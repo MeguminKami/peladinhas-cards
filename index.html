@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#080b10" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Peladinhas" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./assets/pwa/apple-touch-icon.png" />
+    <title>Peladinhas Cards</title>
+    <meta
+      name="description"
+      content="A tua comunidade de futebol. Cartas, desempenhos e histórias de cada Peladinha."
+    />
+    <link rel="icon" href="./assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/cards.css" />
+    <link rel="stylesheet" href="./css/responsive.css" />
+    <link rel="stylesheet" href="./css/experience.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Saltar para o conteúdo</a>
+    <header id="header"></header>
+    <main id="main" tabindex="-1"></main>
+    <div id="toast-region" class="toast-region" aria-live="polite"></div>
+    <div id="modal-root"></div>
+    <script type="module">
+      import("./js/app.js").catch((error) => {
+        console.error(error);
+        const main = document.querySelector("#main");
+        main.innerHTML =
+          '<section class="empty-state"><h1>Não foi possível iniciar a aplicação</h1><p>Verifica a ligação à Internet e a configuração Firebase.</p><button class="btn btn-primary" id="reload">Tentar novamente</button></section>';
+        document.querySelector("#reload").onclick = () => location.reload();
+      });
+    </script>
+  </body>
+</html>

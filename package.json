@@ -1,0 +1,45 @@
+{
+  "name": "peladinhas-cards",
+  "private": true,
+  "type": "module",
+  "main": "functions/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "test:docs": "node scripts/check-docs.mjs",
+    "docs:images": "node scripts/capture-doc-images.mjs",
+    "export:repo": "node scripts/export-repository.mjs",
+    "preexport:repo": "npm run test:docs",
+    "test": "node --test tests/logic.test.js tests/progression.test.js tests/events.test.js tests/youtube.test.js tests/team-balance.test.js tests/card-week.test.js tests/match-time.test.js tests/push-config.test.js",
+    "test:rules": "firebase emulators:exec --project demo-peladinhas-rules --only firestore \"node --test tests/firestore.rules.test.js\"",
+    "test:backend": "firebase emulators:exec --config firebase.backend.json --project demo-peladinhas-backend --only firestore \"node --test --test-concurrency=1 tests/backend.test.js tests/events.backend.test.js tests/push.backend.test.js\"",
+    "test:push": "node tests/push-worker.mjs && node tests/push-ui.mjs",
+    "test:ui": "node tests/browser.mjs",
+    "test:review": "node tests/review.mjs",
+    "test:pwa": "node scripts/build-hosting.mjs && node tests/pwa.mjs",
+    "setup:push": "node scripts/setup-push.mjs",
+    "setup:push:cloud": "node scripts/setup-push.mjs --upload",
+    "check": "node scripts/check.mjs",
+    "build:hosting": "node scripts/build-hosting.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:frontend": "node scripts/deploy.mjs --frontend",
+    "deploy:backend": "node scripts/deploy.mjs --backend",
+    "test:hosting": "firebase emulators:exec --project demo-peladinhas-hosting --only hosting \"node tests/hosting.mjs\"",
+    "pretest:hosting": "node scripts/build-hosting.mjs",
+    "simulate": "node scripts/simulate-evolution.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^7.4.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.0",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^14.0.0",
+    "playwright": "^1.50.0",
+    "prettier": "^3.9.9"
+  }
+}

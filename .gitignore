@@ -1,0 +1,11 @@
+node_modules/
+.firebase/
+*-debug.log
+test-results/
+playwright-report/
+.env*
+.secret.local
+!.env.example
+.repository-export/
+__pycache__/
+*.pyc

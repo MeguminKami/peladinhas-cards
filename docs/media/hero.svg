@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" fill="none">
+  <title>Peladinhas Cards — A tua liga. A tua carta.</title>
+  <desc>Identidade do projeto em verde e dourado sobre fundo escuro, com uma carta conceptual e linhas de um campo de futebol.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1200" y2="460" gradientUnits="userSpaceOnUse"><stop stop-color="#080b10"/><stop offset="1" stop-color="#11251d"/></linearGradient>
+    <linearGradient id="gold" x1="840" y1="70" x2="1080" y2="390" gradientUnits="userSpaceOnUse"><stop stop-color="#fae8b0"/><stop offset=".5" stop-color="#cda65a"/><stop offset="1" stop-color="#f4d997"/></linearGradient>
+    <linearGradient id="line" x1="60" y1="0" x2="1140" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#42e66c"/><stop offset="1" stop-color="#42e66c" stop-opacity="0"/></linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" stroke="#42e66c" stroke-opacity=".045"/></pattern>
+  </defs>
+  <rect width="1200" height="460" rx="24" fill="url(#background)"/>
+  <rect width="1200" height="460" rx="24" fill="url(#grid)"/>
+  <rect x=".5" y=".5" width="1199" height="459" rx="23.5" stroke="#ffffff" stroke-opacity=".12"/>
+  <path d="M60 1H1140" stroke="url(#line)" stroke-width="2"/>
+  <g stroke="#42e66c" stroke-opacity=".12">
+    <rect x="731" y="48" width="420" height="364" rx="3"/>
+    <path d="M941 48V412"/><circle cx="941" cy="230" r="66"/>
+    <path d="M731 142H783V318H731M1151 142H1099V318H1151"/>
+  </g>
+  <g transform="translate(60 53)">
+    <path d="M0 0H35V32L17.5 44 0 32Z" fill="#42e66c"/>
+    <path d="M17.5 10L27 17 23.5 28H11.5L8 17Z" fill="#080b10"/>
+    <path d="M17.5 5V10M27 17L32 15M23.5 28L28 35M11.5 28L7 35M8 17L3 15" stroke="#080b10" stroke-width="2"/>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="111" y="71" fill="#42e66c" font-size="12" font-weight="700" letter-spacing="3">FUTEBOL ENTRE AMIGOS</text>
+    <text x="111" y="93" fill="#97a99f" font-size="12" letter-spacing="2">UMA LIGA COM IDENTIDADE</text>
+    <text x="56" y="186" fill="#f4f7f5" font-size="68" font-weight="800" letter-spacing="-3">PELADINHAS</text>
+    <text x="59" y="240" fill="#42e66c" font-size="42" font-weight="300" letter-spacing="13">CARDS</text>
+    <text x="60" y="293" fill="#d3ded7" font-size="23">A tua liga. A tua carta.</text>
+    <text x="60" y="325" fill="#94a79b" font-size="16">Cada jogo conta. Cada carta tem uma história.</text>
+    <path d="M60 359H650" stroke="#ffffff" stroke-opacity=".12"/>
+    <text x="60" y="395" fill="#a9bcb0" font-size="11" font-weight="600" letter-spacing="2">COMUNIDADE</text>
+    <circle cx="202" cy="391" r="2" fill="#42e66c"/>
+    <text x="221" y="395" fill="#a9bcb0" font-size="11" font-weight="600" letter-spacing="2">EVOLUÇÃO SEMANAL</text>
+    <circle cx="411" cy="391" r="2" fill="#42e66c"/>
+    <text x="430" y="395" fill="#a9bcb0" font-size="11" font-weight="600" letter-spacing="2">FEITO EM PT–PT</text>
+  </g>
+  <g transform="rotate(8 975 232)">
+    <path d="M877 67H1073L1090 85V354L975 411 860 354V85Z" fill="#42e66c" fill-opacity=".045" stroke="#42e66c" stroke-opacity=".3"/>
+  </g>
+  <g transform="rotate(-7 920 228)">
+    <path d="M831 67H1009L1027 85V353L920 399 813 353V85Z" fill="url(#gold)"/>
+    <path d="M836 77H1004L1017 90V346L920 388 823 346V90Z" stroke="#644a1a" stroke-opacity=".55"/>
+    <path d="M831 67H1009M813 111V320M1027 111V320" stroke="#fff3cf" stroke-width="2"/>
+    <g fill="#2b2417" font-family="Segoe UI, Arial, sans-serif">
+      <text x="838" y="139" font-size="46" font-weight="800">99</text>
+      <text x="842" y="155" font-size="9" font-weight="700" letter-spacing="2">OVR</text>
+      <text x="842" y="180" font-size="13" font-weight="700">AV</text>
+      <circle cx="947" cy="161" r="30" fill="#7b704e" fill-opacity=".4"/>
+      <path d="M893 247C895 204 920 197 947 197C974 197 997 208 1000 247Z" fill="#7b704e" fill-opacity=".4"/>
+      <text x="920" y="277" text-anchor="middle" font-size="17" font-weight="800" letter-spacing="2">A TUA CARTA</text>
+      <path d="M837 292H1003" stroke="#644a1a" stroke-opacity=".5"/>
+      <text x="846" y="319" font-size="18" font-weight="800">99</text><text x="909" y="319" font-size="18" font-weight="800">99</text><text x="972" y="319" font-size="18" font-weight="800">99</text>
+      <text x="847" y="334" font-size="8" font-weight="700">VEL</text><text x="910" y="334" font-size="8" font-weight="700">FIN</text><text x="973" y="334" font-size="8" font-weight="700">PAS</text>
+      <text x="920" y="366" text-anchor="middle" font-size="8" letter-spacing="2">CONCEITO VISUAL</text>
+    </g>
+  </g>
+</svg>

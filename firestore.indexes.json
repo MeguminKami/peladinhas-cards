@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "communityRatings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "targetId", "order": "ASCENDING" },
+        { "fieldPath": "submitted", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "feedback",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "targetId", "order": "ASCENDING" },
+        { "fieldPath": "submitted", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

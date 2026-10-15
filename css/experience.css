@@ -1,0 +1,1116 @@
+/* Shared application chrome and compact workspaces. */
+.push-settings {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.push-invitation {
+  padding: 18px 20px;
+  border-color: var(--border-strong);
+}
+.push-invitation[hidden] {
+  display: none;
+}
+.push-invitation .push-settings-copy h2 {
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.push-invitation .push-settings-symbol {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+}
+.push-settings-symbol {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  flex: none;
+  color: var(--accent);
+  background: var(--accent-tint);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+}
+.push-settings-copy {
+  min-width: 0;
+  flex: 1;
+}
+.push-settings-copy h2 {
+  font-size: 1.12rem;
+  margin: 0 0 8px;
+}
+.push-settings-copy p:not(.eyebrow) {
+  margin: 0;
+  font-size: 0.83rem;
+}
+.push-settings-copy .eyebrow {
+  font-size: 0.6rem;
+  margin-bottom: 8px;
+}
+.push-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.notification-view-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.notification-view-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 16px;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.notification-view-tabs button[aria-selected="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.notification-view-tabs span {
+  display: grid;
+  place-items: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 2px 5px;
+  border-radius: 50%;
+  background: var(--bg-panel);
+  font-size: 0.7rem;
+}
+@media (max-width: 800px) {
+  .push-settings {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .push-settings-symbol {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+  .push-settings-copy {
+    flex: 1 1 calc(100% - 56px);
+  }
+  .push-settings-actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+  .push-settings-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+.install-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 26px 32px;
+  margin-bottom: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(ellipse at 100% 50%, var(--accent-tint), transparent 70%),
+    var(--bg-surface);
+}
+.install-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--accent);
+}
+.install-campaign-copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+.install-campaign-copy h2 {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+.install-campaign-copy h2 em {
+  color: var(--accent);
+  font-style: normal;
+}
+.install-campaign-copy > p:not(.eyebrow) {
+  font-size: 0.9rem;
+  margin: 0 0 18px;
+}
+.install-campaign-copy .eyebrow {
+  font-size: 0.61rem;
+  margin-bottom: 10px;
+}
+.install-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.install-platforms button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 16px;
+  text-align: left;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  transition:
+    transform 0.2s,
+    border-color 0.2s,
+    background 0.2s;
+}
+.install-platforms button:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.install-platforms button > svg:first-child {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+.install-platforms button[data-install-platform="android"] > svg:first-child {
+  color: var(--accent);
+}
+.install-platforms :is(small, strong) {
+  display: block;
+}
+.install-platforms small {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+.install-platforms strong {
+  font-size: 0.83rem;
+  font-weight: 750;
+}
+.install-platforms .ui-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 10px;
+}
+.install-campaign-note {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+.install-art {
+  position: relative;
+  width: 160px;
+  height: 180px;
+  display: grid;
+  place-items: center;
+}
+.install-phone {
+  width: 94px;
+  height: 160px;
+  position: relative;
+  padding: 6px;
+  border: 2px solid var(--border-strong);
+  border-radius: 22px;
+  background: var(--bg-app);
+  box-shadow: 12px 16px 30px rgba(0, 0, 0, 0.3);
+  transform: rotate(8deg);
+  animation: install-phone-lift 4s ease-in-out infinite;
+}
+.phone-screen {
+  height: 100%;
+  border-radius: 15px;
+  background: linear-gradient(145deg, var(--accent-tint), var(--bg-panel));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 8px 8px;
+  overflow: hidden;
+}
+.phone-camera {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 5px;
+  border-radius: 4px;
+  background: var(--bg-app);
+  z-index: 2;
+}
+.phone-app-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+}
+.phone-screen > strong {
+  font-size: 5px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  margin-top: 5px;
+}
+.phone-screen > strong small {
+  display: block;
+  font-size: 4px;
+  letter-spacing: 0.28em;
+}
+.phone-mini-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  position: relative;
+  width: 52px;
+  height: 52px;
+  margin-top: 9px;
+  border: 1px solid var(--accent);
+  border-radius: 8px 8px 15px 15px;
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+.phone-mini-card > img {
+  width: 14px;
+}
+.phone-mini-card > span {
+  font-size: 5px;
+}
+.phone-mini-card b {
+  font-size: 10px;
+}
+.phone-dock {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: auto;
+  color: var(--text-muted);
+}
+.phone-dock .ui-icon {
+  width: 9px;
+  height: 9px;
+}
+.install-orbit {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 50%;
+  animation: install-orbit-turn 24s linear infinite;
+}
+.orbit-two {
+  width: 140px;
+  height: 140px;
+  border-style: solid;
+  border-color: var(--accent-tint);
+  animation-direction: reverse;
+}
+.install-floating {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 9px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 6px;
+  font-weight: 750;
+  box-shadow: var(--shadow-sm);
+  animation: install-tag-lift 3s ease-in-out infinite;
+  white-space: nowrap;
+}
+.install-floating .ui-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+}
+.floating-card {
+  top: 28px;
+  left: -12px;
+}
+.floating-match {
+  bottom: 24px;
+  right: -18px;
+  animation-delay: -1.5s;
+}
+.install-art-label {
+  display: none;
+}
+@keyframes install-phone-lift {
+  0%,
+  100% {
+    transform: translateY(3px) rotate(8deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(3deg);
+  }
+}
+@keyframes install-tag-lift {
+  0%,
+  100% {
+    transform: translateY(3px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes install-orbit-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 540px) {
+  .install-spotlight {
+    display: block;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .install-campaign-copy h2 {
+    font-size: 1.85rem;
+    padding-right: 55px;
+  }
+  .install-campaign-copy .eyebrow {
+    padding-right: 50px;
+    font-size: 0.56rem;
+  }
+  .install-campaign-copy > p:not(.eyebrow) {
+    font-size: 0.8rem;
+    padding-right: 50px;
+    margin-bottom: 14px;
+  }
+  .install-platforms {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+  .install-platforms button {
+    padding: 10px;
+    gap: 8px;
+    min-width: 0;
+  }
+  .install-platforms button > svg:first-child {
+    width: 22px;
+    height: 22px;
+  }
+  .install-platforms strong {
+    font-size: 0.7rem;
+  }
+  .install-platforms small {
+    font-size: 0.54rem;
+  }
+  .install-platforms .ui-icon {
+    display: none;
+  }
+  .install-art {
+    position: absolute;
+    top: 12px;
+    right: 3px;
+    width: 70px;
+    height: 100px;
+    opacity: 0.9;
+  }
+  .install-phone {
+    transform: scale(0.55) rotate(8deg);
+    animation-name: install-phone-small;
+  }
+  .install-orbit {
+    width: 94px;
+    height: 94px;
+  }
+  .orbit-two {
+    width: 72px;
+    height: 72px;
+  }
+  .install-floating {
+    display: none;
+  }
+}
+@keyframes install-phone-small {
+  0%,
+  100% {
+    transform: scale(0.55) translateY(3px) rotate(8deg);
+  }
+  50% {
+    transform: scale(0.55) translateY(-7px) rotate(3deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .install-spotlight *,
+  .install-platforms button {
+    animation: none;
+    transition: none;
+  }
+}
+@font-face {
+  font-family: "Peladinhas Sans";
+  src: url("../assets/fonts/manrope-400.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Peladinhas Sans";
+  src: url("../assets/fonts/manrope-600.woff") format("woff");
+  font-style: normal;
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Peladinhas Sans";
+  src: url("../assets/fonts/manrope-700.woff") format("woff");
+  font-style: normal;
+  font-weight: 650 750;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Peladinhas Sans";
+  src: url("../assets/fonts/manrope-800.woff") format("woff");
+  font-style: normal;
+  font-weight: 780 900;
+  font-display: swap;
+}
+:root {
+  font-family: "Peladinhas Sans", system-ui, sans-serif;
+  --text-muted: #929eac;
+}
+body {
+  font-weight: 400;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  line-height: 1.65;
+}
+.page-head .subtitle {
+  font-size: 0.95rem;
+  max-width: 60ch;
+  margin-bottom: 0;
+}
+.page-head {
+  gap: 24px;
+}
+.section-head > div,
+.page-head > div {
+  min-width: 0;
+}
+.eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+}
+.panel > h2,
+.event-form-section legend {
+  letter-spacing: -0.025em;
+}
+.empty-state p {
+  max-width: 42ch;
+  margin-inline: auto;
+}
+.card-caption.long-name {
+  top: 55%;
+}
+.card-caption.long-name h3 {
+  font-size: calc(var(--card-width) * 0.064);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+.podium-hint {
+  display: none;
+}
+.metrics b {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+}
+.my-card-panel {
+  align-self: start;
+}
+.dashboard-missions {
+  gap: 16px;
+  align-self: stretch;
+}
+.dashboard-missions .mission {
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.dashboard-missions .mission-symbol {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+}
+.dashboard-missions .mission-heading h3 {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.dashboard-missions .mission-content p {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 4px 0 8px;
+}
+.dashboard-missions .progress {
+  margin: 8px 0 6px;
+}
+.dashboard-missions .missions-toolbar .btn {
+  width: 100%;
+  min-height: 44px;
+}
+@media (min-width: 801px) {
+  .dashboard-missions:has(> .mission-list > .mission:nth-child(4))
+    > .mission-list {
+    flex: 1;
+    grid-auto-rows: 1fr;
+  }
+}
+@media (max-width: 800px) {
+  .dashboard-missions {
+    padding: 20px;
+  }
+  .dashboard-missions .mission {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+  .dashboard-missions .mission-symbol {
+    width: 32px;
+    height: 32px;
+  }
+}
+.my-card-panel .compact-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.my-card-actions {
+  width: 100%;
+  grid-column: 1 / -1;
+  margin-top: 16px;
+}
+.my-card-actions .btn {
+  width: 100%;
+  min-height: 44px;
+}
+@media (max-width: 800px) {
+  .my-card-actions {
+    margin-top: 0;
+  }
+}
+@media (max-width: 360px) {
+  .my-card-panel .compact-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.metrics small {
+  line-height: 1.4;
+}
+.mission-content p {
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+.ticket-chat {
+  background: transparent;
+}
+.ticket-message {
+  border-radius: 16px 16px 16px 4px;
+}
+.ticket-message.own-message {
+  background: var(--accent-tint);
+  border-color: var(--border-strong);
+  border-radius: 16px 16px 4px 16px;
+}
+.ticket-message p {
+  margin: 14px 0 0;
+}
+#ticket-create,
+#ticket-reply {
+  max-width: 780px;
+}
+.notification:not(.unread) .notification-dot {
+  background: var(--border-strong);
+}
+.notification:not(.unread) {
+  opacity: 0.8;
+}
+.more-menu {
+  display: grid;
+  gap: 8px;
+}
+.more-menu a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+}
+.more-menu a:hover,
+.more-menu a[aria-current] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.more-menu a > .ui-icon:first-child {
+  color: var(--accent);
+}
+.more-menu a > .ui-icon:last-child {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+.more-menu strong,
+.more-menu small {
+  display: block;
+}
+.more-menu small {
+  color: var(--text-secondary);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+.more-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.statistics-controls,
+.admin-mobile-select {
+  display: none;
+}
+.modal {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.auth-tabs button {
+  min-height: 48px;
+}
+.auth-tabs button:focus-visible {
+  outline-offset: -3px;
+}
+.save-state {
+  font-variant-numeric: tabular-nums;
+}
+.install-intro {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 24px 0;
+}
+.install-intro img {
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
+  flex: none;
+}
+.install-intro p {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+}
+.install-intro .eyebrow {
+  margin-bottom: 8px;
+}
+.install-steps {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.install-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.install-steps li > span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-weight: 700;
+}
+.install-steps p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+.connection-status {
+  padding: 12px 20px;
+  background: var(--bg-panel);
+  color: var(--warning);
+  border-bottom: 1px solid var(--border-strong);
+  text-align: center;
+  font-size: 0.85rem;
+}
+.app-update {
+  position: fixed;
+  z-index: 60;
+  right: 24px;
+  bottom: 24px;
+  width: min(420px, calc(100vw - 32px));
+  padding: 22px;
+  border: 1px solid var(--accent);
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+  background: var(--bg-surface);
+}
+.app-update p {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+}
+.app-update .actions {
+  margin-top: 16px;
+}
+.offline-content {
+  max-width: 560px;
+  min-height: 100dvh;
+  padding: max(32px, env(safe-area-inset-top)) 20px
+    max(32px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 32px;
+}
+.offline-panel {
+  padding: 32px;
+}
+.offline-panel h1 {
+  font-size: clamp(2rem, 7vw, 2.8rem);
+}
+.offline-panel #offline-status {
+  margin: 20px 0 0;
+  text-align: center;
+}
+.event-management-card {
+  background:
+    linear-gradient(150deg, var(--accent-tint), transparent 65%),
+    var(--bg-panel);
+}
+.event-area-tabs [aria-selected="true"],
+.event-method-options [aria-pressed="true"],
+.event-editor-steps [aria-current="step"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.event-command .actions {
+  gap: 12px;
+}
+@media (max-width: 1100px) and (min-width: 801px) {
+  .navbar {
+    gap: 12px;
+    padding-inline: 20px;
+  }
+  .brand {
+    font-size: 0.78rem;
+    gap: 8px;
+  }
+  .desktop-nav {
+    gap: 2px;
+  }
+  .nav-link {
+    padding-inline: 7px;
+    font-size: 0.72rem;
+  }
+  .header-actions {
+    gap: 0;
+  }
+}
+@media (min-width: 801px) {
+  .admin-area-nav {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+  .admin-area-nav a {
+    flex: 0 1 auto;
+  }
+}
+@media (max-width: 800px) {
+  .navbar:has(> .install-app) .club-label {
+    display: none;
+  }
+  .navbar > .install-app {
+    margin-left: auto;
+  }
+  .header-actions .install-app {
+    display: none;
+  }
+  .app-update {
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
+  #header {
+    padding-top: env(safe-area-inset-top);
+  }
+  .navbar,
+  .navbar:has([data-role-perspective]) {
+    min-height: 72px;
+    padding-block: 8px;
+  }
+  .header-actions #logout,
+  .mobile-admin {
+    display: none;
+  }
+  .navbar {
+    flex-wrap: nowrap;
+  }
+  .header-actions {
+    flex-basis: auto;
+  }
+  .profile-perspective-menu .user-link {
+    min-height: 30px;
+  }
+  .role-perspective-compact summary {
+    min-height: 30px;
+    padding-block: 2px;
+  }
+  .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px max(10px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  }
+  .bottom-nav :is(a, button) {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 54px;
+    border: 0;
+    border-radius: 12px;
+    padding: 7px 2px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .bottom-nav :is(a, button).active {
+    color: var(--accent);
+    background: var(--accent-tint);
+  }
+  .bottom-nav .ui-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .nav-dot {
+    top: 6px;
+    right: 22%;
+  }
+  main {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+  .admin-area-nav {
+    display: none;
+  }
+  .admin-mobile-select {
+    display: block;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-surface);
+    margin-bottom: 24px;
+  }
+  .statistics-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .statistics-controls label {
+    margin: 0;
+  }
+  .statistics-table thead {
+    display: none;
+  }
+  .statistics-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .statistics-metrics > div {
+    padding: 16px 12px;
+  }
+  .statistics-metrics > div:nth-last-child(-n + 2) {
+    grid-column: span 1;
+  }
+  .statistics-metrics small {
+    font-size: 0.7rem;
+    overflow-wrap: normal;
+  }
+  .notification-dropdown,
+  .role-perspective-compact .perspective-dropdown {
+    top: calc(80px + env(safe-area-inset-top));
+  }
+  .more-menu a {
+    padding: 13px;
+  }
+  .backdrop {
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .modal {
+    max-height: calc(
+      100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    );
+  }
+}
+@media (display-mode: standalone) {
+  .install-app,
+  #menu-install {
+    display: none;
+  }
+}
+@media (max-width: 540px) {
+  .podium {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(270px, 100%);
+    justify-content: start;
+    align-items: start;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding: 20px 0 14px;
+  }
+  .podium-place,
+  .place-1 {
+    order: initial;
+    width: 100%;
+    min-width: 0;
+    padding: 12px 0;
+    scroll-snap-align: start;
+  }
+  .podium-place .football-card,
+  .place-2 .football-card,
+  .place-3 .football-card {
+    --card-width: 230px;
+  }
+  .podium-hint {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin: 14px 0 0;
+  }
+  .podium-place p {
+    min-height: 1.6em;
+  }
+  main {
+    padding-inline: max(16px, env(safe-area-inset-left))
+      max(16px, env(safe-area-inset-right));
+  }
+  .dashboard-greeting h1 {
+    font-size: clamp(1.7rem, 7vw, 2.25rem);
+  }
+  .dashboard-greeting > div > p:last-child {
+    font-size: 0.9rem;
+  }
+  .weekly-section > .section-head {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .weekly-section .section-head > .btn {
+    max-width: none;
+    font-size: 0.78rem;
+    padding: 8px 0;
+    justify-content: flex-start;
+  }
+  .section-head {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .section-head h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
+  .page-head {
+    margin-bottom: 28px;
+  }
+  .page-head .subtitle {
+    font-size: 0.9rem;
+  }
+  .filters {
+    gap: 12px;
+  }
+  .filters label {
+    margin: 0;
+  }
+  .event-command {
+    padding: 22px;
+    gap: 20px;
+  }
+  .event-command .actions {
+    margin-top: 0;
+  }
+  .event-metrics {
+    gap: 12px;
+  }
+  .event-metrics article {
+    padding: 18px;
+    gap: 8px;
+  }
+  .event-metrics strong {
+    font-size: 2rem;
+  }
+  .event-podium {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .podium-award {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    text-align: left;
+    gap: 6px 12px;
+  }
+  .podium-award > span {
+    grid-row: span 3;
+  }
+  .podium-award :is(h3, p) {
+    margin: 0;
+  }
+  .player-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rating-form .section-head:last-child {
+    display: flex;
+  }
+  .rating-form .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .rating-form .actions .btn {
+    padding-inline: 10px;
+  }
+  .auth-story h1 {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+    line-height: 1.12;
+  }
+}

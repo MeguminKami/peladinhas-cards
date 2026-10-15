@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#080b10" />
+    <title>Sem ligação · Peladinhas Cards</title>
+    <link rel="icon" href="./assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/experience.css" />
+  </head>
+  <body class="offline-page">
+    <main class="offline-content">
+      <a class="brand" href="./"
+        ><img src="./assets/logo.svg" alt="" /><span
+          >PELADINHAS<small>CARDS</small></span
+        ></a
+      >
+      <section class="panel offline-panel">
+        <p class="eyebrow">Uma pausa fora de campo</p>
+        <h1>A liga espera por ti.</h1>
+        <p>
+          Estás sem ligação à Internet. Volta a ligar-te para consultar a tua
+          carta, acompanhar os jogos e guardar avaliações.
+        </p>
+        <button class="btn btn-primary full-width" id="offline-retry" disabled>
+          Tentar novamente
+        </button>
+        <p id="offline-status" class="small muted" role="status">
+          Os dados da liga precisam de uma ligação ativa.
+        </p>
+      </section>
+    </main>
+    <script src="./js/offline.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,2 @@
+# Optional font authoring dependency; not used by the app or Functions.
+fonttools==4.63.0

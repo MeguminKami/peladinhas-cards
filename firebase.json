@@ -1,0 +1,70 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": [
+    {
+      "source": ".",
+      "codebase": "peladinhas",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "tests",
+        "scripts",
+        "css",
+        "assets",
+        "design",
+        "docs",
+        ".repository-export",
+        "README.md",
+        ".codex",
+        ".agents",
+        "js/config.js",
+        "playwright-report",
+        "test-results",
+        "*-debug.log",
+        "firebase.backend.json",
+        ".firebase",
+        ".env*",
+        ".secret.local"
+      ]
+    }
+  ],
+  "emulators": {
+    "firestore": {
+      "port": 8085
+    },
+    "functions": {
+      "port": 5001
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": false
+    },
+    "hosting": {
+      "port": 5000
+    }
+  },
+  "hosting": {
+    "public": ".firebase/site",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "regex": ".*",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, max-age=0, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "predeploy": ["npm --prefix \"$PROJECT_DIR\" run build:hosting"]
+  }
+}
