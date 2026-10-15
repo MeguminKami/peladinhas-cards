@@ -128,6 +128,15 @@ try {
   mkdirSync("test-results/event-scopes", { recursive: true });
   await page.locator(".mission-competition").screenshot({ path: `test-results/event-scopes/description-${isWebKit ? "webkit" : "chromium"}.png` });
   await page.evaluate(async () => {
+    const { missionList } = await import("./js/missions.js");
+    document.querySelector("main").innerHTML = missionList(["COMPETITION_OBJECTIVE", "OBJECTIVE_MISSION", "EVENT_VOTE"].map(type => ({ type, title: type, eventDescription: "A description shared by every challenge type.", description: "Objective or voting instructions.", done: 1, total: 3, href: "#/event/example", icon: "trophy" })));
+  });
+  assert.equal(await page.locator(".mission-event-description").count(), 3);
+  for (const width of [320, 390, 844, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `All challenge descriptions overflow ${width}`);
+  }
+  await page.evaluate(async () => {
     const { rewardShowcase } = await import("./js/event-presentation.js");
     const { eventIcon } = await import("./js/icons.js");
     const metrics = ["games", "goals", "assists", "wins", "winStreak", "unbeatenWins", "unbeatenGames", "goalsAndAssists", "cleanSheets"];

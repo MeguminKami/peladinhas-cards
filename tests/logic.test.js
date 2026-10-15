@@ -57,8 +57,11 @@ test("escalas e limites", () => {
 });
 test("raridades nas fronteiras", () => {
   assert.deepEqual(
-    [49, 50, 64, 65, 69, 70, 74, 75, 84, 85, 99].map(calculateBaseCard),
+    [0, 49, 50, 59, 60, 64, 65, 69, 70, 74, 75, 84, 85, 99].map(calculateBaseCard),
     [
+      "bronze-common",
+      "bronze-common",
+      "bronze-common",
       "bronze-common",
       "bronze-rare",
       "bronze-rare",

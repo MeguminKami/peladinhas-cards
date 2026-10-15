@@ -531,7 +531,7 @@ export function calculateOverall(stats, settings, position, inactivity) {
   return calculateOverallDetails(stats, settings, position, inactivity).ovr;
 }
 export function calculateBaseCard(o) {
-  return o < 50
+  return o < 60
     ? "bronze-common"
     : o < 65
       ? "bronze-rare"

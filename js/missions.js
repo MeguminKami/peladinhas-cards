@@ -103,6 +103,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
             id: `event-${event.id}`,
             type: "OBJECTIVE_MISSION",
             title: event.title,
+            eventDescription: event.description || "",
             description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
             done: Math.min(progress, event.objective.target),
             total: event.objective.target,
@@ -132,6 +133,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
             id: `event-${event.id}`,
             type: "EVENT_VOTE",
             title: event.title,
+            eventDescription: event.description || "",
             description: "Consulta as regras e participa na votação.",
             done: 0,
             total: 1,
@@ -158,6 +160,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
       id: `event-${event.id}`,
       type: "EVENT_VOTE",
       title: event.title,
+      eventDescription: event.description || "",
       description: vote
         ? "Voto guardado. Podes atualizar até ao fecho."
         : "Escolhe os colegas que merecem a recompensa.",
@@ -186,7 +189,7 @@ export function missionList(missions, { grouped = true } = {}) {
       .map((m) => {
         const competition = m.type === "COMPETITION_OBJECTIVE";
         const percentage = Math.round((m.done / m.total) * 100);
-        return `<a class="mission${competition ? " mission-competition" : ""}" href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${competition && m.eventDescription?.trim() ? `<p class="mission-event-description">${esc(m.eventDescription.trim())}</p>` : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div><p>${esc(m.description)}</p>${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
+        return `<a class="mission${competition ? " mission-competition" : ""}" href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.eventDescription?.trim() ? `<p class="mission-event-description">${esc(m.eventDescription.trim())}</p>` : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div><p>${esc(m.description)}</p>${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
       })
       .join("")}</div>`;
   if (!grouped) return cards([...competitions, ...remaining]);
