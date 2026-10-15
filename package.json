@@ -32,6 +32,7 @@
     "test:feedback": "node tests/feedback.mjs",
     "test:profile": "node tests/profile-growth.mjs",
     "test:card-choice": "node tests/card-choice.mjs",
+    "test:card-collection": "node tests/card-collection.mjs",
     "test:event-scopes": "node tests/event-scopes.mjs"
   },
   "dependencies": {

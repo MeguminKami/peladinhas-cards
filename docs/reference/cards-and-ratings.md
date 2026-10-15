@@ -89,6 +89,8 @@ Uma carta fechada preserva atributos, OVR, especiais, posição e aparência. O 
 
 ## Identidade e recompensas
 
+A [coleção especial](card-collection.md) acrescenta dez edições visuais ao catálogo e ao Card Lab. Estão disponíveis apenas para pré-visualização; as missões escondidas e a atribuição serão configuradas posteriormente.
+
 Há seis raridades base e cartas especiais reconhecidas por performances/recompensas. O Card Lab é um estúdio para compor estilos com modelos, paletas, camadas, molduras, fontes, efeitos e fotografia; inclui desfazer/refazer, importação/exportação JSON e composições guardadas.
 
 Eventos e missões podem atribuir stats temporárias ou permanentes, cartas semanais, prestígio e conquistas. Elegibilidade, limites e privacidade estão na [referência de eventos e missões](events-and-missions.md).

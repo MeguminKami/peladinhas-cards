@@ -49,6 +49,26 @@ test("composições só aceitam controlos conhecidos dentro dos limites", () => 
     assert.ok(!validCardDesign(value));
 });
 
+test("fundo do nome aceita RGB e transparência nos limites", () => {
+  assert.ok(
+    validCardDesign({
+      nameBackgroundRed: 255,
+      nameBackgroundGreen: 0,
+      nameBackgroundBlue: 128,
+      nameBackgroundTransparency: 100,
+    }),
+  );
+  assert.ok(validCardDesign({ nameBackgroundTransparency: 0 }));
+  for (const value of [
+    { nameBackgroundRed: 256 },
+    { nameBackgroundGreen: -1 },
+    { nameBackgroundBlue: "128" },
+    { nameBackgroundTransparency: 101 },
+    { nameBackgroundTransparency: NaN },
+  ])
+    assert.ok(!validCardDesign(value));
+});
+
 test("estúdio: combinações válidas e fontes/efeitos arbitrários rejeitados", () => {
   assert.ok(
     validCardDesign({

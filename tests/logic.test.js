@@ -16,6 +16,10 @@ import {
 } from "../js/card-geometry.js";
 import { SPECIAL_CARD_DESIGNS } from "../js/card-specials.js";
 import {
+  COLLECTION_EDITIONS,
+  COLLECTION_THEME_IDS,
+} from "../js/card-collection.js";
+import {
   validPhotoDesign,
   cardPhotoStyles,
   defaultPhotoDesign,
@@ -24,6 +28,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   ATTRIBUTES,
+  THEMES,
+  CATALOG_THEMES,
+  themeName,
   calculateInitialBaseline,
   initialSelfWeight,
   calculatePlayerStats,
@@ -48,6 +55,30 @@ import {
 } from "../js/utils.js";
 const ratings = (value) =>
   Object.fromEntries(ATTRIBUTES.map(([k]) => [k, value]));
+test("dez novas edições têm nome e arte no catálogo, sem atribuição ativa", () => {
+  assert.equal(COLLECTION_THEME_IDS.length, 10);
+  assert.equal(new Set(COLLECTION_THEME_IDS.map(themeName)).size, 10);
+  for (const id of COLLECTION_THEME_IDS) {
+    assert.ok(CATALOG_THEMES.includes(id));
+    assert.ok(!THEMES.includes(id));
+    assert.equal(SPECIAL_CARD_DESIGNS[id], COLLECTION_EDITIONS[id]);
+    assert.ok(COLLECTION_EDITIONS[id].art);
+    assert.equal(themeName(id), COLLECTION_EDITIONS[id].name);
+    assert.equal(validReward({ boosts: {}, specialId: id }), false);
+  }
+  const earned = calculateSpecialCards(
+    Array.from({ length: 6 }, () => ({
+      overall: 5,
+      mvp: true,
+      passing: 5,
+      attack: 5,
+      defending: 5,
+      physical: 5,
+      goalkeeping: 5,
+    })),
+  );
+  assert.ok(earned.every(({ id }) => !COLLECTION_THEME_IDS.includes(id)));
+});
 test("escalas e limites", () => {
   assert.equal(convert20To99(0), 0);
   assert.equal(convert20To99(20), 99);
@@ -57,7 +88,9 @@ test("escalas e limites", () => {
 });
 test("raridades nas fronteiras", () => {
   assert.deepEqual(
-    [0, 49, 50, 59, 60, 64, 65, 69, 70, 74, 75, 84, 85, 99].map(calculateBaseCard),
+    [0, 49, 50, 59, 60, 64, 65, 69, 70, 74, 75, 84, 85, 99].map(
+      calculateBaseCard,
+    ),
     [
       "bronze-common",
       "bronze-common",
@@ -590,7 +623,9 @@ test("eventos: uma lista comum, cartas padrão e criadas, resultados explícitos
     "silver-rare",
     "gold-common",
     "gold-rare",
-    ...Object.keys(SPECIAL_CARD_DESIGNS),
+    ...Object.keys(SPECIAL_CARD_DESIGNS).filter(
+      (id) => !COLLECTION_THEME_IDS.includes(id),
+    ),
   ])
     assert.equal(validReward({ boosts: {}, specialId: id }), true);
   assert.equal(validReward({ boosts: {}, specialId: "saved:one" }), false);
@@ -656,10 +691,27 @@ test("prazo de edição é de 7 dias desde a primeira submissão", () => {
   );
 });
 
-
 test("post-match self rating has exactly the same weight as each peer rating", () => {
-  const ratings = [{ raterId: "self", targetId: "self", submitted: true, ratings: { overall: 5 } }, { raterId: "peer", targetId: "self", submitted: true, ratings: { overall: 1 } }];
+  const ratings = [
+    {
+      raterId: "self",
+      targetId: "self",
+      submitted: true,
+      ratings: { overall: 5 },
+    },
+    {
+      raterId: "peer",
+      targetId: "self",
+      submitted: true,
+      ratings: { overall: 1 },
+    },
+  ];
   assert.equal(calculateGameAggregate(ratings).overall, 3);
-  ratings.push({ raterId: "peer2", targetId: "self", submitted: true, ratings: { overall: 3 } });
+  ratings.push({
+    raterId: "peer2",
+    targetId: "self",
+    submitted: true,
+    ratings: { overall: 3 },
+  });
   assert.equal(calculateGameAggregate(ratings).overall, 3);
 });

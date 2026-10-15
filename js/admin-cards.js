@@ -2,7 +2,14 @@ import { applyCardDesign } from "./card-design.js";
 import * as DB from "./db.js";
 import { cardWeek } from "./card-week.js";
 import { PHOTO_FIELDS, defaultPhotoDesign } from "./card-photo.js";
-import { THEMES, ATTRIBUTES, themeName, clamp } from "./utils.js";
+import {
+  THEMES,
+  CATALOG_THEMES,
+  COLLECTION_EDITIONS,
+  ATTRIBUTES,
+  themeName,
+  clamp,
+} from "./utils.js";
 import { card, bindImages } from "./cards.js";
 import { esc, pageHead, empty, linkButton, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
@@ -245,7 +252,7 @@ export async function adminCardsPage(ctx, uid) {
   };
   const created = await DB.list("cardThemes");
   const entries = [
-    ...THEMES.map((type) => ({
+    ...CATALOG_THEMES.map((type) => ({
       id: type,
       name: themeName(type),
       baseTheme: type,
@@ -282,7 +289,7 @@ export async function adminCardsPage(ctx, uid) {
       );
   };
   ctx.render(
-    `${pageHead("Administração", "Cartas", "Catálogo de tipos padrão e criados. Escolhe um jogador apenas para pré-visualizar.")}<section class="panel card-types-toolbar"><label>Perfil na pré-visualização<select id="card-types-player"><option value="">Jogador exemplo</option>${players.map((p) => `<option value="${esc(p.uid)}" ${p.uid === uid ? "selected" : ""}>${esc(p.displayName || p.username)}</option>`).join("")}</select></label><span class="pill">${THEMES.length} padrão · ${created.length} criados</span></section><div id="card-type-gallery" class="card-type-gallery saved-card-gallery">${entries.map((entry, index) => `<button type="button" class="card-type-tile" data-card-type="${esc(entry.id)}" data-catalog-index="${index}" aria-label="Pré-visualizar ${esc(entry.name)}">${card(previewPlayer, { size: "sm", theme: entry.baseTheme || "custom-test", preview: true })}<span>${esc(entry.name)}</span><small class="muted">${entry.created ? "Criada no Card Lab" : "Tipo padrão"}</small></button>`).join("")}</div>`,
+    `${pageHead("Administração", "Cartas", "Catálogo de tipos padrão e criados. Escolhe um jogador apenas para pré-visualizar.")}<section class="panel card-types-toolbar"><label>Perfil na pré-visualização<select id="card-types-player"><option value="">Jogador exemplo</option>${players.map((p) => `<option value="${esc(p.uid)}" ${p.uid === uid ? "selected" : ""}>${esc(p.displayName || p.username)}</option>`).join("")}</select></label><span class="pill">${THEMES.length} padrão · ${Object.keys(COLLECTION_EDITIONS).length} novas edições · ${created.length} criados</span></section><div id="card-type-gallery" class="card-type-gallery saved-card-gallery">${entries.map((entry, index) => `<button type="button" class="card-type-tile" data-card-type="${esc(entry.id)}" data-catalog-index="${index}" aria-label="Pré-visualizar ${esc(entry.name)}">${card(previewPlayer, { size: "sm", theme: entry.baseTheme || "custom-test", preview: true })}<span>${esc(entry.name)}</span><small class="muted">${entry.created ? "Criada no Card Lab" : COLLECTION_EDITIONS[entry.id] ? "Nova edição · Atribuição por definir" : "Tipo padrão"}</small></button>`).join("")}</div>`,
   );
   document.querySelector("#card-types-player").onchange = (event) => {
     location.hash = event.target.value
@@ -304,7 +311,7 @@ export async function adminCardsPage(ctx, uid) {
     const entry = entries[Number(button.dataset.catalogIndex)];
     modal(
       entry.name,
-      `<div class="history-card-expanded">${card(previewPlayer, { size: "lg", theme: entry.baseTheme || "custom-test", preview: true })}</div>`,
+      `${COLLECTION_EDITIONS[entry.id] ? `<p class="muted">${esc(COLLECTION_EDITIONS[entry.id].detail)}. Atribuição por definir.</p>` : ""}<div class="history-card-expanded">${card(previewPlayer, { size: "lg", theme: entry.baseTheme || "custom-test", preview: true })}</div>`,
     );
     decorate(document.querySelector("#modal-root .football-card"), entry);
     bindImages(document.querySelector("#modal-root"));

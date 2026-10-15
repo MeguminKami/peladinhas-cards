@@ -1,4 +1,9 @@
 import { cardWeek } from "./card-week.js";
+import {
+  COLLECTION_EDITIONS,
+  COLLECTION_THEME_IDS,
+} from "./card-collection.js";
+export { COLLECTION_EDITIONS } from "./card-collection.js";
 export const ATTRIBUTES = [
   ["pace", "Velocidade", "VEL"],
   ["shooting", "Finalização", "FIN"],
@@ -70,6 +75,10 @@ export const THEMES = [
   "mvp",
   "legend-form",
 ];
+export const CATALOG_THEMES = Object.freeze([
+  ...THEMES,
+  ...COLLECTION_THEME_IDS,
+]);
 const THEME_NAMES = {
   "bronze-common": "Bronze comum",
   "bronze-rare": "Bronze rara",
@@ -89,7 +98,8 @@ const THEME_NAMES = {
   "legend-form": "Forma lendária",
   "custom-test": "Tema experimental",
 };
-export const themeName = (t) => THEME_NAMES[t] || "Carta personalizada";
+export const themeName = (t) =>
+  THEME_NAMES[t] || COLLECTION_EDITIONS[t]?.name || "Carta personalizada";
 export const average = (a) =>
   a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
 export const clamp = (n, min, max) =>

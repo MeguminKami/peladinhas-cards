@@ -28,6 +28,16 @@ export const DESIGN_FIELDS = [
   ["saturation", "Saturação (%)", 0, 200, 100],
   ["nameY", "Nome · vertical (%)", 40, 90, 54],
   ["nameSize", "Tamanho do nome (%)", 60, 150, 100],
+  ["nameBackgroundRed", "Fundo do nome · vermelho", 0, 255, 0],
+  ["nameBackgroundGreen", "Fundo do nome · verde", 0, 255, 0],
+  ["nameBackgroundBlue", "Fundo do nome · azul", 0, 255, 0],
+  [
+    "nameBackgroundTransparency",
+    "Fundo do nome · transparência (%)",
+    0,
+    100,
+    100,
+  ],
   ["statsY", "Stats · vertical (%)", 50, 90, 68],
   ["statsSize", "Tamanho dos atributos (%)", 60, 140, 100],
   ["ratingX", "OVR · horizontal (%)", 0, 60, 9],
@@ -142,6 +152,10 @@ export function applyCardDesign(card, design = {}) {
     stats = card.querySelector(".card-stats"),
     rating = card.querySelector(".card-rating");
   caption.style.top = "57%";
+  card.style.setProperty(
+    "--name-background",
+    `rgba(${d.nameBackgroundRed}, ${d.nameBackgroundGreen}, ${d.nameBackgroundBlue}, ${1 - d.nameBackgroundTransparency / 100})`,
+  );
   caption.querySelector("h3").style.fontSize =
     `calc(var(--card-width) * ${(0.078 * d.nameSize) / 100})`;
   stats.style.top = "67%";

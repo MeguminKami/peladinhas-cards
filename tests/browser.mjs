@@ -3,6 +3,7 @@ import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
+import { SPECIAL_CARD_DESIGNS } from "../js/card-specials.js";
 const root = resolve(".");
 const server = createServer((req, res) => {
   const path = resolve(
@@ -2167,13 +2168,19 @@ try {
   });
   assert.equal(
     await page.locator("#special-comparison .card-special").count(),
-    10,
+    Object.keys(SPECIAL_CARD_DESIGNS).length,
   );
   const specialShapes = await page
     .locator("#special-comparison .card-surface")
     .evaluateAll((els) => els.map((el) => getComputedStyle(el).clipPath));
-  assert.equal(new Set(specialShapes).size, 10);
-  assert.equal(await page.locator(".special-motif").count(), 10);
+  assert.equal(
+    new Set(specialShapes).size,
+    Object.keys(SPECIAL_CARD_DESIGNS).length,
+  );
+  assert.equal(
+    await page.locator(".special-motif").count(),
+    Object.keys(SPECIAL_CARD_DESIGNS).length,
+  );
   await page
     .locator("#special-comparison")
     .screenshot({ path: "test-results/card-specials-desktop.png" });

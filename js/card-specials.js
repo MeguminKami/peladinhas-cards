@@ -1,5 +1,7 @@
+import { COLLECTION_EDITIONS } from "./card-collection.js";
 // Original silhouettes and engraved motifs for each earned edition.
 export const SPECIAL_CARD_DESIGNS = Object.freeze({
+  ...COLLECTION_EDITIONS,
   "in-form": {
     outline: "12,0 88,0 100,12 96,82 84,94 50,100 16,94 4,82 0,12",
     motif: '<path d="m65 25 10-8 10 8m-20 8 10-8 10 8m-20 8 10-8 10 8"/>',
