@@ -645,20 +645,24 @@ try {
     window.__testState.users.find((u) => u.uid === "pedro").role = "admin";
   });
   await navigate("#/game/test-game/feedback", "Avaliar");
-  assert.equal(await page.locator("[data-rating=overall]").inputValue(), "0");
+  assert.equal(await page.locator("[data-rating=overall]").inputValue(), "");
   assert.equal(
     await page.locator("[data-rating=goalkeeping]").inputValue(),
-    "0",
+    "",
   );
-  assert.equal(await page.locator("[data-rating=attitude]").inputValue(), "0");
-  await page.locator("[data-rating=overall]").selectOption("4");
+  assert.equal(await page.locator("[data-rating=attitude]").inputValue(), "");
+  await page
+    .locator('[data-dimension="overall"] .feedback-star[data-value="4"]')
+    .click();
   await page.waitForTimeout(650);
   await navigate("#/missions", "Missões");
   await navigate("#/game/test-game/feedback", "Avaliar");
   assert.equal(await page.locator("[data-rating=overall]").inputValue(), "4");
   for (const k of ["attack", "passing", "defense", "physical", "attitude"])
-    await page.locator(`[data-rating=${k}]`).selectOption("4");
-  await page.locator("[data-rating=goalkeeping]").selectOption("na");
+    await page
+      .locator(`[data-dimension="${k}"] .feedback-star[data-value="4"]`)
+      .click();
+  await page.locator('[data-dimension="goalkeeping"] .feedback-na').click();
   await page.getByRole("button", { name: "Enviar avaliação" }).click();
   await page.getByText("Avaliação enviada", { exact: true }).waitFor();
   await navigate("#/missions/new/joao", "Avaliar João");

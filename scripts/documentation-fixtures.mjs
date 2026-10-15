@@ -167,6 +167,21 @@ export async function seedDocumentation() {
           },
         })),
     );
+  state.feedback.push({
+    gameId: "demo-game-0",
+    raterId: "pedro",
+    targetId: "ana",
+    submitted: false,
+    ratings: {
+      overall: 4,
+      attack: 5,
+      passing: 4,
+      defense: 3,
+      physical: 4,
+      goalkeeping: null,
+      attitude: 5,
+    },
+  });
   const own = state.weeklyCards[0];
   state.history = Array.from({ length: 5 }, (_, index) => {
     const stats = Object.fromEntries(

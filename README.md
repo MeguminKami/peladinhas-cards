@@ -179,14 +179,14 @@ O resultado inclui o marcador das duas equipas e os golos e assistências de cad
 
 ## 05 · Avaliações pós-jogo
 
-Após um jogo encerrado, os participantes podem avaliar os restantes jogadores. O formulário organiza as avaliações por pessoa, indica o que já foi enviado e guarda os rascunhos automaticamente.
+Após um jogo encerrado, os participantes podem avaliar os restantes jogadores. Os jogadores estão separados por equipa, com molduras azuis e laranja. Cada dimensão ocupa uma linha com cinco estrelas clicáveis, preenchidas da esquerda até à escolhida. Os rascunhos são guardados automaticamente.
 
 <img src="docs/media/match-feedback.png" width="100%" alt="Área de feedback pós-jogo com progresso das avaliações e dimensões de desempenho por jogador." />
 
-| Avaliar                                        | Guardar                                     | Concluir                                    |
-| :--------------------------------------------- | :------------------------------------------ | :------------------------------------------ |
-| Classificar as dimensões de 0 a 5 estrelas.    | Os rascunhos são guardados automaticamente. | Enviar a avaliação quando estiver completa. |
-| Usar N/A em guarda-redes quando não aplicável. | Retomar as avaliações ainda por enviar.     | As avaliações submetidas ficam concluídas.  |
+| Avaliar                                                              | Guardar                                     | Concluir                                    |
+| :------------------------------------------------------------------- | :------------------------------------------ | :------------------------------------------ |
+| Tocar nas estrelas para escolher de 1 a 5, ou selecionar 0 estrelas. | Os rascunhos são guardados automaticamente. | Enviar a avaliação quando estiver completa. |
+| Escolher «Não jogou à baliza» quando não aplicável.                  | Retomar as avaliações ainda por enviar.     | As avaliações submetidas ficam concluídas.  |
 
 Os restantes membros consultam os agregados permitidos. As respostas individuais não são mostradas aos outros jogadores; a administração tem acesso de revisão.
 

@@ -26,6 +26,15 @@ flowchart TB
     C --> D["Aparelhos reais"]
 ```
 
+## Avaliação pós-jogo
+
+```powershell
+npm.cmd run test:feedback
+node tests/feedback.mjs --webkit
+```
+
+Verifica estrelas, teclado, toque, zero explícito, guarda-redes não aplicável, rascunhos, envio, avaliações antigas, separação por equipas e os quatro temas. O comando WebKit exige o motor Playwright instalado.
+
 ## Cobertura visual
 
 **Desktop:** 1440 · 1024 px &nbsp; / &nbsp; **Tablet:** 768 px

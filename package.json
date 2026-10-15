@@ -28,7 +28,8 @@
     "deploy:backend": "node scripts/deploy.mjs --backend",
     "test:hosting": "firebase emulators:exec --project demo-peladinhas-hosting --only hosting \"node tests/hosting.mjs\"",
     "pretest:hosting": "node scripts/build-hosting.mjs",
-    "simulate": "node scripts/simulate-evolution.mjs"
+    "simulate": "node scripts/simulate-evolution.mjs",
+    "test:feedback": "node tests/feedback.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
