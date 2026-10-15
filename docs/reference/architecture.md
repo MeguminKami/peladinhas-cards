@@ -2,6 +2,44 @@
 
 [← Documentação](../README.md) · [Desenvolvimento](../guides/development.md)
 
+## Mapa do sistema
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Browser / PWA<br/>HTML · CSS · ES Modules"] --> B["Authentication<br/>Identidade"]
+    A --> C["Firestore<br/>Dados e regras"]
+    A --> D["Storage<br/>Fotografias"]
+    A --> E["Cloud Functions<br/>Operações protegidas"]
+    C --> E
+    E --> C
+    E --> F["Web Push<br/>Alerta no dispositivo"]
+```
+
+## Onde alterar
+
+| Quero alterar…          | Pasta / entrada                     |
+| :---------------------- | :---------------------------------- |
+| Páginas e interações    | `js/`                               |
+| Layout, temas e cartas  | `css/`                              |
+| Operações protegidas    | `functions/`                        |
+| Permissões de dados     | `firestore.rules` · `storage.rules` |
+| Recursos públicos       | `assets/`                           |
+| Fontes de trabalho      | `design/sources/`                   |
+| Validação automática    | `tests/`                            |
+| Ferramentas de trabalho | `scripts/`                          |
+
+## Fronteiras de acesso
+
+**Membro → ações elegíveis** · **DBS → jogos permitidos** · **ADMIN → gestão da liga**
+
+A interface mostra as ações disponíveis. **As regras e as Functions autorizam cada operação.** Uma mudança de perspetiva visual não concede permissões.
+
+---
+
+<details>
+<summary><strong>Regras completas e implementação</strong></summary>
+
 ## Organização
 
 ```text
@@ -38,7 +76,8 @@ Na raiz ficam as entradas web e configurações usadas diretamente pelo browser/
 ## Fluxo de dados
 
 ```mermaid
-flowchart LR
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
     UI[HTML, CSS e ES Modules] --> AUTH[Firebase Authentication]
     UI --> DB[Firestore e regras]
     UI --> ST[Storage: fotografias]
@@ -103,3 +142,5 @@ A perspetiva visual de um papel não muda a identidade autenticada nem substitui
 `build:hosting` copia apenas entradas web, `js/`, `css/` e `assets/` para `.firebase/site`, e injeta no worker um inventário e hash. Não publica documentação, fontes de trabalho, testes, ferramentas nem segredos.
 
 O pacote de Functions usa a raiz como fonte porque partilha regras de cálculo com `js/`. `firebase.json` exclui os recursos visuais, documentação, originais, caches, dependências locais e segredos; as dependências npm são instaladas no ambiente de Functions.
+
+</details>

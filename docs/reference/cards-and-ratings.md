@@ -2,6 +2,57 @@
 
 [← Documentação](../README.md) · [Progressão por jogo](progression.md) · [Eventos](events-and-missions.md)
 
+## A carta em três passos
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Autoavaliação<br/>12 atributos · escala 0–20"] --> B["Base da carta<br/>escala 0–99"]
+    C["Avaliações externas"] --> B
+    B --> D["Atributos atuais"]
+    E["Progressão dos jogos"] --> D
+    F["Recompensas válidas"] --> D
+    D --> G["OVR por posição"]
+```
+
+| Momento                            | O que acontece                                        |
+| :--------------------------------- | :---------------------------------------------------- |
+| **Autoavaliação concluída**        | É criada a primeira carta.                            |
+| **Primeiro voto externo completo** | A base passa a 20% autoavaliação + 80% média externa. |
+| **Três votos externos completos**  | A carta passa a oficial.                              |
+| **Jogos avaliados**                | Alimentam a progressão dos atributos.                 |
+| **Fecho semanal**                  | Guarda a carta dessa semana no histórico.             |
+
+## Distinguir os indicadores
+
+| Indicador         | Significado                                                      |
+| :---------------- | :--------------------------------------------------------------- |
+| **Atributos**     | Capacidades individuais do jogador.                              |
+| **OVR**           | Média ponderada dos 12 atributos pela posição principal.         |
+| **Forma recente** | Últimas cinco avaliações agregadas de jogo disponíveis.          |
+| **Forma semanal** | Desempenho no ciclo; exige pelo menos duas avaliações recebidas. |
+| **—**             | Não há dados suficientes; não significa zero.                    |
+
+## Ciclo semanal · hora de Lisboa
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Quinta · 20:00<br/>Abre o ciclo"] --> B["Jogos e evolução"]
+    B --> C["Quarta · 12:00<br/>Fecha e guarda a carta"]
+    C --> D["Pausa"]
+    D --> A
+```
+
+**Uma carta fechada conserva o estado da semana.** A posição muda os pesos do OVR, não os atributos.
+
+[Ver a fórmula de progressão →](progression.md)
+
+---
+
+<details>
+<summary><strong>Regras completas e implementação</strong></summary>
+
 ## Da primeira carta à carta oficial
 
 A autoavaliação completa dos 12 atributos usa a escala 0–20 e permite criar a primeira carta. Desde o primeiro voto externo completo, a base usa 20% da autoavaliação e 80% da média externa. Com três avaliações externas completas, a carta passa a oficial.
@@ -41,3 +92,5 @@ Eventos e missões podem atribuir stats temporárias ou permanentes, cartas sema
 ## Implementação
 
 [`js/utils.js`](../../js/utils.js) contém o cálculo de atributos, OVR e estatísticas; [`js/card-week.js`](../../js/card-week.js) define o ciclo. [`js/data.js`](../../js/data.js) combina dados e snapshots para apresentação. A escrita dos agregados/histórico e a validação de operações protegidas pertencem às Functions e às regras Firestore.
+
+</details>

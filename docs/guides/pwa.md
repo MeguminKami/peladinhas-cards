@@ -2,6 +2,42 @@
 
 [← Documentação](../README.md) · [Publicação](deployment.md) · [Push](notifications.md)
 
+## O que é instalado
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Website por HTTPS"] --> B["Instalar pelo browser"]
+    B --> C["Ícone no dispositivo"]
+    C --> D["Janela própria<br/>Mesmo frontend e Firebase"]
+```
+
+| Android                                     | iPhone                                         |
+| :------------------------------------------ | :--------------------------------------------- |
+| Pedido nativo quando disponível.            | Abrir no Safari.                               |
+| Alternativa: instruções no menu do browser. | Partilhar → Adicionar ao ecrã principal.       |
+| Abrir pelo ícone instalado.                 | Ativar “Abrir como aplicação”, quando aparece. |
+
+**Não gera APK/IPA nem publica nas lojas.** A instalação utiliza a aplicação web.
+
+## Rede e atualizações
+
+| Situação            | Comportamento                                                 |
+| :------------------ | :------------------------------------------------------------ |
+| **Com Internet**    | Consultar a liga e guardar alterações.                        |
+| **Sem Internet**    | Ecrã de recuperação; recursos públicos da interface em cache. |
+| **Rede recuperada** | Verificar o servidor e recuperar o destino.                   |
+| **Nova versão**     | Oferecer atualizar ou adiar; não interromper formulários.     |
+
+**O cache não guarda pedidos Firebase, dados privados nem gravações.** O worker publicado é o gerado por `build:hosting`.
+
+[Ativação e leitura dos alertas →](notifications.md)
+
+---
+
+<details>
+<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
+
 ## Aplicação instalada
 
 A PWA é a aplicação web instalada pelo browser: recebe um ícone no ecrã inicial, abre em modo standalone e continua a usar o mesmo frontend e Firebase. A distribuição atual não cria um APK/IPA nem publica nas lojas.
@@ -39,3 +75,5 @@ O worker deve ser publicado a partir do build em `.firebase/site`, com inventár
 Depois de publicar por HTTPS, testar em iPhone e Android: instalação, arranque pelo ícone, conta, navegação, safe areas, teclado, fotografias, reabertura offline, regresso da rede e atualização de uma versão já instalada.
 
 A instalação Web Push no iPhone exige a aplicação no ecrã inicial e uma versão do sistema compatível. Os passos e limites estão no [guia de push](notifications.md).
+
+</details>

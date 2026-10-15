@@ -1,61 +1,81 @@
-# Mudança de repositório
+# Repositório e migração
 
-[← Documentação](../README.md) · [Arquitetura](../reference/architecture.md) · [Publicação](deployment.md)
+[← Documentação](../README.md) · [Desenvolvimento](development.md) · [Publicação](deployment.md)
 
-## Preparar a cópia
+## Localização atual
 
-O projeto está atualmente numa pasta do portefólio. Nenhum repositório novo foi criado nem nenhum remoto foi alterado. Para preparar o conteúdo isolado:
+| Elemento                | Destino                                                                                   |
+| :---------------------- | :---------------------------------------------------------------------------------------- |
+| **Código no GitHub**    | [MeguminKami/peladinhas-cards](https://github.com/MeguminKami/peladinhas-cards) · público |
+| **Pasta de trabalho**   | `C:\Users\Joao\Desktop\Projetos\peladinhas-cards`                                         |
+| **Aplicação publicada** | [pedalinhas-cards.web.app](https://pedalinhas-cards.web.app/)                             |
+| **Projeto Firebase**    | `pedalinhas-cards`                                                                        |
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Projetos/peladinhas-cards"] -->|"commit e push"| B["Repositório GitHub"]
+    A -->|"deploy"| C["Firebase Hosting e serviços"]
+    C --> D["Website e PWA instalada"]
+```
+
+**GitHub guarda o código. Firebase aloja a aplicação e os dados.** Um push não equivale a um deploy.
+
+## Trabalhar noutro computador
 
 ```powershell
-npm.cmd run test:docs
+git clone https://github.com/MeguminKami/peladinhas-cards.git
+cd peladinhas-cards
+npm.cmd ci
+npm.cmd run dev
+```
+
+Recuperar a chave privada VAPID por transferência segura apenas quando necessária. Não faz parte do clone.
+
+## Criar uma cópia limpa
+
+```powershell
 npm.cmd run export:repo
 ```
 
-A cópia fica em `.repository-export/peladinhas-cards/`. O inventário fica ao lado, em `.repository-export/inventory.json`. A exportação usa uma lista explícita de entradas; inclui aplicação, servidor, configurações públicas, regras, testes, scripts, documentação, originais de design e lockfile.
+| Inclui                                   | Exclui                                            |
+| :--------------------------------------- | :------------------------------------------------ |
+| Código, configurações públicas e regras. | Chaves privadas e ficheiros `.env*` / `.secret*`. |
+| Testes, scripts, documentação e design.  | Dependências, caches, builds e logs.              |
+| `package-lock.json`.                     | Histórico `.git`.                                 |
 
-O comando `export:repo` valida automaticamente as ligações da documentação antes de copiar.
+**Destino:** `.repository-export/peladinhas-cards/` · **Inventário:** `.repository-export/inventory.json`
 
-Não inclui `.git`, `node_modules`, `.firebase`, `test-results`, logs, ficheiros `.env*` ou `.secret*`. O script verifica ainda que o valor da chave VAPID local não aparece em nenhum ficheiro exportado, sem mostrar essa chave.
+O script verifica os links da documentação e a ausência do valor da chave privada local. A exportação é uma fotografia dos ficheiros atuais, não um substituto de commit e push.
 
-Esta cópia é uma fotografia do estado atual, incluindo alterações locais. Repetir a exportação depois de modificar o projeto. O script só recria a sua pasta de saída.
+## Se mudar apenas o repositório
 
-## Quando o destino estiver decidido
+**Mantém-se:** URL do site · Firebase · contas · dados · instalações PWA · subscrições push.
 
-### Publicar na conta GitHub
+Não é necessário ativar GitHub Pages nem criar outro projeto Firebase.
 
-No GitHub, abre [New repository](https://github.com/new), escolhe o nome `peladinhas-cards` e a visibilidade pretendida. Cria o repositório vazio, sem adicionar README, licença ou `.gitignore`: esses ficheiros já acompanham o projeto.
+<details>
+<summary><strong>Se mudar o domínio ou o projeto Firebase</strong></summary>
 
-Se estiveres a usar a cópia com o primeiro commit preparado em `.repository-export/github/peladinhas-cards`, abre um terminal nessa pasta e executa:
+| Rever                          | Ação                                                                       |
+| :----------------------------- | :------------------------------------------------------------------------- |
+| README                         | Atualizar as ligações da aplicação.                                        |
+| `js/config.js` e `.firebaserc` | Confirmar o projeto de destino.                                            |
+| Authentication                 | Autorizar o domínio; conservar `auth.weeklyfc.app` para contas existentes. |
+| Hosting / PWA                  | Publicar `.firebase/site`, gerado por `build:hosting`.                     |
+| Push                           | Rever `allowedPushScope` em `functions/push.js`.                           |
+| Outro projeto Firebase         | Rever também o endpoint permitido em `js/push-worker.js`.                  |
+| VAPID                          | Preservar o par público/privado e transferir a privada fora do Git.        |
 
-```powershell
-git push -u origin main
-```
+Uma nova origem não transporta sessões, localStorage, IndexedDB, instalações PWA ou subscrições push. Os utilizadores precisam de abrir a nova origem, voltar a instalar e ativar notificações.
 
-O Git pode pedir autenticação no GitHub pelo browser. Confirma antes com `git remote -v` que o destino corresponde à tua conta e ao nome escolhido. Para alterar o destino:
+</details>
 
-```powershell
-git remote set-url origin https://github.com/TEU_UTILIZADOR/TEU_REPOSITORIO.git
-```
+<details>
+<summary><strong>Como funciona a exportação</strong></summary>
 
-Depois do envio, clona o novo repositório para uma pasta de trabalho definitiva fora do portefólio. A cópia de preparação pode continuar guardada até confirmares o conteúdo no GitHub. O projeto original e o histórico do portefólio ficam preservados.
+O script usa uma lista explícita de entradas e recusa links simbólicos. Exclui `.git`, `node_modules`, `.firebase`, `test-results`, logs e segredos. Recria apenas `.repository-export/peladinhas-cards/`; não remove a pasta de trabalho.
 
-Mudar apenas o repositório conserva o site em `https://pedalinhas-cards.web.app`, o projeto Firebase e as instalações existentes. Não é necessário ativar GitHub Pages. A chave privada VAPID e outras credenciais ficam fora do Git; a configuração do Secret Manager continua a ser uma operação separada.
+Se criares um novo repositório a partir da exportação, preserva os ficheiros ocultos `.gitignore` e `.firebaserc`. Instala as dependências e valida antes do primeiro commit. Não copies o histórico do portefólio.
 
-Copiar o conteúdo da pasta exportada para a raiz do novo repositório, preservando os ficheiros ocultos `.gitignore` e `.firebaserc`. O `README.md` é a capa; a documentação e imagens usam caminhos relativos e acompanham a cópia.
-
-Instalar com `npm ci`, validar `check`, `test:docs` e os testes adequados. Só depois criar o commit e associar o remoto escolhido. Não transportar o histórico Git do portefólio por acidente; preservar histórico ou iniciar uma história nova é uma decisão para o momento da migração.
-
-## O que rever antes da primeira publicação
-
-| Elemento            | Verificação                                                                                                                                                                 |
-| :------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| URL da apresentação | O botão da demo no README deve apontar para o destino efetivamente publicado.                                                                                               |
-| Firebase            | `js/config.js` e `.firebaserc`: conservar o projeto existente ou decidir uma instalação nova.                                                                               |
-| Authentication      | Autorizar o novo domínio. O domínio técnico dos usernames existentes permanece igual.                                                                                       |
-| Hosting/PWA         | Publicar `.firebase/site`, obtido com `build:hosting`; caminhos e cache usam o âmbito relativo.                                                                             |
-| Web Push            | Atualizar `allowedPushScope` em `functions/push.js` para a nova origem/subpasta. Se mudar o projeto Firebase, atualizar também o endpoint permitido em `js/push-worker.js`. |
-| VAPID               | Manter `js/push-config.js` e recuperar a chave privada correspondente por transferência segura, fora do Git. Preservar a versão no Secret Manager se o projeto for o mesmo. |
-| Conta Firebase CLI  | Fazer login e confirmar permissões do projeto; não copiar credenciais da CLI para o repositório.                                                                            |
-| CI/publicação       | Configurar depois de conhecer o repositório e alojamento; nenhuma automação de produção é inventada nesta preparação.                                                       |
-
-Uma mudança de origem não transporta instalações PWA, localStorage, IndexedDB, sessões nem subscrições push do domínio antigo. Os utilizadores terão de abrir/instalar e ativar notificações na nova origem. Mudar apenas o repositório mantendo a URL pública não altera essa origem.
+</details>

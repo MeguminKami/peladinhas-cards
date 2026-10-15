@@ -2,6 +2,48 @@
 
 [← Documentação](../README.md) · [Desenvolvimento](development.md) · [Publicação](deployment.md)
 
+## Escolher pelo tipo de alteração
+
+| Alterei…                                 | Verificar                                         |
+| :--------------------------------------- | :------------------------------------------------ |
+| Qualquer módulo                          | `check`                                           |
+| Cálculos ou regras do produto            | `test`                                            |
+| Textos, imagens ou links da documentação | `test:docs`                                       |
+| Interface e fluxos                       | `test:ui` + `test:review`                         |
+| Permissões                               | `test:rules`                                      |
+| Functions                                | `test:backend`                                    |
+| Instalação, cache ou atualização         | `test:pwa`                                        |
+| Notificações                             | `test:push` + backend/regras conforme a alteração |
+| Pacote público                           | `test:hosting`                                    |
+
+Executar os scripts com `npm.cmd run NOME`; para os testes de lógica, usar `npm.cmd test`.
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Lógica"] --> B["Integração e permissões"]
+    B --> C["Browser e layout"]
+    C --> D["Aparelhos reais"]
+```
+
+## Cobertura visual
+
+**Desktop:** 1440 · 1024 px &nbsp; / &nbsp; **Tablet:** 768 px
+
+**Mobile:** 430 · 390 · 360 · 320 px &nbsp; / &nbsp; **Horizontal:** três dimensões
+
+| Automação local                          | Confirmar em produção / aparelho                       |
+| :--------------------------------------- | :----------------------------------------------------- |
+| Fixtures, emuladores, Chromium e WebKit. | Instalação física, teclado e apresentação dos alertas. |
+| Cache, offline e leitura sincronizada.   | Entrega Apple/Google e permissões cloud.               |
+
+**WebKit no computador ajuda a detetar problemas de Safari; não substitui um iPhone.**
+
+---
+
+<details>
+<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
+
 ## Escolher a verificação
 
 | Comando                | O que verifica                                                                      |
@@ -52,3 +94,5 @@ Para um teste específico, pode usar-se um emulador já iniciado, desde que se c
 Playwright/WebKit no computador não substitui um iPhone físico. A entrega Apple/Google, permissões IAM e faturação do Firebase também não são confirmadas pelos mocks. A validação depois do deploy inclui instalar, abrir pelo ícone, iniciar sessão, usar formulários/teclado, receber um alerta com a app fechada, tocar nele, voltar a abrir sem rede e verificar uma atualização da PWA.
 
 Os guias [PWA](pwa.md) e [push](notifications.md) detalham os cenários de cada plataforma.
+
+</details>

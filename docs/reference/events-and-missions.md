@@ -2,6 +2,50 @@
 
 [← Documentação](../README.md) · [Cartas e OVR](cards-and-ratings.md)
 
+## Escolher o formato
+
+| Formato                   | Como se decide                     | Quem recebe                                         |
+| :------------------------ | :--------------------------------- | :-------------------------------------------------- |
+| **Missão**                | Cumprir um objetivo validado.      | Cada participante elegível que concluir e reclamar. |
+| **Competição**            | Ordem de chegada à meta.           | As posições premiadas configuradas.                 |
+| **Votação**               | Votos dos participantes elegíveis. | Os vencedores após apuramento.                      |
+| **Competição controlada** | Ordem definida no ADMIN.           | As posições escolhidas e confirmadas.               |
+
+## Da criação à recompensa
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Configurar<br/>Participantes e regras"] --> B["Publicar ou agendar"]
+    B --> C["Participar<br/>Jogar ou votar"]
+    C --> D["Validar o resultado"]
+    D --> E["Confirmar se exigido"]
+    E --> F["Entregar e registar"]
+```
+
+## Objetivos e prémios
+
+| Objetivos                              | Recompensas                            |
+| :------------------------------------- | :------------------------------------- |
+| Jogos, golos, assistências e vitórias. | Stats temporárias ou permanentes.      |
+| Sequências com regras próprias.        | Carta semanal ou combinação com Stats. |
+| Participação individual ou coletiva.   | Aparência autorizada pelo servidor.    |
+
+| Regra essencial               | Resultado                                      |
+| :---------------------------- | :--------------------------------------------- |
+| **Requisitos de desbloqueio** | A missão só aparece após cumprir as condições. |
+| **Editar**                    | Conserva o estado e as entregas existentes.    |
+| **Cancelar missão**           | Revoga as entregas dessa missão.               |
+| **Apagar**                    | Apenas após cancelar e remover dependências.   |
+| **Histórico fechado**         | As cartas semanais preservam os snapshots.     |
+
+**O servidor valida progresso, votos e entregas.** O histórico público não expõe a identidade dos outros votantes.
+
+---
+
+<details>
+<summary><strong>Regras completas e implementação</strong></summary>
+
 O ADMIN gere esta área em `#/admin/events`; jogadores consultam calendário e histórico em `#/events`, tarefas em `#/missions` e detalhes em `#/event/{id}`.
 
 ## Gestão e resultados
@@ -73,3 +117,5 @@ As competições por objetivo aparecem nas Missões com o progresso individual. 
 A ordem de chegada é verificada pelos jogos finalizados. Quem atingir a meta antes fica à frente, mesmo que outra pessoa tenha um total maior mais tarde. Se a meta for atingida no mesmo jogo, aplica-se o desempate configurado; uma ordem fixa resolve a igualdade restante. Não existem tempos individuais de golos registados dentro do mesmo jogo.
 
 Ao preencher as posições premiadas, a competição encerra automaticamente (ou fica em revisão se exigir confirmação). A verificação ocorre ao finalizar/atualizar jogos e também a cada cinco minutos. Com uma posição premiada, o primeiro jogador a atingir a meta vence; com várias, o pódio segue a ordem de conclusão. Missões continuam a recompensar cada participante que cumprir o objetivo.
+
+</details>

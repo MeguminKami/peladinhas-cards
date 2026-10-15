@@ -2,6 +2,33 @@
 
 [← Documentação](../README.md) · [Guia PWA](../guides/pwa.md) · [Push](../guides/notifications.md)
 
+## Resumo da revisão
+
+| Área            | Trabalho registado                                       |
+| :-------------- | :------------------------------------------------------- |
+| **Interface**   | Tipografia, espaçamento, temas e estados.                |
+| **Mobile**      | Navegação, pódio, estatísticas e administração.          |
+| **Fluxos**      | Modais, pesquisa, notificações e navegação assíncrona.   |
+| **PWA**         | Instalação, cache, offline e atualização adiada.         |
+| **Push**        | Ativação, entrega, confirmação de leitura e diagnóstico. |
+| **Repositório** | README visual, guias e exportação sem segredos.          |
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Rever o produto"] --> B["Implementar"]
+    B --> C["Testar lógica e fluxos"]
+    C --> D["Inspecionar capturas"]
+    D --> E["Corrigir e repetir"]
+```
+
+**Este documento é um registo de trabalho.** Não prova que todas as alterações locais estejam publicadas. A entrega push real ficou dependente da correção do segredo cloud; ver o [estado das notificações](../guides/notifications.md).
+
+---
+
+<details>
+<summary><strong>Registo completo da revisão</strong></summary>
+
 Este documento regista a revisão local. Os procedimentos atuais de instalação e publicação estão nos guias; não confirma que o código local esteja publicado.
 
 As alterações foram feitas sobre o estado existente do projeto, preservando o trabalho anterior e a identidade das cartas, os quatro temas e os fluxos da liga.
@@ -83,3 +110,5 @@ Uma verificação posterior confirmou as funções push ativas em produção e o
 O par local foi validado e a chave pública coincide com a publicada. A correção preparada conserva esse par e as subscrições. O servidor passa a validar a chave privada e a correspondência antes de criar um teste, e guarda uma classificação segura da falha. Os testes de servidor constroem agora o pedido Web Push real encriptado/assinado, com chaves fictícias e sem enviar pela rede, além dos cenários de configuração inválida.
 
 A substituição do segredo cloud e a republicação das funções dependem da autorização explícita necessária para essa operação de produção. Esta preparação local não confirma ainda a entrega num aparelho físico.
+
+</details>

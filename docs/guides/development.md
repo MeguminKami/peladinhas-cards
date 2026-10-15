@@ -2,6 +2,42 @@
 
 [← Documentação](../README.md) · [Arquitetura](../reference/architecture.md) · [Testes](testing.md)
 
+## Arranque rápido
+
+| Requisito              | Quando é necessário                                          |
+| :--------------------- | :----------------------------------------------------------- |
+| **Node.js 22**         | Instalar dependências, executar scripts e servir o frontend. |
+| **Java 21**            | Testes com emulador Firestore.                               |
+| **Python + fonttools** | Apenas para regenerar fontes.                                |
+
+```powershell
+npm.cmd ci
+npm.cmd run dev
+```
+
+**Abrir:** `http://localhost:8080` · **Outra porta:** `npm.cmd run dev -- --port 8081`
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Editar"] --> B["Verificar sintaxe e lógica"]
+    B --> C["Rever no browser"]
+    C --> D["Corrigir e validar"]
+```
+
+> **Frontend local não significa Firebase emulado.** O servidor usa a configuração de `js/config.js`. Para explorar sem dados reais, usar os [testes com fixtures](testing.md).
+
+| Guardar no Git                           | Manter local                                                     |
+| :--------------------------------------- | :--------------------------------------------------------------- |
+| Código, regras, documentação e lockfile. | `.secret.local`, dependências, builds, logs e capturas de teste. |
+
+Os comandos usam `npm.cmd` no Windows; em macOS/Linux, usar `npm`.
+
+---
+
+<details>
+<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
+
 ## Ambiente
 
 O projeto usa HTML, CSS e ES Modules diretamente no browser. Não precisa de um bundler para desenvolvimento. Os scripts e o servidor usam **Node.js 22**, conforme `package.json`. Os emuladores Firestore precisam de **Java 21** no ambiente usado pelo projeto. A geração de fontes é opcional e usa Python com `fonttools`.
@@ -49,3 +85,5 @@ O service worker pode continuar a servir uma versão anterior já instalada. Par
 `node_modules/`, `.firebase/`, `test-results/`, `.repository-export/` e logs são gerados localmente e ignorados pelo Git. `package-lock.json` deve acompanhar o repositório para que `npm ci` reproduza as dependências.
 
 `.secret.local` contém a chave privada VAPID. Não entra em Git, Hosting, no pacote de Functions nem na exportação do repositório. É necessária uma cópia segura dessa chave para conservar subscrições push existentes; não a substituir por uma nova por conveniência.
+
+</details>

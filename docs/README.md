@@ -1,32 +1,69 @@
-# Documentação · Peladinhas Cards
+<div align="center">
 
-[← Apresentação do projeto](../README.md)
+<img src="media/hero.svg" width="100%" alt="Peladinhas Cards" />
 
-O README apresenta a experiência. Aqui estão os guias para trabalhar no projeto, as regras do produto e o registo da revisão realizada.
+# Documentação
 
-## Guias
+**Escolhe um objetivo. Consulta o resumo. Expande os detalhes quando precisares.**
 
-| Documento                                                | Para quê                                                                 |
-| :------------------------------------------------------- | :----------------------------------------------------------------------- |
-| [Desenvolvimento local](guides/development.md)           | Preparar o ambiente, configurar Firebase e conhecer o ciclo de trabalho. |
-| [Testes e validação](guides/testing.md)                  | Escolher os testes, usar emuladores e rever o resultado no browser.      |
-| [Publicação](guides/deployment.md)                       | Publicar Hosting, Functions e regras; atualizar a aplicação instalada.   |
-| [PWA e instalação](guides/pwa.md)                        | Comportamento em iPhone/Android, offline, cache e atualizações.          |
-| [Notificações push](guides/notifications.md)             | Permissões, envio, leitura, segurança e configuração VAPID.              |
-| [Mudança de repositório](guides/repository-migration.md) | Preparar uma cópia limpa e rever origens, caminhos e segredos.           |
+[← Projeto](../README.md) · [Aplicação ↗](https://pedalinhas-cards.web.app/)
 
-## Referência
+</div>
 
-| Documento                                                  | Conteúdo                                                           |
-| :--------------------------------------------------------- | :----------------------------------------------------------------- |
-| [Arquitetura e estrutura](reference/architecture.md)       | Pastas, módulos, fluxo de dados e permissões.                      |
-| [Cartas, avaliações e OVR](reference/cards-and-ratings.md) | Primeira carta, comunidade, posições, ciclo semanal e inatividade. |
-| [Progressão por jogo](reference/progression.md)            | Fórmula de evolução, limites e simulação reproduzível.             |
-| [Eventos e missões](reference/events-and-missions.md)      | Objetivos, votos, recompensas, elegibilidade e privacidade.        |
-| [Recursos de design](../design/README.md)                  | Originais, derivados e regeneração de fontes/ícones.               |
+## Por onde começar
 
-## Registo de trabalho
+| Quero trabalhar no projeto                           | Quero perceber o produto                                 | Quero publicar                                  |
+| :--------------------------------------------------- | :------------------------------------------------------- | :---------------------------------------------- |
+| [1. Preparar o ambiente](guides/development.md)      | [1. Cartas e avaliações](reference/cards-and-ratings.md) | [1. Escolher os testes](guides/testing.md)      |
+| [2. Conhecer a estrutura](reference/architecture.md) | [2. Evolução por jogo](reference/progression.md)         | [2. Publicar no Firebase](guides/deployment.md) |
+| [3. Validar alterações](guides/testing.md)           | [3. Missões e eventos](reference/events-and-missions.md) | [3. Confirmar nos aparelhos](guides/pwa.md)     |
 
-[Revisão da experiência](reports/experience-review.md) descreve as melhorias e os métodos de validação. É um registo da revisão; os guias acima documentam os procedimentos atuais.
+## Como os conceitos se ligam
 
-As imagens da apresentação vivem em [`media/`](media/). São recursos locais, com dados de demonstração. Regeneração: `npm run docs:images`.
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Avaliações da comunidade"] --> B["Base da carta"]
+    C["Jogos e feedback"] --> D["Progressão"]
+    B --> E["Carta atual e OVR"]
+    D --> E
+    F["Eventos e missões"] --> G["Recompensas"]
+    G --> E
+    E --> H["Histórico semanal"]
+```
+
+| Conceito       | Leitura rápida                             | Referência                                            |
+| :------------- | :----------------------------------------- | :---------------------------------------------------- |
+| **Carta**      | Identidade, posição e atributos.           | [Cartas e OVR](reference/cards-and-ratings.md)        |
+| **Progressão** | Como os jogos alteram os atributos.        | [Evolução por jogo](reference/progression.md)         |
+| **Missão**     | Um objetivo a cumprir.                     | [Eventos e missões](reference/events-and-missions.md) |
+| **PWA**        | A aplicação web instalada no dispositivo.  | [Instalação e offline](guides/pwa.md)                 |
+| **Push**       | Um alerta enviado ao sistema do telemóvel. | [Notificações](guides/notifications.md)               |
+
+## Desenvolvimento e operação
+
+| Documento                                      | Encontrar aqui                                         |
+| :--------------------------------------------- | :----------------------------------------------------- |
+| [Desenvolvimento local](guides/development.md) | Requisitos, arranque e configuração Firebase.          |
+| [Arquitetura](reference/architecture.md)       | Pastas, módulos, dados e permissões.                   |
+| [Testes](guides/testing.md)                    | Comandos por tipo de alteração e limites da automação. |
+| [Publicação](guides/deployment.md)             | Frontend, servidor, regras e confirmação após deploy.  |
+| [PWA](guides/pwa.md)                           | Instalação, cache, offline e atualizações.             |
+| [Notificações](guides/notifications.md)        | Ativação, envio, leitura e configuração VAPID.         |
+| [Repositório](guides/repository-migration.md)  | Localização atual, GitHub e cópias limpas.             |
+
+## Design e imagens
+
+<a href="../design/README.md"><img src="media/card-rarities.png" width="100%" alt="Galeria dos estilos de carta; abrir documentação de design." /></a>
+
+| Recurso                                | Onde                                      |
+| :------------------------------------- | :---------------------------------------- |
+| Originais, fontes e otimização         | [Recursos de design](../design/README.md) |
+| Banner e capturas da aplicação         | [Imagens da documentação](media/)         |
+| Regenerar capturas com dados fictícios | `npm run docs:images`                     |
+
+## Registo de revisão
+
+[Revisão da experiência e PWA →](reports/experience-review.md)
+
+Regista alterações e validações realizadas. O estado de publicação e as limitações devem ser confirmados nos guias; um teste local não comprova a entrega push num aparelho.

@@ -2,6 +2,41 @@
 
 [← Documentação](../README.md) · [Testes](testing.md) · [PWA](pwa.md) · [Push](notifications.md)
 
+## O que queres publicar?
+
+| Alteração                 | Comando                       | Publica                          |
+| :------------------------ | :---------------------------- | :------------------------------- |
+| Só interface              | `npm.cmd run deploy:frontend` | Hosting e PWA.                   |
+| Servidor ou permissões    | `npm.cmd run deploy:backend`  | Functions, regras e índices.     |
+| Atualização completa      | `npm.cmd run deploy`          | Frontend, servidor e regras.     |
+| Apenas preparar ficheiros | `npm.cmd run build:hosting`   | **Nada:** gera `.firebase/site`. |
+
+**Projeto:** `pedalinhas-cards` · **Aplicação:** [pedalinhas-cards.web.app](https://pedalinhas-cards.web.app/)
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Confirmar projeto"] --> B["Testar a alteração"]
+    B --> C["Preparar o frontend"]
+    C --> D["Publicar os serviços necessários"]
+    D --> E["Confirmar no browser e aparelhos"]
+```
+
+## Conferência rápida
+
+- [ ] Configuração Firebase e conta de publicação corretas.
+- [ ] Testes adequados à alteração concluídos.
+- [ ] Fluxos e layouts revistos no browser.
+- [ ] Após deploy: conta, dados, fotografias e ações principais.
+- [ ] Em mobile: instalação, atualização e recuperação sem rede.
+
+> **Push exige configuração própria.** Um deploy só do frontend não corrige a chave VAPID nem atualiza as Functions. Consultar [notificações](notifications.md).
+
+---
+
+<details>
+<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
+
 ## Projeto configurado
 
 O ID existente é **`pedalinhas-cards`**. Os scripts leem `js/config.js` e usam `--project` explicitamente; não dependem de um alias ativo. Confirmar a configuração antes de publicar uma instalação diferente.
@@ -84,3 +119,5 @@ npx.cmd firebase hosting:sites:list --project pedalinhas-cards
 ```
 
 O estado da execução local está no [relatório da revisão](../reports/experience-review.md).
+
+</details>

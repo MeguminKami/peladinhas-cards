@@ -2,6 +2,46 @@
 
 [← Documentação](../README.md) · [Cartas e OVR](cards-and-ratings.md)
 
+## O que faz um jogador evoluir
+
+```mermaid
+flowchart TB
+    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
+    A["Avaliação de cada dimensão"] --> D["Variação por atributo"]
+    B["Comparação com as equipas"] --> D
+    C["Resultado e contribuições"] --> D
+    D --> E["Aplicar limites e patamares"]
+    E --> F["Guardar decimais<br/>Apresentar valores arredondados"]
+```
+
+| Fator                           | Efeito                                                               |
+| :------------------------------ | :------------------------------------------------------------------- |
+| Avaliação acima das referências | Favorece ganhos.                                                     |
+| Golos e assistências            | Acrescentam bónus nas dimensões previstas.                           |
+| Vitória                         | Contribui para a evolução; não garante ganhos em todas as dimensões. |
+| Atributos elevados              | Crescem mais devagar.                                                |
+| Dimensão sem avaliação / GR N/A | Não altera os atributos dessa dimensão.                              |
+| Carta semanal fechada           | Preserva o snapshot guardado.                                        |
+
+## Exemplo de calibração
+
+| Jogos   |   0 |   5 |  10 |  12 |  18 |  30 |
+| :------ | --: | --: | --: | --: | --: | --: |
+| **OVR** |  60 |  74 |  85 |  88 |  91 |  94 |
+
+**É um cenário de teste, não uma previsão.** Usa um avançado com 4 estrelas, 3 golos e 2 assistências por jogo e 70% de vitórias; as condições completas estão abaixo.
+
+```powershell
+npm.cmd run simulate
+```
+
+**Limites principais:** atributos entre 0 e 99 · ganhos mais lentos no topo · +4 reservado a desempenho excecional.
+
+---
+
+<details>
+<summary><strong>Regras completas e implementação</strong></summary>
+
 Implementação partilhada pelo cliente e Cloud Functions: `js/utils.js`, versão `per-game-growth-v1`.
 
 A base mantém a combinação 20% autoavaliação / 80% comunidade e conversão 0–20 para 0–99. Jogos são reproduzidos por data e ID; cada delta é somado sem arredondamento intermédio. O OVR de início do jogo usa os pesos da posição principal e atributos arredondados, sem penalização por inatividade.
@@ -47,3 +87,5 @@ Cartas semanais fechadas preservam os valores guardados. Cartas atuais e histór
 Esta curva é um cenário de calibração, não uma garantia para todas as posições ou desempenhos. Testes específicos em `tests/progression.test.js` cobrem a curva, médias, limites, estagnação, perdas e precisão.
 
 O teto abaixo de 75 mantém-se em +4. A parcela acima de +3 é multiplicada por `clamp(estrelas − 4, 0, 1) × clamp(max(diferença_colegas, diferença_adversários)/0,5, 0, 1)`. O ganho completo de +4 exige 5 estrelas e vantagem de pelo menos 0,5 face a uma das equipas. Avaliações de 4,5 podem ganhar até +3,5; avaliações iguais às médias não recebem esta parcela excecional. Na simulação de 4 estrelas, 88 é atingido no 12.º jogo.
+
+</details>
