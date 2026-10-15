@@ -807,6 +807,9 @@ export function managedEvents(rebuild) {
     )
       return null;
     const result = publicManagedEvent(event, id);
+    const previewRewards = await ref.collection("private").doc("rewards").get();
+    result.rewardPreview = previewRewards.data()?.positions || [];
+
     if (event.kind === "mission") {
       const unlocked = missionUnlockedAt(
         event,

@@ -234,6 +234,11 @@ export function calculateInitialBaseline(
 }
 export function initialSelfWeight(communityCount, settings = CARD_SETTINGS) {
   if (!(communityCount >= 1)) return 1;
+  if (communityCount >= 5) {
+    // One basis point = 0.01%. Truncate each external share; self receives the remainder.
+    const eachExternal = Math.floor(9600 / communityCount);
+    return (10000 - eachExternal * communityCount) / 10000;
+  }
   return Math.min(0.2, settings.selfWeight ?? 0.2, 1 / (communityCount + 1));
 }
 export function calculateGameAggregate(feedback) {

@@ -1,4 +1,5 @@
 import { cardWeek } from "./card-week.js";
+import { canEditRating } from "./rating-window.js";
 import { db, storage } from "./firebase.js";
 import {
   collection,
@@ -80,14 +81,24 @@ export const saveProfile = (uid, changes) =>
     ...changes,
     updatedAt: serverTimestamp(),
   });
-export async function saveInitial(uid, ratings20) {
+export async function saveInitial(uid, ratings20, submit = true) {
   const target = doc(db, "initialRatings", uid);
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
+    if (!canEditRating(s.data(), new Date(), true))
+      throw Error("O prazo de 7 dias para editar a autoavaliação terminou.");
+    const completed = submit || s.data()?.completed === true;
+    if (completed && !completeInitial(ratings20))
+      throw Error("Preenche os 12 atributos.");
     const value = {
       uid,
       ratings20,
-      completed: completeInitial(ratings20),
+      completed,
+      submittedAt: s.data()?.completed
+        ? s.data().submittedAt || s.data().createdAt
+        : completed
+          ? serverTimestamp()
+          : null,
       updatedAt: serverTimestamp(),
       createdAt: s.data()?.createdAt || serverTimestamp(),
     };
@@ -103,6 +114,8 @@ export async function saveCommunity(
   const target = doc(db, "communityRatings", `${raterId}_${targetId}`);
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
+    if (!canEditRating(s.data()))
+      throw Error("O prazo de 7 dias para editar a avaliação terminou.");
     submit = submit || s.data()?.submitted === true;
     if (submit && !completeInitial(ratings20))
       throw Error("Preenche os 12 atributos.");
@@ -113,7 +126,7 @@ export async function saveCommunity(
       submitted: submit,
       updatedAt: serverTimestamp(),
       submittedAt: s.data()?.submitted
-        ? s.data().submittedAt
+        ? s.data().submittedAt || s.data().createdAt
         : submit
           ? serverTimestamp()
           : null,
@@ -133,7 +146,9 @@ export async function saveFeedback(
   const target = doc(db, `games/${gid}/feedback/${raterId}_${targetId}`);
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
-    if (s.data()?.submitted) throw Error("Esta avaliação já foi concluída.");
+    if (!canEditRating(s.data()))
+      throw Error("O prazo de 7 dias para editar a avaliação terminou.");
+    submit = submit || s.data()?.submitted === true;
     if (submit && !completeFeedback(ratings))
       throw Error("Preenche as dimensões obrigatórias.");
     tx.set(target, {
@@ -144,7 +159,11 @@ export async function saveFeedback(
       submitted: submit,
       createdAt: s.data()?.createdAt || serverTimestamp(),
       updatedAt: serverTimestamp(),
-      submittedAt: submit ? serverTimestamp() : null,
+      submittedAt: s.data()?.submitted
+        ? s.data().submittedAt || s.data().createdAt
+        : submit
+          ? serverTimestamp()
+          : null,
     });
   });
 }

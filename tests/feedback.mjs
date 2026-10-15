@@ -279,6 +279,67 @@ try {
       .inputValue(),
     "na",
   );
+  const firstSubmission = await page.evaluate(() =>
+    window.__testState.feedback
+      .find(
+        (row) =>
+          row.gameId === "demo-game-0" &&
+          row.targetId === "ana" &&
+          row.raterId === "pedro",
+      )
+      .submittedAt.toISOString(),
+  );
+  await page
+    .getByRole("button", { name: "Editar avaliações enviadas", exact: true })
+    .click();
+  await page
+    .locator(
+      '[data-target="ana"] [data-dimension="attack"] .feedback-star[data-value="4"]',
+    )
+    .tap();
+  await page.waitForFunction(() =>
+    window.__testState.feedback.some(
+      (row) =>
+        row.gameId === "demo-game-0" &&
+        row.targetId === "ana" &&
+        row.raterId === "pedro" &&
+        row.ratings.attack === 4 &&
+        row.submitted,
+    ),
+  );
+  assert.equal(
+    await page.evaluate(() =>
+      window.__testState.feedback
+        .find(
+          (row) =>
+            row.gameId === "demo-game-0" &&
+            row.targetId === "ana" &&
+            row.raterId === "pedro",
+        )
+        .submittedAt.toISOString(),
+    ),
+    firstSubmission,
+  );
+  await page.getByRole("button", { name: "Submeter", exact: true }).click();
+  await page.locator('[data-target="ana"][data-submitted="true"]').waitFor();
+  await context.clock.install({ time: new Date(Date.now() + 8 * 86400000) });
+  await page.evaluate(() => {
+    location.hash = "#/games";
+  });
+  await page.locator(".game-list").waitFor();
+  await openFeedback();
+  assert.equal(
+    await page
+      .getByRole("button", { name: "Editar avaliações enviadas", exact: true })
+      .count(),
+    0,
+  );
+  assert.equal(
+    await page
+      .locator(".feedback-form input[data-feedback-choice]:enabled")
+      .count(),
+    0,
+  );
   await page.locator('[data-feedback-team="B"]').click();
   assert.equal(
     await page

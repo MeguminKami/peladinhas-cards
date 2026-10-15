@@ -1637,7 +1637,7 @@ test("OVR usa base e melhorias, nunca os valores de cartas guardadas", async (t)
   }
 });
 
-test("autoavaliação pesa um voto entre dez avaliações externas, abaixo de 20%", async (t) => {
+test("autoavaliação pesa 4% quando existem pelo menos cinco avaliações externas", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00:00Z") });
   t.after(() => t.mock.timers.reset());
   const uid = "self-weight-ten-votes";
@@ -1646,8 +1646,23 @@ test("autoavaliação pesa um voto entre dez avaliações externas, abaixo de 20
   for (let i = 0; i < 10; i++) await db.doc(`communityRatings/self-weight-${i}`).set({ raterId: `rater-${i}`, targetId: uid, ratings20: all(15), submitted: true, submittedAt: Timestamp.now(), createdAt: Timestamp.now() });
   await ensureHistory.run({ auth: { uid }, data: {} });
   const snapshot = (await db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`).get()).data();
-  const expected = Math.round((15 * 10 / 11) * 99 / 20);
+  const expected = Math.round(15 * 0.96 * 99 / 20);
   assert.deepEqual(snapshot.stats, all(expected));
   assert.equal(snapshot.ovr, expected);
   assert.ok(expected > Math.round(15 * 0.8 * 99 / 20));
+});
+
+test("correção administrativa também respeita 7 dias desde a submissão", async (t) => {
+  t.mock.timers.enable({ apis:["Date"],now:new Date("2026-10-23T12:00Z") });
+  t.after(()=>t.mock.timers.reset());
+  const adminId="rating-window-admin";
+  await db.doc(`users/${adminId}`).set({uid:adminId,role:"admin",disabled:false});
+  const submittedAt=Timestamp.fromDate(new Date("2026-10-17T12:00Z"));
+  const ref=db.doc("communityRatings/window-test");
+  await ref.set({raterId:"one",targetId:"two",submitted:true,ratings20:all(12),submittedAt,createdAt:submittedAt});
+  const request={auth:{uid:adminId},data:{kind:"community",id:"window-test",ratings:all(13)}};
+  await correctRating.run(request);
+  assert.equal((await ref.get()).data().submittedAt.toMillis(),submittedAt.toMillis());
+  t.mock.timers.setTime(new Date("2026-10-24T12:00Z").getTime());
+  await assert.rejects(correctRating.run(request), /7 dias/);
 });

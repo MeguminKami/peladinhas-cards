@@ -8,6 +8,7 @@ import {
   asDate,
   participants,
   calculateInitialBaseline,
+  initialSelfWeight,
   calculatePlayerStats,
   matchPerformance,
   matchOutcome,
@@ -66,8 +67,10 @@ async function read(path, list = false) {
   return docs;
 }
 const users = await read("users", true);
-const user = users.find(user => /carlos/i.test(user.displayName || user.username || ""));
-if (!user) throw Error("Carlos não encontrado.");
+const query = (process.argv[2] || "Carlos").toLocaleLowerCase("pt-PT");
+const candidates = users.filter(user => `${user.displayName || ""} ${user.username || ""}`.toLocaleLowerCase("pt-PT").includes(query));
+const user = candidates.find(user => [user.displayName, user.username].some(value => value?.toLocaleLowerCase("pt-PT") === query)) || (candidates.length === 1 ? candidates[0] : null);
+if (!user) throw Error(`Jogador não identificado de forma única: ${candidates.map(user => user.displayName || user.username).join(", ")}`);
 const cycle = cardWeek();
 const previousWeek = cardWeek(new Date(+cycle.opensAt - 1)).weekId;
 const [initial, community, games, summaries, balances, rewards, previous, current, published, settings] = await Promise.all([
@@ -90,5 +93,5 @@ const rows = ATTRIBUTES.map(([key,name]) => ({
   key,name,previous:previous?.stats?.[key],published:published?.stats?.[key] ?? current?.stats?.[key],difference:(published?.stats?.[key] ?? current?.stats?.[key])-previous?.stats?.[key],self20:initial?.ratings20?.[key],community20:community?.ratings20?.[key],weight:calculated.ovrCalculation.weights[key],
   oldRuleBase:oldRule.baseStats[key],oldRuleGame:oldRule.progression.rows.find(row=>row.key===key).contributions,oldRuleFinal:oldRule.stats[key],newBase20:calculated.progression.rows.find(row=>row.key===key).initial20,newBase99:calculated.baseStats[key],gameDeltas:calculated.progression.rows.find(row=>row.key===key).contributions,newFinal:calculated.stats[key],
 }));
-console.log(JSON.stringify({ checkedAt:new Date(), name:user.displayName, position:user.primaryPosition,previousWeek, currentWeek:cycle.weekId,selfUpdated:initial?.updatedAt,communityCount:community?.count,communityUpdated:community?.updatedAt,oldRuleSelfWeight:.2,newRuleSelfWeight:Math.min(.2,1/(community.count+1)),previousOvr:previous?.ovr,publishedOvr:published?.ovr,currentStoredOvr:current?.ovr,previousExact:previous?.ovrCalculation?.rawExact ?? ATTRIBUTES.reduce((sum,[key])=>sum+(previous.stats[key]||0)*(previousWeights?.[key]||0),0)/100,publishedExact:publishedCalculation.rawExact,oldRuleCalculatedOvr:oldRule.ovr,newRuleCalculatedOvr:calculated.ovr,newRuleExact:calculated.ovrCalculation.rawExact,inactivity:calculated.inactivity,rewards:calculated.eventBoosts,rows},null,2));
+console.log(JSON.stringify({ checkedAt:new Date(), name:user.displayName, position:user.primaryPosition,previousPosition:previous?.primaryPosition,previousWeights:previous?.ovrCalculation?.weights,previousInactivity:previous?.inactivity,previousWeek, currentWeek:cycle.weekId,selfUpdated:initial?.updatedAt,communityCount:community?.count,communityUpdated:community?.updatedAt,oldRuleSelfWeight:.2,newRuleSelfWeight:initialSelfWeight(community.count),previousOvr:previous?.ovr,publishedOvr:published?.ovr,currentStoredOvr:current?.ovr,previousExact:previous?.ovrCalculation?.rawExact ?? ATTRIBUTES.reduce((sum,[key])=>sum+(previous.stats[key]||0)*(previousWeights?.[key]||0),0)/100,publishedExact:publishedCalculation.rawExact,oldRuleCalculatedOvr:oldRule.ovr,newRuleCalculatedOvr:calculated.ovr,newRuleExact:calculated.ovrCalculation.rawExact,baseOvr:withoutGames.ovr,gameEffectOnOvr:calculated.ovr-withoutGames.ovr,inactivity:calculated.inactivity,rewards:calculated.eventBoosts,rows},null,2));
 console.log(JSON.stringify({ gameReferences: balances.filter(row=>row.playerOvr?.[user.uid]!==undefined).map(row=>({gameId:row.id,title:games.find(game=>game.id===row.id)?.title,ovrAtMatch:row.playerOvr[user.uid]})), weeklyHistory:(await read(`users/${user.uid}/cardHistory`,true)).map(row=>({week:row.weekId,ovr:row.ovr,locked:row.locked})) },null,2));

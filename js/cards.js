@@ -1,3 +1,4 @@
+import { trendArrow } from "./icons.js";
 import { cardClip, expandCardOutline } from "./card-geometry.js";
 import { applyCardTemplate } from "./card-design.js";
 import { cardPhotoStyles } from "./card-photo.js";
@@ -74,7 +75,7 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.hasCard !== false &&
     Number.isFinite(player.ovrDelta) &&
     player.ovrDelta !== 0
-      ? `<span class="card-ovr-trend ${player.ovrDelta > 0 ? "positive" : "negative"}" role="img" aria-label="${player.ovrDelta > 0 ? "Subiu" : "Desceu"} OVR face à semana anterior">${player.ovrDelta > 0 ? "↑" : "↓"}</span>`
+      ? `<span class="card-ovr-trend ${player.ovrDelta > 0 ? "positive" : "negative"}" role="img" aria-label="${player.ovrDelta > 0 ? "Subiu" : "Desceu"} OVR face à semana anterior">${trendArrow(player.ovrDelta)}</span>`
       : "";
   return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${special ? " card-special" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${ornament}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
     0,
@@ -92,7 +93,7 @@ function cardStatTrend(current, previous) {
   if (!Number.isFinite(current) || !Number.isFinite(previous)) return "";
   const delta = Math.round((current - previous) * 100) / 100;
   if (!delta) return "";
-  return `<sup class="card-stat-trend ${delta > 0 ? "positive" : "negative"}" aria-label="${delta > 0 ? "Subiu" : "Desceu"} face à semana anterior" title="Face à semana anterior">${delta > 0 ? "↑" : "↓"}</sup>`;
+  return `<sup class="card-stat-trend ${delta > 0 ? "positive" : "negative"}" aria-label="${delta > 0 ? "Subiu" : "Desceu"} face à semana anterior" title="Face à semana anterior">${trendArrow(delta)}</sup>`;
 }
 export function weeklyEvolution(player) {
   if (!player?.hasCard) return "";
@@ -104,7 +105,7 @@ export function weeklyEvolution(player) {
   ).map(([key]) => player.stats[key] - player.previousStats[key]);
   const up = changes.filter((value) => value > 0).length;
   const down = changes.filter((value) => value < 0).length;
-  return `<div class="weekly-evolution" aria-label="Evolução face à carta da semana anterior"><span class="weekly-evolution-label">Face à semana anterior</span><span class="weekly-evolution-value ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">${delta > 0 ? "↑ +" : delta < 0 ? "↓ −" : "= "}${Math.abs(delta)} OVR</span>${up ? `<span class="weekly-evolution-value positive">↑ ${up} atributos</span>` : ""}${down ? `<span class="weekly-evolution-value negative">↓ ${down} atributos</span>` : ""}</div>`;
+  return `<div class="weekly-evolution" aria-label="Evolução face à carta da semana anterior"><span class="weekly-evolution-label">Face à semana anterior</span><span class="weekly-evolution-value ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">${delta ? trendArrow(delta) : ""}${delta > 0 ? "+" : delta < 0 ? "−" : "= "}${Math.abs(delta)} OVR</span>${up ? `<span class="weekly-evolution-value positive">${trendArrow(1)} ${up} atributos</span>` : ""}${down ? `<span class="weekly-evolution-value negative">${trendArrow(-1)} ${down} atributos</span>` : ""}</div>`;
 }
 export function bindImages(root = document) {
   root

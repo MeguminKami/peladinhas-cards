@@ -1,4 +1,18 @@
 const paths = {
+  goals: "M4 20V6h16v14 M4 10h16 M8 6v14 M16 6v14 M4 15h9 M20 15h-2 M17 17h.01 M20 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  assists: "M3 17h6a5 5 0 0 0 5-5V5 m-4 4 4-4 4 4 M3 7h4 M3 11h2 M18 17h3 M19.5 15.5v3",
+  appearances: "m8 3-5 4 3 4 2-2v12h8V9l2 2 3-4-5-4 M9 3a3 3 0 0 0 6 0",
+  wins: "M8 3h8v8a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 15v6 M8 21h8 m2-13 1.5 1.5L14 7",
+  streak: "m13 2-2 7 5-2-1 5 4-1-7 11 1-8-5 2 2-7-4 1 7-8Z",
+  unbeatenWins: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z m-4 10 3 3 5-6 M12 5v2",
+  unbeatenGames: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z m-4 10 3 3 5-6",
+  cleanSheets: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z M9 9h6v7H9Z",
+  goalContributions: "M3 20V6h11v5 M3 10h11 M7 6v14 M3 15h7 M13 19h3a5 5 0 0 0 5-5v-3 m-3 3 3-3 2 3",
+  vote: "m9 3 8 5-5 8-8-5Z M4 14H2v7h20v-7h-5 M9 17h6",
+  decision: "m14 3 7 7-3 3-7-7Z m0 6-7 7 M3 21h12 M5 18h8v3",
+  rewardCard: "m8 2 4 2 4-2 5 4v12l-9 4-9-4V6Z M8 9h8 M8 13h8 M10 17h4",
+  rewardStats: "M4 20h16 M7 16v-5 M12 16V8 M17 16V4 m-3 3 3-3 3 3",
+
   install: "M12 3v12 m-4-4 4 4 4-4 M4 16v5h16v-5",
   menu: "M4 6h16 M4 12h16 M4 18h16",
   tickets: "M4 4h16v12H9l-5 4Z M8 8h8 M8 12h5",
@@ -30,3 +44,13 @@ const paths = {
 };
 export const icon = (name, cls = "") =>
   `<svg class="ui-icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.ball}"/></svg>`;
+
+// A compact, faceted arrow shared by cards and profile comparisons.
+export const trendArrow = (delta) =>
+  `<svg class="trend-arrow${delta < 0 ? " trend-arrow-down" : ""}" viewBox="0 0 16 20" fill="none" aria-hidden="true" focusable="false"><path class="trend-arrow-body" d="M8 1.5 14.5 8H10v9.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-facet" d="M8 1.5V17.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-edge" d="m2 7.5 6-6 6 6"/></svg>`;
+
+export function eventIcon(event = {}) {
+  if (event.method === "vote" || (!event.method && event.kind === "vote")) return "vote";
+  if (event.method === "admin") return "decision";
+  return ({ games: "appearances", goals: "goals", assists: "assists", wins: "wins", winStreak: "streak", unbeatenWins: "unbeatenWins", unbeatenGames: "unbeatenGames", goalsAndAssists: "goalContributions", cleanSheets: "cleanSheets" })[event.objective?.metric] || "trophy";
+}

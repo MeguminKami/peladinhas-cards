@@ -2691,9 +2691,11 @@ main.wide-layout {
 
 .event-builder[data-creation-type=mission] .eyebrow{color:#89b9ff}.event-builder[data-creation-type=mission] .event-editor-steps [aria-current=step]{border-color:#89b9ff;background:rgba(137,185,255,.09)}.event-context-note{padding:16px;border-radius:12px;background:rgba(137,185,255,.07);line-height:1.7;margin-bottom:20px}.event-editor-step .event-switches:empty{display:none}
 
-/* Weekly changes stay beside the values on every card size. */
-.football-card .card-stats b { display: flex; align-items: center; justify-content: center; gap: 2px; }
-.football-card .card-stat-trend { font-size: calc(var(--card-width) * .029); font-weight: 850; line-height: 1; white-space: nowrap; }
-.football-card .card-ovr-trend { top: 34%; font-size: calc(var(--card-width) * .034); white-space: nowrap; }
-.football-card :is(.card-stat-trend,.card-ovr-trend).positive { color: #087a32; background: #e9fff0; border-radius: 3px; padding: 2px; text-shadow: none; }
-.football-card :is(.card-stat-trend,.card-ovr-trend).negative { color: #b31827; background: #fff0f0; border-radius: 3px; padding: 2px; text-shadow: none; }
+/* Faceted movement marks are part of the card typography, without badges. */
+.football-card .card-stats b { display: flex; align-items: center; justify-content: center; gap: calc(var(--card-width) * .008); }
+.football-card .card-stat-trend { display: inline-flex; align-items: center; width: calc(var(--card-width) * .033); height: calc(var(--card-width) * .043); flex-shrink: 0; line-height: 1; }
+.football-card .card-ovr-trend { display: inline-flex; top: 28%; left: calc(100% + var(--card-width) * .012); width: calc(var(--card-width) * .043); height: calc(var(--card-width) * .056); }
+.football-card :is(.card-stat-trend,.card-ovr-trend).positive { color: #079c58; --trend-glow: #13b97055; }
+.football-card :is(.card-stat-trend,.card-ovr-trend).negative { color: #db3048; --trend-glow: #f43e5755; }
+.football-card.card-special :is(.card-stat-trend,.card-ovr-trend).positive { color: #4ce9a0; }
+.football-card.card-special :is(.card-stat-trend,.card-ovr-trend).negative { color: #ff657b; }

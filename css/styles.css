@@ -2520,9 +2520,9 @@ td small {
 
 .weekly-evolution { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 16px 0; }
 .weekly-evolution-label { flex-basis: 100%; color: var(--text-muted); text-align: center; font-size: .75rem; }
-.weekly-evolution-value { display: inline-flex; border: 1px solid currentColor; border-radius: 8px; padding: 6px 9px; font-size: .78rem; font-weight: 750; font-variant-numeric: tabular-nums; }
-.weekly-evolution-value.positive { color: #58d68d; background: #58d68d12; }
-.weekly-evolution-value.negative { color: #ff7b7b; background: #ff7b7b12; }
+.weekly-evolution-value { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; font-size: .78rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.weekly-evolution-value.positive { color: #58d68d; }
+.weekly-evolution-value.negative { color: #ff7b7b; }
 .weekly-evolution-value.neutral, .weekly-evolution-note { color: var(--text-muted); }
 .weekly-evolution-note { font-size: .75rem; text-align: center; }
 
@@ -2531,3 +2531,49 @@ td small {
 .weekly-card-choice[aria-pressed="true"] { border-color: var(--accent); }
 .weekly-card-choice:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .weekly-card-choice .football-card { pointer-events: none; max-width: 100%; }
+
+.trend-arrow { display: block; width: 100%; height: 100%; flex-shrink: 0; overflow: visible; filter: drop-shadow(0 1px .6px #081a2070) drop-shadow(0 0 2px var(--trend-glow, #ffffff12)); }
+.trend-arrow-body { fill: currentColor; }
+.trend-arrow-facet { fill: #fff; opacity: .22; }
+.trend-arrow-edge { stroke: #fff; stroke-opacity: .38; stroke-width: .65; stroke-linejoin: round; }
+.trend-arrow-down { transform: rotate(180deg); }
+:is(.attribute-change,.weekly-evolution-value) > .trend-arrow { width: 11px; height: 14px; }
+:is(.attribute-change.is-positive,.weekly-evolution-value.positive) { --trend-glow: #28d88935; }
+:is(.attribute-change.is-negative,.weekly-evolution-value.negative) { --trend-glow: #ff506835; }
+
+/* The event introduction shares the heading row on wide screens. */
+.mission-heading .mission-event-description {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin: 0 12px;
+  color: var(--text-muted);
+  font-size: .85rem;
+  font-weight: 400;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.mission-heading .mission-competition-label { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .mission-heading .mission-event-description {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0;
+  }
+}
+
+.event-title-with-icon { display: flex; align-items: center; gap: 10px; }
+.event-title-with-icon .ui-icon { width: 24px; height: 24px; flex-shrink: 0; color: var(--accent); }
+.event-reward-markers { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 8px 0; color: var(--text-muted); font-size: .75rem; }
+.event-reward-markers > span { display: inline-flex; align-items: center; gap: 6px; }
+.event-reward-markers .ui-icon { width: 16px; height: 16px; color: var(--accent); }
+.event-reward-showcase { padding-top: 20px; border-top: 1px solid var(--border); }
+.event-reward-grid { display: grid; gap: 20px; margin-top: 16px; }
+.event-reward-prize { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; min-width: 0; }
+.event-reward-copy { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.event-reward-copy h3 { margin: 0 0 8px; }
+.event-reward-copy p { color: var(--text-secondary); font-size: .85rem; line-height: 1.6; }
+.event-reward-copy small { display: block; font-size: .75rem; line-height: 1.6; }
+.event-reward-card { display: flex; justify-content: center; padding: 12px; max-width: 100%; filter: drop-shadow(0 8px 22px #c6a24e22); }
+.event-reward-card .football-card { max-width: 100%; }
+@media(max-width: 640px) { .event-reward-card { flex-basis: 100%; } }

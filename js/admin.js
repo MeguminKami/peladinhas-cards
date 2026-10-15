@@ -4,6 +4,7 @@ import { mountEventAdmin } from "./events.js";
 import { cardWeek } from "./card-week.js";
 import { ADMIN_AREAS } from "./admin-menu.js";
 import * as DB from "./db.js";
+import { canEditRating } from "./rating-window.js";
 import {
   THEMES,
   ATTRIBUTES,
@@ -315,7 +316,7 @@ export async function rawRatings(ctx, uid) {
               mean = values.length
                 ? (values.reduce((s, v) => s + v, 0) / values.length).toFixed(1)
                 : "—";
-            return `<tr><td>${esc(r.kind)}<small>${esc(ctx.league.games.find((g) => g.id === r.gameId)?.title || "0–20")}</small></td><td>@${esc(name(r.raterId))}</td><td>@${esc(name(r.targetId))}</td><td><span class="rating-average">${mean}<small> / ${r.kind === "Pós-jogo" ? 5 : 20}</small></span></td><td><span class="pill ${r.submitted ? "success" : "warning"}">${r.submitted ? "Enviada" : "Rascunho"}</span></td><td><div class="actions compact"><button type="button" class="btn btn-ghost" data-view="${rows.indexOf(r)}">${icon("plus")}Ver</button><button type="button" class="btn btn-secondary" data-correct="${rows.indexOf(r)}">${icon("edit")}Corrigir</button></div></td></tr>`;
+            return `<tr><td>${esc(r.kind)}<small>${esc(ctx.league.games.find((g) => g.id === r.gameId)?.title || "0–20")}</small></td><td>@${esc(name(r.raterId))}</td><td>@${esc(name(r.targetId))}</td><td><span class="rating-average">${mean}<small> / ${r.kind === "Pós-jogo" ? 5 : 20}</small></span></td><td><span class="pill ${r.submitted ? "success" : "warning"}">${r.submitted ? "Enviada" : "Rascunho"}</span></td><td><div class="actions compact"><button type="button" class="btn btn-ghost" data-view="${rows.indexOf(r)}">${icon("plus")}Ver</button><button type="button" class="btn btn-secondary" data-correct="${rows.indexOf(r)}" ${canEditRating(r) ? "" : 'disabled title="Prazo de edição de 7 dias terminado"'}>${icon("edit")}Corrigir</button></div></td></tr>`;
           })
           .join("")}</tbody></table></div>`
       : empty("Sem avaliações", "Experimenta outros filtros.");

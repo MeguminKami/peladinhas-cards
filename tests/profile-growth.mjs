@@ -104,11 +104,11 @@ try {
   await page.locator(".attribute-grid").waitFor();
   assert.match(
     await page.locator(".attribute-change.is-positive").innerText(),
-    /↑\s*\+3/,
+    /\+3/,
   );
   assert.match(
     await page.locator(".attribute-change.is-negative").innerText(),
-    /↓\s*−2/,
+    /−2/,
   );
   assert.equal(await page.locator(".attribute-change.is-neutral").count(), 10);
   const currentWeek = await page.evaluate(async () => {
@@ -193,7 +193,7 @@ try {
         await currentCard
           .locator(".card-stat-trend, .card-ovr-trend")
           .allTextContents()
-      ).every((text) => /^[↑↓]$/.test(text)),
+      ).every((text) => text === ""),
       "Cards outside profiles must only show arrows",
     );
     assert.equal(await page.locator(".weekly-evolution").count(), 0);
@@ -223,6 +223,21 @@ try {
       path: `${output}/${route === "#/" ? "home" : "players"}-growth.png`,
     });
   }
+  await page.evaluate(async () => {
+    const { card } = await import("./js/cards.js");
+    const gallery = document.createElement("div");
+    gallery.id = "trend-gallery";
+    gallery.style = "display:flex;flex-wrap:wrap;gap:24px;padding:28px;background:#111820";
+    const { ATTRIBUTES } = await import("./js/utils.js");
+    const current = Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 84]));
+    const previous = Object.fromEntries(ATTRIBUTES.map(([key], i) => [key, i % 2 ? 86 : 81]));
+    gallery.innerHTML = ["gold-rare", "silver-common", "bronze-rare", "in-form", "hot-streak", "perfect-five"].map((theme, i) => card({ uid: "preview", displayName: "Pedro Silva", hasCard: true, ovr: 84, ovrDelta: i % 2 ? -2 : 3, stats: current, previousStats: previous }, { theme, size: "md", preview: true })).join("");
+    document.body.append(gallery);
+  });
+  await page.setViewportSize({ width: 1100, height: 1000 });
+  await page.locator("#trend-gallery").screenshot({ path: `${output}/trend-gallery.png` });
+  assert.equal(await page.locator("#trend-gallery .trend-arrow").count(), 54);
+  await page.locator("#trend-gallery").evaluate(el => el.remove());
   await page.evaluate(() => {
     window.__testState.history = [];
     location.hash = "#/players";

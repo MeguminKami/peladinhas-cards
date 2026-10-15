@@ -1,3 +1,4 @@
+import { trendArrow } from "./icons.js";
 import { cardWeek } from "./card-week.js";
 import { historyForDisplay } from "./card-history.js";
 import {
@@ -335,5 +336,5 @@ function attributeChange(current, previous) {
       : delta < 0
         ? `Desceu ${amount}`
         : "Sem alteração";
-  return `<small class="attribute-change ${delta > 0 ? "is-positive" : delta < 0 ? "is-negative" : "is-neutral"}" aria-label="${description} face à carta da semana anterior" title="${description} face à carta da semana anterior"><span aria-hidden="true">${delta > 0 ? "↑" : delta < 0 ? "↓" : "="}</span> ${delta > 0 ? "+" : delta < 0 ? "−" : ""}${amount}</small>`;
+  return `<small class="attribute-change ${delta > 0 ? "is-positive" : delta < 0 ? "is-negative" : "is-neutral"}" aria-label="${description} face à carta da semana anterior" title="${description} face à carta da semana anterior">${delta ? trendArrow(delta) : '<span aria-hidden="true">=</span>'} ${delta > 0 ? "+" : delta < 0 ? "−" : ""}${amount}</small>`;
 }

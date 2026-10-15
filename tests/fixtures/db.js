@@ -96,14 +96,15 @@ export async function saveProfile(uid, data) {
     data,
   );
 }
-export async function saveInitial(uid, ratings20) {
+export async function saveInitial(uid, ratings20, submit = true) {
   let r = state.initialRatings.find((r) => r.uid === uid);
   if (!r) {
     r = { uid };
     state.initialRatings.push(r);
   }
   r.ratings20 = ratings20;
-  r.completed = Object.keys(ratings20).length === 12;
+  if (!r.completed && submit) r.submittedAt = new Date();
+  r.completed = submit || r.completed === true;
 }
 export async function saveCommunity(raterId, targetId, ratings20, submit) {
   let r = state.communityRatings.find(
@@ -114,6 +115,7 @@ export async function saveCommunity(raterId, targetId, ratings20, submit) {
     state.communityRatings.push(r);
   }
   r.ratings20 = ratings20;
+  if (!r.submitted && submit) r.submittedAt = new Date();
   r.submitted = !!submit || r.submitted === true;
 }
 export async function saveFeedback(gameId, raterId, targetId, ratings, submit) {
@@ -126,7 +128,8 @@ export async function saveFeedback(gameId, raterId, targetId, ratings, submit) {
     state.feedback.push(r);
   }
   r.ratings = ratings;
-  r.submitted = !!submit;
+  if (!r.submitted && submit) r.submittedAt = new Date();
+  r.submitted = !!submit || r.submitted === true;
 }
 export async function saveGame(id, data, actor) {
   if (!id) {
@@ -328,6 +331,7 @@ const publicEvent = (event) => ({
 export const eventDetails = async (id) => {
   const event = (state.events || []).find((event) => event.id === id);
   const value = event ? publicEvent(event) : null;
+  if (value && event.schemaVersion === 2) value.rewardPreview = event.configuration?.positions || [];
   if (value && state.users.find((u) => u.uid === "pedro")?.role === "admin")
     value.configuration = event.configuration;
   return value;

@@ -220,7 +220,7 @@ test("rascunhos parciais e impossibilidade de alterar submissão", async () => {
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertFails(
+  await assertSucceeds(
     updateDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), {
       ratings: vote().ratings,
       updatedAt: serverTimestamp(),
@@ -785,4 +785,39 @@ test("admin corrige jogo fechado preservando estado e metadados de fecho", async
   ]) {
     await assertFails(updateDoc(ref, { ...correction, updatedAt: serverTimestamp() }));
   }
+});
+
+test("avaliações: edição dentro de 7 dias, sem reiniciar o prazo", async () => {
+  const all = Object.fromEntries(["pace","shooting","passing","dribbling","defending","physical","goalkeeping","stamina","vision","positioning","teamwork","composure"].map(key=>[key,12]));
+  for (const days of [6,8]) {
+    const submittedAt = Timestamp.fromMillis(Date.now()-days*86400000);
+    const createdAt = Timestamp.fromMillis(Date.now()-30*86400000);
+    await env.withSecurityRulesDisabled(async context => {
+      await setDoc(doc(context.firestore(),"initialRatings/pedro"),{uid:"pedro",ratings20:all,completed:true,submittedAt,createdAt,updatedAt:Timestamp.now()});
+      await setDoc(doc(context.firestore(),"communityRatings/pedro_joao"),{raterId:"pedro",targetId:"joao",ratings20:all,submitted:true,submittedAt,createdAt,updatedAt:Timestamp.now()});
+      await setDoc(doc(context.firestore(),"games/closed/feedback/pedro_joao"),{...vote(),createdAt,submittedAt,updatedAt:Timestamp.now()});
+    });
+    for (const [path,change] of [["initialRatings/pedro",{ratings20:{...all,pace:13}}],["communityRatings/pedro_joao",{ratings20:{...all,pace:13}}],["games/closed/feedback/pedro_joao",{ratings:vote().ratings}]]) {
+      const ref = doc(signed("pedro"),path);
+      await (days<7 ? assertSucceeds : assertFails)(updateDoc(ref,{...change,updatedAt:serverTimestamp()}));
+      await assertFails(updateDoc(ref,{...change,submittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+      await assertFails(updateDoc(ref,{...(path.startsWith("initial")?{completed:false}:{submitted:false}),updatedAt:serverTimestamp()}));
+    }
+  }
+});
+
+test("autoavaliações antigas usam a criação como prazo quando não há submittedAt", async () => {
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),"initialRatings/pedro"),{uid:"pedro",ratings20:{pace:12},completed:true,createdAt:Timestamp.fromMillis(Date.now()-8*86400000),updatedAt:Timestamp.now()});
+  });
+  await assertFails(updateDoc(doc(signed("pedro"),"initialRatings/pedro"),{submittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+});
+
+test("rascunho completo não inicia o prazo da autoavaliação antes da submissão", async () => {
+  const ratings20 = Object.fromEntries(["pace","shooting","passing","dribbling","defending","physical","goalkeeping","stamina","vision","positioning","teamwork","composure"].map(key=>[key,12]));
+  await env.withSecurityRulesDisabled(async context=>{
+    await setDoc(doc(context.firestore(),"initialRatings/pedro"),{uid:"pedro",ratings20,completed:false,submittedAt:null,createdAt:Timestamp.fromMillis(Date.now()-30*86400000),updatedAt:Timestamp.now()});
+  });
+  await assertSucceeds(updateDoc(doc(signed("pedro"),"initialRatings/pedro"),{completed:true,submittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+  await assertSucceeds(updateDoc(doc(signed("pedro"),"initialRatings/pedro"),{ratings20:{...ratings20,pace:13},updatedAt:serverTimestamp()}));
 });

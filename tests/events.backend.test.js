@@ -70,6 +70,8 @@ test("eventos modernos: permissão, privacidade, votos, revisão, pódio, entreg
     data: { eventId: id },
   });
   assert.equal(publicBefore.configuration, undefined);
+  assert.equal(publicBefore.rewardPreview.length, 3);
+  assert.equal(publicBefore.rewardPreview[0].specialId, "mvp");
   assert.equal(publicBefore.ballots, undefined);
   assert.deepEqual(publicBefore.winners, []);
   await assert.rejects(

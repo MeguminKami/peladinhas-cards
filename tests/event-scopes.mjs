@@ -109,6 +109,40 @@ try {
       );
     }
   }
+  await page.evaluate(async () => {
+    const { missionList } = await import("./js/missions.js");
+    document.querySelector("main").innerHTML = missionList([{
+      type: "COMPETITION_OBJECTIVE", title: "Djabugoleador",
+      description: "Marca 14 golos.",
+      eventDescription: "Uma corrida pelos golos da semana. Mostra a tua qualidade e conquista o topo! <teste>",
+      done: 1, total: 14, href: "#/event/example", icon: "trophy",
+    }]);
+  });
+  assert.ok((await page.locator(".mission-event-description").textContent()).includes("<teste>"));
+  assert.equal(await page.locator(".mission-event-description teste").count(), 0);
+  for (const width of [320, 390, 640, 844, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Event description overflow ${width}`);
+    assert.ok(await page.locator(".mission-event-description").isVisible());
+  }
+  mkdirSync("test-results/event-scopes", { recursive: true });
+  await page.locator(".mission-competition").screenshot({ path: `test-results/event-scopes/description-${isWebKit ? "webkit" : "chromium"}.png` });
+  await page.evaluate(async () => {
+    const { rewardShowcase } = await import("./js/event-presentation.js");
+    const { eventIcon } = await import("./js/icons.js");
+    const metrics = ["games", "goals", "assists", "wins", "winStreak", "unbeatenWins", "unbeatenGames", "goalsAndAssists", "cleanSheets"];
+    window.__metricIcons = metrics.map(metric => eventIcon({ method: "objective", objective: { metric } }));
+    document.querySelector("main").innerHTML += rewardShowcase({ kind: "mission", status: "open", rewardPreview: [{ boosts: { pace: 2 }, statDuration: "weekly", specialId: "in-form" }] }, { uid: "pedro", displayName: "Pedro Silva", ovr: 84, stats: {} });
+  });
+  assert.equal(new Set(await page.evaluate(() => window.__metricIcons)).size, 9);
+  assert.equal(await page.locator(".event-reward-card .football-card.in-form").count(), 1);
+  assert.equal(await page.locator(".event-reward-markers > span").count(), 2);
+  for (const width of [320, 390, 430, 844, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Reward preview overflow ${width}`);
+  }
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await page.locator(".event-reward-showcase").screenshot({ path: `test-results/event-scopes/reward-${isWebKit ? "webkit" : "chromium"}.png` });
   assert.deepEqual(errors, []);
   console.log(
     `Event scopes ${isWebKit ? "WebKit" : "Chromium"}: mission/event scope choices and mobile layouts passed.`,

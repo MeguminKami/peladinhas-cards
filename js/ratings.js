@@ -1,4 +1,5 @@
 import * as DB from "./db.js";
+import { canEditRating, ratingEditDeadline } from "./rating-window.js";
 import {
   ATTRIBUTES,
   FEEDBACK,
@@ -103,10 +104,24 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
       ...Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 0])),
       ...(saved?.ratings20 || {}),
     };
+  const locked = !canEditRating(saved, new Date(), self);
   ctx.render(
     `${pageHead(self ? "A minha primeira carta" : "Avaliação da comunidade", self ? "Conhece o teu jogo" : `Avaliar ${player.displayName || player.username}`, "As alterações são guardadas automaticamente.", linkButton("#/missions", "Todas as missões", "ghost"))}${initialForm(self ? "Autoavaliação" : "Ajuda a criar a primeira carta", values, false)}`,
   );
   const form = document.querySelector("form");
+  const deadline = ratingEditDeadline(saved, self);
+  if (deadline)
+    form.insertAdjacentHTML(
+      "afterbegin",
+      `<p class="muted">${locked ? "Prazo de edição terminado em" : "Podes editar até"} ${deadline.toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })} (Lisboa).</p>`,
+    );
+  if (locked) {
+    form.querySelectorAll("input, button").forEach((control) => {
+      control.disabled = true;
+    });
+    form.querySelector(".actions")?.remove();
+    return;
+  }
   form.querySelectorAll("[data-slider]").forEach(
     (slider) =>
       (slider.oninput = () => {
@@ -132,7 +147,7 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
     async (r, submit = false) => {
       if (submit && !completeInitial(r))
         throw Error("Preenche os 12 atributos, entre 0 e 20.");
-      if (self) await DB.saveInitial(targetId || ctx.user.uid, r);
+      if (self) await DB.saveInitial(targetId || ctx.user.uid, r, submit);
       else await DB.saveCommunity(ctx.user.uid, targetId, r, submit);
     },
     async () => {
@@ -224,7 +239,7 @@ function bindFeedbackStars(form) {
     sync();
   });
 }
-export async function feedbackPage(ctx, gid) {
+export async function feedbackPage(ctx, gid, editing = false) {
   const g = ctx.league.games.find((g) => g.id === gid);
   if (!g || g.status !== "closed" || !participants(g).includes(ctx.user.uid))
     return ctx.render(
@@ -263,6 +278,7 @@ export async function feedbackPage(ctx, gid) {
     const p = ctx.league.users.find((p) => p.uid === uid);
     const f = existing.find((f) => f.targetId === uid);
     const submitted = !!f?.submitted;
+    const readonly = submitted && (!editing || !canEditRating(f));
     const name = p?.displayName || p?.username || "Jogador";
     const selectedCount = FEEDBACK.filter(
       ([key]) =>
@@ -272,10 +288,10 @@ export async function feedbackPage(ctx, gid) {
     const bench = g[`team${team.side}`]?.bench?.includes(uid);
     return `<details name="match-feedback" class="panel feedback-review ${submitted ? "feedback-completed" : ""}" ${uid === firstPending || (!firstPending && uid === targets[0]) ? "open" : ""}>
       <summary class="feedback-player"><span class="feedback-avatar"><img src="${esc(safeImage(p?.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}" width="48" height="48"><i aria-hidden="true">${team.side}</i></span><span class="feedback-player-name"><strong>${esc(name)}</strong><small>${esc(p?.primaryPosition || "Jogador")} · ${bench ? "Suplente" : "Titular"}</small></span><span class="pill feedback-status ${submitted ? "success" : ""}">${submitted ? "Enviada" : f ? "Rascunho" : "Por avaliar"}</span><span class="feedback-toggle" aria-hidden="true">${icon("arrow")}</span></summary>
-      <form class="rating-form feedback-form" data-target="${esc(uid)}" data-submitted="${submitted}" aria-label="Avaliar ${esc(name)}"><div class="feedback-form-status"><span data-rating-count>${selectedCount} / ${FEEDBACK.length} dimensões</span><span class="save-state" role="status">${submitted ? "Concluída" : f ? "Guardado" : "Escolhe as estrelas"}</span></div><div class="feedback-fields">${FEEDBACK.map(([key, label], index) => feedbackField(uid, key, label, f?.ratings, submitted, index)).join("")}</div>${submitted ? '<div class="feedback-sent"><span class="pill success">Avaliação enviada</span></div>' : ''}</form></details>`;
+      <form class="rating-form feedback-form" data-target="${esc(uid)}" data-submitted="${readonly}" data-was-submitted="${submitted}" aria-label="Avaliar ${esc(name)}"><div class="feedback-form-status"><span data-rating-count>${selectedCount} / ${FEEDBACK.length} dimensões</span><span class="save-state" role="status">${submitted ? "Concluída" : f ? "Guardado" : "Escolhe as estrelas"}</span></div><div class="feedback-fields">${FEEDBACK.map(([key, label], index) => feedbackField(uid, key, label, f?.ratings, readonly, index)).join("")}</div>${submitted ? '<div class="feedback-sent"><span class="pill success">Avaliação enviada</span></div>' : ""}</form></details>`;
   }
   ctx.render(`${pageHead("Pós-jogo", `Avaliar ${g.title}`, "Escolhe as estrelas para cada jogador. Cinco estrelas é a avaliação máxima.", linkButton(`#/game/${gid}`, "Ver jogo", "ghost"))}
-    <div class="feedback-workspace content-stack"><section class="panel feedback-overview"><div class="section-head"><div><span class="eyebrow">AVALIAÇÃO DO JOGO</span><h2>${completed === targets.length && targets.length ? "Tudo enviado" : "O jogo, pela tua perspetiva"}</h2></div><span class="pill ${completed === targets.length && targets.length ? "success" : ""}">${completed} / ${targets.length} enviadas</span></div><div class="progress" role="progressbar" aria-label="Avaliações enviadas" aria-valuemin="0" aria-valuemax="${targets.length || 1}" aria-valuenow="${completed}"><span style="--progress:${targets.length ? Math.round((completed / targets.length) * 100) : 0}%"></span></div><p>Os rascunhos ficam guardados. No final, usa «Submeter» para enviar todas as avaliações. As avaliações enviadas ficam concluídas e as respostas individuais não são mostradas aos outros jogadores.</p><div class="feedback-team-shortcuts">${teams.map((team) => `<button type="button" class="feedback-team-shortcut feedback-team-${team.side.toLowerCase()}" data-feedback-team="${team.side}"><span>Equipa ${team.side}</span><small>${team.own ? "A tua equipa" : "Adversários"} · ${team.completed}/${team.players.length} enviadas</small>${icon("arrow")}</button>`).join("")}</div><details class="feedback-guide"><summary>Como usar a escala</summary><p>Toca numa estrela para preencher todas até à escolhida. Usa 0 estrelas para a classificação mínima e «Não jogou à baliza» quando guarda-redes não se aplica.</p><div class="feedback-scale">${feedbackScale.map((label, value) => `<span><b>${value}</b>${label}</span>`).join("")}</div></details></section>
+    <div class="feedback-workspace content-stack"><section class="panel feedback-overview"><div class="section-head"><div><span class="eyebrow">AVALIAÇÃO DO JOGO</span><h2>${completed === targets.length && targets.length ? "Tudo enviado" : "O jogo, pela tua perspetiva"}</h2></div><span class="pill ${completed === targets.length && targets.length ? "success" : ""}">${completed} / ${targets.length} enviadas</span></div><div class="progress" role="progressbar" aria-label="Avaliações enviadas" aria-valuemin="0" aria-valuemax="${targets.length || 1}" aria-valuenow="${completed}"><span style="--progress:${targets.length ? Math.round((completed / targets.length) * 100) : 0}%"></span></div><p>Os rascunhos ficam guardados. No final, usa «Submeter» para enviar todas as avaliações. Depois de submeter, podes editar durante 7 dias. As avaliações enviadas ficam concluídas e as respostas individuais não são mostradas aos outros jogadores.</p><div class="feedback-team-shortcuts">${teams.map((team) => `<button type="button" class="feedback-team-shortcut feedback-team-${team.side.toLowerCase()}" data-feedback-team="${team.side}"><span>Equipa ${team.side}</span><small>${team.own ? "A tua equipa" : "Adversários"} · ${team.completed}/${team.players.length} enviadas</small>${icon("arrow")}</button>`).join("")}</div><details class="feedback-guide"><summary>Como usar a escala</summary><p>Toca numa estrela para preencher todas até à escolhida. Usa 0 estrelas para a classificação mínima e «Não jogou à baliza» quando guarda-redes não se aplica.</p><div class="feedback-scale">${feedbackScale.map((label, value) => `<span><b>${value}</b>${label}</span>`).join("")}</div></details></section>
     <div class="feedback-grid">${teams.map((team) => `<section class="feedback-team feedback-team-${team.side.toLowerCase()}" id="feedback-team-${team.side}" aria-labelledby="feedback-team-heading-${team.side}"><div class="feedback-team-heading"><span class="feedback-team-letter" aria-hidden="true">${team.side}</span><div><p>${team.own ? "A tua equipa" : "Equipa adversária"}</p><h2 id="feedback-team-heading-${team.side}" tabindex="-1">Equipa ${team.side}</h2></div><span class="feedback-team-count">${team.completed}<span> / ${team.players.length} enviadas</span></span></div><div class="feedback-team-players">${team.players.map((uid) => playerReview(uid, team)).join("")}</div></section>`).join("") || empty("Não há colegas para avaliar", "Este jogo só tem um participante.", "", "players")}</div></div>`);
   document.querySelectorAll("[data-feedback-team]").forEach((button) => {
     button.onclick = () => {
@@ -308,7 +324,7 @@ export async function feedbackPage(ctx, gid) {
     form.addEventListener("input", () => {
       form
         .closest(".feedback-review")
-        .querySelector(".feedback-status").textContent = "Rascunho";
+        .querySelector(".feedback-status").textContent = form.dataset.wasSubmitted === "true" ? "Enviada · em edição" : "Rascunho";
     });
     const flush = autosave(
       ctx,
@@ -331,40 +347,75 @@ export async function feedbackPage(ctx, gid) {
   if (pending.length) {
     const footer = document.createElement("div");
     footer.className = "feedback-submit";
-    footer.innerHTML = '<button type="button" class="btn btn-primary feedback-submit-button">Submeter</button>';
+    footer.innerHTML =
+      '<button type="button" class="btn btn-primary feedback-submit-button">Submeter</button>';
     document.querySelector(".feedback-workspace").append(footer);
     footer.querySelector("button").onclick = async (event) => {
-      const entries = pending.filter(({ form }) => form.dataset.submitted !== "true");
-      const incomplete = entries.find(({ form }) => !completeFeedback(readRatings(form)));
+      const entries = pending.filter(
+        ({ form }) => form.dataset.submitted !== "true",
+      );
+      const incomplete = entries.find(
+        ({ form }) => !completeFeedback(readRatings(form)),
+      );
       if (incomplete) {
         incomplete.form.closest("details").open = true;
         incomplete.form.scrollIntoView({ block: "center" });
         incomplete.form.reportValidity();
-        toast("Avalia todas as dimensões de todos os jogadores antes de submeter.", "error");
+        toast(
+          "Avalia todas as dimensões de todos os jogadores antes de submeter.",
+          "error",
+        );
         return;
       }
       try {
         await busy(event.currentTarget, async () => {
-          const controls = entries.flatMap(({ form }) => [...form.querySelectorAll("input, button")]);
-          controls.forEach((control) => { control.disabled = true; });
+          const controls = entries.flatMap(({ form }) => [
+            ...form.querySelectorAll("input, button"),
+          ]);
+          controls.forEach((control) => {
+            control.disabled = true;
+          });
           try {
             await Promise.all(entries.map(({ flush }) => flush()));
             for (const { form } of entries) {
-              await DB.saveFeedback(gid, ctx.user.uid, form.dataset.target, readRatings(form), true);
+              await DB.saveFeedback(
+                gid,
+                ctx.user.uid,
+                form.dataset.target,
+                readRatings(form),
+                true,
+              );
               form.dataset.submitted = "true";
               form.querySelector(".save-state").textContent = "Concluída";
-              form.closest("details").querySelector(".feedback-status").textContent = "Enviada";
+              form
+                .closest("details")
+                .querySelector(".feedback-status").textContent = "Enviada";
             }
             toast("Avaliações submetidas.");
             await ctx.refresh();
             ctx.go(`#/game/${gid}/feedback`);
           } finally {
-            entries.filter(({ form }) => form.dataset.submitted !== "true").forEach(({ form }) => {
-              form.querySelectorAll("input, button").forEach((control) => { control.disabled = false; });
-            });
+            entries
+              .filter(({ form }) => form.dataset.submitted !== "true")
+              .forEach(({ form }) => {
+                form.querySelectorAll("input, button").forEach((control) => {
+                  control.disabled = false;
+                });
+              });
           }
         });
       } catch {}
+    };
+  }
+  if (!editing && existing.some((row) => row.submitted && canEditRating(row))) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-secondary";
+    button.textContent = "Editar avaliações enviadas";
+    document.querySelector(".feedback-overview").append(button);
+    button.onclick = async () => {
+      await Promise.all(pending.map(({ flush }) => flush()));
+      await feedbackPage(ctx, gid, true);
     };
   }
 }

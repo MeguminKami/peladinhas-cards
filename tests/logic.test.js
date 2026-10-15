@@ -1,4 +1,5 @@
 import { defaultOvrPresets } from "../js/ovr-presets.js";
+import { canEditRating, ratingEditDeadline } from "../js/rating-window.js";
 import {
   monthlyCandidates,
   eventDeadline,
@@ -92,16 +93,17 @@ test("autoavaliação sozinha e limite 20/80 desde o primeiro voto externo", () 
 });
 test("autoavaliação conta como um voto com teto de 20%, diminuindo com a comunidade", () => {
   for (const count of [1, 2, 3, 4]) assert.equal(initialSelfWeight(count), 0.2);
-  for (const count of [5, 9, 10, 19, 99]) {
-    assert.equal(initialSelfWeight(count), 1 / (count + 1));
+  for (const count of [5, 10, 20]) {
+    assert.equal(initialSelfWeight(count), 0.04);
     const baseline = calculateInitialBaseline(ratings(0), {
       count,
       ratings20: ratings(20),
     });
-    assert.ok(Math.abs(baseline.pace - (20 * count) / (count + 1)) < 1e-10);
+    assert.ok(Math.abs(baseline.pace - 19.2) < 1e-10);
   }
-  assert.equal(initialSelfWeight(9), 0.1);
-  assert.equal(initialSelfWeight(19), 0.05);
+  assert.equal(initialSelfWeight(9), 0.0406);
+  assert.equal(initialSelfWeight(13), 0.0406);
+  assert.equal(initialSelfWeight(19), 0.0405);
   assert.equal(initialSelfWeight(1, { selfWeight: 0.9 }), 0.2);
 });
 test("um jogo tem um peso, não um peso por voto; N/A excluído", () => {
@@ -611,4 +613,42 @@ test("prazos de eventos usam Lisboa no verão e inverno", () => {
   assert.equal(eventDeadline("2026-07-01T20:00"), "2026-07-01T19:00:00.000Z");
   assert.equal(eventDeadline("2026-11-01T20:00"), "2026-11-01T20:00:00.000Z");
   assert.throws(() => eventDeadline("2026-03-29T01:30"));
+});
+
+test("prazo de edição é de 7 dias desde a primeira submissão", () => {
+  const submittedAt = new Date("2026-10-01T12:00Z");
+  const row = {
+    submitted: true,
+    submittedAt,
+    createdAt: new Date("2026-09-01"),
+    updatedAt: new Date("2026-10-07"),
+  };
+  assert.equal(
+    ratingEditDeadline(row).toISOString(),
+    "2026-10-08T12:00:00.000Z",
+  );
+  assert.equal(canEditRating(row, new Date("2026-10-08T11:59:59.999Z")), true);
+  assert.equal(canEditRating(row, new Date("2026-10-08T12:00:00Z")), false);
+  assert.equal(
+    canEditRating(
+      { ...row, updatedAt: new Date("2026-10-09") },
+      new Date("2026-10-09"),
+    ),
+    false,
+  );
+  assert.equal(
+    canEditRating(
+      { completed: true, createdAt: submittedAt },
+      new Date("2026-10-09"),
+      true,
+    ),
+    false,
+  );
+  assert.equal(
+    canEditRating(
+      { submitted: false, createdAt: submittedAt },
+      new Date("2026-11-01"),
+    ),
+    true,
+  );
 });

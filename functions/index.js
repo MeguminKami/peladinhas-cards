@@ -4,6 +4,7 @@ import { defineSecret } from "firebase-functions/params";
 import { WEB_PUSH_PUBLIC_KEY } from "../js/push-config.js";
 import { eventFunctions } from "./events.js";
 import { calculatePlayerCard } from "../js/player-calculation.js";
+import { canEditRating } from "../js/rating-window.js";
 import { defaultOvrPresets } from "../js/ovr-presets.js";
 import { validPhotoDesign } from "../js/card-photo.js";
 import { getStorage } from "firebase-admin/storage";
@@ -423,7 +424,9 @@ async function buildHistory(uid) {
   const balanceRows = data(balanceSnaps);
   const ovrWeights = normalizeOvrWeights(settings.data());
   const self = initial.data().ratings20;
-  const votes = data(community).filter((r) => r.submitted && completeInitial(r.ratings20));
+  const votes = data(community).filter(
+    (r) => r.submitted && completeInitial(r.ratings20),
+  );
   const games = data(gameSnaps).filter(
     (g) =>
       g.status === "closed" && !g.deleting && participants(g).includes(uid),
@@ -976,6 +979,11 @@ export const correctRating = onCall(async (request) => {
       keys =
         kind === "game" ? FEEDBACK.map(([k]) => k) : ATTRIBUTES.map(([k]) => k),
       max = kind === "game" ? 5 : 20;
+    if (!canEditRating(previous))
+      throw new HttpsError(
+        "failed-precondition",
+        "O prazo de 7 dias para editar a avaliação terminou.",
+      );
     if (
       !Object.entries(ratings).every(
         ([k, v]) =>
