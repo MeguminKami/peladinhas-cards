@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" fill="none">
-  <title>Peladinhas Cards — A tua liga. A tua carta.</title>
+  <title>Peladinhas Cards — Gestão de jogos e evolução de jogadores.</title>
   <desc>Identidade do projeto em verde e dourado sobre fundo escuro, com uma carta conceptual e linhas de um campo de futebol.</desc>
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="1200" y2="460" gradientUnits="userSpaceOnUse"><stop stop-color="#080b10"/><stop offset="1" stop-color="#11251d"/></linearGradient>
@@ -23,11 +23,11 @@
   </g>
   <g font-family="Segoe UI, Arial, sans-serif">
     <text x="111" y="71" fill="#42e66c" font-size="12" font-weight="700" letter-spacing="3">FUTEBOL ENTRE AMIGOS</text>
-    <text x="111" y="93" fill="#97a99f" font-size="12" letter-spacing="2">UMA LIGA COM IDENTIDADE</text>
+    <text x="111" y="93" fill="#97a99f" font-size="12" letter-spacing="2">PLATAFORMA DE GESTÃO</text>
     <text x="56" y="186" fill="#f4f7f5" font-size="68" font-weight="800" letter-spacing="-3">PELADINHAS</text>
     <text x="59" y="240" fill="#42e66c" font-size="42" font-weight="300" letter-spacing="13">CARDS</text>
-    <text x="60" y="293" fill="#d3ded7" font-size="23">A tua liga. A tua carta.</text>
-    <text x="60" y="325" fill="#94a79b" font-size="16">Cada jogo conta. Cada carta tem uma história.</text>
+    <text x="60" y="293" fill="#d3ded7" font-size="23">Gestão de jogos e evolução de jogadores.</text>
+    <text x="60" y="325" fill="#94a79b" font-size="16">Equipas, avaliações, estatísticas e cartas individuais.</text>
     <path d="M60 359H650" stroke="#ffffff" stroke-opacity=".12"/>
     <text x="60" y="395" fill="#a9bcb0" font-size="11" font-weight="600" letter-spacing="2">COMUNIDADE</text>
     <circle cx="202" cy="391" r="2" fill="#42e66c"/>

@@ -204,6 +204,15 @@ try {
     path: resolve(output, "card-lab.png"),
     animations: "disabled",
   });
+  await page.evaluate(() => {
+    location.hash = "#/statistics";
+  });
+  await page.locator(".statistics-table tbody tr").first().waitFor();
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.screenshot({
+    path: resolve(output, "statistics.png"),
+    animations: "disabled",
+  });
   const gallery = await context.newPage();
   await gallery.goto(url);
   await gallery.locator(".dashboard-greeting").waitFor();
@@ -231,7 +240,7 @@ try {
   });
   if (errors.length) throw Error(errors.join("\n"));
   console.log(
-    "Imagens atualizadas: dashboard, mobile, Card Lab e raridades. Aplicação real, apenas dados de demonstração.",
+    "Imagens atualizadas: dashboard, mobile, Card Lab, estatísticas e raridades. Aplicação real, apenas dados de demonstração.",
   );
 } finally {
   await browser?.close();
