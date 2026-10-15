@@ -2,137 +2,354 @@
 
 <img src="docs/media/hero.svg" width="100%" alt="Peladinhas Cards — gestão de jogos e evolução de jogadores." />
 
-**Gestão de jogos, avaliação de jogadores e acompanhamento de uma comunidade de futebol.**
+<br />
 
-[Aplicação ↗](https://pedalinhas-cards.web.app/) &nbsp; · &nbsp; [Funcionalidades](#funcionalidades) &nbsp; · &nbsp; [Documentação](docs/README.md)
+**Uma plataforma para organizar jogos de futebol, avaliar jogadores e acompanhar a evolução da liga.**
+
+Perfis individuais · Equipas e resultados · Cartas de jogador · Estatísticas · Eventos e missões
+
+<br />
 
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES_Modules-131b22?style=flat-square&logo=javascript&logoColor=F7DF1E)](docs/reference/architecture.md)
 [![Firebase](https://img.shields.io/badge/Firebase-Backend-131b22?style=flat-square&logo=firebase&logoColor=FFCA28)](docs/guides/deployment.md)
 [![PWA](https://img.shields.io/badge/PWA-iPhone_%26_Android-131b22?style=flat-square&logo=pwa&logoColor=42e66c)](docs/guides/pwa.md)
+[![Idioma](https://img.shields.io/badge/Idioma-PT--PT-131b22?style=flat-square)](docs/README.md)
+
+<br />
+
+<a href="https://pedalinhas-cards.web.app/"><strong>Abrir a aplicação ↗</strong></a>
+&nbsp; · &nbsp;
+<a href="#explorar-a-aplicação">Explorar a aplicação</a>
+&nbsp; · &nbsp;
+<a href="docs/README.md">Documentação</a>
+
+<br /><br />
 
 </div>
 
-## Como funciona
+## O projeto
 
-```mermaid
-flowchart TB
-    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["1 · Criar perfil"] --> B["2 · Avaliar jogadores"]
-    B --> C["3 · Organizar e jogar"]
-    C --> D["4 · Registar e avaliar"]
-    D --> E["5 · Acompanhar a evolução"]
-```
+**Peladinhas Cards** reúne num único website a gestão de uma comunidade de futebol amador. A organização prepara os encontros e regista o que acontece em campo; os jogadores consultam as equipas, avaliam os colegas e acompanham o seu desempenho.
 
-| O jogador                         | A organização                      | A comunidade                             |
-| :-------------------------------- | :--------------------------------- | :--------------------------------------- |
-| Gere o perfil e consulta a carta. | Prepara equipas e regista jogos.   | Avalia jogadores e participa em eventos. |
-| Acompanha resultados e progresso. | Configura objetivos e recompensas. | Consulta estatísticas e classificações.  |
+Cada membro tem uma carta com fotografia, posição, atributos e classificação geral (OVR). As avaliações estabelecem a base da carta; os jogos alimentam a progressão. Estatísticas, classificações e cartas semanais permitem acompanhar a evolução individual e comparar a liga.
 
-## Funcionalidades
+<table>
+<tr>
+<td width="33%" valign="top">
 
-### Painel pessoal
+### Para os jogadores
 
-<img src="docs/media/dashboard.png" width="100%" alt="Painel com carta, seis indicadores pessoais e missões pendentes." />
+Consultar a carta, os jogos e as estatísticas. Avaliar colegas, cumprir objetivos e acompanhar eventos.
 
-**Carta e OVR** · Forma recente · Jogos e contribuições · Missões · Destaques semanais
+</td>
+<td width="33%" valign="top">
 
-### Cartas e avaliações
+### Para a organização
 
-<img src="docs/media/card-rarities.png" width="100%" alt="Bronze, prata e ouro: as seis raridades base das cartas." />
+Preparar equipas, registar resultados e gerir jogadores, avaliações, eventos e recompensas.
 
-| Conceito         | O que representa                                                  |
-| :--------------- | :---------------------------------------------------------------- |
-| **Carta**        | Fotografia, posição, nacionalidade e atributos do jogador.        |
-| **12 atributos** | Capacidades individuais avaliadas pela comunidade.                |
-| **OVR**          | Classificação geral, ponderada pela posição principal.            |
-| **Evolução**     | Alterações nos atributos a partir dos jogos e avaliações válidas. |
-| **Histórico**    | Cartas semanais guardadas para consultar o percurso.              |
+</td>
+<td width="33%" valign="top">
 
-<sub>Os valores da galeria ilustram os estilos, não os limiares das raridades.</sub>
+### No computador e telemóvel
 
-[Como se calcula a carta →](docs/reference/cards-and-ratings.md) · [Como funciona a progressão →](docs/reference/progression.md)
+Aceder pelo browser ou instalar a PWA, com navegação e layouts adaptados ao dispositivo.
 
-### Jogos e equipas
+</td>
+</tr>
+</table>
 
-| Antes do jogo                   | Depois do jogo                                   |
-| :------------------------------ | :----------------------------------------------- |
-| Definir data e local.           | Registar resultado, golos e assistências.        |
-| Escolher titulares e suplentes. | Recolher avaliações dos participantes elegíveis. |
-| Usar o sorteio equilibrado.     | Atualizar estatísticas e progressão.             |
+## Explorar a aplicação
 
-### Estatísticas e ranking
+| Visão geral                                          | Participar na liga                                                        | Organização                                      |
+| :--------------------------------------------------- | :------------------------------------------------------------------------ | :----------------------------------------------- |
+| [01 · Início e navegação](#01--início-e-navegação)   | [04 · Jogos e equipas](#04--jogos-e-equipas)                              | [09 · Administração](#09--administração)         |
+| [02 · Jogadores e perfis](#02--jogadores-e-perfis)   | [05 · Avaliações pós-jogo](#05--avaliações-pós-jogo)                      | [10 · Card Lab e temas](#10--card-lab-e-temas)   |
+| [03 · Cartas e histórico](#03--cartas-e-histórico)   | [06 · Estatísticas e ranking](#06--estatísticas-e-ranking)                | [11 · Apoio e mensagens](#11--apoio-e-mensagens) |
+| [12 · Mobile e instalação](#12--mobile-e-instalação) | [07 · Missões](#07--missões) · [08 · Eventos](#08--eventos-e-competições) | [Documentação técnica](#documentação-técnica)    |
 
-<img src="docs/media/statistics.png" width="100%" alt="Indicadores da liga e comparação de jogadores por desempenho e participação." />
+<sub>Todas as capturas apresentam a aplicação real com uma liga fictícia. Nomes, jogos, avaliações e mensagens são dados de demonstração. Alguns ecrãs mostram ferramentas reservadas à organização.</sub>
 
-**Comparar e ordenar:** OVR · Forma · Jogos · Vitórias · Golos · Assistências · Taxa de vitória
+## 01 · Início e navegação
 
-O ranking semanal destaca o desempenho recente. Sem avaliações suficientes, utiliza o OVR como referência.
+O painel inicial reúne os destaques semanais e os acessos mais usados. A carta pessoal, os indicadores de desempenho, as missões pendentes e os últimos jogos permitem perceber o estado da liga sem percorrer todas as páginas.
 
-### Missões e eventos
+<img src="docs/media/home-overview.png" width="100%" alt="Página inicial com navegação superior, destaques semanais e acesso à carta pessoal e missões." />
 
-| Missão                                      | Competição                                          | Votação                                          |
-| :------------------------------------------ | :-------------------------------------------------- | :----------------------------------------------- |
-| Cumprir um objetivo individual ou coletivo. | Atingir uma meta antes dos restantes participantes. | Escolher candidatos segundo as regras do evento. |
-| Cada participante elegível pode concluir.   | As posições premiadas são limitadas.                | O resultado pode exigir confirmação.             |
+### Carta pessoal e tarefas pendentes
 
-**Recompensas:** melhorias de atributos e cartas, conforme a configuração e os limites do evento.
+Os seis indicadores pessoais resumem a participação e as contribuições. Ao lado, o painel de missões destaca as competições e as próximas tarefas, com acesso à lista completa.
 
-[Objetivos, regras e recompensas →](docs/reference/events-and-missions.md)
+<img src="docs/media/dashboard.png" width="100%" alt="Carta pessoal com OVR, forma, jogos, vitórias, golos e assistências, ao lado das missões pendentes." />
 
-### Card Lab e personalização
+### O que encontras em cada menu
 
-<img src="docs/media/card-lab.png" width="100%" alt="Estúdio de administração com opções visuais e pré-visualização da carta." />
-
-**Card Lab:** modelos · camadas · paletas · molduras · fotografia · composições guardadas
-
-**Temas da interface:** Club Original · Volt Arena · Champions Night · Ultimate 20
-
-### Gestão e apoio
-
-| Membro                                 | DBS                                                  | Administrador                                    |
-| :------------------------------------- | :--------------------------------------------------- | :----------------------------------------------- |
-| Perfil, avaliações, eventos e tickets. | Capacidades de membro e gestão dos jogos permitidos. | Jogadores, papéis, cartas, OVR, eventos e apoio. |
-
-As permissões são verificadas no servidor e nas regras de acesso aos dados.
-
-## No telemóvel
-
-<div align="center">
-<img src="docs/media/mobile.png" width="300" alt="Carta e estatísticas pessoais na interface mobile." />
-</div>
-
-### Uma PWA instalável
-
-| No dispositivo   | Como funciona                                                    |
+| Área             | O que permite fazer                                              |
 | :--------------- | :--------------------------------------------------------------- |
-| **Android**      | Instalação pelo browser compatível.                              |
-| **iPhone**       | Safari → Partilhar → Adicionar ao ecrã principal.                |
-| **Arranque**     | Ícone próprio e janela de aplicação.                             |
-| **Interface**    | Navegação e controlos adaptados ao telemóvel.                    |
-| **Atualizações** | Opção de atualizar ou adiar.                                     |
-| **Sem rede**     | Ecrã de recuperação; os dados da liga exigem Internet.           |
-| **Alertas**      | Web Push mediante suporte, permissão e configuração do servidor. |
+| **Início**       | Consultar destaques, carta pessoal, missões e últimos jogos.     |
+| **Jogadores**    | Explorar o plantel, pesquisar membros e abrir os seus perfis.    |
+| **Jogos**        | Consultar encontros e resultados; gerir jogos quando autorizado. |
+| **Estatísticas** | Comparar participação, resultados e contribuições dos jogadores. |
+| **Missões**      | Acompanhar objetivos e avaliações por concluir.                  |
+| **Tickets**      | Enviar pedidos de apoio e acompanhar respostas.                  |
+| **Admin**        | Aceder à gestão da liga, conforme as permissões da conta.        |
 
-[Instalação e offline →](docs/guides/pwa.md) · [Notificações e configuração →](docs/guides/notifications.md)
+O cabeçalho dá também acesso ao perfil, às notificações, aos temas e ao fim de sessão. No telemóvel, os destinos principais ficam na navegação inferior e os restantes no menu **Mais**.
 
-<sub>Capturas da aplicação real com dados fictícios. A entrega push nos aparelhos depende da configuração do serviço; consultar o guia de notificações.</sub>
+## 02 · Jogadores e perfis
 
-## Tecnologia e documentação
+### O plantel
 
-**HTML + CSS + JavaScript** → **Firebase Authentication · Firestore · Storage · Cloud Functions**
+A área de jogadores apresenta as cartas da comunidade. A pesquisa e a ordenação ajudam a encontrar um membro e a consultar os seus dados antes de abrir o perfil completo.
 
-| Quero…                   | Consultar                                                                        |
-| :----------------------- | :------------------------------------------------------------------------------- |
-| Explorar a documentação  | [Mapa da documentação](docs/README.md)                                           |
-| Executar e testar        | [Desenvolvimento](docs/guides/development.md) · [Testes](docs/guides/testing.md) |
-| Perceber a estrutura     | [Arquitetura](docs/reference/architecture.md)                                    |
-| Publicar uma atualização | [Publicação](docs/guides/deployment.md)                                          |
-| Trabalhar nos visuais    | [Recursos de design](design/README.md)                                           |
+<img src="docs/media/players.png" width="100%" alt="Lista de jogadores da liga, com pesquisa, ordenação e cartas individuais de várias posições e raridades." />
+
+### O perfil individual
+
+O perfil reúne a carta e os dados do jogador: nacionalidade, posição, altura, pé preferido e número. Mostra também os atributos, a forma recente, as estatísticas, o histórico semanal e os últimos jogos.
+
+<img src="docs/media/profile.png" width="100%" alt="Perfil de Pedro Silva com carta, dados pessoais, indicadores de evolução e atributos." />
+
+| Identidade                       | Desempenho                             | Evolução                                     |
+| :------------------------------- | :------------------------------------- | :------------------------------------------- |
+| Fotografia e dados do perfil.    | OVR, forma, jogos e resultados.        | Comparação com a semana anterior.            |
+| Posição principal e secundárias. | Golos, assistências e taxa de vitória. | Atributos em crescimento e cartas guardadas. |
+
+O jogador pode editar o próprio perfil. As ações de avaliação e gestão apresentadas dependem da conta e das regras de elegibilidade.
+
+## 03 · Cartas e histórico
+
+### A carta do jogador
+
+A carta traduz os dados do perfil e as avaliações numa identidade visual comum à liga. O **OVR** é a classificação geral: combina os 12 atributos com pesos próprios para a posição principal.
+
+<img src="docs/media/card-rarities.png" width="100%" alt="Galeria das seis raridades base: bronze comum e rara, prata comum e rara, ouro comum e rara." />
+
+| Elemento                 | Como funciona                                                              |
+| :----------------------- | :------------------------------------------------------------------------- |
+| **Primeira carta**       | A autoavaliação completa permite criar a base inicial.                     |
+| **Comunidade**           | As avaliações externas passam a contribuir para essa base.                 |
+| **Carta oficial**        | É atingida com três avaliações externas completas.                         |
+| **Progressão**           | Jogos e avaliações válidas alteram os atributos segundo as regras da liga. |
+| **Raridade e especiais** | Refletem os critérios de classificação e as recompensas atribuídas.        |
+
+<sub>A galeria ilustra os estilos. Os valores apresentados não representam os limiares das raridades.</sub>
+
+### Uma carta guardada por semana
+
+O histórico permite consultar as cartas de semanas anteriores e ampliá-las. As cartas fechadas conservam os valores e a aparência desse momento.
+
+<img src="docs/media/card-history.png" width="100%" alt="Histórico de cinco cartas semanais, com OVR e atributos preservados em cada semana." />
+
+[Consultar as regras de cartas e OVR →](docs/reference/cards-and-ratings.md) · [Conhecer o cálculo de progressão →](docs/reference/progression.md)
+
+## 04 · Jogos e equipas
+
+### Consultar os encontros
+
+A página de jogos apresenta data, local e estado de cada encontro. Os jogos finalizados mostram o resultado; os encontros abertos permitem consultar a preparação das equipas.
+
+<img src="docs/media/games.png" width="100%" alt="Lista de jogos com um encontro aberto e três jogos encerrados, respetivas datas, locais e resultados." />
+
+| Rascunho                           | Aberto                                              | Encerrado                                                  |
+| :--------------------------------- | :-------------------------------------------------- | :--------------------------------------------------------- |
+| Preparar os detalhes e as equipas. | Disponibilizar o encontro e gerir a sua composição. | Consultar resultado, contribuições e avaliações elegíveis. |
+
+### Preparar o jogo
+
+Os responsáveis definem título, data, hora de Lisboa e local. Podem associar um vídeo do YouTube e organizar as equipas manualmente ou através do sorteio equilibrado.
+
+<img src="docs/media/game-setup.png" width="100%" alt="Gestão de um jogo aberto com dados do encontro, configuração do sorteio e comparação de equilíbrio entre equipas." />
+
+### Escolher jogadores e distribuir equipas
+
+No sorteio, os jogadores são adicionados ao **balde de seleção**. A aplicação procura uma distribuição equilibrada com base no OVR e nas opções disponíveis. A organização pode ajustar a composição antes de guardar.
+
+<img src="docs/media/team-draw.png" width="100%" alt="Janela de sorteio com cartas disponíveis e balde dos jogadores selecionados." />
+
+As equipas distinguem **titulares e suplentes**. Os controlos permitem mover jogadores entre grupos; o painel de equilíbrio compara as duas equipas e apresenta os valores de referência.
+
+<img src="docs/media/game-teams.png" width="100%" alt="Equipas A e B com titulares, suplentes, cartas individuais e controlos para mover jogadores." />
+
+### Registar o resultado
+
+O resultado inclui o marcador das duas equipas e os golos e assistências de cada participante. Depois do encerramento, esses registos alimentam as estatísticas e os objetivos elegíveis.
+
+<img src="docs/media/game-result.png" width="100%" alt="Resultado de um jogo encerrado, com marcador e registo individual de golos e assistências." />
+
+## 05 · Avaliações pós-jogo
+
+Após um jogo encerrado, os participantes podem avaliar os restantes jogadores. O formulário organiza as avaliações por pessoa, indica o que já foi enviado e guarda os rascunhos automaticamente.
+
+<img src="docs/media/match-feedback.png" width="100%" alt="Área de feedback pós-jogo com progresso das avaliações e dimensões de desempenho por jogador." />
+
+| Avaliar                                        | Guardar                                     | Concluir                                    |
+| :--------------------------------------------- | :------------------------------------------ | :------------------------------------------ |
+| Classificar as dimensões de 0 a 5 estrelas.    | Os rascunhos são guardados automaticamente. | Enviar a avaliação quando estiver completa. |
+| Usar N/A em guarda-redes quando não aplicável. | Retomar as avaliações ainda por enviar.     | As avaliações submetidas ficam concluídas.  |
+
+Os restantes membros consultam os agregados permitidos. As respostas individuais não são mostradas aos outros jogadores; a administração tem acesso de revisão.
+
+## 06 · Estatísticas e ranking
+
+### Comparar a liga
+
+Os indicadores resumem a atividade da comunidade. A tabela permite comparar e ordenar os jogadores por OVR, forma, participação, resultados, golos e assistências.
+
+<img src="docs/media/statistics.png" width="100%" alt="Estatísticas da liga com totais de participação e resultados, e tabela ordenável com os jogadores." />
+
+| Participação   | Resultados                            | Contribuições                          |
+| :------------- | :------------------------------------ | :------------------------------------- |
+| Jogos e forma. | Vitórias, empates e derrotas.         | Golos e assistências.                  |
+| OVR e posição. | Taxa de vitória e diferença de golos. | Golos marcados e sofridos pela equipa. |
+
+O **ranking semanal** destaca o desempenho do ciclo. Exige avaliações suficientes para a forma semanal e utiliza o OVR como desempate ou referência quando faltam dados.
+
+## 07 · Missões
+
+As missões reúnem as avaliações por concluir e os objetivos ativos. Cada entrada indica o que falta fazer, a quantidade atingida e a percentagem de progresso.
+
+<img src="docs/media/missions.png" width="100%" alt="Página de missões com competição em destaque, avaliações pendentes e objetivos de participação e desempenho." />
+
+- **Participação:** jogar um determinado número de encontros.
+- **Contribuições:** marcar golos, fazer assistências ou combinar ambos.
+- **Resultados:** conquistar vitórias ou cumprir sequências.
+- **Desbloqueio:** disponibilizar uma missão após concluir outras.
+
+Os objetivos podem ser individuais ou coletivos, com prazo, periodicidade e limites de conclusão configuráveis. O servidor verifica os registos dos jogos antes de autorizar a recompensa.
+
+## 08 · Eventos e competições
+
+O calendário reúne os eventos ativos, agendados e terminados. Os filtros permitem pesquisar por nome, estado, tipo e data; os detalhes de cada evento apresentam as regras e a participação aplicável.
+
+<img src="docs/media/events.png" width="100%" alt="Calendário e histórico de eventos com pesquisa, filtros e cartões de missões, competição e votação." />
+
+| Formato                     | Participação                           | Resultado                                            |
+| :-------------------------- | :------------------------------------- | :--------------------------------------------------- |
+| **Missão**                  | Cumprir um objetivo.                   | Cada participante elegível pode concluir e reclamar. |
+| **Competição por objetivo** | Atingir uma meta.                      | As posições seguem a ordem de conclusão.             |
+| **Votação**                 | Escolher candidatos elegíveis.         | Apuramento segundo as regras do evento.              |
+| **Competição controlada**   | Classificação gerida pela organização. | Ordem de vencedores definida no ADMIN.               |
+
+As recompensas podem incluir Stats temporárias ou permanentes e cartas semanais. Participantes, posições premiadas, desempates e confirmação são definidos pela administração.
+
+[Consultar objetivos, limites e recompensas →](docs/reference/events-and-missions.md)
+
+## 09 · Administração
+
+A área de administração concentra as ferramentas de gestão e uma visão geral do estado da liga. O menu próprio permite alternar entre jogadores, jogos, avaliações, eventos e configuração das cartas.
+
+<img src="docs/media/administration.png" width="100%" alt="Painel de administração com navegação por área, indicadores da liga, últimos jogos e acompanhamento." />
+
+| Área de gestão          | Principais operações                                            |
+| :---------------------- | :-------------------------------------------------------------- |
+| **Jogadores e acessos** | Editar perfis, atribuir papéis e rever o estado das cartas.     |
+| **Jogos**               | Criar, gerir equipas, encerrar e consultar encontros.           |
+| **Avaliações e OVR**    | Rever avaliações, pesos por posição e cálculo dos valores.      |
+| **Eventos e missões**   | Criar objetivos, gerir participantes, resultados e recompensas. |
+| **Cartas**              | Trabalhar estilos no Card Lab e gerir recursos visuais.         |
+| **Comunicação e apoio** | Enviar mensagens e responder aos tickets da comunidade.         |
+| **Manutenção**          | Recalcular cartas em evolução, preservando semanas fechadas.    |
+
+**Papéis:** o membro participa na liga; o DBS gere os jogos permitidos; o administrador gere a configuração e as restantes áreas protegidas. As permissões são verificadas no servidor.
+
+## 10 · Card Lab e temas
+
+### Composição de cartas
+
+O Card Lab permite à administração trabalhar a apresentação das cartas com pré-visualização. Inclui modelos, camadas, paletas, molduras, fontes, efeitos e fotografia, com composições guardadas e importação/exportação JSON.
+
+<img src="docs/media/card-lab.png" width="100%" alt="Card Lab com biblioteca de modelos, opções de composição e pré-visualização da carta." />
+
+### Ambientes da interface
+
+| Club Original          | Volt Arena               | Champions Night          | Ultimate 20               |
+| :--------------------- | :----------------------- | :----------------------- | :------------------------ |
+| Preto azulado e verde. | Violeta profundo e lima. | Azul meia-noite e ciano. | Cinzento, rosa e dourado. |
+
+A escolha do tema acompanha a interface e a cor do browser. Os estilos das cartas são geridos separadamente.
+
+## 11 · Apoio e mensagens
+
+### Pedidos de apoio
+
+Os tickets mantêm o pedido e as respostas numa conversa própria. Permitem acompanhar dúvidas e correções sem perder o contexto. Um ticket fechado fica no histórico e não pode ser reaberto.
+
+<img src="docs/media/support.png" width="100%" alt="Conversa de apoio com pedido de revisão de uma assistência e resposta da organização." />
+
+### Notificações da liga
+
+A caixa de notificações separa **Por ler** e **Histórico**. As mensagens podem dar acesso direto a um jogo, missão ou outra área relacionada. Ao ler, a notificação deixa a lista principal e fica guardada no histórico.
+
+<img src="docs/media/notifications.png" width="100%" alt="Página de notificações com opções do dispositivo, lista por ler e acesso ao histórico." />
+
+A integração Web Push permite alertas do sistema após ativação no dispositivo. O toque no alerta fecha-o e confirma a leitura; sem rede, essa confirmação fica em fila local. A entrega depende do suporte, das permissões e da configuração do servidor.
+
+[Consultar ativação, funcionamento e estado de configuração do push →](docs/guides/notifications.md)
+
+## 12 · Mobile e instalação
+
+### Navegação adaptada ao telemóvel
+
+A navegação inferior dá acesso a **Início, Jogadores, Jogos e Missões**. O menu **Mais** reúne perfil, estatísticas, ranking, eventos, apoio e instalação; a administração surge para as contas autorizadas.
+
+<table>
+<tr>
+<td width="33%" align="center" valign="top">
+<strong>Menu Mais</strong><br /><br />
+<img src="docs/media/mobile-menu.png" width="100%" alt="Menu mobile com acesso ao perfil, estatísticas, ranking, eventos, apoio e administração." />
+</td>
+<td width="33%" align="center" valign="top">
+<strong>Jogos</strong><br /><br />
+<img src="docs/media/mobile-games.png" width="100%" alt="Lista de jogos adaptada ao telemóvel, com estados e resultados." />
+</td>
+<td width="33%" align="center" valign="top">
+<strong>Estatísticas</strong><br /><br />
+<img src="docs/media/mobile-statistics.png" width="100%" alt="Estatísticas mobile com indicadores, seletor de ordenação e dados por jogador." />
+</td>
+</tr>
+</table>
+
+### Instalar a aplicação
+
+O website pode ser instalado como **PWA**, com ícone no dispositivo e abertura numa janela própria. O início apresenta os acessos de instalação e as instruções adequadas a cada plataforma.
+
+<img src="docs/media/installation.png" width="100%" alt="Bloco de instalação com botões para iOS e Android e ilustração da aplicação no telemóvel." />
+
+| Plataforma / situação | Experiência                                                                       |
+| :-------------------- | :-------------------------------------------------------------------------------- |
+| **Android**           | Pedido de instalação quando disponível; alternativa pelo menu do browser.         |
+| **iPhone**            | Safari → Partilhar → Adicionar ao ecrã principal.                                 |
+| **Nova versão**       | Opção de atualizar ou adiar, sem interromper automaticamente formulários.         |
+| **Sem ligação**       | Ecrã de recuperação; consultar dados da liga e guardar alterações exige Internet. |
+
+A PWA utiliza o mesmo frontend e Firebase do website. A instalação atual não gera APK/IPA nem publica nas lojas.
+
+[Conhecer a instalação, o cache e as atualizações →](docs/guides/pwa.md)
+
+## Documentação técnica
+
+O frontend utiliza **HTML, CSS e JavaScript com ES Modules**. O Firebase suporta autenticação, Firestore, Storage e processamento em Cloud Functions. Os procedimentos técnicos e as regras detalhadas ficam nos documentos abaixo.
+
+| Desenvolvimento e operação                                    | Regras e funcionalidades                                                |
+| :------------------------------------------------------------ | :---------------------------------------------------------------------- |
+| [Desenvolvimento local](docs/guides/development.md)           | [Cartas, avaliações e OVR](docs/reference/cards-and-ratings.md)         |
+| [Arquitetura e estrutura](docs/reference/architecture.md)     | [Progressão por jogo](docs/reference/progression.md)                    |
+| [Testes e validação](docs/guides/testing.md)                  | [Eventos, missões e recompensas](docs/reference/events-and-missions.md) |
+| [Publicação no Firebase](docs/guides/deployment.md)           | [PWA e instalação](docs/guides/pwa.md)                                  |
+| [Repositório e migração](docs/guides/repository-migration.md) | [Notificações do telemóvel](docs/guides/notifications.md)               |
+| [Recursos de design](design/README.md)                        | [Revisão da experiência](docs/reports/experience-review.md)             |
+
+[Consultar o índice completo →](docs/README.md)
 
 ---
 
 <div align="center">
+
 <img src="assets/logo.svg" width="30" alt="Emblema Peladinhas Cards" />
 
-**Peladinhas Cards** · [Aplicação ↗](https://pedalinhas-cards.web.app/) · [Documentação](docs/README.md)
+**Peladinhas Cards**
+
+[Aplicação ↗](https://pedalinhas-cards.web.app/) &nbsp; · &nbsp; [Documentação](docs/README.md) &nbsp; · &nbsp; [Voltar ao início ↑](#o-projeto)
+
 </div>

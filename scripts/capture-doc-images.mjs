@@ -3,6 +3,7 @@ import { readFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve, dirname, extname, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import { seedDocumentation } from "./documentation-fixtures.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, "docs/media");
 mkdirSync(output, { recursive: true });
@@ -84,83 +85,7 @@ try {
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(url);
   await page.locator(".dashboard-greeting").waitFor();
-  await page.evaluate(async () => {
-    const state = window.__testState;
-    const {
-      ATTRIBUTES,
-      calculateInitialBaseline,
-      calculatePlayerStats,
-      calculateOverall,
-      calculateBaseCard,
-    } = await import("./js/utils.js");
-    const { cardWeek } = await import("./js/card-week.js");
-    const template = state.users[1];
-    state.users[0].displayName = "Pedro Silva";
-    state.users[1].displayName = "João Fernandes";
-    state.users.push(
-      ...["Miguel Costa", "Ana Rodrigues", "Rui Martins"].map(
-        (displayName, index) => ({
-          ...template,
-          displayName,
-          username: `demo-${index}`,
-          uid: `demo-${index}`,
-        }),
-      ),
-    );
-    state.initialRatings = state.users.slice(0, 2).map((u, index) => ({
-      uid: u.uid,
-      completed: true,
-      ratings20: Object.fromEntries(
-        ATTRIBUTES.map(([key]) => [key, 16 - index]),
-      ),
-    }));
-    const now = Date.now();
-    state.games = Array.from({ length: 3 }, (_, index) => ({
-      id: `demo-game-${index}`,
-      title: "Peladinha da comunidade",
-      status: "closed",
-      scheduledAt: new Date(now - (index + 1) * 86400000).toISOString(),
-      closedAt: new Date(now - (index + 1) * 86400000).toISOString(),
-      teamA: { starters: ["pedro"], bench: [] },
-      teamB: { starters: ["joao"], bench: [] },
-      score: { teamA: 5, teamB: index === 1 ? 5 : 3 },
-      performance: {
-        teamA: { goals: ["pedro"], assists: ["pedro"] },
-        teamB: { goals: ["joao"], assists: [] },
-      },
-    }));
-    state.gameSummaries = state.games.map((game) => ({
-      id: game.id,
-      players: {
-        pedro: { overall: 4.2, passing: 4.3, count: 3 },
-        joao: { overall: 4.0, passing: 4.1, count: 3 },
-      },
-    }));
-    state.weeklyCards = state.users.slice(0, 2).map((u) => {
-      const initial = state.initialRatings.find(
-        (r) => r.uid === u.uid,
-      ).ratings20;
-      const stats = calculatePlayerStats(calculateInitialBaseline(initial), []),
-        ovr = calculateOverall(stats);
-      return {
-        id: u.uid,
-        uid: u.uid,
-        weekId: cardWeek().weekId,
-        stats,
-        ovr,
-        baseCard: calculateBaseCard(ovr),
-        specials: [],
-        official: false,
-        appearance: {
-          displayName: u.displayName,
-          countryCode: "PT",
-          country: "Portugal",
-          primaryPosition: "ALA",
-        },
-      };
-    });
-    location.hash = "#/players";
-  });
+  await page.evaluate(seedDocumentation);
   await page.locator("#player-grid").waitFor();
   await page.evaluate(() => {
     location.hash = "#/";
@@ -213,6 +138,103 @@ try {
     path: resolve(output, "statistics.png"),
     animations: "disabled",
   });
+  // Product tour: capture real routes with the isolated documentation league.
+  async function openRoute(hash, selector) {
+    await page.evaluate((hash) => {
+      location.hash = hash;
+    }, hash);
+    await page.locator(selector).first().waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(() => scrollTo(0, 0));
+    if (await page.getByText("Invalid Date", { exact: true }).count()) {
+      throw Error("Invalid date in documentation route: " + hash);
+    }
+  }
+  async function captureViewport(name, height = 860) {
+    await page.setViewportSize({ width: 1360, height });
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.screenshot({
+      path: resolve(output, name),
+      animations: "disabled",
+    });
+  }
+  async function captureThrough(name, selector) {
+    await page.setViewportSize({ width: 1360, height: 960 });
+    await page.evaluate(() => scrollTo(0, 0));
+    const bottom = await page
+      .locator(selector)
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().bottom);
+    await captureViewport(name, Math.ceil(bottom) + 12);
+  }
+  const cleanCrop = {
+    animations: "disabled",
+    style: "#header,.bottom-nav{visibility:hidden!important;}",
+  };
+  await openRoute("#/", ".dashboard-greeting");
+  await captureViewport("home-overview.png", 900);
+  await page
+    .locator(".install-spotlight")
+    .screenshot({ ...cleanCrop, path: resolve(output, "installation.png") });
+  await openRoute("#/players", "#player-grid .football-card");
+  await captureThrough("players.png", "#player-grid .grid-player");
+  await openRoute("#/profile", ".player-hero");
+  await captureThrough("profile.png", ".player-hero");
+  await page
+    .locator(".history-grid")
+    .screenshot({ ...cleanCrop, path: resolve(output, "card-history.png") });
+  await openRoute("#/games", ".game-list .game-row");
+  await captureThrough("games.png", "#main .game-list");
+  await openRoute("#/game/demo-next", ".team-balance-panel");
+  await captureThrough("game-setup.png", ".team-balance-panel");
+  await page
+    .locator(".team-builder")
+    .screenshot({ ...cleanCrop, path: resolve(output, "game-teams.png") });
+  await page.locator("#auto-teams").click();
+  await page.locator("#auto-selection").waitFor();
+  for (const uid of ["tiago", "beatriz", "diogo", "marta"]) {
+    await page.locator('[data-auto-player="' + uid + '"]').click();
+  }
+  await page.locator(".modal").screenshot({
+    animations: "disabled",
+    path: resolve(output, "team-draw.png"),
+  });
+  await page.keyboard.press("Escape");
+  await openRoute("#/game/demo-game-0", ".score-panel");
+  await page
+    .locator(".score-panel")
+    .screenshot({ ...cleanCrop, path: resolve(output, "game-result.png") });
+  await openRoute("#/game/demo-game-0/feedback", ".feedback-workspace");
+  await captureThrough("match-feedback.png", ".feedback-review[open]");
+  await openRoute("#/missions", ".missions-workspace");
+  await captureThrough("missions.png", ".missions-workspace");
+  await openRoute("#/events", "#public-event-list a");
+  await captureThrough("events.png", "#public-event-list");
+  await openRoute("#/admin", ".admin-overview");
+  await captureThrough("administration.png", ".admin-overview");
+  await openRoute("#/tickets/demo-support", ".ticket-message");
+  await captureViewport("support.png", 1000);
+  await openRoute("#/notifications", ".notification-view-tabs");
+  await captureThrough("notifications.png", "#notification-content");
+  await openRoute("#/", ".dashboard-greeting");
+  await page.setViewportSize({ width: 414, height: 896 });
+  await page.locator("#mobile-more").click();
+  await page.locator(".more-menu").waitFor();
+  await page.screenshot({
+    path: resolve(output, "mobile-menu.png"),
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await openRoute("#/games", ".game-list");
+  await page.screenshot({
+    path: resolve(output, "mobile-games.png"),
+    animations: "disabled",
+  });
+  await openRoute("#/statistics", "#statistics-sort");
+  await page.screenshot({
+    path: resolve(output, "mobile-statistics.png"),
+    animations: "disabled",
+  });
   const gallery = await context.newPage();
   await gallery.goto(url);
   await gallery.locator(".dashboard-greeting").waitFor();
@@ -240,7 +262,7 @@ try {
   });
   if (errors.length) throw Error(errors.join("\n"));
   console.log(
-    "Imagens atualizadas: dashboard, mobile, Card Lab, estatísticas e raridades. Aplicação real, apenas dados de demonstração.",
+    "Visita visual atualizada: menus, perfis, jogos, equipas, feedback, eventos, apoio, mobile, Card Lab, estatísticas e raridades. Aplicação real, apenas dados de demonstração.",
   );
 } finally {
   await browser?.close();
