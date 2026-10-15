@@ -1,4 +1,9 @@
-import { EVENT_RARITIES, eventRarityId, rarityBadge, compareEventRarity } from "../js/event-rarity.js";
+import {
+  EVENT_RARITIES,
+  eventRarityId,
+  rarityBadge,
+  compareEventRarity,
+} from "../js/event-rarity.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -402,9 +407,9 @@ test("recompensas semanais, mensais e permanentes: validade, cartas e anulação
       statDuration: duration,
       cardDuration: duration,
       boosts: { shooting: 3 },
-      specialId: "mvp",
+      specialId: "saved:duration-test",
     };
-    assert.ok(validEventReward(reward));
+    assert.ok(validEventReward(reward, [{ id: "duration-test" }]));
     assert.equal(hasTemporaryReward(reward), duration !== "permanent");
     assert.match(
       rewardText(reward),
@@ -526,20 +531,42 @@ test("objetivos usam a data de encerramento, mesmo quando o jogo foi realizado a
   );
 });
 
-
 test("live leaderboard shares positions for equal progress without duplicated ordinals", () => {
-  const rows = [3, 2, 2, 2, 1, 1, 1, 0, 0].map((progress, i) => ({ uid: String(i), progress, position: i + 1 }));
-  assert.deepEqual(sharedRankingPositions({ method: "objective", status: "open" }, rows).map(r => r.position), [1, 2, 2, 2, 5, 5, 5, 8, 8]);
+  const rows = [3, 2, 2, 2, 1, 1, 1, 0, 0].map((progress, i) => ({
+    uid: String(i),
+    progress,
+    position: i + 1,
+  }));
+  assert.deepEqual(
+    sharedRankingPositions({ method: "objective", status: "open" }, rows).map(
+      (r) => r.position,
+    ),
+    [1, 2, 2, 2, 5, 5, 5, 8, 8],
+  );
   assert.equal(positionLabel(4), "4.\u00ba");
-  assert.deepEqual(sharedRankingPositions({ method: "admin", status: "open" }, rows), rows);
-  assert.deepEqual(sharedRankingPositions({ method: "objective", status: "closed" }, rows), rows);
-  const reached = [{ progress: 10, position: 1, reachedAt: "2026-10-15T12:00Z" }, { progress: 10, position: 2, reachedAt: "2026-10-15T13:00Z" }];
-  assert.deepEqual(sharedRankingPositions({ method: "objective", status: "review" }, reached), reached);
+  assert.deepEqual(
+    sharedRankingPositions({ method: "admin", status: "open" }, rows),
+    rows,
+  );
+  assert.deepEqual(
+    sharedRankingPositions({ method: "objective", status: "closed" }, rows),
+    rows,
+  );
+  const reached = [
+    { progress: 10, position: 1, reachedAt: "2026-10-15T12:00Z" },
+    { progress: 10, position: 2, reachedAt: "2026-10-15T13:00Z" },
+  ];
+  assert.deepEqual(
+    sharedRankingPositions({ method: "objective", status: "review" }, reached),
+    reached,
+  );
 });
 
-
 test("event rarities have seven ordered cosmetic tiers and a safe legacy default", () => {
-  assert.deepEqual(Object.values(EVENT_RARITIES).map(r => r.level), [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(
+    Object.values(EVENT_RARITIES).map((r) => r.level),
+    [1, 2, 3, 4, 5, 6, 7],
+  );
   assert.equal(eventRarityId({}), "bronze");
   assert.equal(eventRarityId({ rarity: "<invalid>" }), "bronze");
   for (const id of Object.keys(EVENT_RARITIES)) {
@@ -548,8 +575,16 @@ test("event rarities have seven ordered cosmetic tiers and a safe legacy default
   }
 });
 
-
 test("player challenges sort by descending rarity and preserve ties", () => {
-  const rows = [{ id: 1, rarity: "bronze" }, { id: 2, rarity: "ultimate" }, { id: 3, rarity: "elite" }, { id: 4, rarity: "ultimate" }, { id: 5 }];
-  assert.deepEqual([...rows].sort(compareEventRarity).map(r => r.id), [2, 4, 3, 1, 5]);
+  const rows = [
+    { id: 1, rarity: "bronze" },
+    { id: 2, rarity: "ultimate" },
+    { id: 3, rarity: "elite" },
+    { id: 4, rarity: "ultimate" },
+    { id: 5 },
+  ];
+  assert.deepEqual(
+    [...rows].sort(compareEventRarity).map((r) => r.id),
+    [2, 4, 3, 1, 5],
+  );
 });

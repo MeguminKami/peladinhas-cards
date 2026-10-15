@@ -83,13 +83,15 @@ O ciclo abre à quinta-feira às 12:00 e fecha à quarta-feira às 12:00, em Lis
 
 As cartas na página principal e na lista de jogadores mostram apenas setas verdes ou vermelhas para a evolução de OVR e atributos face à semana anterior. Só no perfil são mostradas as diferenças numéricas: OVR, os 12 atributos e um resumo de quantos subiram ou desceram. Sem carta da semana anterior, não se inventa uma variação.
 
-Quando o jogador tem mais de um tipo de carta disponível, o próprio perfil mostra «Escolher carta». A escolha aplica-se às cartas exibidas na aplicação durante a semana e só pode ser feita pelo jogador numa semana aberta. O fecho guarda o tipo selecionado no snapshot; o histórico mantém essa escolha. Com zero ou uma opção, ou após o fecho, o botão não aparece.
+Quando o jogador tem uma especial disponível, o próprio perfil mostra «Escolher carta», incluindo sempre a carta normal. A escolha pertence ao jogador e persiste entre semanas, podendo ser alterada também durante a pausa. Ao expirar uma carta, a aplicação regressa à normal. O histórico fechado mantém a escolha original; alterar a aparência atual nunca reescreve um snapshot fechado.
 
 Uma carta fechada preserva atributos, OVR, especiais, posição e aparência. O histórico semanal permite ampliar essas cartas e consultar a evolução. Alterações posteriores não devem reescrever a memória visual de uma semana fechada.
 
 ## Identidade e recompensas
 
-A [coleção especial](card-collection.md) acrescenta dez edições visuais ao catálogo e ao Card Lab. Estão disponíveis apenas para pré-visualização; as missões escondidas e a atribuição serão configuradas posteriormente.
+A carta **Em forma (In Form)** tem três versões visuais: bronze, prata e ouro. Ao receber esta recompensa, o jogador usa automaticamente o metal da sua carta base (bronze abaixo de 65 OVR, prata de 65 a 74, ouro a partir de 75), incluindo variantes comuns e raras. A recompensa mantém o ID `in-form`; o histórico usa a raridade base guardada na respetiva semana. As três versões podem ser pré-visualizadas no catálogo e no Card Lab.
+
+A [coleção especial](card-collection.md) acrescenta dezanove edições visuais ao catálogo e ao Card Lab, incluindo nove temas inspirados no Ultimate Team. Quinze têm [condições de conquista e validade](card-unlocks.md); quatro designs ficam em reserva.
 
 Há seis raridades base e cartas especiais reconhecidas por performances/recompensas. O Card Lab é um estúdio para compor estilos com modelos, paletas, camadas, molduras, fontes, efeitos e fotografia; inclui desfazer/refazer, importação/exportação JSON e composições guardadas.
 

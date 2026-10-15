@@ -1,4 +1,6 @@
 import { EVENT_RARITIES } from "../js/event-rarity.js";
+import { CARD_POLICY } from "../js/card-achievements.js";
+import { CARD_CRITERIA } from "./card-unlock-rules.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { cardWeek } from "../js/card-week.js";
@@ -42,8 +44,14 @@ function rewardValue(input, themes) {
     mode: input.mode,
     boosts: input.boosts,
     statDuration: input.statDuration,
-    cardDuration: input.statDuration,
+    cardDuration:
+      CARD_POLICY[input.specialId]?.duration ||
+      input.cardDuration ||
+      input.statDuration,
     specialId: input.specialId || null,
+    ...(CARD_CRITERIA[input.specialId]
+      ? { criterion: CARD_CRITERIA[input.specialId] }
+      : {}),
     ...(theme
       ? {
           cardTheme: {
@@ -101,7 +109,10 @@ async function configuration(input, eventId = null) {
     db().collection("cardThemes").get(),
     db().collection("events").get(),
   ]);
-  const rarity = input.rarity ?? eventSnaps.docs.find(doc => doc.id === eventId)?.data().rarity ?? "bronze";
+  const rarity =
+    input.rarity ??
+    eventSnaps.docs.find((doc) => doc.id === eventId)?.data().rarity ??
+    "bronze";
   if (!Object.hasOwn(EVENT_RARITIES, rarity)) fail("Raridade invalida.");
   const indefinite = input.indefinite === true;
   if (input.indefinite !== undefined && typeof input.indefinite !== "boolean")
@@ -364,6 +375,7 @@ function grant(
     statDuration: configured.statDuration,
     cardDuration: configured.cardDuration || "weekly",
     specialId: configured.specialId || null,
+    ...(configured.criterion ? { criterion: configured.criterion } : {}),
     ...(configured.cardTheme ? { cardTheme: configured.cardTheme } : {}),
     boosts,
   };
@@ -377,6 +389,7 @@ function grant(
     schemaVersion: 2,
     weekId: rewardCycle.weekId,
     startsAt: Timestamp.fromDate(permanent ? now : start),
+    cardStartsAt: Timestamp.fromDate(now),
     expiresAt: Timestamp.fromDate(rewardExpiry(start, configured.statDuration)),
     createdAt: FieldValue.serverTimestamp(),
     awardedBy: actorId,

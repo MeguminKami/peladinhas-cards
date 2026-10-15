@@ -230,7 +230,7 @@ export async function gamePage(ctx, id) {
                 const player = ctx.league.players.find((p) => p.uid === uid),
                   row = performance.get(uid) || { goals: 0, assists: 0 };
                 performance.set(uid, row);
-                return `<div class="match-performance-row"><b>${esc(player?.displayName || player?.username || "Jogador")}</b>${[
+                return `<div class="match-performance-row"><b>${esc(player?.displayName || player?.username || "Jogador")}</b><label>Posição no jogo<select data-game-position="${esc(uid)}" ${editable ? "" : "disabled"}><option value="">Não registada</option>${["GR", "DEF", "ALA", "MED", "AV"].map((position) => `<option value="${position}" ${g.positions?.[uid] === position ? "selected" : ""}>${position}</option>`).join("")}</select></label>${[
                   ["goals", "Golos"],
                   ["assists", "Assistências"],
                 ]
@@ -253,6 +253,14 @@ export async function gamePage(ctx, id) {
         Math.min(999, Number(input.value) + Number(button.dataset.counter)),
       );
       input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    root.onchange = (event) => {
+      if (event.target.dataset.gamePosition) {
+        g.positions ||= {};
+        if (event.target.value)
+          g.positions[event.target.dataset.gamePosition] = event.target.value;
+        else delete g.positions[event.target.dataset.gamePosition];
+      }
     };
     root.oninput = (event) => {
       const input = event.target;
@@ -511,6 +519,11 @@ export async function gamePage(ctx, id) {
             scheduledAt: parseLisbonDateInput(f.get("scheduledAt")),
             teamA: g.teamA,
             teamB: g.teamB,
+            positions: Object.fromEntries(
+              Object.entries(g.positions || {}).filter(([uid]) =>
+                participants(g).includes(uid),
+              ),
+            ),
             performance: Object.fromEntries(
               ["teamA", "teamB"].map((side) => [
                 side,

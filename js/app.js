@@ -75,6 +75,28 @@ const ctx = {
   disposers: [],
   render(html) {
     setMain(html);
+    clearTimeout(this.cardExpiryTimer);
+    if (
+      /^#\/(?:profile|players|ranking|statistics)?$/.test(location.hash) ||
+      /^#\/player\/[^/]+$/.test(location.hash)
+    ) {
+      const expiry = Math.min(
+        ...(this.league?.players || [])
+          .flatMap((player) => player.specials || [])
+          .map((card) =>
+            card.expiresAt ? +new Date(card.expiresAt) : Infinity,
+          )
+          .filter((value) => value > Date.now()),
+      );
+      if (Number.isFinite(expiry)) {
+        const timer = setTimeout(
+          () => route(),
+          Math.min(86400000, Math.max(100, expiry - Date.now() + 50)),
+        );
+        this.cardExpiryTimer = timer;
+        this.cleanup(() => clearTimeout(timer));
+      }
+    }
     document
       .querySelector("#main")
       .classList.toggle("admin-layout", /^#\/admin(\/|$)/.test(location.hash));
@@ -120,6 +142,9 @@ const ctx = {
       },
     ).catch(() => {});
     if (!this.user || this.user.disabled) return;
+    if (["#/profile", `#/player/${this.user.uid}`].includes(location.hash)) {
+      await DB.callAdmin("ensureHistory", {}).catch(() => {});
+    }
     this.league = await loadLeague();
     this.missions = await refreshMissionsForCurrentUser(this.user, this.league);
     await this.refreshNotifications();
@@ -210,10 +235,31 @@ function home() {
       ["Golos", me?.matchStats.goals || 0],
       ["Assistências", me?.matchStats.assists || 0],
       ["% vitórias", `${me?.matchStats.winRate || 0}%`, true],
-      ["Golos / jogo", me?.matchStats.played ? (me.matchStats.goals / me.matchStats.played).toLocaleString("pt-PT", { maximumFractionDigits: 1 }) : "0", true],
-      ["Assist. / jogo", me?.matchStats.played ? (me.matchStats.assists / me.matchStats.played).toLocaleString("pt-PT", { maximumFractionDigits: 1 }) : "0", true],
+      [
+        "Golos / jogo",
+        me?.matchStats.played
+          ? (me.matchStats.goals / me.matchStats.played).toLocaleString(
+              "pt-PT",
+              { maximumFractionDigits: 1 },
+            )
+          : "0",
+        true,
+      ],
+      [
+        "Assist. / jogo",
+        me?.matchStats.played
+          ? (me.matchStats.assists / me.matchStats.played).toLocaleString(
+              "pt-PT",
+              { maximumFractionDigits: 1 },
+            )
+          : "0",
+        true,
+      ],
     ]
-      .map(([k, v, extra]) => `<div${extra ? ' class="dashboard-extra-stat"' : ""}><small>${k}</small><b>${v}</b></div>`)
+      .map(
+        ([k, v, extra]) =>
+          `<div${extra ? ' class="dashboard-extra-stat"' : ""}><small>${k}</small><b>${v}</b></div>`,
+      )
       .join(
         "",
       )}</div><div class="my-card-actions">${linkButton("#/statistics", "Comparar na liga", "secondary", "chart")}</div></section><section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${ctx.missions.length} ${ctx.missions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions, { grouped: false })}${ctx.missions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,

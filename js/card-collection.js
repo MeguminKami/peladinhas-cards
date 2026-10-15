@@ -1,5 +1,7 @@
 // Visual catalog only. These editions have no reward or mission eligibility yet.
+import { FUT_INSPIRED_EDITIONS } from "./card-fut-themes.js";
 export const COLLECTION_EDITIONS = Object.freeze({
+  ...FUT_INSPIRED_EDITIONS,
   apogee: {
     name: "Apogeu",
     detail: "Safira e ouro · o topo do jogo",
@@ -87,4 +89,13 @@ export const COLLECTION_EDITIONS = Object.freeze({
 });
 export const COLLECTION_THEME_IDS = Object.freeze(
   Object.keys(COLLECTION_EDITIONS),
+);
+export const RESERVED_COLLECTION_IDS = Object.freeze([
+  "apogee",
+  "legacy",
+  "titan",
+  "carnival",
+]);
+export const ACTIVE_COLLECTION_IDS = Object.freeze(
+  COLLECTION_THEME_IDS.filter((id) => !RESERVED_COLLECTION_IDS.includes(id)),
 );

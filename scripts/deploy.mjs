@@ -15,6 +15,7 @@ run(process.execPath, ["scripts/check.mjs"]);
 run(process.execPath, [
   "--test",
   "tests/logic.test.js",
+  "tests/card-achievements.test.js",
   "tests/youtube.test.js",
   "tests/team-balance.test.js",
   "tests/card-week.test.js",

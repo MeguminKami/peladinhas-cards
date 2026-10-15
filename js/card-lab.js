@@ -1,6 +1,7 @@
 import * as DB from "./db.js";
 import {
   CATALOG_THEMES,
+  informTheme,
   COLLECTION_EDITIONS,
   ATTRIBUTES,
   themeName,
@@ -8,6 +9,7 @@ import {
 } from "./utils.js";
 import { esc, pageHead, linkButton, busy, toast } from "./ui.js";
 import { icon } from "./icons.js";
+import { RESERVED_COLLECTION_IDS } from "./card-collection.js";
 import { card, bindImages } from "./cards.js";
 import {
   DESIGN_FIELDS,
@@ -228,6 +230,8 @@ export async function cardLab(ctx, uid) {
       ]),
     ]);
   const set = (key, value) => {
+    if (key === "theme" && value === "in-form")
+      value = informTheme(base.cardType, base.ovr);
     const input = form.elements.namedItem(key);
     if (input) input.value = value;
   };
@@ -242,11 +246,11 @@ export async function cardLab(ctx, uid) {
       saved = experimental.find((t) => `saved:${t.id}` === f.theme);
     document.querySelector("#name-background-transparency").value =
       `${f.nameBackgroundTransparency}%`;
-    const collectionPreview = Object.hasOwn(COLLECTION_EDITIONS, f.theme);
+    const collectionPreview = RESERVED_COLLECTION_IDS.includes(f.theme);
     const saveButton = document.querySelector("#save-theme");
-    saveButton.disabled = collectionPreview;
-    saveButton.innerHTML = collectionPreview
-      ? "Nova edição · Só pré-visualização"
+    saveButton.disabled = RESERVED_COLLECTION_IDS.includes(f.theme);
+    saveButton.innerHTML = RESERVED_COLLECTION_IDS.includes(f.theme)
+      ? "Design em reserva · Só pré-visualização"
       : `${icon("check")}Guardar composição`;
     const p = {
       ...(players.find((p) => p.uid === f.player) || sample),
@@ -469,6 +473,41 @@ export async function cardLab(ctx, uid) {
     const saved = experimental.find(
       (t) => `saved:${t.id}` === form.theme.value,
     );
+    if (
+      COLLECTION_EDITIONS[form.theme.value] &&
+      !RESERVED_COLLECTION_IDS.includes(form.theme.value)
+    ) {
+      const probe = document.createElement("div");
+      probe.hidden = true;
+      probe.innerHTML = card(sample, {
+        theme: form.theme.value,
+        preview: true,
+      });
+      document.body.append(probe);
+      const material = getComputedStyle(probe.firstElementChild);
+      const edge = material.getPropertyValue("--card-edge").trim();
+      for (const [key, variable] of [
+        ["color1", "--card-a"],
+        ["color2", "--card-b"],
+        ["textColor", "--card-text"],
+        ["borderColor", "--card-edge"],
+        ["glowColor", "--card-glow"],
+      ]) {
+        const value = material.getPropertyValue(variable).trim();
+        set(key, /^#[0-9a-f]{6}$/i.test(value) ? value : edge);
+      }
+      probe.remove();
+    }
+    const informColors = {
+      "in-form-bronze": ["#70472e", "#171318", "#f7faff", "#e8b58b", "#9c522e"],
+      "in-form-silver": ["#46596e", "#10141e", "#f7faff", "#dceaf8", "#5d7f9d"],
+      "in-form-gold": ["#605027", "#14131b", "#f7faff", "#eac775", "#b47720"],
+    }[form.theme.value];
+    if (informColors) {
+      ["color1", "color2", "textColor", "borderColor", "glowColor"].forEach(
+        (key, i) => set(key, informColors[i]),
+      );
+    }
     if (saved) {
       for (const [key, , , , value] of DESIGN_FIELDS.filter(([name]) =>
         name.startsWith("nameBackground"),
@@ -610,7 +649,7 @@ export async function cardLab(ctx, uid) {
       document.querySelector("#lab-redo").disabled = next >= history.length - 1;
     };
   document.querySelector("#save-theme").onclick = async (e) => {
-    if (Object.hasOwn(COLLECTION_EDITIONS, fields().theme)) return;
+    if (RESERVED_COLLECTION_IDS.includes(fields().theme)) return;
     commit();
     const f = fields(),
       saved = experimental.find((t) => `saved:${t.id}` === f.theme),

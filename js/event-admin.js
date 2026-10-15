@@ -1,4 +1,5 @@
 import { EVENT_RARITIES, eventRarityId, rarityBadge } from "./event-rarity.js";
+import { CARD_POLICY } from "./card-achievements.js";
 import { DIFFICULTY_LABELS } from "./labels.js";
 import * as DB from "./db.js";
 import { ATTRIBUTES, THEMES, themeName, asDate, formatDate } from "./utils.js";
@@ -140,6 +141,18 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         ["permanent", "Permanente"],
       ],
       reward.statDuration || "weekly",
+    )}</select></label><label>Duração da carta<select name="cardDuration">${options(
+      [
+        ["weekly", "Semanal · 7 dias"],
+        ["monthly", "Mensal · 1 mês"],
+        ["season", "Época · 2 meses"],
+        ["year", "Ano · 4 meses"],
+        ["permanent", "Permanente"],
+      ],
+      CARD_POLICY[reward.specialId]?.duration ||
+        reward.cardDuration ||
+        reward.statDuration ||
+        "weekly",
     )}</select></label><label>Carta<select name="specialId"><option value="">Sem carta</option><optgroup label="Cartas padrão">${options(
       THEMES.map((id) => [id, themeName(id)]),
       reward.specialId,
@@ -150,11 +163,11 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
             reward.specialId,
           )}</optgroup>`
         : ""
-    }</select></label></div><div class="event-boost-grid">${ATTRIBUTES.map(([key, name]) => `<label>${name} +<input name="boost-${key}" type="number" min="0" max="10" value="${reward.boosts?.[key] || 0}"></label>`).join("")}</div><p class="muted small">Semanais e mensais: até 10 por atributo e 20 por prémio. A duração aplica-se às stats e à carta. Permanentes: máximo acumulado de +10 por atributo e por jogador.</p></div></details>`;
+    }</select></label></div><div class="event-boost-grid">${ATTRIBUTES.map(([key, name]) => `<label>${name} +<input name="boost-${key}" type="number" min="0" max="10" value="${reward.boosts?.[key] || 0}"></label>`).join("")}</div><p class="muted small">Semanais e mensais: até 10 por atributo e 20 por prémio. A duração da carta é independente das stats; as cartas padrão seguem a sua regra. Permanentes: máximo acumulado de +10 por atributo e por jogador.</p></div></details>`;
   const readReward = (section) => ({
     mode: section.querySelector('[name="rewardMode"]').value,
     statDuration: section.querySelector('[name="statDuration"]').value,
-    cardDuration: section.querySelector('[name="statDuration"]').value,
+    cardDuration: section.querySelector('[name="cardDuration"]').value,
     specialId: section.querySelector('[name="specialId"]').value || null,
     boosts: Object.fromEntries(
       ATTRIBUTES.map(([key]) => [
@@ -181,7 +194,10 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         ...(isMission ? [["mission", "Missão"]] : []),
       ],
       event.kind || "event",
-    )}</select></label><label>Raridade visual<select name="rarity">${options(Object.entries(EVENT_RARITIES).map(([id, rarity]) => [id, rarity.name]), eventRarityId(event))}</select><small class="muted">Apenas visual. Sem efeito nas recompensas ou dificuldade.</small></label><div class="event-rarity-preview event-rarity-surface" id="event-rarity-preview" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}</div><label class="field-wide">Descrição<textarea name="description" maxlength="2000">${esc(event.description || "")}</textarea></label><div class="field-wide"><label for="event-image-url">Imagem HTTPS</label><div class="event-image-input"><input id="event-image-url" name="image" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="1000" placeholder="https://exemplo.pt/imagem.jpg" value="${esc(event.image || "")}"><button id="paste-event-image" type="button" class="btn btn-secondary">Colar link</button></div><small class="muted">Cola o endereço da imagem com Ctrl+V ou usa o botão.</small></div><label class="field-wide">Regras e condições<textarea name="rules" maxlength="2000">${esc(event.rules || "")}</textarea></label></div></fieldset><fieldset class="event-form-section"><legend>Datas e participantes</legend><div class="form-grid"><label>Início (Lisboa)<input name="startsAt" type="datetime-local" required value="${wallDate(start)}"></label><label class="check-label"><input name="indefinite" type="checkbox" ${event.indefinite ? "checked" : ""}>Sem prazo de conclusão</label><label>Fim (Lisboa)<input name="endsAt" type="datetime-local" required value="${wallDate(end)}"></label><label>Início da votação<input name="votingStartsAt" type="datetime-local" value="${event.votingStartsAt ? wallDate(event.votingStartsAt) : ""}"></label><label>Fim da votação<input name="votingEndsAt" type="datetime-local" value="${event.votingEndsAt ? wallDate(event.votingEndsAt) : ""}"></label><label>Participantes<select name="audience">${options(
+    )}</select></label><label>Raridade visual<select name="rarity">${options(
+      Object.entries(EVENT_RARITIES).map(([id, rarity]) => [id, rarity.name]),
+      eventRarityId(event),
+    )}</select><small class="muted">Apenas visual. Sem efeito nas recompensas ou dificuldade.</small></label><div class="event-rarity-preview event-rarity-surface" id="event-rarity-preview" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}</div><label class="field-wide">Descrição<textarea name="description" maxlength="2000">${esc(event.description || "")}</textarea></label><div class="field-wide"><label for="event-image-url">Imagem HTTPS</label><div class="event-image-input"><input id="event-image-url" name="image" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="1000" placeholder="https://exemplo.pt/imagem.jpg" value="${esc(event.image || "")}"><button id="paste-event-image" type="button" class="btn btn-secondary">Colar link</button></div><small class="muted">Cola o endereço da imagem com Ctrl+V ou usa o botão.</small></div><label class="field-wide">Regras e condições<textarea name="rules" maxlength="2000">${esc(event.rules || "")}</textarea></label></div></fieldset><fieldset class="event-form-section"><legend>Datas e participantes</legend><div class="form-grid"><label>Início (Lisboa)<input name="startsAt" type="datetime-local" required value="${wallDate(start)}"></label><label class="check-label"><input name="indefinite" type="checkbox" ${event.indefinite ? "checked" : ""}>Sem prazo de conclusão</label><label>Fim (Lisboa)<input name="endsAt" type="datetime-local" required value="${wallDate(end)}"></label><label>Início da votação<input name="votingStartsAt" type="datetime-local" value="${event.votingStartsAt ? wallDate(event.votingStartsAt) : ""}"></label><label>Fim da votação<input name="votingEndsAt" type="datetime-local" value="${event.votingEndsAt ? wallDate(event.votingEndsAt) : ""}"></label><label>Participantes<select name="audience">${options(
       [
         ["all", "Todos os membros"],
         ["game", "Participantes de um jogo"],
@@ -541,6 +557,11 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         section.querySelector('[name="statDuration"]').closest("label").hidden =
           !stats;
         const special = section.querySelector('[name="specialId"]');
+        const cardDuration = section.querySelector('[name="cardDuration"]');
+        cardDuration.closest("label").hidden = !card;
+        cardDuration.disabled = !!CARD_POLICY[special.value];
+        if (CARD_POLICY[special.value])
+          cardDuration.value = CARD_POLICY[special.value].duration;
         special.closest("label").hidden = !card;
         if (!card) special.value = "";
         section.querySelectorAll('[name^="boost-"]').forEach((input) => {

@@ -2,11 +2,11 @@ import { calculatePlayerCard } from "./player-calculation.js";
 import { cardWeek } from "./card-week.js";
 import { balanceMatches } from "./team-balance.js";
 import * as DB from "./db.js";
+import { availableSpecials, validCardSelection } from "./card-achievements.js";
 import {
   asDate,
   normalizeOvrWeights,
   calculateBaseCard,
-  calculateSpecialCards,
   calculateMatchStats,
   completeInitial,
   participants,
@@ -28,6 +28,8 @@ export async function loadLeague() {
     weeklyPhotos,
     events,
     eventRewards,
+    collections,
+    selections,
   ] = await Promise.all([
     DB.users(),
     DB.initials(),
@@ -40,6 +42,8 @@ export async function loadLeague() {
     DB.weeklyCardPhotos(cardWeek().weekId),
     DB.openEvents(),
     DB.list("eventRewards"),
+    DB.list("cardCollections"),
+    DB.list("cardSelections"),
   ]);
   const cycle = cardWeek();
   const previousCards = await DB.previousCards(users, cycle);
@@ -88,7 +92,7 @@ export async function loadLeague() {
           u.createdAt || initials.find((x) => x.uid === u.uid)?.createdAt,
       });
       const { stats, inactivity, ovr } = calculation;
-      return {
+      const player = {
         ...u,
         cardPhoto: weeklyPhotos.find((photo) => photo.uid === u.uid) || null,
         initial,
@@ -107,12 +111,7 @@ export async function loadLeague() {
           ? ovr - previousOvrs[u.uid]
           : null,
         cardType: calculateBaseCard(ovr),
-        specials: [
-          ...calculation.rewardSpecials,
-          ...calculateSpecialCards(aggregates).filter(
-            (s) => !calculation.rewardSpecials.some((r) => r.id === s.id),
-          ),
-        ],
+        specials: [],
         eventBoosts: calculation.eventBoosts,
         progression: calculation.progression,
         cardCalculation: calculation.ovrCalculation,
@@ -152,6 +151,23 @@ export async function loadLeague() {
                 : { hasCard: false, cardLocked: true };
             })()
           : {}),
+      };
+      const earnedCards =
+        collections.find((row) => row.uid === u.uid || row.id === u.uid)
+          ?.awards || [];
+      const specials = availableSpecials(
+        earnedCards,
+        calculation.rewardSpecials,
+      );
+      return {
+        ...player,
+        specials,
+        earnedCards,
+        selectedCardId: validCardSelection(
+          selections.find((row) => row.uid === u.uid || row.id === u.uid)
+            ?.selectedCardId || player.selectedCardId,
+          specials,
+        ),
       };
     });
   return {

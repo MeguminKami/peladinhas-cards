@@ -4,6 +4,7 @@ import { resolve, extname } from "node:path";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { SPECIAL_CARD_DESIGNS } from "../js/card-specials.js";
+import { CATALOG_THEMES } from "../js/utils.js";
 const root = resolve(".");
 const server = createServer((req, res) => {
   const path = resolve(
@@ -1734,7 +1735,7 @@ try {
     await page.getByRole("link", { name: "Cartas", exact: true }).count(),
   );
   assert.equal(await page.locator("#weekly-photo-form").count(), 0);
-  assert.equal(await page.locator("[data-card-type]").count(), 17);
+  assert.equal(await page.locator("[data-card-type]").count(), CATALOG_THEMES.length + 1);
   assert.equal(await page.locator('[data-card-type="mvp"] .mvp').count(), 1);
   assert.equal(
     await page
@@ -1767,7 +1768,7 @@ try {
       document.querySelector("#card-type-gallery .card-caption h3")
         ?.textContent === "Jogador exemplo",
   );
-  assert.equal(await page.locator("[data-card-type]").count(), 17);
+  assert.equal(await page.locator("[data-card-type]").count(), CATALOG_THEMES.length + 1);
   await page.evaluate(() => {
     window.__testState.cardThemes = [];
   });

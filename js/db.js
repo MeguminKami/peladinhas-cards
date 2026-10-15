@@ -254,7 +254,9 @@ export async function markRead(uid, items) {
 export async function syncNotifications(uid, missions) {
   const existing = await notifications(uid);
   const ids = new Set(existing.map((n) => n.id));
-  const missing = missions.filter((m) => !ids.has(`mission-${m.id}`));
+  const missing = missions.filter(
+    (m) => !m.hiddenCard && !ids.has(`mission-${m.id}`),
+  );
   if (missing.length) {
     const batch = writeBatch(db);
     missing.forEach((m) =>

@@ -1,4 +1,5 @@
 import { cardWeek } from "../js/card-week.js";
+import { CARD_CRITERIA } from "../functions/card-unlock-rules.js";
 import { getStorage } from "firebase-admin/storage";
 import { defaultPhotoDesign } from "../js/card-photo.js";
 import { teamBalance, balanceSignature } from "../js/team-balance.js";
@@ -675,14 +676,12 @@ test("evolução relativa: resumo público e histórico concordam; voto num cole
     await db
       .doc(`users/${id}`)
       .set({ uid: id, role: "member", primaryPosition: "AV", disabled: false });
-    await db
-      .doc(`initialRatings/${id}`)
-      .set({
-        uid: id,
-        ratings20: all((ovr * 20) / 99),
-        completed: true,
-        createdAt: stamp,
-      });
+    await db.doc(`initialRatings/${id}`).set({
+      uid: id,
+      ratings20: all((ovr * 20) / 99),
+      completed: true,
+      createdAt: stamp,
+    });
   }
   const game = {
     status: "closed",
@@ -773,8 +772,13 @@ test("cartas semanais: fecho imutável, pausa e nova carta na quinta às 12h", a
     assert.equal(frozen.locked, true);
     await initial.update({ ratings20: all(20) });
     await ref.update({ displayName: "Nome novo", primaryPosition: "GR" });
-    await db.doc("users/weekly-lock-admin").set({ uid: "weekly-lock-admin", role: "admin", disabled: false });
-    await rebuildHistory.run({ auth: { uid: "weekly-lock-admin" }, data: { uid } });
+    await db
+      .doc("users/weekly-lock-admin")
+      .set({ uid: "weekly-lock-admin", role: "admin", disabled: false });
+    await rebuildHistory.run({
+      auth: { uid: "weekly-lock-admin" },
+      data: { uid },
+    });
     const still = (await history.get()).data();
     assert.deepEqual(still, frozen);
     const published = (await db.doc(`weeklyCards/${uid}`).get()).data();
@@ -1248,7 +1252,7 @@ test("eventos e presets: permissões, eleições, fecho idempotente, recompensa 
       auth: { uid: ids[0] },
       data: { eventId: mixed },
     });
-    assert.deepEqual(mixedResult.winners[0].reward, reward);
+    assert.deepEqual(mixedResult.winners[0].reward, { ...reward, criterion: CARD_CRITERIA.mvp });
     assert.deepEqual(mixedResult.winners[1].uids, []);
     assert.equal(mixedResult.winners[1].reward, undefined);
     const { id: tie } = await call(admin, {
@@ -1351,6 +1355,14 @@ test("eventos e presets: permissões, eleições, fecho idempotente, recompensa 
     assert.equal(next.eventBoosts.vision, 0);
     assert.equal(
       next.specials.some((s) => s.eventReward),
+      true,
+    );
+    t.mock.timers.setTime(new Date("2026-10-31T20:00:00Z").getTime());
+    await ensureHistory.run({ auth: { uid: ids[0] }, data: {} });
+    assert.equal(
+      (await db.doc(`users/${ids[0]}/cardHistory/2026-W44`).get())
+        .data()
+        .specials.some((s) => s.eventReward),
       false,
     );
   } finally {
@@ -1564,6 +1576,10 @@ test("notificações: convocatórias, lembretes, alterações, votações e idem
       .collection("feedback")
       .doc("b-a")
       .set({ raterId: ids[1], targetId: ids[0], submitted: true });
+    await ref
+      .collection("feedback")
+      .doc("b-b")
+      .set({ raterId: ids[1], targetId: ids[1], submitted: true });
     await scheduledNotifications.run({});
     await scheduledNotifications.run({});
     assert.equal(
@@ -1581,46 +1597,93 @@ test("notificações: convocatórias, lembretes, alterações, votações e idem
   }
 });
 
-test("escolha da carta: apenas recompensas próprias, persiste e bloqueia no fecho", async (t) => {
-  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00:00Z") });
+test("escolha da carta: coleção própria, normal e seleção independente dos snapshots fechados", async (t) => {
+  t.mock.timers.enable({
+    apis: ["Date"],
+    now: new Date("2026-10-23T12:00:00Z"),
+  });
   t.after(() => t.mock.timers.reset());
   const uid = "weekly-choice-player";
-  await db.doc(`users/${uid}`).set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
-  await db.doc(`initialRatings/${uid}`).set({ uid, ratings20: all(12), completed: true, createdAt: Timestamp.now() });
-  for (const specialId of ["mvp", "sniper"]) await db.doc(`eventRewards/choice-${specialId}`).set({ uid, schemaVersion: 2, startsAt: Timestamp.now(), createdAt: Timestamp.now(), expiresAt: Timestamp.fromDate(new Date("2026-11-02T12:00Z")), reward: { mode: "card", specialId, statDuration: "weekly", boosts: {} } });
+  await db
+    .doc(`users/${uid}`)
+    .set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
+  await db.doc(`initialRatings/${uid}`).set({
+    uid,
+    ratings20: all(12),
+    completed: true,
+    createdAt: Timestamp.now(),
+  });
+  for (const specialId of ["mvp", "sniper"])
+    await db.doc(`eventRewards/choice-${specialId}`).set({
+      uid,
+      schemaVersion: 2,
+      startsAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromDate(new Date("2026-11-02T12:00Z")),
+      reward: { mode: "card", specialId, statDuration: "weekly", boosts: {} },
+    });
   const cycle = cardWeek();
-  const choose = cardId => selectWeeklyCard.run({ auth: { uid }, data: { weekId: cycle.weekId, cardId } });
-  await assert.rejects(selectWeeklyCard.run({ data: { weekId: cycle.weekId, cardId: "mvp" } }));
+  const choose = (cardId) =>
+    selectWeeklyCard.run({
+      auth: { uid },
+      data: { weekId: cycle.weekId, cardId },
+    });
+  await assert.rejects(
+    selectWeeklyCard.run({ data: { weekId: cycle.weekId, cardId: "mvp" } }),
+  );
   await assert.rejects(choose("not-earned"));
   await choose("sniper");
   const ref = db.doc(`users/${uid}/cardHistory/${cycle.weekId}`);
   assert.equal((await ref.get()).data().selectedCardId, "sniper");
-  assert.equal((await db.doc(`weeklyCards/${uid}`).get()).data().selectedCardId, "sniper");
+  assert.equal(
+    (await db.doc(`weeklyCards/${uid}`).get()).data().selectedCardId,
+    "sniper",
+  );
   await ensureHistory.run({ auth: { uid }, data: {} });
   assert.equal((await ref.get()).data().selectedCardId, "sniper");
   t.mock.timers.setTime(new Date("2026-10-28T12:00:00Z").getTime());
-  await assert.rejects(choose("mvp"));
+  await choose("mvp");
   await ensureHistory.run({ auth: { uid }, data: {} });
   assert.equal((await ref.get()).data().locked, true);
   assert.equal((await ref.get()).data().selectedCardId, "sniper");
   t.mock.timers.setTime(new Date("2026-10-29T12:00:00Z").getTime());
   await ensureHistory.run({ auth: { uid }, data: {} });
   assert.equal((await ref.get()).data().selectedCardId, "sniper");
-  const next = (await db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`).get()).data();
+  const next = (
+    await db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`).get()
+  ).data();
   assert.equal(next.selectedCardId, "mvp");
+  t.mock.timers.setTime(new Date("2026-10-31T12:00:00Z").getTime());
+  await ensureHistory.run({ auth: { uid }, data: {} });
+  assert.equal(
+    (await db.doc(`cardSelections/${uid}`).get()).data().selectedCardId,
+    "base",
+  );
 });
 
 test("OVR usa base e melhorias, nunca os valores de cartas guardadas", async (t) => {
-  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00:00Z") });
+  t.mock.timers.enable({
+    apis: ["Date"],
+    now: new Date("2026-10-23T12:00:00Z"),
+  });
   t.after(() => t.mock.timers.reset());
   const uid = "base-growth-independent";
-  await db.doc(`users/${uid}`).set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
-  await db.doc(`initialRatings/${uid}`).set({ uid, ratings20: all(12), completed: true, createdAt: Timestamp.now() });
+  await db
+    .doc(`users/${uid}`)
+    .set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
+  await db.doc(`initialRatings/${uid}`).set({
+    uid,
+    ratings20: all(12),
+    completed: true,
+    createdAt: Timestamp.now(),
+  });
   const cycle = cardWeek();
   const oldWeek = cardWeek(new Date(+cycle.opensAt - 1)).weekId;
   const oldRef = db.doc(`users/${uid}/cardHistory/${oldWeek}`);
   await oldRef.set({ weekId: oldWeek, stats: all(99), ovr: 99, locked: true });
-  await db.doc(`weeklyCards/${uid}`).set({ uid, weekId: oldWeek, stats: all(99), ovr: 99 });
+  await db
+    .doc(`weeklyCards/${uid}`)
+    .set({ uid, weekId: oldWeek, stats: all(99), ovr: 99 });
   await ensureHistory.run({ auth: { uid }, data: {} });
   const currentRef = db.doc(`users/${uid}/cardHistory/${cycle.weekId}`);
   const first = (await currentRef.get()).data();
@@ -1630,7 +1693,14 @@ test("OVR usa base e melhorias, nunca os valores de cartas guardadas", async (t)
   await ensureHistory.run({ auth: { uid }, data: {} });
   assert.deepEqual((await currentRef.get()).data().stats, first.stats);
   assert.equal((await currentRef.get()).data().ovr, first.ovr);
-  await db.doc(`eventRewards/${uid}`).set({ uid, schemaVersion: 2, startsAt: Timestamp.now(), createdAt: Timestamp.now(), expiresAt: Timestamp.fromDate(new Date("2026-11-01")), reward: { statDuration: "weekly", boosts: { shooting: 4 } } });
+  await db.doc(`eventRewards/${uid}`).set({
+    uid,
+    schemaVersion: 2,
+    startsAt: Timestamp.now(),
+    createdAt: Timestamp.now(),
+    expiresAt: Timestamp.fromDate(new Date("2026-11-01")),
+    reward: { statDuration: "weekly", boosts: { shooting: 4 } },
+  });
   for (let i = 0; i < 2; i++) {
     await ensureHistory.run({ auth: { uid }, data: {} });
     assert.equal((await currentRef.get()).data().stats.shooting, 63);
@@ -1638,31 +1708,66 @@ test("OVR usa base e melhorias, nunca os valores de cartas guardadas", async (t)
 });
 
 test("autoavaliação pesa 4% quando existem pelo menos cinco avaliações externas", async (t) => {
-  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00:00Z") });
+  t.mock.timers.enable({
+    apis: ["Date"],
+    now: new Date("2026-10-23T12:00:00Z"),
+  });
   t.after(() => t.mock.timers.reset());
   const uid = "self-weight-ten-votes";
-  await db.doc(`users/${uid}`).set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
-  await db.doc(`initialRatings/${uid}`).set({ uid, ratings20: all(0), completed: true, createdAt: Timestamp.now() });
-  for (let i = 0; i < 10; i++) await db.doc(`communityRatings/self-weight-${i}`).set({ raterId: `rater-${i}`, targetId: uid, ratings20: all(15), submitted: true, submittedAt: Timestamp.now(), createdAt: Timestamp.now() });
+  await db
+    .doc(`users/${uid}`)
+    .set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
+  await db.doc(`initialRatings/${uid}`).set({
+    uid,
+    ratings20: all(0),
+    completed: true,
+    createdAt: Timestamp.now(),
+  });
+  for (let i = 0; i < 10; i++)
+    await db.doc(`communityRatings/self-weight-${i}`).set({
+      raterId: `rater-${i}`,
+      targetId: uid,
+      ratings20: all(15),
+      submitted: true,
+      submittedAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+    });
   await ensureHistory.run({ auth: { uid }, data: {} });
-  const snapshot = (await db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`).get()).data();
-  const expected = Math.round(15 * 0.96 * 99 / 20);
+  const snapshot = (
+    await db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`).get()
+  ).data();
+  const expected = Math.round((15 * 0.96 * 99) / 20);
   assert.deepEqual(snapshot.stats, all(expected));
   assert.equal(snapshot.ovr, expected);
-  assert.ok(expected > Math.round(15 * 0.8 * 99 / 20));
+  assert.ok(expected > Math.round((15 * 0.8 * 99) / 20));
 });
 
 test("correção administrativa também respeita 7 dias desde a submissão", async (t) => {
-  t.mock.timers.enable({ apis:["Date"],now:new Date("2026-10-23T12:00Z") });
-  t.after(()=>t.mock.timers.reset());
-  const adminId="rating-window-admin";
-  await db.doc(`users/${adminId}`).set({uid:adminId,role:"admin",disabled:false});
-  const submittedAt=Timestamp.fromDate(new Date("2026-10-17T12:00Z"));
-  const ref=db.doc("communityRatings/window-test");
-  await ref.set({raterId:"one",targetId:"two",submitted:true,ratings20:all(12),submittedAt,createdAt:submittedAt});
-  const request={auth:{uid:adminId},data:{kind:"community",id:"window-test",ratings:all(13)}};
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00Z") });
+  t.after(() => t.mock.timers.reset());
+  const adminId = "rating-window-admin";
+  await db
+    .doc(`users/${adminId}`)
+    .set({ uid: adminId, role: "admin", disabled: false });
+  const submittedAt = Timestamp.fromDate(new Date("2026-10-17T12:00Z"));
+  const ref = db.doc("communityRatings/window-test");
+  await ref.set({
+    raterId: "one",
+    targetId: "two",
+    submitted: true,
+    ratings20: all(12),
+    submittedAt,
+    createdAt: submittedAt,
+  });
+  const request = {
+    auth: { uid: adminId },
+    data: { kind: "community", id: "window-test", ratings: all(13) },
+  };
   await correctRating.run(request);
-  assert.equal((await ref.get()).data().submittedAt.toMillis(),submittedAt.toMillis());
+  assert.equal(
+    (await ref.get()).data().submittedAt.toMillis(),
+    submittedAt.toMillis(),
+  );
   t.mock.timers.setTime(new Date("2026-10-24T12:00Z").getTime());
   await assert.rejects(correctRating.run(request), /7 dias/);
 });

@@ -64,7 +64,11 @@ test("eventos modernos: permissão, privacidade, votos, revisão, pódio, entreg
       data: { action: "create", ...payload() },
     }),
   );
-  const { id } = await call("create", { ...payload(), rarity: "ultimate", openNow: true });
+  const { id } = await call("create", {
+    ...payload(),
+    rarity: "ultimate",
+    openNow: true,
+  });
   const publicBefore = await getEvent.run({
     auth: { uid: ids[0] },
     data: { eventId: id },
@@ -72,7 +76,11 @@ test("eventos modernos: permissão, privacidade, votos, revisão, pódio, entreg
   assert.equal(publicBefore.configuration, undefined);
   assert.equal(publicBefore.rarity, "ultimate");
   await call("update", { ...payload(), eventId: id });
-  assert.equal((await getEvent.run({ auth: { uid: ids[0] }, data: { eventId: id } })).rarity, "ultimate");
+  assert.equal(
+    (await getEvent.run({ auth: { uid: ids[0] }, data: { eventId: id } }))
+      .rarity,
+    "ultimate",
+  );
   await assert.rejects(call("create", { ...payload(), rarity: "invalid" }));
   assert.equal(publicBefore.rewardPreview.length, 3);
   assert.equal(publicBefore.rewardPreview[0].specialId, "mvp");
@@ -846,7 +854,7 @@ test("duração das recompensas: entrega semanal, mensal e permanente", async (t
       await db.collection("eventRewards").where("eventId", "==", id).get()
     ).docs[0].data();
     assert.equal(ledger.reward.statDuration, duration);
-    assert.equal(ledger.reward.cardDuration, duration);
+    assert.equal(ledger.reward.cardDuration, "weekly");
     assert.equal(ledger.reward.boosts.shooting, 3);
     assert.equal(
       ledger.startsAt.toDate().toISOString(),

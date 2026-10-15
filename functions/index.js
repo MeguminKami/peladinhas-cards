@@ -4,6 +4,18 @@ import { defineSecret } from "firebase-functions/params";
 import { WEB_PUSH_PUBLIC_KEY } from "../js/push-config.js";
 import { eventFunctions } from "./events.js";
 import { calculatePlayerCard } from "../js/player-calculation.js";
+import { applyEventRewards } from "../js/event-rules.js";
+import {
+  refreshPlayerCollection,
+  collectionContext,
+  settleCollectionPeriods,
+  ensureFuttiesVote,
+} from "./card-collection.js";
+import {
+  availableCardAchievements,
+  availableSpecials,
+  validCardSelection,
+} from "../js/card-achievements.js";
 import { canEditRating } from "../js/rating-window.js";
 import { defaultOvrPresets } from "../js/ovr-presets.js";
 import { validPhotoDesign } from "../js/card-photo.js";
@@ -24,11 +36,11 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
 import {
   ATTRIBUTES,
+  asDate,
   calculateGameAggregate,
   normalizeOvrWeights,
   validOvrWeights,
   calculateBaseCard,
-  calculateSpecialCards,
   isoWeek,
   isoWeekEnd,
   participants,
@@ -36,6 +48,7 @@ import {
   completeFeedback,
   FEEDBACK,
   THEMES,
+  INFORM_THEMES,
   matchOutcome,
   matchGoalMargin,
   matchEvolutionContext,
@@ -375,7 +388,30 @@ async function aggregateGame(gid) {
           participants(g).includes(v.raterId),
       );
       const a = calculateGameAggregate(own);
-      ps[uid] = { ...a, count: own.length, mvp: false };
+      ps[uid] = {
+        ...a,
+        count: own.length,
+        mvp: false,
+        evaluatedAt: new Date(
+          Math.max(
+            +(asDate(g.closedAt || g.scheduledAt) || 0),
+            ...own.map(
+              (vote) =>
+                +(
+                  asDate(
+                    vote.updatedAt || vote.submittedAt || vote.createdAt,
+                  ) || 0
+                ),
+            ),
+          ),
+        ).toISOString(),
+        ratingCounts: Object.fromEntries(
+          FEEDBACK.map(([key]) => [
+            key,
+            own.filter((vote) => Number.isFinite(vote.ratings?.[key])).length,
+          ]),
+        ),
+      };
     }
     const best = Math.max(0, ...Object.values(ps).map((a) => a.overall || 0));
     for (const uid of Object.keys(ps))
@@ -395,6 +431,7 @@ async function aggregateGame(gid) {
   });
 }
 async function buildHistory(uid) {
+  const earnedCards = await refreshPlayerCollection(uid);
   const now = new Date();
   const [
     user,
@@ -550,12 +587,11 @@ async function buildHistory(uid) {
       date: cutoff,
     });
     const { stats, inactivity, ovr } = calculation;
-    const specials = [
-      ...calculation.rewardSpecials,
-      ...calculateSpecialCards(aggregates).filter(
-        (s) => !calculation.rewardSpecials.some((r) => r.id === s.id),
-      ),
-    ];
+    const specials = availableSpecials(
+      earnedCards,
+      calculation.rewardSpecials,
+      cutoff,
+    );
     results.push({
       weekId,
       ovr,
@@ -600,13 +636,13 @@ async function buildHistory(uid) {
         snapshot = await tx.get(ref);
       if (snapshot.data()?.locked) return;
       const photo = await tx.get(db.doc(`weeklyCardPhotos/${uid}_${r.weekId}`));
+      const selection = await tx.get(db.doc(`cardSelections/${uid}`));
       tx.set(ref, {
         ...r,
-        selectedCardId: r.specials.some(
-          (s) => s.id === snapshot.data()?.selectedCardId,
-        )
-          ? snapshot.data().selectedCardId
-          : r.specials[0]?.id || null,
+        selectedCardId: validCardSelection(
+          selection.data()?.selectedCardId || snapshot.data()?.selectedCardId,
+          r.specials,
+        ),
         cardPhoto: photo.exists
           ? { photoURL: photo.data().photoURL, design: photo.data().design }
           : null,
@@ -808,13 +844,27 @@ export const ensureHistory = onCall(async (request) => {
   await buildHistory(uid);
   return { ok: true };
 });
+export const refreshCardCollection = onSchedule(
+  { schedule: "15 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  async () => {
+    const context = await collectionContext();
+    for (const user of context.users)
+      await refreshPlayerCollection(user.uid, context);
+    await settleCollectionPeriods(context);
+    await ensureFuttiesVote(context);
+    await closeEvents.run({});
+  },
+);
 export const selectWeeklyCard = onCall(async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const uid = request.auth.uid;
   const { weekId, cardId } = request.data || {};
   const cycle = cardWeek();
-  if (weekId !== cycle.weekId || cycle.phase !== "open")
-    throw new HttpsError("failed-precondition", "A semana está fechada.");
+  if (weekId !== cycle.weekId)
+    throw new HttpsError(
+      "failed-precondition",
+      "Atualiza a página para escolher a carta.",
+    );
   if (typeof cardId !== "string" || cardId.length > 160)
     throw new HttpsError("invalid-argument", "Carta inválida.");
   const user = await db.doc(`users/${uid}`).get();
@@ -825,32 +875,49 @@ export const selectWeeklyCard = onCall(async (request) => {
     const ref = db.doc(`users/${uid}/cardHistory/${weekId}`);
     const snapshot = await tx.get(ref);
     const currentUser = await tx.get(db.doc(`users/${uid}`));
+    const collection = await tx.get(db.doc(`cardCollections/${uid}`));
+    const rewards = await tx.get(
+      db.collection("eventRewards").where("uid", "==", uid),
+    );
     const freshCycle = cardWeek();
     if (!currentUser.exists || currentUser.data().disabled)
       throw new HttpsError("permission-denied", "Conta indisponível.");
-    if (
-      !snapshot.exists ||
-      snapshot.data().locked ||
-      freshCycle.phase !== "open" ||
-      freshCycle.weekId !== weekId
-    )
-      throw new HttpsError("failed-precondition", "Esta carta está fechada.");
-    const options = [
-      ...new Set((snapshot.data().specials || []).map((s) => s.id)),
-    ];
-    if (options.length < 2 || !options.includes(cardId))
+    if (freshCycle.weekId !== weekId)
+      throw new HttpsError(
+        "failed-precondition",
+        "Atualiza a página para escolher a carta.",
+      );
+    const eventCards = applyEventRewards({}, data(rewards), uid).specials;
+    const specials = availableSpecials(
+      collection.data()?.awards || [],
+      eventCards,
+    );
+    if (cardId !== "base" && !specials.some((card) => card.id === cardId))
       throw new HttpsError(
         "invalid-argument",
-        "Escolhe uma das cartas recebidas nesta semana.",
+        "Esta carta já não está disponível na tua coleção.",
       );
-    tx.update(ref, { selectedCardId: cardId });
-    tx.set(db.doc(`weeklyCards/${uid}`), {
-      ...snapshot.data(),
+    tx.set(db.doc(`cardSelections/${uid}`), {
       uid,
       selectedCardId: cardId,
-      phase: "open",
-      nextOpensAt: freshCycle.nextOpensAt,
+      updatedAt: FieldValue.serverTimestamp(),
     });
+    // Changing today's look must never rewrite a closed weekly snapshot.
+    if (
+      snapshot.exists &&
+      !snapshot.data().locked &&
+      freshCycle.phase === "open"
+    ) {
+      tx.update(ref, { selectedCardId: cardId, specials });
+      tx.set(db.doc(`weeklyCards/${uid}`), {
+        ...snapshot.data(),
+        uid,
+        selectedCardId: cardId,
+        specials,
+        phase: "open",
+        nextOpensAt: freshCycle.nextOpensAt,
+      });
+    }
   });
   return { ok: true };
 });
@@ -937,7 +1004,7 @@ export const saveTheme = onCall(async (request) => {
     ) ||
     (design !== undefined && !validCardDesign(design)) ||
     (baseTheme !== undefined &&
-      ![...THEMES, "custom-test"].includes(baseTheme)) ||
+      ![...THEMES, ...INFORM_THEMES, "custom-test"].includes(baseTheme)) ||
     !["diagonal", "radial", "plain"].includes(texture)
   )
     throw new HttpsError("invalid-argument", "Tema inválido.");

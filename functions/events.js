@@ -1,4 +1,5 @@
 import { missionUnlocked } from "../js/event-model.js";
+import { CARD_CRITERIA } from "./card-unlock-rules.js";
 import {
   managedEvents,
   publicManagedEvent,
@@ -184,6 +185,7 @@ export function eventFunctions(rebuild) {
               reward,
               weekId: rewardCycle.weekId,
               startsAt: Timestamp.fromDate(starts),
+              cardStartsAt: Timestamp.fromDate(new Date()),
               expiresAt: Timestamp.fromDate(rewardCycle.closesAt),
               createdAt: FieldValue.serverTimestamp(),
             });
@@ -317,6 +319,9 @@ export function eventFunctions(rebuild) {
       const reward = {
         boosts: question.reward.boosts,
         specialId: question.reward.specialId || null,
+        ...(CARD_CRITERIA[question.reward.specialId]
+          ? { criterion: CARD_CRITERIA[question.reward.specialId] }
+          : {}),
         ...(template
           ? {
               cardTheme: {

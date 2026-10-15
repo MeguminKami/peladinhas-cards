@@ -15,9 +15,12 @@ import {
   expandCardOutline,
 } from "../js/card-geometry.js";
 import { SPECIAL_CARD_DESIGNS } from "../js/card-specials.js";
+import { card } from "../js/cards.js";
+import { FUT_INSPIRED_EDITIONS } from "../js/card-fut-themes.js";
 import {
   COLLECTION_EDITIONS,
   COLLECTION_THEME_IDS,
+  RESERVED_COLLECTION_IDS,
 } from "../js/card-collection.js";
 import {
   validPhotoDesign,
@@ -30,6 +33,8 @@ import {
   ATTRIBUTES,
   THEMES,
   CATALOG_THEMES,
+  informTheme,
+  INFORM_THEMES,
   themeName,
   calculateInitialBaseline,
   initialSelfWeight,
@@ -55,16 +60,60 @@ import {
 } from "../js/utils.js";
 const ratings = (value) =>
   Object.fromEntries(ATTRIBUTES.map(([k]) => [k, value]));
-test("dez novas edições têm nome e arte no catálogo, sem atribuição ativa", () => {
-  assert.equal(COLLECTION_THEME_IDS.length, 10);
-  assert.equal(new Set(COLLECTION_THEME_IDS.map(themeName)).size, 10);
+
+test("Em Forma acompanha bronze, prata e ouro, incluindo cartas raras", () => {
+  for (const [ovr, metal] of [
+    [59, "bronze"],
+    [60, "bronze"],
+    [64, "bronze"],
+    [65, "silver"],
+    [70, "silver"],
+    [74, "silver"],
+    [75, "gold"],
+    [85, "gold"],
+  ]) {
+    assert.equal(informTheme(calculateBaseCard(ovr), ovr), `in-form-${metal}`);
+    assert.equal(informTheme(null, ovr), `in-form-${metal}`);
+    for (const source of [
+      { specials: [{ id: "in-form" }] },
+      {
+        specials: [{ id: "mvp" }, { id: "in-form", eventReward: true }],
+        selectedCardId: "in-form",
+      },
+    ]) {
+      const markup = card(
+        { ...source, ovr, cardType: calculateBaseCard(ovr), stats: {} },
+        { preview: true },
+      );
+      assert.ok(markup.includes(`in-form in-form-${metal}`));
+    }
+  }
+  // A closed snapshot's base rarity wins over newer or inconsistent OVR data.
+  assert.equal(informTheme("bronze-rare", 95), "in-form-bronze");
+  for (const theme of INFORM_THEMES) {
+    assert.ok(CATALOG_THEMES.includes(theme));
+    assert.ok(
+      card({ ovr: 82 }, { theme, preview: true }).includes(`in-form ${theme}`),
+    );
+  }
+  assert.ok(validReward({ boosts: {}, specialId: "in-form" }));
+});
+test("edições do catálogo distinguem cartas ativas e designs em reserva", () => {
+  assert.equal(COLLECTION_THEME_IDS.length, 19);
+  assert.equal(new Set(COLLECTION_THEME_IDS.map(themeName)).size, 19);
   for (const id of COLLECTION_THEME_IDS) {
     assert.ok(CATALOG_THEMES.includes(id));
-    assert.ok(!THEMES.includes(id));
+    assert.equal(THEMES.includes(id), !RESERVED_COLLECTION_IDS.includes(id));
     assert.equal(SPECIAL_CARD_DESIGNS[id], COLLECTION_EDITIONS[id]);
     assert.ok(COLLECTION_EDITIONS[id].art);
-    assert.equal(themeName(id), COLLECTION_EDITIONS[id].name);
-    assert.equal(validReward({ boosts: {}, specialId: id }), false);
+    assert.ok(
+      themeName(id).includes(COLLECTION_EDITIONS[id].name) ||
+        ["toty", "tots", "fut-birthday"].includes(id),
+    );
+    assert.equal(
+      validReward({ boosts: {}, specialId: id }),
+      !RESERVED_COLLECTION_IDS.includes(id),
+    );
   }
   const earned = calculateSpecialCards(
     Array.from({ length: 6 }, () => ({
@@ -78,6 +127,24 @@ test("dez novas edições têm nome e arte no catálogo, sem atribuição ativa"
     })),
   );
   assert.ok(earned.every(({ id }) => !COLLECTION_THEME_IDS.includes(id)));
+});
+
+test("nove temas FUT têm silhuetas, gravuras e motivos próprios", () => {
+  assert.deepEqual(Object.keys(FUT_INSPIRED_EDITIONS), [
+    "toty",
+    "tots",
+    "icon",
+    "fut-heroes",
+    "fut-birthday",
+    "otw",
+    "future-stars",
+    "futties",
+    "shapeshifters",
+  ]);
+  const editions = Object.values(FUT_INSPIRED_EDITIONS);
+  for (const field of ["outline", "art", "motif"]) {
+    assert.equal(new Set(editions.map((e) => e[field])).size, 9);
+  }
 });
 test("escalas e limites", () => {
   assert.equal(convert20To99(0), 0);

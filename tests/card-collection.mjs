@@ -3,7 +3,11 @@ import { readFileSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
-import { COLLECTION_EDITIONS } from "../js/card-collection.js";
+import {
+  COLLECTION_EDITIONS,
+  RESERVED_COLLECTION_IDS,
+} from "../js/card-collection.js";
+import { CARD_POLICY } from "../js/card-achievements.js";
 const root = resolve(".");
 const server = createServer((req, res) => {
   try {
@@ -62,10 +66,24 @@ try {
     `http://127.0.0.1:${server.address().port}/#/admin/card-types`,
   );
   await page.locator("#card-type-gallery").waitFor();
+  for (const metal of ["bronze", "silver", "gold"]) {
+    assert.equal(
+      await page
+        .locator(`[data-card-type="in-form-${metal}"] .in-form-${metal}`)
+        .count(),
+      1,
+    );
+  }
   for (const [id, edition] of Object.entries(COLLECTION_EDITIONS)) {
     const tile = page.locator(`[data-card-type="${id}"]`);
-    assert.ok((await tile.textContent()).includes(edition.name));
-    assert.ok((await tile.textContent()).includes("Atribuição por definir"));
+    assert.ok(
+      (await tile.textContent()).includes(edition.name) ||
+        ["toty", "tots", "fut-birthday"].includes(id),
+    );
+    assert.equal(
+      (await tile.textContent()).includes("Design em reserva"),
+      RESERVED_COLLECTION_IDS.includes(id),
+    );
     await tile.click();
     await page.locator(`#modal-root .${id}`).waitFor();
     assert.ok(
@@ -139,7 +157,10 @@ try {
       };
     }),
   );
-  assert.equal(new Set(layouts.map((x) => x.material)).size, 10);
+  assert.equal(
+    new Set(layouts.map((x) => x.material)).size,
+    Object.keys(COLLECTION_EDITIONS).length,
+  );
   assert.ok(layouts.every((x) => x.portraitClear));
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 900 });
@@ -168,17 +189,80 @@ try {
       fullPage: true,
     });
   }
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await page.evaluate(async () => {
+    const { FUT_INSPIRED_EDITIONS } = await import("/js/card-fut-themes.js");
+    document
+      .querySelectorAll(".collection-preview-grid > div")
+      .forEach((tile) => {
+        if (
+          !Object.keys(FUT_INSPIRED_EDITIONS).some((id) =>
+            tile.querySelector(`.${id}`),
+          )
+        )
+          tile.remove();
+      });
+    const grid = document.querySelector(".collection-preview-grid");
+    grid.style.gridTemplateColumns = "repeat(3,minmax(0,1fr))";
+    grid.style.gap = "32px";
+    grid.style.maxWidth = "980px";
+    grid.style.margin = "auto";
+    document.querySelector("#collection-preview h1").textContent =
+      "Ultimate Collection · 9 edições";
+    document
+      .querySelectorAll(".football-card")
+      .forEach((el) => el.style.setProperty("--card-width", "250px"));
+    document
+      .querySelectorAll(".football-card")
+      .forEach((el) => (el.style.margin = "auto"));
+    window.scrollTo(0, 0);
+  });
+  await page
+    .locator("#collection-preview")
+    .screenshot({ path: "test-results/card-fut-themes.png" });
+  await page.evaluate(() => {
+    document
+      .querySelectorAll(
+        ".card-photo,.card-caption,.card-rating,.card-stats,.collection-edition",
+      )
+      .forEach((el) => (el.style.visibility = "hidden"));
+    document.querySelector("#collection-preview h1").textContent =
+      "Molduras e materiais · sem jogadores";
+  });
+  await page
+    .locator("#collection-preview")
+    .screenshot({ path: "test-results/card-fut-frames.png" });
   await page.goto(`http://127.0.0.1:${server.address().port}/#/admin/cards`);
   await page.locator('#lab-controls select[name="theme"]').waitFor();
   for (const id of Object.keys(COLLECTION_EDITIONS)) {
     await page.locator('#lab-controls select[name="theme"]').selectOption(id);
-    assert.equal(await page.locator("#save-theme").isDisabled(), true);
+    assert.equal(
+      await page.locator("#save-theme").isDisabled(),
+      RESERVED_COLLECTION_IDS.includes(id),
+    );
     assert.equal(await page.locator(`#card-preview .${id}`).count(), 1);
   }
   await page
     .locator('#lab-controls select[name="theme"]')
     .selectOption("gold-rare");
   assert.equal(await page.locator("#save-theme").isEnabled(), true);
+  for (const [metal, edge] of [
+    ["bronze", "#e8b58b"],
+    ["silver", "#dceaf8"],
+    ["gold", "#eac775"],
+  ]) {
+    await page
+      .locator('#lab-controls select[name="theme"]')
+      .selectOption(`in-form-${metal}`);
+    assert.equal(
+      await page.locator(`#card-preview .in-form-${metal}`).count(),
+      1,
+    );
+    assert.equal(
+      await page.locator('#lab-controls [name="borderColor"]').inputValue(),
+      edge,
+    );
+  }
   await page.locator('[data-studio-tab="text"]').click();
   const captionBackground = () =>
     page
@@ -228,7 +312,7 @@ try {
   assert.equal(await captionBackground(), "rgba(24, 120, 220, 0)");
   assert.deepEqual(errors, []);
   console.log(
-    "Collection: ten catalog previews, modal names, distinct materials, clear portraits, mobile layout and preview-only Card Lab passed.",
+    "Collection: catalog previews, modal names, distinct materials, clear portraits, mobile layout, nine blank FUT frames and Card Lab passed.",
   );
 } finally {
   await browser.close();

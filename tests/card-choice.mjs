@@ -106,12 +106,13 @@ try {
     await page.locator(".attribute-grid").waitFor();
   }
   await setRewards(1);
-  assert.equal(await page.locator("#choose-weekly-card").count(), 0);
+  assert.equal(await page.locator("#choose-weekly-card").count(), 1);
   await setRewards(2);
   for (const width of [320, 390, 430, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.locator("#choose-weekly-card").tap();
-    assert.equal(await page.locator("[data-select-card]").count(), 2);
+    assert.equal(await page.locator("[data-select-card]").count(), 3);
+    assert.equal(await page.locator('[data-select-card="base"]').count(), 1);
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth + 1,
@@ -139,7 +140,46 @@ try {
     location.hash = "#/profile";
   });
   await page.locator(".attribute-grid").waitFor();
-  assert.equal(await page.locator("#choose-weekly-card").count(), 0);
+  assert.equal(await page.locator("#choose-weekly-card").count(), 1);
+  await context.clock.setSystemTime(new Date("2026-11-27T12:00:00Z"));
+  await page.evaluate(() => {
+    window.__testState.cardCollections = [
+      {
+        uid: "pedro",
+        awards: [
+          {
+            id: "perfect-five",
+            name: "Cinco estrelas",
+            themeId: "perfect-five",
+            duration: "permanent",
+            criterion: "Perfeição na mesma dimensão durante três jogos.",
+            earnedAt: "2026-10-23T12:00:00Z",
+            expiresAt: null,
+          },
+        ],
+      },
+    ];
+    location.hash = "#/players";
+  });
+  await page.locator("#player-grid").waitFor();
+  await page.evaluate(() => (location.hash = "#/profile"));
+  await page.locator("#choose-weekly-card").tap();
+  assert.equal(await page.locator("[data-select-card]").count(), 2);
+  assert.equal(await page.locator(".collection-proof").count(), 1);
+  await page.locator(".collection-proof summary").click();
+  assert.ok(
+    (await page.locator(".collection-proof").textContent()).includes(
+      "Perfeição na mesma dimensão",
+    ),
+  );
+  await page
+    .locator("#modal-root .modal")
+    .screenshot({ path: "test-results/card-collection-selector.png" });
+  await page.locator('[data-select-card="perfect-five"]').tap();
+  await page.locator(".card-stage .perfect-five").waitFor();
+  await page.locator("#choose-weekly-card").tap();
+  await page.locator('[data-select-card="base"]').tap();
+  await page.locator(".card-stage .football-card:not(.card-special)").waitFor();
   assert.deepEqual(errors, []);
   console.log(
     `Card choice ${isWebKit ? "WebKit" : "Chromium"}: visibility, owner-only, selection, persistence, closed week and mobile passed.`,

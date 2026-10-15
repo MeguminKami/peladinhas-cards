@@ -18,17 +18,36 @@ import {
   Timestamp,
 } from "firebase/firestore";
 let env;
-test('push subscriptions and receipt capabilities are inaccessible to all frontend roles',async()=>{
-  await env.withSecurityRulesDisabled(async c=>{
-    await setDoc(doc(c.firestore(),'pushDevices/private-device'),{uid:'pedro',subscription:{endpoint:'private'}});
-    await setDoc(doc(c.firestore(),'pushDeliveries/private-receipt'),{uid:'pedro',token:'private'});
+test("push subscriptions and receipt capabilities are inaccessible to all frontend roles", async () => {
+  await env.withSecurityRulesDisabled(async (c) => {
+    await setDoc(doc(c.firestore(), "pushDevices/private-device"), {
+      uid: "pedro",
+      subscription: { endpoint: "private" },
+    });
+    await setDoc(doc(c.firestore(), "pushDeliveries/private-receipt"), {
+      uid: "pedro",
+      token: "private",
+    });
   });
-  for(const uid of ['pedro','joao','boss']) for(const collectionName of ['pushDevices','pushDeliveries']) {
-    const db=signed(uid);
-    await assertFails(getDoc(doc(db,collectionName,collectionName==='pushDevices'?'private-device':'private-receipt')));
-    await assertFails(getDocs(collection(db,collectionName)));
-    await assertFails(setDoc(doc(db,collectionName,'forged'),{uid,token:'forged'}));
-  }
+  for (const uid of ["pedro", "joao", "boss"])
+    for (const collectionName of ["pushDevices", "pushDeliveries"]) {
+      const db = signed(uid);
+      await assertFails(
+        getDoc(
+          doc(
+            db,
+            collectionName,
+            collectionName === "pushDevices"
+              ? "private-device"
+              : "private-receipt",
+          ),
+        ),
+      );
+      await assertFails(getDocs(collection(db, collectionName)));
+      await assertFails(
+        setDoc(doc(db, collectionName, "forged"), { uid, token: "forged" }),
+      );
+    }
 });
 before(async () => {
   const [host, port] = (
@@ -86,6 +105,57 @@ beforeEach(async () => {
     await setDoc(doc(c.firestore(), "games/closed"), game());
     await setDoc(doc(c.firestore(), "games/open"), game("open"));
   });
+});
+
+test("coleções e escolhas são públicas na liga e só o servidor pode atribuir ou selecionar", async () => {
+  await env.withSecurityRulesDisabled(async (c) => {
+    await setDoc(doc(c.firestore(), "cardCollections/pedro"), {
+      uid: "pedro",
+      awards: [],
+    });
+    await setDoc(doc(c.firestore(), "cardSelections/pedro"), {
+      uid: "pedro",
+      selectedCardId: "base",
+    });
+  });
+  for (const path of ["cardCollections/pedro", "cardSelections/pedro"]) {
+    await assertSucceeds(getDoc(doc(signed("joao"), path)));
+    await assertFails(
+      getDoc(doc(env.unauthenticatedContext().firestore(), path)),
+    );
+    for (const uid of ["pedro", "joao", "boss"])
+      await assertFails(
+        setDoc(doc(signed(uid), path), {
+          uid: "pedro",
+          awards: [{ id: "toty" }],
+        }),
+      );
+  }
+});
+
+test("posições no jogo aceitam apenas posições válidas de participantes", async () => {
+  const value = {
+    ...game("draft"),
+    creatorId: "boss",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    positions: { pedro: "GR", joao: "AV" },
+  };
+  await assertSucceeds(
+    setDoc(doc(signed("boss"), "games/positions-valid"), value),
+  );
+  await assertFails(
+    setDoc(doc(signed("boss"), "games/positions-other"), {
+      ...value,
+      positions: { outsider: "GR" },
+    }),
+  );
+  await assertFails(
+    setDoc(doc(signed("boss"), "games/positions-invalid"), {
+      ...value,
+      positions: { pedro: "SCRIPT" },
+    }),
+  );
 });
 test("tickets: leitura só do proprietário/admin e sem escrita directa", async () => {
   await env.withSecurityRulesDisabled(async (c) => {
@@ -741,28 +811,55 @@ test("jogos a eliminar bloqueiam novos votos", async () => {
   );
 });
 
-
 test("eventos modernos: auditoria e identidade dos outros votantes só para ADMIN", async () => {
   await env.withSecurityRulesDisabled(async (context) => {
     const store = context.firestore();
-    await setDoc(doc(store, "events/managed-private"), { schemaVersion: 2, status: "open", rewardPrivacy: 1 });
-    await setDoc(doc(store, "events/managed-private/votes/joao"), { selections: ["pedro"], submittedAt: Timestamp.now() });
-    await setDoc(doc(store, "events/managed-private/audit/entry"), { actorId: "joao", action: "vote-submitted" });
-    await setDoc(doc(store, "events/managed-private/private/rewards"), { positions: [{ points: 5 }] });
+    await setDoc(doc(store, "events/managed-private"), {
+      schemaVersion: 2,
+      status: "open",
+      rewardPrivacy: 1,
+    });
+    await setDoc(doc(store, "events/managed-private/votes/joao"), {
+      selections: ["pedro"],
+      submittedAt: Timestamp.now(),
+    });
+    await setDoc(doc(store, "events/managed-private/audit/entry"), {
+      actorId: "joao",
+      action: "vote-submitted",
+    });
+    await setDoc(doc(store, "events/managed-private/private/rewards"), {
+      positions: [{ points: 5 }],
+    });
   });
   await assertSucceeds(getDoc(doc(signed("pedro"), "events/managed-private")));
-  for (const path of ["events/managed-private/votes/joao", "events/managed-private/audit/entry", "events/managed-private/private/rewards"]) {
+  for (const path of [
+    "events/managed-private/votes/joao",
+    "events/managed-private/audit/entry",
+    "events/managed-private/private/rewards",
+  ]) {
     await assertFails(getDoc(doc(signed("pedro"), path)));
     await assertSucceeds(getDoc(doc(signed("boss"), path)));
     await assertFails(setDoc(doc(signed("boss"), path), { forged: true }));
   }
-  await assertFails(setDoc(doc(signed("joao"), "eventRewards/forged-managed"), { uid: "joao", reward: { points: 999 } }));
+  await assertFails(
+    setDoc(doc(signed("joao"), "eventRewards/forged-managed"), {
+      uid: "joao",
+      reward: { points: 999 },
+    }),
+  );
 });
 
-
 test("locked missions cannot be read directly by a member", async () => {
-  await env.withSecurityRulesDisabled(async context => {
-    await setDoc(doc(context.firestore(), "events/locked-mission"), { schemaVersion: 2, kind: "mission", status: "open", rewardPrivacy: 1, indefinite: true, endsAt: null, prerequisites: { mode: "all", missionIds: ["previous"] } });
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "events/locked-mission"), {
+      schemaVersion: 2,
+      kind: "mission",
+      status: "open",
+      rewardPrivacy: 1,
+      indefinite: true,
+      endsAt: null,
+      prerequisites: { mode: "all", missionIds: ["previous"] },
+    });
   });
   await assertFails(getDoc(doc(signed("pedro"), "events/locked-mission")));
   await assertSucceeds(getDoc(doc(signed("boss"), "events/locked-mission")));
@@ -770,12 +867,17 @@ test("locked missions cannot be read directly by a member", async () => {
 
 test("admin corrige jogo fechado preservando estado e metadados de fecho", async () => {
   const ref = doc(signed("boss"), "games/closed");
-  await assertSucceeds(updateDoc(ref, {
-    score: { teamA: 3, teamB: 1 },
-    performance: { teamA: { goals: ["pedro"], assists: ["pedro"] }, teamB: { goals: [], assists: [] } },
-    location: "Local corrigido",
-    updatedAt: serverTimestamp(),
-  }));
+  await assertSucceeds(
+    updateDoc(ref, {
+      score: { teamA: 3, teamB: 1 },
+      performance: {
+        teamA: { goals: ["pedro"], assists: ["pedro"] },
+        teamB: { goals: [], assists: [] },
+      },
+      location: "Local corrigido",
+      updatedAt: serverTimestamp(),
+    }),
+  );
   for (const correction of [
     { status: "open" },
     { closedAt: serverTimestamp() },
@@ -783,41 +885,139 @@ test("admin corrige jogo fechado preservando estado e metadados de fecho", async
     { creatorId: "boss" },
     { teamA: { starters: ["pedro", "pedro"], bench: [] } },
   ]) {
-    await assertFails(updateDoc(ref, { ...correction, updatedAt: serverTimestamp() }));
+    await assertFails(
+      updateDoc(ref, { ...correction, updatedAt: serverTimestamp() }),
+    );
   }
 });
 
 test("avaliações: edição dentro de 7 dias, sem reiniciar o prazo", async () => {
-  const all = Object.fromEntries(["pace","shooting","passing","dribbling","defending","physical","goalkeeping","stamina","vision","positioning","teamwork","composure"].map(key=>[key,12]));
-  for (const days of [6,8]) {
-    const submittedAt = Timestamp.fromMillis(Date.now()-days*86400000);
-    const createdAt = Timestamp.fromMillis(Date.now()-30*86400000);
-    await env.withSecurityRulesDisabled(async context => {
-      await setDoc(doc(context.firestore(),"initialRatings/pedro"),{uid:"pedro",ratings20:all,completed:true,submittedAt,createdAt,updatedAt:Timestamp.now()});
-      await setDoc(doc(context.firestore(),"communityRatings/pedro_joao"),{raterId:"pedro",targetId:"joao",ratings20:all,submitted:true,submittedAt,createdAt,updatedAt:Timestamp.now()});
-      await setDoc(doc(context.firestore(),"games/closed/feedback/pedro_joao"),{...vote(),createdAt,submittedAt,updatedAt:Timestamp.now()});
+  const all = Object.fromEntries(
+    [
+      "pace",
+      "shooting",
+      "passing",
+      "dribbling",
+      "defending",
+      "physical",
+      "goalkeeping",
+      "stamina",
+      "vision",
+      "positioning",
+      "teamwork",
+      "composure",
+    ].map((key) => [key, 12]),
+  );
+  for (const days of [6, 8]) {
+    const submittedAt = Timestamp.fromMillis(Date.now() - days * 86400000);
+    const createdAt = Timestamp.fromMillis(Date.now() - 30 * 86400000);
+    await env.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "initialRatings/pedro"), {
+        uid: "pedro",
+        ratings20: all,
+        completed: true,
+        submittedAt,
+        createdAt,
+        updatedAt: Timestamp.now(),
+      });
+      await setDoc(doc(context.firestore(), "communityRatings/pedro_joao"), {
+        raterId: "pedro",
+        targetId: "joao",
+        ratings20: all,
+        submitted: true,
+        submittedAt,
+        createdAt,
+        updatedAt: Timestamp.now(),
+      });
+      await setDoc(
+        doc(context.firestore(), "games/closed/feedback/pedro_joao"),
+        { ...vote(), createdAt, submittedAt, updatedAt: Timestamp.now() },
+      );
     });
-    for (const [path,change] of [["initialRatings/pedro",{ratings20:{...all,pace:13}}],["communityRatings/pedro_joao",{ratings20:{...all,pace:13}}],["games/closed/feedback/pedro_joao",{ratings:vote().ratings}]]) {
-      const ref = doc(signed("pedro"),path);
-      await (days<7 ? assertSucceeds : assertFails)(updateDoc(ref,{...change,updatedAt:serverTimestamp()}));
-      await assertFails(updateDoc(ref,{...change,submittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
-      await assertFails(updateDoc(ref,{...(path.startsWith("initial")?{completed:false}:{submitted:false}),updatedAt:serverTimestamp()}));
+    for (const [path, change] of [
+      ["initialRatings/pedro", { ratings20: { ...all, pace: 13 } }],
+      ["communityRatings/pedro_joao", { ratings20: { ...all, pace: 13 } }],
+      ["games/closed/feedback/pedro_joao", { ratings: vote().ratings }],
+    ]) {
+      const ref = doc(signed("pedro"), path);
+      await (days < 7 ? assertSucceeds : assertFails)(
+        updateDoc(ref, { ...change, updatedAt: serverTimestamp() }),
+      );
+      await assertFails(
+        updateDoc(ref, {
+          ...change,
+          submittedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        }),
+      );
+      await assertFails(
+        updateDoc(ref, {
+          ...(path.startsWith("initial")
+            ? { completed: false }
+            : { submitted: false }),
+          updatedAt: serverTimestamp(),
+        }),
+      );
     }
   }
 });
 
 test("autoavaliações antigas usam a criação como prazo quando não há submittedAt", async () => {
-  await env.withSecurityRulesDisabled(async context=>{
-    await setDoc(doc(context.firestore(),"initialRatings/pedro"),{uid:"pedro",ratings20:{pace:12},completed:true,createdAt:Timestamp.fromMillis(Date.now()-8*86400000),updatedAt:Timestamp.now()});
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "initialRatings/pedro"), {
+      uid: "pedro",
+      ratings20: { pace: 12 },
+      completed: true,
+      createdAt: Timestamp.fromMillis(Date.now() - 8 * 86400000),
+      updatedAt: Timestamp.now(),
+    });
   });
-  await assertFails(updateDoc(doc(signed("pedro"),"initialRatings/pedro"),{submittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+  await assertFails(
+    updateDoc(doc(signed("pedro"), "initialRatings/pedro"), {
+      submittedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
 });
 
 test("rascunho completo não inicia o prazo da autoavaliação antes da submissão", async () => {
-  const ratings20 = Object.fromEntries(["pace","shooting","passing","dribbling","defending","physical","goalkeeping","stamina","vision","positioning","teamwork","composure"].map(key=>[key,12]));
-  await env.withSecurityRulesDisabled(async context=>{
-    await setDoc(doc(context.firestore(),"initialRatings/pedro"),{uid:"pedro",ratings20,completed:false,submittedAt:null,createdAt:Timestamp.fromMillis(Date.now()-30*86400000),updatedAt:Timestamp.now()});
+  const ratings20 = Object.fromEntries(
+    [
+      "pace",
+      "shooting",
+      "passing",
+      "dribbling",
+      "defending",
+      "physical",
+      "goalkeeping",
+      "stamina",
+      "vision",
+      "positioning",
+      "teamwork",
+      "composure",
+    ].map((key) => [key, 12]),
+  );
+  await env.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "initialRatings/pedro"), {
+      uid: "pedro",
+      ratings20,
+      completed: false,
+      submittedAt: null,
+      createdAt: Timestamp.fromMillis(Date.now() - 30 * 86400000),
+      updatedAt: Timestamp.now(),
+    });
   });
-  await assertSucceeds(updateDoc(doc(signed("pedro"),"initialRatings/pedro"),{completed:true,submittedAt:serverTimestamp(),updatedAt:serverTimestamp()}));
-  await assertSucceeds(updateDoc(doc(signed("pedro"),"initialRatings/pedro"),{ratings20:{...ratings20,pace:13},updatedAt:serverTimestamp()}));
+  await assertSucceeds(
+    updateDoc(doc(signed("pedro"), "initialRatings/pedro"), {
+      completed: true,
+      submittedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(doc(signed("pedro"), "initialRatings/pedro"), {
+      ratings20: { ...ratings20, pace: 13 },
+      updatedAt: serverTimestamp(),
+    }),
+  );
 });

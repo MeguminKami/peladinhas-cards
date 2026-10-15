@@ -164,6 +164,11 @@ export const syncNotifications = async (uid, missions) => {
 };
 export const callAdmin = async (name, data) => {
   if (name === "selectWeeklyCard") {
+    state.cardSelections ||= [];
+    const choice = state.cardSelections.find((row) => row.uid === "pedro");
+    if (choice) choice.selectedCardId = data.cardId;
+    else
+      state.cardSelections.push({ uid: "pedro", selectedCardId: data.cardId });
     state.weeklyCards ||= [];
     const current = state.weeklyCards.find(
       (card) => card.uid === "pedro" && card.weekId === data.weekId,
@@ -292,23 +297,27 @@ export const callAdmin = async (name, data) => {
   return { data: { ok: true } };
 };
 export const list = async (path) =>
-  path === "weeklyCards"
-    ? state.weeklyCards || []
-    : path === "events"
-      ? state.events || []
-      : path === "ovrPresets"
-        ? state.ovrPresets || []
-        : path === "eventRewards"
-          ? state.eventRewards || []
-          : path === "cardThemes"
-            ? state.cardThemes || []
-            : path === "gameBalances"
-              ? state.gameBalances || []
-              : path === "communityRatings"
-                ? state.communityRatings
-                : path.includes("/feedback")
-                  ? state.feedback
-                  : [];
+  path === "cardCollections"
+    ? state.cardCollections || []
+    : path === "cardSelections"
+      ? state.cardSelections || []
+      : path === "weeklyCards"
+        ? state.weeklyCards || []
+        : path === "events"
+          ? state.events || []
+          : path === "ovrPresets"
+            ? state.ovrPresets || []
+            : path === "eventRewards"
+              ? state.eventRewards || []
+              : path === "cardThemes"
+                ? state.cardThemes || []
+                : path === "gameBalances"
+                  ? state.gameBalances || []
+                  : path === "communityRatings"
+                    ? state.communityRatings
+                    : path.includes("/feedback")
+                      ? state.feedback
+                      : [];
 
 export const weeklyCardPhotos = (weekId) =>
   (state.weeklyCardPhotos || []).filter((p) => p.weekId === weekId);
@@ -331,7 +340,8 @@ const publicEvent = (event) => ({
 export const eventDetails = async (id) => {
   const event = (state.events || []).find((event) => event.id === id);
   const value = event ? publicEvent(event) : null;
-  if (value && event.schemaVersion === 2) value.rewardPreview = event.configuration?.positions || [];
+  if (value && event.schemaVersion === 2)
+    value.rewardPreview = event.configuration?.positions || [];
   if (value && state.users.find((u) => u.uid === "pedro")?.role === "admin")
     value.configuration = event.configuration;
   return value;

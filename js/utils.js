@@ -2,6 +2,7 @@ import { cardWeek } from "./card-week.js";
 import {
   COLLECTION_EDITIONS,
   COLLECTION_THEME_IDS,
+  ACTIVE_COLLECTION_IDS,
 } from "./card-collection.js";
 export { COLLECTION_EDITIONS } from "./card-collection.js";
 export const ATTRIBUTES = [
@@ -58,6 +59,7 @@ export const COUNTRIES = [
   ["AR", "Argentina"],
 ];
 export const THEMES = [
+  ...ACTIVE_COLLECTION_IDS,
   "bronze-common",
   "bronze-rare",
   "silver-common",
@@ -75,11 +77,29 @@ export const THEMES = [
   "mvp",
   "legend-form",
 ];
+export const INFORM_THEMES = Object.freeze([
+  "in-form-bronze",
+  "in-form-silver",
+  "in-form-gold",
+]);
+// In Form keeps one earned ID; its metal follows the player's base rarity.
+export function informTheme(baseCard, ovr = 0) {
+  const base = /^(bronze|silver|gold)-(common|rare)$/.test(baseCard || "")
+    ? baseCard
+    : calculateBaseCard(ovr);
+  return `in-form-${base.split("-")[0]}`;
+}
 export const CATALOG_THEMES = Object.freeze([
-  ...THEMES,
-  ...COLLECTION_THEME_IDS,
+  ...new Set([
+    ...THEMES.filter((id) => id !== "in-form"),
+    ...INFORM_THEMES,
+    ...COLLECTION_THEME_IDS,
+  ]),
 ]);
 const THEME_NAMES = {
+  toty: "Apogeu · TOTY",
+  tots: "Equipa da Época · TOTS",
+  "fut-birthday": "Carnaval · FUT BIRTHDAY",
   "bronze-common": "Bronze comum",
   "bronze-rare": "Bronze rara",
   "silver-common": "Prata comum",
@@ -87,6 +107,9 @@ const THEME_NAMES = {
   "gold-common": "Ouro comum",
   "gold-rare": "Ouro rara",
   "in-form": "Em forma",
+  "in-form-bronze": "Em forma · Bronze",
+  "in-form-silver": "Em forma · Prata",
+  "in-form-gold": "Em forma · Ouro",
   "hot-streak": "Série de ouro",
   playmaker: "Maestro",
   sniper: "Goleador",

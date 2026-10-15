@@ -1,4 +1,5 @@
 import { EVENT_LIMITS, medal, rewardText } from "./event-model.js";
+import { CARD_POLICY, cardExpiry } from "./card-achievements.js";
 import {
   ATTRIBUTES,
   THEMES,
@@ -47,6 +48,10 @@ export function votersFor(event, users, games) {
   return active.filter((uid) => ids?.includes(uid) && eligible.includes(uid));
 }
 export function candidatesFor(event, question, users, games) {
+  if (event.automaticCollectionVote)
+    return votersFor(event, users, games).filter((uid) =>
+      question.candidateIds?.includes(uid),
+    );
   // The event's participant list is shared by voters and candidates.
   return votersFor(event, users, games);
 }
@@ -137,18 +142,59 @@ export function applyEventRewards(stats, rewards, uid, date = new Date()) {
       ];
     }),
   );
-  const cardRewards = delivered.filter(
-    (r) => r.reward.cardDuration === "permanent" || active.includes(r),
-  );
+  const cardRewards = delivered.filter((r) => {
+    const duration =
+      CARD_POLICY[r.reward.specialId]?.duration ||
+      r.reward.cardDuration ||
+      r.reward.statDuration ||
+      "weekly";
+    const starts = asDate(r.cardStartsAt || r.startsAt || r.createdAt);
+    return (
+      starts &&
+      +starts <= +date &&
+      (duration === "permanent" || +cardExpiry(starts, duration) > +date)
+    );
+  });
   const specials = [
     ...new Set(cardRewards.map((r) => r.reward.specialId).filter(Boolean)),
   ].map((id) => {
-    const cardTheme = cardRewards.find((r) => r.reward.specialId === id)?.reward
-      .cardTheme;
+    const source = cardRewards
+      .filter((r) => r.reward.specialId === id)
+      .sort(
+        (a, b) =>
+          Number(
+            (CARD_POLICY[id]?.duration ||
+              b.reward.cardDuration ||
+              b.reward.statDuration) === "permanent",
+          ) -
+            Number(
+              (CARD_POLICY[id]?.duration ||
+                a.reward.cardDuration ||
+                a.reward.statDuration) === "permanent",
+            ) ||
+          +asDate(b.cardStartsAt || b.startsAt || b.createdAt) -
+            +asDate(a.cardStartsAt || a.startsAt || a.createdAt),
+      )[0];
+    const cardTheme = source?.reward.cardTheme;
+    const duration =
+      CARD_POLICY[id]?.duration ||
+      source.reward.cardDuration ||
+      source.reward.statDuration ||
+      "weekly";
+    const earnedAt = asDate(
+      source.cardStartsAt || source.startsAt || source.createdAt,
+    );
     return {
       id,
       name: cardTheme?.name || themeName(id),
       eventReward: true,
+      ...(source.reward.criterion
+        ? { criterion: source.reward.criterion }
+        : {}),
+      eventId: source.eventId || null,
+      duration,
+      earnedAt: earnedAt.toISOString(),
+      expiresAt: cardExpiry(earnedAt, duration)?.toISOString() || null,
       ...(cardTheme ? { cardTheme } : {}),
     };
   });

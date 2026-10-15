@@ -791,7 +791,7 @@
 }
 .match-performance-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 168px 168px;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 0.6fr) 140px 140px;
   gap: 20px;
   align-items: center;
   padding-block: 12px;

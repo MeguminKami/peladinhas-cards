@@ -16,6 +16,11 @@ import { card, bindImages, weeklyEvolution } from "./cards.js";
 import { esc, empty, linkButton, pageHead, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
 import * as DB from "./db.js";
+import {
+  durationName,
+  validCardSelection,
+  CARD_POLICY,
+} from "./card-achievements.js";
 export function profileFields(p = {}) {
   return `<div class="form-grid"><label>Nome de jogador<input name="displayName" required maxlength="30" value="${esc(p.displayName || "")}"></label><label>País<select name="countryCode" required>${COUNTRIES.map(([c, n]) => `<option value="${c}" ${p.countryCode === c ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>Data de nascimento<input name="birthDate" type="date" required max="${new Date().toISOString().slice(0, 10)}" value="${esc(p.birthDate || "")}"></label><label>Altura (cm)<input name="heightCm" type="number" required min="120" max="230" value="${p.heightCm || ""}"></label><label>Peso (kg) <span class="muted">opcional</span><input name="weightKg" type="number" min="30" max="250" step=".1" value="${p.weightKg || ""}"></label><label>Pé preferido<select name="preferredFoot" required><option value="">Escolher</option>${[
     ["right", "Direito"],
@@ -136,12 +141,25 @@ export async function playerPage(ctx, uid) {
     ),
     s = p.matchStats,
     best = ATTRIBUTES.reduce((a, b) => (p.stats[b[0]] > p.stats[a[0]] ? b : a));
-  const cardChoices = [...new Map(p.specials.map((s) => [s.id, s])).values()];
-  const canChooseCard =
-    own &&
-    !p.cardLocked &&
-    cardWeek().phase === "open" &&
-    cardChoices.length > 1;
+  const cardChoices = [
+    { id: "base", name: "Carta normal", duration: "base" },
+    ...new Map(p.specials.map((s) => [s.id, s])).values(),
+  ];
+  const collectionProof = p.specials
+    .filter((choice) => choice.evidence?.length || choice.criterion)
+    .map(
+      (choice) =>
+        `<details class="collection-proof"><summary>${esc(choice.name)} · Como foi conquistada</summary><p>${esc(choice.criterion || "")}</p>${choice.earnedAt ? `<p>Conquistada em ${formatDate(choice.earnedAt)}.</p>` : ""}${choice.eventId ? `<p><a href="#/event/${esc(choice.eventId)}">Ver evento</a></p>` : ""}<ul>${(
+          choice.evidence || []
+        )
+          .map((id) => {
+            const game = ctx.league.games.find((game) => game.id === id);
+            return `<li>${game ? `<a href="#/game/${esc(id)}">${esc(game.title || "Ver jogo")}</a>` : "Jogo já indisponível"}</li>`;
+          })
+          .join("")}</ul></details>`,
+    )
+    .join("");
+  const canChooseCard = own && p.hasCard && cardChoices.length > 1;
   const previousWeek = cardWeek(new Date(+cardWeek().opensAt - 1)).weekId;
   const attributePrevious = history.find((h) => h.weekId === previousWeek);
   const previous = attributePrevious;
@@ -243,12 +261,10 @@ export async function playerPage(ctx, uid) {
   document
     .querySelector("#choose-weekly-card")
     ?.addEventListener("click", () => {
-      const selected = cardChoices.some((s) => s.id === p.selectedCardId)
-        ? p.selectedCardId
-        : cardChoices[0].id;
+      const selected = validCardSelection(p.selectedCardId, p.specials);
       const close = modal(
         "Escolher carta",
-        `<p>A carta selecionada fica guardada quando a semana fechar.</p><div class="weekly-card-choices">${cardChoices.map((choice) => `<button type="button" class="weekly-card-choice" data-select-card="${esc(choice.id)}" aria-pressed="${choice.id === selected}" aria-label="Escolher ${esc(choice.name)}">${card(p, { size: "sm", preview: true, theme: choice.id })}<strong>${esc(choice.name)}</strong><span>${choice.id === selected ? "✓ Selecionada" : "Escolher esta carta"}</span></button>`).join("")}</div>`,
+        `<p>Escolhe a carta normal ou uma especial disponível. As conquistas permanentes ficam na tua coleção. Ao expirar uma carta, voltas à carta normal.</p><div class="weekly-card-choices">${cardChoices.map((choice) => `<button type="button" class="weekly-card-choice" data-select-card="${esc(choice.id)}" aria-pressed="${choice.id === selected}" aria-label="Escolher ${esc(choice.name)}">${card(p, { size: "sm", preview: true, theme: choice.id === "base" ? p.cardType : choice.id })}<strong>${esc(choice.name)}</strong><small>${choice.id === "base" ? "Sempre disponível" : `${durationName(choice.duration || CARD_POLICY[choice.themeId || choice.id]?.duration)}${choice.expiresAt ? ` · Até ${formatDate(choice.expiresAt)}` : ""}`}</small><span>${choice.id === selected ? "✓ Selecionada" : "Escolher esta carta"}</span></button>`).join("")}</div>${collectionProof}`,
       );
       const root = document.querySelector("#modal-root");
       bindImages(root);

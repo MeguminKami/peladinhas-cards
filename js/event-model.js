@@ -9,6 +9,7 @@ import {
   formatDate,
   formatDateTime,
 } from "./utils.js";
+import { CARD_POLICY, durationName, cardExpiry } from "./card-achievements.js";
 export const EVENT_LIMITS = Object.freeze({
   winners: 20,
   votes: 10,
@@ -67,7 +68,11 @@ export const positionLabel = (position) =>
 
 // Shared live positions do not change the order used to award prizes.
 export function sharedRankingPositions(event, rows) {
-  if (event.method === "admin" || ["closed", "cancelled"].includes(event.status)) return rows;
+  if (
+    event.method === "admin" ||
+    ["closed", "cancelled"].includes(event.status)
+  )
+    return rows;
   const key = event.method === "vote" ? "votes" : "progress";
   const positions = new Map();
   return rows.map((row, index) => {
@@ -79,7 +84,10 @@ export function sharedRankingPositions(event, rows) {
   });
 }
 export const hasTemporaryReward = (reward = {}) =>
-  (!!reward.specialId && reward.cardDuration !== "permanent") ||
+  (!!reward.specialId &&
+    (CARD_POLICY[reward.specialId]?.duration ||
+      reward.cardDuration ||
+      reward.statDuration) !== "permanent") ||
   (reward.statDuration !== "permanent" &&
     Object.values(reward.boosts || {}).some((value) => value > 0));
 export function rewardText(reward = {}) {
@@ -89,7 +97,7 @@ export function rewardText(reward = {}) {
   );
   if (reward.specialId)
     parts.push(
-      `${reward.cardTheme?.name || themeName(reward.specialId)} · carta ${reward.cardDuration === "permanent" ? "permanente" : (reward.cardDuration || reward.statDuration) === "monthly" ? "mensal" : "semanal"}`,
+      `${reward.cardTheme?.name || themeName(reward.specialId)} · ${durationName(CARD_POLICY[reward.specialId]?.duration || reward.cardDuration || reward.statDuration)}`,
     );
   return parts.join(" · ") || "Sem recompensa";
 }
@@ -110,6 +118,13 @@ export function validEventReward(reward, themes = []) {
     return false;
   if (!["stats", "card", "both"].includes(reward.mode)) return false;
   if (!["weekly", "monthly", "permanent"].includes(reward.statDuration))
+    return false;
+  if (
+    reward.cardDuration &&
+    !["weekly", "monthly", "season", "year", "permanent"].includes(
+      reward.cardDuration,
+    )
+  )
     return false;
   if (
     !reward.boosts ||

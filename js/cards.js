@@ -3,7 +3,7 @@ import { cardClip, expandCardOutline } from "./card-geometry.js";
 import { applyCardTemplate } from "./card-design.js";
 import { cardPhotoStyles } from "./card-photo.js";
 import { SPECIAL_CARD_DESIGNS } from "./card-specials.js";
-import { ATTRIBUTES, flag } from "./utils.js";
+import { ATTRIBUTES, flag, informTheme, INFORM_THEMES } from "./utils.js";
 import { esc } from "./ui.js";
 import { safeImage, ASSET_PATHS, PLAYSTYLE_ICONS } from "./assets.js";
 export function cardPlaystyles(player) {
@@ -26,16 +26,28 @@ export function cardPlaystyles(player) {
 export function card(player, { size = "md", theme, preview = false } = {}) {
   const chosenTheme =
     theme ||
-    (player.specials?.some((s) => s.id === player.selectedCardId)
-      ? player.selectedCardId
-      : null) ||
+    (player.selectedCardId === "base"
+      ? player.cardType || "bronze-common"
+      : player.specials?.some((s) => s.id === player.selectedCardId)
+        ? player.selectedCardId
+        : null) ||
     player.specials?.[0]?.id ||
     player.cardType ||
     "bronze-common";
   const template = player.specials?.find(
     (sp) => sp.id === chosenTheme,
   )?.cardTheme;
-  const t = template?.baseTheme || chosenTheme;
+  const baseTheme =
+    template?.baseTheme ||
+    player.specials?.find((s) => s.id === chosenTheme)?.themeId ||
+    chosenTheme;
+  const informMaterial =
+    baseTheme === "in-form"
+      ? informTheme(player.cardType, player.ovr)
+      : INFORM_THEMES.includes(baseTheme)
+        ? baseTheme
+        : "";
+  const t = informMaterial ? "in-form" : baseTheme;
   const special = SPECIAL_CARD_DESIGNS[t];
   const specialShape = special?.outline
     .split(" ")
@@ -80,7 +92,7 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.ovrDelta !== 0
       ? `<span class="card-ovr-trend ${player.ovrDelta > 0 ? "positive" : "negative"}" role="img" aria-label="${player.ovrDelta > 0 ? "Subiu" : "Desceu"} OVR face à semana anterior">${trendArrow(player.ovrDelta)}</span>`
       : "";
-  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${special ? " card-special" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
+  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
     0,
     8,
   )
