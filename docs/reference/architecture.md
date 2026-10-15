@@ -135,6 +135,8 @@ O frontend Firebase usa SDK web por importação remota; o servidor usa as depen
 | DBS           | Capacidades de membro e gestão dos jogos permitidos, equipas e encerramento.  |
 | Administrador | Jogadores, papéis, OVR, cartas, eventos, avaliações, tickets e manutenção.    |
 
+O administrador pode corrigir dados, equipas, resultado, golos e assistências de jogos encerrados. O jogo mantém o estado encerrado, a data e o autor do fecho; as estatísticas são recalculadas pelo processamento do jogo. DBS só edita jogos ainda não encerrados.
+
 A perspetiva visual de um papel não muda a identidade autenticada nem substitui permissões no servidor. Votos e feedback individual são limitados ao autor e à administração; os restantes membros consultam os agregados permitidos. Regras e Functions são a autoridade para cada operação.
 
 ## Pacotes de publicação

@@ -217,9 +217,24 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await field("passing").locator('.feedback-star[data-value="5"]').tap();
   assert.equal(await field("passing").locator(".is-filled").count(), 5);
-  await form
-    .getByRole("button", { name: "Enviar avaliação", exact: true })
-    .click();
+  const submit = page.getByRole("button", { name: "Submeter", exact: true });
+  await submit.click();
+  assert.equal(await page.locator('.feedback-form[data-submitted="true"]').count(), 0);
+  const geometry = await submit.evaluate((button) => {
+    const box = button.getBoundingClientRect();
+    return { height: box.height, center: box.left + box.width / 2, viewport: innerWidth };
+  });
+  assert.ok(geometry.height >= 64);
+  assert.ok(Math.abs(geometry.center - geometry.viewport / 2) < 4);
+  await page.evaluate(() => {
+    document.querySelectorAll('.feedback-form[data-submitted="false"] .feedback-field').forEach((field) => {
+      if (field.querySelector('[data-rating]').value !== "") return;
+      const choice = field.querySelector('input[data-feedback-choice][value="3"]');
+      choice.checked = true;
+      choice.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+  await submit.click();
   await page
     .locator('[data-target="ana"][data-submitted="true"]')
     .waitFor({ state: "attached" });
@@ -256,6 +271,7 @@ try {
       .getAttribute("open")) !== null,
   );
   await page.evaluate(() => {
+    window.__testState.feedback = window.__testState.feedback.filter(row => row.targetId !== "joao");
     window.__testState.feedback.push({
       gameId: "demo-game-0",
       raterId: "pedro",

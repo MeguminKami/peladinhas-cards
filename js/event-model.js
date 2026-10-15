@@ -170,7 +170,13 @@ export function periodWindow(event, date = new Date()) {
   }
   return { start, end, key };
 }
-export function objectiveProgress(uid, event, games, date = new Date()) {
+export function objectiveProgress(
+  uid,
+  event,
+  games,
+  date = new Date(),
+  teamStats = false,
+) {
   const window = periodWindow(event, date);
   const matches = games
     .filter(
@@ -192,8 +198,18 @@ export function objectiveProgress(uid, event, games, date = new Date()) {
   let value = 0,
     streak = 0;
   for (const game of matches) {
-    const outcome = matchOutcome(uid, game),
-      performance = matchPerformance(uid, game);
+    const outcome = matchOutcome(uid, game);
+    const side = ["teamA", "teamB"].find((side) =>
+      [...(game[side]?.starters || []), ...(game[side]?.bench || [])].includes(
+        uid,
+      ),
+    );
+    const performance = teamStats
+      ? {
+          goals: game.score?.[side] || 0,
+          assists: game.performance?.[side]?.assists?.length || 0,
+        }
+      : matchPerformance(uid, game);
     switch (event.objective?.metric) {
       case "games":
         value++;
@@ -316,9 +332,34 @@ export function eventRanking(
       ),
     ]),
   );
+  const teamMetrics = ["goals", "assists", "goalsAndAssists", "wins"];
+  const collectiveTeamProgress = () => {
+    let total = 0;
+    for (const game of games) {
+      for (const side of ["teamA", "teamB"]) {
+        const members = [
+          ...(game[side]?.starters || []),
+          ...(game[side]?.bench || []),
+        ];
+        // Count each team's result once, even with several mission participants.
+        const uid = ids.find((id) => {
+          const unlocked = missionUnlockedAt(event, id, completions);
+          return (
+            members.includes(id) &&
+            unlocked &&
+            +asDate(game.closedAt || game.scheduledAt) >= +unlocked
+          );
+        });
+        if (uid) total += objectiveProgress(uid, event, [game], date, true);
+      }
+    }
+    return total;
+  };
   const collective =
     event.scope === "collective"
-      ? ids.reduce((sum, uid) => sum + progressFor(uid), 0)
+      ? teamMetrics.includes(event.objective?.metric)
+        ? collectiveTeamProgress()
+        : ids.reduce((sum, uid) => sum + progressFor(uid), 0)
       : null;
   const ranking = ids.map((uid) => ({
     uid,

@@ -1,5 +1,9 @@
 import { bindRowScroll } from "./row-scroll.js";
-import { lisbonDateInput, parseLisbonDateInput, formatMatchDate } from './match-time.js';
+import {
+  lisbonDateInput,
+  parseLisbonDateInput,
+  formatMatchDate,
+} from "./match-time.js";
 import {
   balancedTeams,
   teamBalance,
@@ -65,7 +69,8 @@ export async function gamePage(ctx, id) {
     participants(g).map((uid) => [uid, matchPerformance(uid, g)]),
   );
   const manager = ["admin", "dbs"].includes(ctx.user.role);
-  const editable = manager && g.status !== "closed";
+  const editable =
+    manager && (g.status !== "closed" || ctx.user.role === "admin");
   const canClose = manager && g.status === "open";
   if (!saved && !manager)
     return ctx.render(

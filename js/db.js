@@ -154,13 +154,19 @@ export async function saveGame(id, data, actor) {
     const s = await tx.get(target);
     if (!["admin", "dbs"].includes(actor.role))
       throw Error("Só DBS e administradores podem gerir jogos.");
-    if (s.exists() && (s.data().status === "closed" || s.data().deleting))
+    if (
+      s.exists() &&
+      ((s.data().status === "closed" && actor.role !== "admin") ||
+        s.data().deleting)
+    )
       throw Error("O jogo está encerrado ou a ser eliminado.");
     const prior = s.data()?.status;
     if (
       (!s.exists() && data.status !== "draft") ||
       (prior === "draft" && !["draft", "open"].includes(data.status)) ||
-      (prior === "open" && !["draft", "open", "closed"].includes(data.status))
+      (prior === "open" &&
+        !["draft", "open", "closed"].includes(data.status)) ||
+      (prior === "closed" && data.status !== "closed")
     )
       throw Error("Transição de jogo inválida.");
     const value = { ...data, updatedAt: serverTimestamp() };

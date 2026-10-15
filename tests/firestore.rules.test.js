@@ -253,7 +253,7 @@ test("jogo fechado é imutável para criador; limites e duplicados", async () =>
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertFails(
+  await assertSucceeds(
     updateDoc(doc(signed("boss"), "games/closed"), {
       title: "Correcção",
       updatedAt: serverTimestamp(),
@@ -766,4 +766,23 @@ test("locked missions cannot be read directly by a member", async () => {
   });
   await assertFails(getDoc(doc(signed("pedro"), "events/locked-mission")));
   await assertSucceeds(getDoc(doc(signed("boss"), "events/locked-mission")));
+});
+
+test("admin corrige jogo fechado preservando estado e metadados de fecho", async () => {
+  const ref = doc(signed("boss"), "games/closed");
+  await assertSucceeds(updateDoc(ref, {
+    score: { teamA: 3, teamB: 1 },
+    performance: { teamA: { goals: ["pedro"], assists: ["pedro"] }, teamB: { goals: [], assists: [] } },
+    location: "Local corrigido",
+    updatedAt: serverTimestamp(),
+  }));
+  for (const correction of [
+    { status: "open" },
+    { closedAt: serverTimestamp() },
+    { closedBy: "boss" },
+    { creatorId: "boss" },
+    { teamA: { starters: ["pedro", "pedro"], bench: [] } },
+  ]) {
+    await assertFails(updateDoc(ref, { ...correction, updatedAt: serverTimestamp() }));
+  }
 });

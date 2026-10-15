@@ -326,3 +326,51 @@ test("new objectives count contributions, unbeaten games and clean sheets", () =
       expected,
     );
 });
+
+test("missões coletivas contam os totais de cada equipa uma vez", () => {
+  const match = game(5, 1, 1, 1);
+  match.teamA.starters.push("outside");
+  match.score.teamA = 4;
+  match.performance.teamA.assists.push("outside", "outside");
+  for (const [metric, expected] of [
+    ["goals", 4],
+    ["assists", 3],
+    ["goalsAndAssists", 7],
+    ["wins", 1],
+  ]) {
+    const mission = {
+      ...event,
+      kind: "mission",
+      method: "objective",
+      scope: "collective",
+      participantIds: ["a", "b"],
+      objective: { metric, target: 10 },
+    };
+    assert.deepEqual(
+      eventRanking(mission, [], [match], [], date).map((row) => row.progress),
+      [expected, expected],
+    );
+    assert.equal(
+      eventRanking(
+        { ...mission, participantIds: ["b"] },
+        [],
+        [match],
+        [],
+        date,
+      )[0].progress,
+      expected,
+    );
+  }
+  const bothSides = {
+    ...event,
+    kind: "mission",
+    method: "objective",
+    scope: "collective",
+    objective: { metric: "wins", target: 10 },
+  };
+  assert.ok(
+    eventRanking(bothSides, [], [match], [], date).every(
+      (row) => row.progress === 1,
+    ),
+  );
+});
