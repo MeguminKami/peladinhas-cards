@@ -29,7 +29,10 @@
     "test:hosting": "firebase emulators:exec --project demo-peladinhas-hosting --only hosting \"node tests/hosting.mjs\"",
     "pretest:hosting": "node scripts/build-hosting.mjs",
     "simulate": "node scripts/simulate-evolution.mjs",
-    "test:feedback": "node tests/feedback.mjs"
+    "test:feedback": "node tests/feedback.mjs",
+    "test:profile": "node tests/profile-growth.mjs",
+    "test:card-choice": "node tests/card-choice.mjs",
+    "test:event-scopes": "node tests/event-scopes.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

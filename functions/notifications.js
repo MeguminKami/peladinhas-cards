@@ -241,7 +241,7 @@ export function notificationFunctions(notify) {
                       .filter((w) => w.uid === uid)
                       .map(
                         (w) =>
-                          `${w.position ? `${medal(w.position)} ${w.position}.º` : "Participação"} — ${rewardText(w.reward)}.${hasTemporaryReward(w.reward) ? ` Validade semanal até ${dateFormat.format(asDate(w.expiresAt))}.` : ""}`,
+                          `${w.position ? `${medal(w.position)} ${w.position}.º` : "Participação"} — ${rewardText(w.reward)}.${hasTemporaryReward(w.reward) ? ` Validade até ${dateFormat.format(asDate(w.expiresAt))}.` : ""}`,
                       )
                       .join(" ")}`.slice(0, 500)
                   : `${event.title}: recebeste a recompensa na carta da semana da recompensa. Consulta o teu perfil.`,

@@ -18,7 +18,7 @@ flowchart TB
 | Momento                            | O que acontece                                        |
 | :--------------------------------- | :---------------------------------------------------- |
 | **Autoavaliação concluída**        | É criada a primeira carta.                            |
-| **Primeiro voto externo completo** | A base passa a 20% autoavaliação + 80% média externa. |
+| **Primeiro voto externo completo** | A autoavaliação passa a ter peso máximo de 20%. |
 | **Três votos externos completos**  | A carta passa a oficial.                              |
 | **Jogos avaliados**                | Alimentam a progressão dos atributos.                 |
 | **Fecho semanal**                  | Guarda a carta dessa semana no histórico.             |
@@ -38,7 +38,7 @@ flowchart TB
 ```mermaid
 flowchart TB
     classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["Quinta · 20:00<br/>Abre o ciclo"] --> B["Jogos e evolução"]
+    A["Quinta · 12:00<br/>Abre o ciclo"] --> B["Jogos e evolução"]
     B --> C["Quarta · 12:00<br/>Fecha e guarda a carta"]
     C --> D["Pausa"]
     D --> A
@@ -55,7 +55,7 @@ flowchart TB
 
 ## Da primeira carta à carta oficial
 
-A autoavaliação completa dos 12 atributos usa a escala 0–20 e permite criar a primeira carta. Desde o primeiro voto externo completo, a base usa 20% da autoavaliação e 80% da média externa. Com três avaliações externas completas, a carta passa a oficial.
+A autoavaliação completa dos 12 atributos usa a escala 0–20 e permite criar a primeira carta. Desde o primeiro voto externo completo, o peso da autoavaliação é min(20%, 1 / (N + 1)), com N avaliações externas; a média externa recebe o restante peso. Com 4 votos externos pesa 20%, com 9 pesa 10% e com 19 pesa 5%. Sem votos externos, a primeira carta provisória usa a autoavaliação. Com três avaliações externas completas, a carta passa a oficial.
 
 Os valores são convertidos para a escala 0–99 da carta. Avaliações da comunidade, feedback de jogos e recompensas têm responsabilidades distintas: a comunidade estabelece a base; os jogos alimentam a progressão; os eventos aplicam recompensas validadas pelo servidor.
 
@@ -79,7 +79,11 @@ O ranking semanal considera o ciclo e exige pelo menos duas avaliações recebid
 
 ## Ciclo semanal
 
-O ciclo abre à quinta-feira às 20:00 e fecha à quarta-feira às 12:00, em Lisboa. A pausa dura até à quinta-feira seguinte às 20:00. A conversão respeita inverno/verão e não depende do fuso do dispositivo.
+O ciclo abre à quinta-feira às 12:00 e fecha à quarta-feira às 12:00, em Lisboa. A pausa dura até à quinta-feira seguinte às 12:00. A conversão respeita inverno/verão e não depende do fuso do dispositivo.
+
+As cartas na página principal e na lista de jogadores mostram apenas setas verdes ou vermelhas para a evolução de OVR e atributos face à semana anterior. Só no perfil são mostradas as diferenças numéricas: OVR, os 12 atributos e um resumo de quantos subiram ou desceram. Sem carta da semana anterior, não se inventa uma variação.
+
+Quando o jogador tem mais de um tipo de carta disponível, o próprio perfil mostra «Escolher carta». A escolha aplica-se às cartas exibidas na aplicação durante a semana e só pode ser feita pelo jogador numa semana aberta. O fecho guarda o tipo selecionado no snapshot; o histórico mantém essa escolha. Com zero ou uma opção, ou após o fecho, o botão não aparece.
 
 Uma carta fechada preserva atributos, OVR, especiais, posição e aparência. O histórico semanal permite ampliar essas cartas e consultar a evolução. Alterações posteriores não devem reescrever a memória visual de uma semana fechada.
 

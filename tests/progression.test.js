@@ -12,6 +12,7 @@ import {
   performanceBonuses,
 } from "../js/utils.js";
 import { progressionScenario } from "../scripts/simulate-evolution.mjs";
+import { calculatePlayerCard } from "../js/player-calculation.js";
 const all = (value) =>
   Object.fromEntries(ATTRIBUTES.map(([key]) => [key, value]));
 const rating = (value) =>
@@ -258,4 +259,117 @@ test("+4 abaixo de 75 é reservado à excelência absoluta e relativa", () => {
     }).pace,
     3,
   );
+});
+
+test("cálculo da carta: base e jogos elegíveis, sem dependência de cartas semanais", () => {
+  const date = new Date("2026-10-23T12:00Z");
+  const base = {
+    uid: "a",
+    initial: all(12),
+    community: { count: 1, ratings20: all(12) },
+    position: "ALA",
+    date,
+  };
+  const first = calculatePlayerCard(base);
+  assert.ok(Object.values(first.stats).every((value) => value === 59));
+  assert.equal(first.ovr, 59);
+  assert.deepEqual(
+    calculatePlayerCard({ ...base, date: new Date("2026-11-05T12:00Z") }).stats,
+    first.stats,
+  );
+  const game = {
+    id: "one",
+    status: "closed",
+    closedAt: new Date("2026-10-22T12:00Z"),
+    teamA: { starters: ["a"], bench: [] },
+    teamB: { starters: ["b"], bench: [] },
+    score: { teamA: 1, teamB: 0 },
+  };
+  const aggregate = {
+    ...rating(5),
+    gameId: game.id,
+    date: game.closedAt,
+    outcome: 1,
+    teamRatings: rating(3),
+    opponentRatings: rating(3),
+  };
+  const played = calculatePlayerCard({
+    ...base,
+    games: [game],
+    aggregates: [aggregate],
+  });
+  assert.ok(played.ovr > first.ovr);
+  assert.deepEqual(
+    calculatePlayerCard({ ...base, games: [game], aggregates: [aggregate] }),
+    played,
+    "Reloading must not apply improvements twice",
+  );
+  for (const invalid of [
+    { ...game, deleting: true },
+    { ...game, status: "open" },
+    { ...game, closedAt: new Date("2026-10-30") },
+    { ...game, teamA: { starters: ["outsider"], bench: [] } },
+  ]) {
+    assert.deepEqual(
+      calculatePlayerCard({
+        ...base,
+        games: [invalid],
+        aggregates: [aggregate],
+      }).stats,
+      first.stats,
+    );
+  }
+  const changedBase = calculatePlayerCard({ ...base, initial: all(0) });
+  assert.ok(
+    changedBase.ovr < first.ovr,
+    "Self-rating edits change the base even without a game",
+  );
+  const newCommunity = calculatePlayerCard({
+    ...base,
+    community: { count: 2, ratings20: all(16) },
+  });
+  assert.ok(
+    newCommunity.ovr > first.ovr,
+    "Community edits change the base even without a game",
+  );
+});
+
+test("cálculo da carta: recompensas somadas uma vez e expiração sem apagar melhorias", () => {
+  const date = new Date("2026-10-23T12:00Z");
+  const game = {
+    id: "one",
+    status: "closed",
+    closedAt: new Date("2026-10-22"),
+    teamA: { starters: ["a"], bench: [] },
+    teamB: { starters: ["b"], bench: [] },
+    score: { teamA: 1, teamB: 0 },
+  };
+  const input = {
+    uid: "a",
+    initial: all(12),
+    position: "AV",
+    date,
+    games: [game],
+    aggregates: [
+      { ...rating(5), gameId: game.id, date: game.closedAt, outcome: 1 },
+    ],
+  };
+  const unboosted = calculatePlayerCard(input);
+  const reward = {
+    uid: "a",
+    schemaVersion: 2,
+    createdAt: new Date("2026-10-22"),
+    startsAt: new Date("2026-10-22"),
+    expiresAt: new Date("2026-10-29"),
+    reward: { statDuration: "weekly", boosts: { shooting: 4 } },
+  };
+  const boosted = calculatePlayerCard({ ...input, rewards: [reward] });
+  assert.equal(boosted.stats.shooting, unboosted.stats.shooting + 4);
+  assert.deepEqual(boosted.rawStats, unboosted.rawStats);
+  const expired = calculatePlayerCard({
+    ...input,
+    rewards: [reward],
+    date: new Date("2026-10-30"),
+  });
+  assert.deepEqual(expired.stats, unboosted.stats);
 });

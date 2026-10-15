@@ -1,13 +1,9 @@
-import { applyEventRewards } from "./event-rules.js";
+import { calculatePlayerCard } from "./player-calculation.js";
 import { cardWeek } from "./card-week.js";
 import { balanceMatches } from "./team-balance.js";
 import * as DB from "./db.js";
 import {
   asDate,
-  calculateInitialBaseline,
-  calculatePlayerStats,
-  calculateInactivity,
-  calculateOverall,
   normalizeOvrWeights,
   calculateBaseCard,
   calculateSpecialCards,
@@ -46,7 +42,10 @@ export async function loadLeague() {
     DB.list("eventRewards"),
   ]);
   const cycle = cardWeek();
-  const previousOvrs = await DB.previousOvrs(users, cycle);
+  const previousCards = await DB.previousCards(users, cycle);
+  const previousOvrs = Object.fromEntries(
+    Object.entries(previousCards).map(([uid, card]) => [uid, card?.ovr]),
+  );
   const ovrWeights = normalizeOvrWeights(settings);
   const players = users
     .filter((u) => !u.disabled)
@@ -55,7 +54,12 @@ export async function loadLeague() {
         cs = community.find((x) => x.targetId === u.uid),
         matches = games.filter((g) => participants(g).includes(u.uid));
       const aggregates = matches
-        .filter((g) => g.status === "closed")
+        .filter(
+          (g) =>
+            g.status === "closed" &&
+            !g.deleting &&
+            +asDate(g.closedAt || g.scheduledAt) <= Date.now(),
+        )
         .map((g) => ({
           ...(summaries.find((x) => x.id === g.id)?.players?.[u.uid] || {}),
           ...matchPerformance(u.uid, g),
@@ -71,24 +75,19 @@ export async function loadLeague() {
           gameId: g.id,
         }))
         .sort((a, b) => a.date - b.date);
-      const rawStats = calculatePlayerStats(
-          calculateInitialBaseline(initial, cs),
-          aggregates,
-          { weights: ovrWeights, position: u.primaryPosition },
-        ),
-        rewards = applyEventRewards(rawStats, eventRewards, u.uid),
-        stats = rewards.stats,
-        inactivity = calculateInactivity(
-          u.uid,
-          games,
+      const calculation = calculatePlayerCard({
+        uid: u.uid,
+        initial,
+        community: cs,
+        aggregates,
+        games,
+        rewards: eventRewards,
+        weights: ovrWeights,
+        position: u.primaryPosition,
+        createdAt:
           u.createdAt || initials.find((x) => x.uid === u.uid)?.createdAt,
-        ),
-        ovr = calculateOverall(
-          stats,
-          ovrWeights,
-          u.primaryPosition,
-          inactivity,
-        );
+      });
+      const { stats, inactivity, ovr } = calculation;
       return {
         ...u,
         cardPhoto: weeklyPhotos.find((photo) => photo.uid === u.uid) || null,
@@ -98,6 +97,10 @@ export async function loadLeague() {
         official: (cs?.count || 0) >= 3,
         hasCard: completeInitial(initial),
         stats,
+        selectedCardId:
+          weeklyCards.find((c) => c.uid === u.uid && c.weekId === cycle.weekId)
+            ?.selectedCardId || null,
+        previousStats: previousCards[u.uid]?.stats || null,
         inactivity,
         ovr,
         ovrDelta: Number.isFinite(previousOvrs[u.uid])
@@ -105,12 +108,14 @@ export async function loadLeague() {
           : null,
         cardType: calculateBaseCard(ovr),
         specials: [
-          ...rewards.specials,
+          ...calculation.rewardSpecials,
           ...calculateSpecialCards(aggregates).filter(
-            (s) => !rewards.specials.some((r) => r.id === s.id),
+            (s) => !calculation.rewardSpecials.some((r) => r.id === s.id),
           ),
         ],
-        eventBoosts: rewards.boosts,
+        eventBoosts: calculation.eventBoosts,
+        progression: calculation.progression,
+        cardCalculation: calculation.ovrCalculation,
         cardAggregates: aggregates,
         aggregates: aggregates.filter((a) => Number.isFinite(a.overall)),
         matches,
@@ -124,14 +129,12 @@ export async function loadLeague() {
                 ? {
                     ...snapshot.appearance,
                     stats: snapshot.stats,
+                    selectedCardId: snapshot.selectedCardId || null,
                     eventBoosts: snapshot.eventBoosts || {},
                     cardPhoto: snapshot.cardPhoto || null,
                     ovr: snapshot.ovr,
-                    ovrDelta: Number.isFinite(
-                      snapshot.previousOvr ?? previousOvrs[u.uid],
-                    )
-                      ? snapshot.ovr -
-                        (snapshot.previousOvr ?? previousOvrs[u.uid])
+                    ovrDelta: Number.isFinite(previousOvrs[u.uid])
+                      ? snapshot.ovr - previousOvrs[u.uid]
                       : null,
                     inactivity: snapshot.inactivity || {
                       missed: 0,

@@ -270,7 +270,13 @@ export const eventDetails = async (eventId) =>
 
 const previousOvrCache = new Map();
 export async function previousOvrs(users, cycle) {
-  const week = cardWeek(new Date(+cycle.opensAt - 7 * 86400000)).weekId;
+  const cards = await previousCards(users, cycle);
+  return Object.fromEntries(
+    Object.entries(cards).map(([uid, card]) => [uid, card?.ovr ?? null]),
+  );
+}
+export async function previousCards(users, cycle) {
+  const week = cardWeek(new Date(+cycle.opensAt - 1)).weekId;
   return Object.fromEntries(
     await Promise.all(
       users
@@ -280,7 +286,7 @@ export async function previousOvrs(users, cycle) {
           if (!previousOvrCache.has(key))
             previousOvrCache.set(
               key,
-              (await read(`users/${u.uid}/cardHistory/${week}`))?.ovr ?? null,
+              (await read(`users/${u.uid}/cardHistory/${week}`)) ?? null,
             );
           return [u.uid, previousOvrCache.get(key)];
         }),

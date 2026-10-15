@@ -44,7 +44,9 @@ export function objectiveSummary(event) {
     cleanSheets: `terminar ${games} sem sofrer golos`,
   }[event.objective?.metric];
   if (!action) return "Consulta as condições da missão.";
-  if (event.scope === "collective") return `Objetivo coletivo: ${action}.`;
+  if (["collective", "team"].includes(event.scope))
+    return `Objetivo da equipa: ${action}.`;
+  if (event.scope === "group") return `Objetivo do grupo: ${action}.`;
   const verbs = {
     participar: "Participa",
     marcar: "Marca",
@@ -61,25 +63,38 @@ export function objectiveSummary(event) {
 export const medal = (position) =>
   ["🥇", "🥈", "🥉"][position - 1] || `${position}.º`;
 export const hasTemporaryReward = (reward = {}) =>
-  !!reward.specialId ||
+  (!!reward.specialId && reward.cardDuration !== "permanent") ||
   (reward.statDuration !== "permanent" &&
     Object.values(reward.boosts || {}).some((value) => value > 0));
 export function rewardText(reward = {}) {
   const parts = ATTRIBUTES.filter(([key]) => reward.boosts?.[key] > 0).map(
     ([key, name]) =>
-      `${name} +${reward.boosts[key]}${reward.statDuration === "permanent" ? " permanente" : " semanal"}`,
+      `${name} +${reward.boosts[key]} ${reward.statDuration === "permanent" ? "permanente" : reward.statDuration === "monthly" ? "mensal" : "semanal"}`,
   );
   if (reward.specialId)
     parts.push(
-      `${reward.cardTheme?.name || themeName(reward.specialId)} · carta semanal`,
+      `${reward.cardTheme?.name || themeName(reward.specialId)} · carta ${reward.cardDuration === "permanent" ? "permanente" : (reward.cardDuration || reward.statDuration) === "monthly" ? "mensal" : "semanal"}`,
     );
   return parts.join(" · ") || "Sem recompensa";
+}
+export function rewardExpiry(start, duration) {
+  const expiry = new Date(+start);
+  if (duration !== "monthly") return new Date(+expiry + 7 * 86400000);
+  const day = expiry.getUTCDate();
+  expiry.setUTCDate(1);
+  expiry.setUTCMonth(expiry.getUTCMonth() + 1);
+  const lastDay = new Date(
+    Date.UTC(expiry.getUTCFullYear(), expiry.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  expiry.setUTCDate(Math.min(day, lastDay));
+  return expiry;
 }
 export function validEventReward(reward, themes = []) {
   if (!reward || typeof reward !== "object" || Array.isArray(reward))
     return false;
   if (!["stats", "card", "both"].includes(reward.mode)) return false;
-  if (!["weekly", "permanent"].includes(reward.statDuration)) return false;
+  if (!["weekly", "monthly", "permanent"].includes(reward.statDuration))
+    return false;
   if (
     !reward.boosts ||
     typeof reward.boosts !== "object" ||
@@ -175,7 +190,7 @@ export function objectiveProgress(
   event,
   games,
   date = new Date(),
-  teamStats = false,
+  teamStats = ["team", "collective"].includes(event.scope),
 ) {
   const window = periodWindow(event, date);
   const matches = games
@@ -251,7 +266,37 @@ export function objectiveProgress(
   }
   return value;
 }
-export function objectiveReachedAt(uid, event, games, date = new Date()) {
+export function scopedObjectiveProgress(
+  uid,
+  event,
+  games,
+  date = new Date(),
+  completions = [],
+) {
+  const progressFor = (id) => {
+    const unlocked = missionUnlockedAt(event, id, completions);
+    if (!unlocked) return 0;
+    return objectiveProgress(
+      id,
+      { ...event, progressStartsAt: unlocked },
+      games,
+      date,
+    );
+  };
+  return event.scope === "group"
+    ? [...new Set(event.participantIds || [])].reduce(
+        (sum, id) => sum + progressFor(id),
+        0,
+      )
+    : progressFor(uid);
+}
+export function objectiveReachedAt(
+  uid,
+  event,
+  games,
+  date = new Date(),
+  completions = [],
+) {
   const times = [
     ...new Set(
       games
@@ -259,7 +304,11 @@ export function objectiveReachedAt(uid, event, games, date = new Date()) {
           (game) =>
             game.status === "closed" &&
             !game.deleting &&
-            participants(game).includes(uid),
+            (event.scope === "group"
+              ? participants(game).some((id) =>
+                  event.participantIds?.includes(id),
+                )
+              : participants(game).includes(uid)),
         )
         .map((game) => +asDate(game.closedAt || game.scheduledAt))
         .filter((time) => time <= +date),
@@ -267,7 +316,7 @@ export function objectiveReachedAt(uid, event, games, date = new Date()) {
   ].sort((a, b) => a - b);
   for (const time of times)
     if (
-      objectiveProgress(uid, event, games, new Date(time)) >=
+      scopedObjectiveProgress(uid, event, games, new Date(time), completions) >=
       event.objective.target
     )
       return new Date(time).toISOString();
@@ -283,16 +332,8 @@ export function eventRanking(
   completions = [],
 ) {
   const ids = [...new Set(event.participantIds || [])];
-  const progressFor = (uid, mission = event) => {
-    const unlocked = missionUnlockedAt(event, uid, completions);
-    if (!unlocked) return 0;
-    return objectiveProgress(
-      uid,
-      { ...mission, progressStartsAt: unlocked },
-      games,
-      date,
-    );
-  };
+  const progressFor = (uid) =>
+    scopedObjectiveProgress(uid, event, games, date, completions);
   const counts = Object.fromEntries(ids.map((uid) => [uid, 0]));
   if (event.method === "vote")
     for (const vote of votes) {
@@ -315,7 +356,7 @@ export function eventRanking(
   const reached = Object.fromEntries(
     ids.map((uid) => [
       uid,
-      race ? objectiveReachedAt(uid, event, games, date) : null,
+      race ? objectiveReachedAt(uid, event, games, date, completions) : null,
     ]),
   );
   const scores = Object.fromEntries(
@@ -332,39 +373,10 @@ export function eventRanking(
       ),
     ]),
   );
-  const teamMetrics = ["goals", "assists", "goalsAndAssists", "wins"];
-  const collectiveTeamProgress = () => {
-    let total = 0;
-    for (const game of games) {
-      for (const side of ["teamA", "teamB"]) {
-        const members = [
-          ...(game[side]?.starters || []),
-          ...(game[side]?.bench || []),
-        ];
-        // Count each team's result once, even with several mission participants.
-        const uid = ids.find((id) => {
-          const unlocked = missionUnlockedAt(event, id, completions);
-          return (
-            members.includes(id) &&
-            unlocked &&
-            +asDate(game.closedAt || game.scheduledAt) >= +unlocked
-          );
-        });
-        if (uid) total += objectiveProgress(uid, event, [game], date, true);
-      }
-    }
-    return total;
-  };
-  const collective =
-    event.scope === "collective"
-      ? teamMetrics.includes(event.objective?.metric)
-        ? collectiveTeamProgress()
-        : ids.reduce((sum, uid) => sum + progressFor(uid), 0)
-      : null;
   const ranking = ids.map((uid) => ({
     uid,
     votes: counts[uid],
-    progress: collective ?? progressFor(uid),
+    progress: progressFor(uid),
     tieScore: scores[uid],
     ...(race ? { reachedAt: reached[uid] } : {}),
   }));

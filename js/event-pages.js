@@ -177,7 +177,7 @@ export async function managedEventPage(ctx, event) {
     rows
       .map(
         (row) =>
-          `<tr><td>${event.kind === "mission" ? (row.reward ? "✓ Concluída" : "Em progresso") : `${medal(row.position)} ${row.position}.º`}</td><td>${esc(name(ctx, row.uid))}</td><td>${event.method === "vote" ? row.votes : row.progress}</td><td>${row.reward ? `${esc(rewardText(row.reward))}${row.expiresAt && (row.reward.specialId || (row.reward.statDuration !== "permanent" && Object.values(row.reward.boosts || {}).some(Boolean))) ? `<small>Bónus temporários até ${formatDate(row.expiresAt)}</small>` : ""}` : "—"}</td></tr>`,
+          `<tr><td>${event.kind === "mission" ? (row.reward ? "✓ Concluída" : "Em progresso") : `${medal(row.position)} ${row.position}.º`}</td><td>${esc(name(ctx, row.uid))}</td><td>${event.method === "vote" ? row.votes : row.progress}</td><td>${row.reward ? `${esc(rewardText(row.reward))}${row.expiresAt && hasTemporaryReward(row.reward) ? `<small>Bónus temporários até ${formatDate(row.expiresAt)}</small>` : ""}` : "—"}</td></tr>`,
       )
       .join("");
   ctx.render(

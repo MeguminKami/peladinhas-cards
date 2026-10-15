@@ -137,10 +137,13 @@ export function applyEventRewards(stats, rewards, uid, date = new Date()) {
       ];
     }),
   );
+  const cardRewards = delivered.filter(
+    (r) => r.reward.cardDuration === "permanent" || active.includes(r),
+  );
   const specials = [
-    ...new Set(active.map((r) => r.reward.specialId).filter(Boolean)),
+    ...new Set(cardRewards.map((r) => r.reward.specialId).filter(Boolean)),
   ].map((id) => {
-    const cardTheme = active.find((r) => r.reward.specialId === id)?.reward
+    const cardTheme = cardRewards.find((r) => r.reward.specialId === id)?.reward
       .cardTheme;
     return {
       id,

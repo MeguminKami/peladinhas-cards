@@ -42,9 +42,13 @@ npm.cmd run simulate
 <details>
 <summary><strong>Regras completas e implementação</strong></summary>
 
-Implementação partilhada pelo cliente e Cloud Functions: `js/utils.js`, versão `per-game-growth-v1`.
+Implementação partilhada pelo cliente e Cloud Functions: `js/player-calculation.js` coordena a base, os jogos, as recompensas e o OVR; `js/utils.js` mantém a progressão `per-game-growth-v1`. O cálculo atual não recebe atributos nem OVR de cartas semanais anteriores. As cartas fechadas são snapshots de apresentação e comparação.
 
-A base mantém a combinação 20% autoavaliação / 80% comunidade e conversão 0–20 para 0–99. Jogos são reproduzidos por data e ID; cada delta é somado sem arredondamento intermédio. O OVR de início do jogo usa os pesos da posição principal e atributos arredondados, sem penalização por inatividade.
+A base usa peso da autoavaliação = min(20%, 1 / (N + 1)), sendo N o número de avaliações externas completas; o restante peso pertence à média da comunidade. Assim, a autoavaliação conta como uma avaliação e nunca ultrapassa 20% quando existem votos externos. A base é convertida de 0–20 para 0–99. Jogos são reproduzidos por data e ID; cada delta é somado sem arredondamento intermédio. O OVR de início do jogo usa os pesos da posição principal e atributos arredondados, sem penalização por inatividade.
+
+Atributos atuais = base atual + variações dos jogos elegíveis + recompensas ativas. O OVR pondera esses atributos pela posição e aplica a penalização por inatividade. Jogos futuros, abertos ou em eliminação não entram. Recalcular começa sempre na base, sem somar novamente melhorias já aplicadas. Novos snapshots guardam baseStats e gameStats para distinguir a base das variações dos jogos.
+
+Alterar a autoavaliação ou a avaliação da comunidade altera a base, mesmo sem jogos novos. A autoavaliação pesa no máximo 20% e diminui com o número de avaliações externas; guardar os 12 valores a zero reduz a base. As comparações semanais incluem essas alterações, além dos jogos e das recompensas.
 
 ## Fórmula
 

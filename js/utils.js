@@ -25,7 +25,6 @@ export const FEEDBACK = [
 export const CARD_SETTINGS = {
   communityMinimum: 3,
   selfWeight: 0.2,
-  communityWeight: 0.8,
 };
 export function matchOutcome(uid, game) {
   if (game.status !== "closed" || !participants(game).includes(uid)) return 0;
@@ -222,15 +221,20 @@ export function calculateInitialBaseline(
   community,
   settings = CARD_SETTINGS,
 ) {
+  const selfWeight = initialSelfWeight(community?.count || 0, settings);
   return Object.fromEntries(
     ATTRIBUTES.map(([k]) => [
       k,
       community?.count >= 1
-        ? (self?.[k] ?? community.ratings20[k]) * settings.selfWeight +
-          community.ratings20[k] * settings.communityWeight
+        ? (self?.[k] ?? community.ratings20[k]) * selfWeight +
+          community.ratings20[k] * (1 - selfWeight)
         : (self?.[k] ?? 0),
     ]),
   );
+}
+export function initialSelfWeight(communityCount, settings = CARD_SETTINGS) {
+  if (!(communityCount >= 1)) return 1;
+  return Math.min(0.2, settings.selfWeight ?? 0.2, 1 / (communityCount + 1));
 }
 export function calculateGameAggregate(feedback) {
   return Object.fromEntries(

@@ -12,6 +12,7 @@ import {
   votingFlags,
   medal,
   rewardText,
+  rewardExpiry,
   hasTemporaryReward,
   eventEndMillis,
   missionUnlocked,
@@ -40,6 +41,7 @@ function rewardValue(input, themes) {
     mode: input.mode,
     boosts: input.boosts,
     statDuration: input.statDuration,
+    cardDuration: input.statDuration,
     specialId: input.specialId || null,
     ...(theme
       ? {
@@ -207,7 +209,9 @@ async function configuration(input, eventId = null) {
   )
     fail("Objetivo inválido.");
   if (
-    !["individual", "collective"].includes(input.scope || "individual") ||
+    !["individual", "collective", "team", "group"].includes(
+      input.scope || "individual",
+    ) ||
     !["once", "daily", "weekly"].includes(input.cadence || "once") ||
     !["easy", "medium", "hard"].includes(input.difficulty || "medium") ||
     !["uid", "goals", "participation"].includes(input.tieBreak || "uid")
@@ -221,10 +225,9 @@ async function configuration(input, eventId = null) {
   if (
     input.kind !== "mission" &&
     input.method === "objective" &&
-    ((input.scope || "individual") !== "individual" ||
-      (input.cadence || "once") !== "once")
+    (input.cadence || "once") !== "once"
   )
-    fail("As competições usam objetivos individuais num único período.");
+    fail("As competições usam objetivos num único período.");
   if (input.kind !== "mission" && winnerCount > participantIds.length)
     fail("As posições premiadas não podem exceder os participantes.");
   const maxRepeats = input.maxRepeats ?? 1;
@@ -355,6 +358,7 @@ function grant(
   const reward = {
     mode: configured.mode,
     statDuration: configured.statDuration,
+    cardDuration: configured.cardDuration || "weekly",
     specialId: configured.specialId || null,
     ...(configured.cardTheme ? { cardTheme: configured.cardTheme } : {}),
     boosts,
@@ -369,7 +373,7 @@ function grant(
     schemaVersion: 2,
     weekId: rewardCycle.weekId,
     startsAt: Timestamp.fromDate(permanent ? now : start),
-    expiresAt: Timestamp.fromDate(new Date(+start + 7 * 86400000)),
+    expiresAt: Timestamp.fromDate(rewardExpiry(start, configured.statDuration)),
     createdAt: FieldValue.serverTimestamp(),
     awardedBy: actorId,
   };
@@ -939,7 +943,7 @@ export function managedEvents(rebuild) {
       tx.set(db().doc(`users/${uid}/notifications/mission-completed-${key}`), {
         type: "EVENT_REWARD",
         title: "Missão concluída!",
-        body: `${event.title}: ${rewardText(awarded.reward)}.${hasTemporaryReward(awarded.reward) ? ` Componentes semanais até ${asDate(awarded.expiresAt).toISOString()}.` : ""}`,
+        body: `${event.title}: ${rewardText(awarded.reward)}.${hasTemporaryReward(awarded.reward) ? ` Componentes temporários até ${asDate(awarded.expiresAt).toISOString()}.` : ""}`,
         href: `#/event/${id}`,
         read: false,
         createdAt: FieldValue.serverTimestamp(),

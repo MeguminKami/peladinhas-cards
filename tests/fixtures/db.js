@@ -1,5 +1,6 @@
 // Apenas interceptado pelo teste de browser; nunca importado pela aplicação real.
 import { ATTRIBUTES } from "../../js/utils.js";
+import { cardWeek } from "../../js/card-week.js";
 const now = {
   seconds: Math.floor(Date.now() / 1000),
   toDate: () => new Date(),
@@ -159,6 +160,19 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if (name === "selectWeeklyCard") {
+    state.weeklyCards ||= [];
+    const current = state.weeklyCards.find(
+      (card) => card.uid === "pedro" && card.weekId === data.weekId,
+    );
+    if (current) current.selectedCardId = data.cardId;
+    else
+      state.weeklyCards.push({
+        uid: "pedro",
+        weekId: data.weekId,
+        selectedCardId: data.cardId,
+      });
+  }
   if (name === "saveOvrWeights") state.ovrWeights = { ...data };
   if (name === "deleteGame") {
     state.games = state.games.filter((g) => g.id !== data.gameId);
@@ -320,3 +334,13 @@ export const eventDetails = async (id) => {
 };
 
 export const previousOvrs = async () => state.previousOvrs || {};
+export const previousCards = async () =>
+  Object.fromEntries(
+    state.users.map((user) => {
+      const week = cardWeek(new Date(+cardWeek().opensAt - 1)).weekId;
+      const snapshot = state.history?.find(
+        (row) => (!row.uid || row.uid === user.uid) && row.weekId === week,
+      );
+      return [user.uid, snapshot || { ovr: state.previousOvrs?.[user.uid] }];
+    }),
+  );

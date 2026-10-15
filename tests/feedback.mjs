@@ -206,6 +206,19 @@ try {
         geometry.minStar >= 38,
         `Star touch width ${geometry.minStar} at ${width}`,
       );
+      if (width <= 700) {
+        const na = field("goalkeeping").locator(".feedback-na");
+        await na.tap();
+        assert.equal(
+          await field("goalkeeping").locator("[data-rating]").inputValue(),
+          "na",
+        );
+        const box = await na.boundingBox();
+        assert.ok(
+          box.height >= 44 && box.x >= 0 && box.x + box.width <= width,
+          `N/A touch target ${theme} ${width}`,
+        );
+      }
       if (theme === "club" && [1440, 390, 320].includes(width))
         await page.locator("section.feedback-team-a").screenshot({
           path: `${output}/${width}.png`,
@@ -218,23 +231,36 @@ try {
   await field("passing").locator('.feedback-star[data-value="5"]').tap();
   assert.equal(await field("passing").locator(".is-filled").count(), 5);
   const submit = page.getByRole("button", { name: "Submeter", exact: true });
-  await submit.click();
-  assert.equal(await page.locator('.feedback-form[data-submitted="true"]').count(), 0);
+  await submit.tap();
+  assert.equal(
+    await page.locator('.feedback-form[data-submitted="true"]').count(),
+    0,
+  );
   const geometry = await submit.evaluate((button) => {
     const box = button.getBoundingClientRect();
-    return { height: box.height, center: box.left + box.width / 2, viewport: innerWidth };
+    return {
+      height: box.height,
+      center: box.left + box.width / 2,
+      viewport: innerWidth,
+    };
   });
   assert.ok(geometry.height >= 64);
   assert.ok(Math.abs(geometry.center - geometry.viewport / 2) < 4);
   await page.evaluate(() => {
-    document.querySelectorAll('.feedback-form[data-submitted="false"] .feedback-field').forEach((field) => {
-      if (field.querySelector('[data-rating]').value !== "") return;
-      const choice = field.querySelector('input[data-feedback-choice][value="3"]');
-      choice.checked = true;
-      choice.dispatchEvent(new Event("input", { bubbles: true }));
-    });
+    document
+      .querySelectorAll(
+        '.feedback-form[data-submitted="false"] .feedback-field',
+      )
+      .forEach((field) => {
+        if (field.querySelector("[data-rating]").value !== "") return;
+        const choice = field.querySelector(
+          'input[data-feedback-choice][value="3"]',
+        );
+        choice.checked = true;
+        choice.dispatchEvent(new Event("input", { bubbles: true }));
+      });
   });
-  await submit.click();
+  await submit.tap();
   await page
     .locator('[data-target="ana"][data-submitted="true"]')
     .waitFor({ state: "attached" });
@@ -271,7 +297,9 @@ try {
       .getAttribute("open")) !== null,
   );
   await page.evaluate(() => {
-    window.__testState.feedback = window.__testState.feedback.filter(row => row.targetId !== "joao");
+    window.__testState.feedback = window.__testState.feedback.filter(
+      (row) => row.targetId !== "joao",
+    );
     window.__testState.feedback.push({
       gameId: "demo-game-0",
       raterId: "pedro",
@@ -304,6 +332,43 @@ try {
     await legacy.locator(".feedback-rating-result").innerText(),
     "Sem avalia" + String.fromCharCode(231, 227) + "o",
   );
+  assert.equal(await page.locator(".feedback-form button").count(), 0);
+  await page.evaluate(() => {
+    window.__testState.users.find((user) => user.uid === "pedro").role =
+      "admin";
+    location.hash = "#/game/demo-game-0";
+  });
+  await page.locator("#game-form").waitFor();
+  for (const width of [320, 360, 390, 430, 844]) {
+    await page.setViewportSize({ width, height: width === 844 ? 390 : 844 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+      `Admin game overflow ${width}`,
+    );
+    assert.ok(await page.locator('[name="title"]').isEnabled());
+    await page
+      .locator('[name="location"]')
+      .fill(`Correção no telemóvel ${width}`);
+    await page.getByRole("button", { name: "Guardar jogo", exact: true }).tap();
+    await page.waitForFunction(
+      (width) =>
+        window.__testState.games.find((game) => game.id === "demo-game-0")
+          .location === `Correção no telemóvel ${width}`,
+      width,
+    );
+    await page.locator("#game-form").waitFor();
+    assert.equal(
+      await page.evaluate(
+        () =>
+          window.__testState.games.find((game) => game.id === "demo-game-0")
+            .status,
+      ),
+      "closed",
+    );
+  }
   assert.deepEqual(errors, []);
   console.log(
     `Feedback ${isWebKit ? "WebKit" : "Chromium"}: stars, keyboard, zero/N-A, draft persistence, submission, teams, themes and responsive layouts passed.`,

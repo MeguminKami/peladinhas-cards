@@ -9,6 +9,9 @@ import {
   periodWindow,
   eventRanking,
   validEventReward,
+  rewardExpiry,
+  rewardText,
+  hasTemporaryReward,
   votingFlags,
 } from "../js/event-model.js";
 import { applyEventRewards } from "../js/event-rules.js";
@@ -266,7 +269,7 @@ test("mission objectives describe real goals with natural singular and plural", 
   );
   assert.equal(
     describe("goals", 5, "collective"),
-    "Objetivo coletivo: marcar 5 golos.",
+    "Objetivo da equipa: marcar 5 golos.",
   );
 });
 
@@ -370,7 +373,152 @@ test("missões coletivas contam os totais de cada equipa uma vez", () => {
   };
   assert.ok(
     eventRanking(bothSides, [], [match], [], date).every(
-      (row) => row.progress === 1,
+      (row) => row.progress === (row.uid === "c" ? 0 : 1),
     ),
+  );
+});
+
+test("recompensas semanais, mensais e permanentes: validade, cartas e anulação", () => {
+  const start = new Date("2026-01-31T12:00:00Z");
+  assert.equal(
+    rewardExpiry(start, "weekly").toISOString(),
+    "2026-02-07T12:00:00.000Z",
+  );
+  assert.equal(
+    rewardExpiry(start, "monthly").toISOString(),
+    "2026-02-28T12:00:00.000Z",
+  );
+  assert.equal(
+    rewardExpiry(new Date("2028-01-31T12:00Z"), "monthly").toISOString(),
+    "2028-02-29T12:00:00.000Z",
+  );
+  assert.equal(start.toISOString(), "2026-01-31T12:00:00.000Z");
+  for (const duration of ["weekly", "monthly", "permanent"]) {
+    const reward = {
+      mode: "both",
+      statDuration: duration,
+      cardDuration: duration,
+      boosts: { shooting: 3 },
+      specialId: "mvp",
+    };
+    assert.ok(validEventReward(reward));
+    assert.equal(hasTemporaryReward(reward), duration !== "permanent");
+    assert.match(
+      rewardText(reward),
+      new RegExp(
+        duration === "monthly"
+          ? "mensal"
+          : duration === "permanent"
+            ? "permanente"
+            : "semanal",
+      ),
+    );
+    const expiry = rewardExpiry(start, duration);
+    const row = {
+      uid: "a",
+      schemaVersion: 2,
+      startsAt: start,
+      createdAt: start,
+      expiresAt: expiry,
+      reward,
+    };
+    const before = applyEventRewards(
+      { shooting: 60 },
+      [row],
+      "a",
+      new Date(+expiry - 1),
+    );
+    assert.equal(before.stats.shooting, 63);
+    assert.equal(before.specials.length, 1);
+    const after = applyEventRewards({ shooting: 60 }, [row], "a", expiry);
+    assert.equal(after.stats.shooting, duration === "permanent" ? 63 : 60);
+    assert.equal(after.specials.length, duration === "permanent" ? 1 : 0);
+    const revoked = applyEventRewards(
+      { shooting: 60 },
+      [{ ...row, revokedAt: start }],
+      "a",
+      expiry,
+    );
+    assert.equal(revoked.stats.shooting, 60);
+    assert.equal(revoked.specials.length, 0);
+  }
+});
+
+test("âmbitos individual, grupo e equipa acumulam jogos sem somar adversários", () => {
+  const matches = [game(5, 1, 1, 1), game(6, -1, 2, 0)];
+  matches[0].score = { teamA: 5, teamB: 7 };
+  matches[1].score = { teamA: 3, teamB: 2 };
+  for (const scope of ["team", "collective"]) {
+    for (const kind of ["mission", "event"]) {
+      const config = {
+        ...event,
+        kind,
+        scope,
+        method: "objective",
+        participantIds: ["a", "b", "c", "absent"],
+        objective: { metric: "goals", target: 8 },
+      };
+      const rows = eventRanking(config, [], matches, [], date);
+      const progress = Object.fromEntries(
+        rows.map((row) => [row.uid, row.progress]),
+      );
+      assert.deepEqual(progress, { c: 9, a: 8, b: 8, absent: 0 });
+      if (kind === "event")
+        assert.equal(
+          rows.find((row) => row.uid === "a").reachedAt,
+          new Date(matches[1].closedAt).toISOString(),
+        );
+    }
+  }
+  const config = {
+    ...event,
+    kind: "mission",
+    method: "objective",
+    participantIds: ["a", "b"],
+    objective: { metric: "goals", target: 8 },
+  };
+  assert.ok(
+    eventRanking({ ...config, scope: "group" }, [], matches, [], date).every(
+      (row) => row.progress === 3,
+    ),
+  );
+  assert.equal(
+    eventRanking(
+      { ...config, scope: "individual" },
+      [],
+      matches,
+      [],
+      date,
+    ).find((row) => row.uid === "b").progress,
+    0,
+  );
+});
+
+test("objetivos usam a data de encerramento, mesmo quando o jogo foi realizado antes", () => {
+  const start = "2026-10-15T12:04:00Z";
+  const old = {
+    ...game(14, 1, 5),
+    scheduledAt: "2026-10-14T20:00Z",
+    closedAt: "2026-10-15T13:00Z",
+  };
+  const next = {
+    ...game(16, 1, 1),
+    scheduledAt: "2026-10-16T20:00Z",
+    closedAt: "2026-10-16T22:00Z",
+    score: { teamA: 7, teamB: 2 },
+  };
+  const config = {
+    ...event,
+    startsAt: start,
+    kind: "mission",
+    scope: "team",
+    method: "objective",
+    objective: { metric: "goals", target: 30 },
+  };
+  assert.equal(objectiveProgress("a", config, [old], date), 2);
+  assert.equal(objectiveProgress("a", config, [old, next], date), 9);
+  assert.equal(
+    objectiveProgress("a", config, [next], new Date("2026-10-16T21:00Z")),
+    0,
   );
 });

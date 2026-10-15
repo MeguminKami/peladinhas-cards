@@ -90,7 +90,7 @@ export async function adminPage(ctx, section = "overview") {
   if (section === "overview") {
     const cycle = cardWeek();
     document.querySelector("#admin-week-status").innerHTML =
-      `<div class="overview-line"><b>Cartas · ${cycle.weekId}</b><span class="pill ${cycle.phase === "open" ? "success" : "warning"}">${cycle.phase === "open" ? "Em evolução" : "Fechadas"}</span></div><p class="muted small">Fecho: quarta às 12h · Abertura: quinta às 20h · Lisboa</p>`;
+      `<div class="overview-line"><b>Cartas · ${cycle.weekId}</b><span class="pill ${cycle.phase === "open" ? "success" : "warning"}">${cycle.phase === "open" ? "Em evolução" : "Fechadas"}</span></div><p class="muted small">Fecho: quarta às 12h · Abertura: quinta às 12h · Lisboa</p>`;
     DB.tickets(ctx.user)
       .then((rows) => {
         const counter = document.querySelector("#admin-open-tickets");

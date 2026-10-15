@@ -3,7 +3,7 @@ import { pushFunctions } from "./push.js";
 import { defineSecret } from "firebase-functions/params";
 import { WEB_PUSH_PUBLIC_KEY } from "../js/push-config.js";
 import { eventFunctions } from "./events.js";
-import { applyEventRewards } from "../js/event-rules.js";
+import { calculatePlayerCard } from "../js/player-calculation.js";
 import { defaultOvrPresets } from "../js/ovr-presets.js";
 import { validPhotoDesign } from "../js/card-photo.js";
 import { getStorage } from "firebase-admin/storage";
@@ -24,13 +24,8 @@ import { setGlobalOptions } from "firebase-functions/v2";
 import {
   ATTRIBUTES,
   calculateGameAggregate,
-  calculateInitialBaseline,
-  calculatePlayerStats,
-  calculateInactivity,
-  calculateOverall,
   normalizeOvrWeights,
   validOvrWeights,
-  calculateOverallDetails,
   calculateBaseCard,
   calculateSpecialCards,
   isoWeek,
@@ -255,6 +250,7 @@ async function captureGameBalance(gid, g) {
       (game) =>
         game.id !== gid &&
         game.status === "closed" &&
+        !game.deleting &&
         game.closedAt?.toMillis?.() < closedAt,
     ),
     balanceRows = data(balances);
@@ -273,26 +269,14 @@ async function captureGameBalance(gid, g) {
       ),
     ]),
   );
-  const closingCycle = cardWeek(g.closedAt.toDate());
-  const frozenCards =
-    closingCycle.phase === "closed"
-      ? data(await db.collection("weeklyCards").get())
-      : [];
   const players = participants(g).map((uid) => {
-    if (closingCycle.phase === "closed") {
-      const snapshot = frozenCards.find(
-        (card) => card.uid === uid && card.weekId === closingCycle.weekId,
-      );
-      return snapshot
-        ? { uid, hasCard: true, ovr: snapshot.ovr }
-        : { uid, hasCard: false };
-    }
     const initial = initialRows.find((r) => r.uid === uid)?.ratings20;
     if (!completeInitial(initial)) return { uid, hasCard: false };
     const external = voteRows.filter(
       (v) =>
         v.targetId === uid &&
         v.submitted &&
+        completeInitial(v.ratings20) &&
         (v.submittedAt || v.createdAt)?.toMillis?.() <= closedAt,
     );
     const community = {
@@ -332,34 +316,21 @@ async function captureGameBalance(gid, g) {
         ),
         gameId: game.id,
       }));
-    return {
+    const calculation = calculatePlayerCard({
       uid,
-      hasCard: true,
-      ovr: calculateOverall(
-        applyEventRewards(
-          calculatePlayerStats(
-            calculateInitialBaseline(initial, community),
-            aggregates,
-            {
-              weights,
-              position: data(users).find((u) => u.uid === uid)?.primaryPosition,
-            },
-          ),
-          data(rewards),
-          uid,
-          new Date(closedAt),
-        ).stats,
-        weights,
-        data(users).find((u) => u.uid === uid)?.primaryPosition,
-        calculateInactivity(
-          uid,
-          priorGames,
-          data(users).find((u) => u.uid === uid)?.createdAt ||
-            initialRows.find((r) => r.uid === uid)?.createdAt,
-          new Date(closedAt),
-        ),
-      ),
-    };
+      initial,
+      community,
+      aggregates,
+      games: priorGames,
+      rewards: data(rewards),
+      weights,
+      position: data(users).find((u) => u.uid === uid)?.primaryPosition,
+      createdAt:
+        data(users).find((u) => u.uid === uid)?.createdAt ||
+        initialRows.find((r) => r.uid === uid)?.createdAt,
+      date: new Date(closedAt),
+    });
+    return { uid, hasCard: true, ovr: calculation.ovr };
   });
   const snapshot = {
     ...teamBalance(g, players),
@@ -452,9 +423,10 @@ async function buildHistory(uid) {
   const balanceRows = data(balanceSnaps);
   const ovrWeights = normalizeOvrWeights(settings.data());
   const self = initial.data().ratings20;
-  const votes = data(community).filter((r) => r.submitted);
+  const votes = data(community).filter((r) => r.submitted && completeInitial(r.ratings20));
   const games = data(gameSnaps).filter(
-    (g) => g.status === "closed" && participants(g).includes(uid),
+    (g) =>
+      g.status === "closed" && !g.deleting && participants(g).includes(uid),
   );
   const feedback = await Promise.all(
     games.map((g) => db.collection(`games/${g.id}/feedback`).get()),
@@ -562,31 +534,25 @@ async function buildHistory(uid) {
       });
     }
     aggregates.sort((a, b) => a.date - b.date);
-    const rawStats = calculatePlayerStats(
-        calculateInitialBaseline(self, cs),
-        aggregates,
-        { weights: ovrWeights, position: user.data().primaryPosition },
+    const calculation = calculatePlayerCard({
+      uid,
+      initial: self,
+      community: cs,
+      aggregates,
+      games: data(gameSnaps),
+      rewards: data(rewardSnap),
+      weights: ovrWeights,
+      position: user.data().primaryPosition,
+      createdAt: user.data().createdAt || initial.data().createdAt,
+      date: cutoff,
+    });
+    const { stats, inactivity, ovr } = calculation;
+    const specials = [
+      ...calculation.rewardSpecials,
+      ...calculateSpecialCards(aggregates).filter(
+        (s) => !calculation.rewardSpecials.some((r) => r.id === s.id),
       ),
-      rewards = applyEventRewards(rawStats, data(rewardSnap), uid, cutoff),
-      stats = rewards.stats,
-      inactivity = calculateInactivity(
-        uid,
-        data(gameSnaps),
-        user.data().createdAt || initial.data().createdAt,
-        cutoff,
-      ),
-      ovr = calculateOverall(
-        stats,
-        ovrWeights,
-        user.data().primaryPosition,
-        inactivity,
-      ),
-      specials = [
-        ...rewards.specials,
-        ...calculateSpecialCards(aggregates).filter(
-          (s) => !rewards.specials.some((r) => r.id === s.id),
-        ),
-      ];
+    ];
     results.push({
       weekId,
       ovr,
@@ -597,14 +563,12 @@ async function buildHistory(uid) {
           ?.data().ovr ?? null,
       inactivity,
       stats,
-      eventBoosts: rewards.boosts,
+      eventBoosts: calculation.eventBoosts,
+      calculationVersion: "base-plus-growth-v1",
+      baseStats: calculation.baseStats,
+      gameStats: calculation.rawStats,
       primaryPosition: user.data().primaryPosition || null,
-      ovrCalculation: calculateOverallDetails(
-        stats,
-        ovrWeights,
-        user.data().primaryPosition,
-        inactivity,
-      ),
+      ovrCalculation: calculation.ovrCalculation,
       baseCard: calculateBaseCard(ovr),
       specials,
       official: cs.count >= 3,
@@ -635,6 +599,11 @@ async function buildHistory(uid) {
       const photo = await tx.get(db.doc(`weeklyCardPhotos/${uid}_${r.weekId}`));
       tx.set(ref, {
         ...r,
+        selectedCardId: r.specials.some(
+          (s) => s.id === snapshot.data()?.selectedCardId,
+        )
+          ? snapshot.data().selectedCardId
+          : r.specials[0]?.id || null,
         cardPhoto: photo.exists
           ? { photoURL: photo.data().photoURL, design: photo.data().design }
           : null,
@@ -819,7 +788,7 @@ export const closeCardWeek = onSchedule(
   },
 );
 export const openCardWeek = onSchedule(
-  { schedule: "0 20 * * 4", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  { schedule: "0 12 * * 4", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
     const users = data(await db.collection("users").get()).filter(
       (u) => !u.disabled,
@@ -834,6 +803,52 @@ export const ensureHistory = onCall(async (request) => {
   if (user.data()?.disabled)
     throw new HttpsError("permission-denied", "Conta desactivada.");
   await buildHistory(uid);
+  return { ok: true };
+});
+export const selectWeeklyCard = onCall(async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
+  const uid = request.auth.uid;
+  const { weekId, cardId } = request.data || {};
+  const cycle = cardWeek();
+  if (weekId !== cycle.weekId || cycle.phase !== "open")
+    throw new HttpsError("failed-precondition", "A semana está fechada.");
+  if (typeof cardId !== "string" || cardId.length > 160)
+    throw new HttpsError("invalid-argument", "Carta inválida.");
+  const user = await db.doc(`users/${uid}`).get();
+  if (!user.exists || user.data().disabled)
+    throw new HttpsError("permission-denied", "Conta indisponível.");
+  await buildHistory(uid);
+  await db.runTransaction(async (tx) => {
+    const ref = db.doc(`users/${uid}/cardHistory/${weekId}`);
+    const snapshot = await tx.get(ref);
+    const currentUser = await tx.get(db.doc(`users/${uid}`));
+    const freshCycle = cardWeek();
+    if (!currentUser.exists || currentUser.data().disabled)
+      throw new HttpsError("permission-denied", "Conta indisponível.");
+    if (
+      !snapshot.exists ||
+      snapshot.data().locked ||
+      freshCycle.phase !== "open" ||
+      freshCycle.weekId !== weekId
+    )
+      throw new HttpsError("failed-precondition", "Esta carta está fechada.");
+    const options = [
+      ...new Set((snapshot.data().specials || []).map((s) => s.id)),
+    ];
+    if (options.length < 2 || !options.includes(cardId))
+      throw new HttpsError(
+        "invalid-argument",
+        "Escolhe uma das cartas recebidas nesta semana.",
+      );
+    tx.update(ref, { selectedCardId: cardId });
+    tx.set(db.doc(`weeklyCards/${uid}`), {
+      ...snapshot.data(),
+      uid,
+      selectedCardId: cardId,
+      phase: "open",
+      nextOpensAt: freshCycle.nextOpensAt,
+    });
+  });
   return { ok: true };
 });
 export const rebuildLeague = onCall(async (request) => {

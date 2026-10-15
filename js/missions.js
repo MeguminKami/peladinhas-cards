@@ -1,7 +1,6 @@
 import { difficultyLabel } from "./labels.js";
 import {
   periodWindow,
-  OBJECTIVES,
   objectiveSummary,
   eventEndMillis,
   missionUnlocked,
@@ -103,7 +102,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
             id: `event-${event.id}`,
             type: "OBJECTIVE_MISSION",
             title: event.title,
-            description: `${OBJECTIVES[event.objective.metric]} · ${difficultyLabel(event.difficulty)} · ${event.scope === "collective" ? "progresso coletivo" : "individual"}`,
+            description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
             done: Math.min(progress, event.objective.target),
             total: event.objective.target,
             href: `#/event/${event.id}`,

@@ -64,16 +64,16 @@ Métodos: votação, classificação manual pelo ADMIN ou objetivos verificados.
 - Obter X vitórias sem perder: empates preservam a sequência; derrotas reiniciam-na.
 - Ganhar X jogos consecutivos: empates e derrotas reiniciam a sequência.
 
-As sequências usam o melhor registo alcançado no período. Só contam jogos finalizados depois do início do período e até ao momento da consulta. Missões podem ser individuais ou coletivas; no modo coletivo, golos e assistências usam os totais da equipa, incluindo colegas fora da missão, e cada vitória conta uma vez por equipa e jogo, sem duplicar por participante. Golos e assistências combinados seguem a mesma regra. Os restantes objetivos somam as contribuições individuais (jogos representam participações, não partidas únicas). Frequências especial, diária e semanal: períodos de 24 horas/7 dias a partir do início, com máximo de 12 conclusões configuráveis e uma entrega por jogador/período. Cada jogador reclama a própria conclusão; o servidor verifica o objetivo e ignora qualquer progresso enviado pelo cliente. A dificuldade é configurável. Os objetivos são escolhidos no formulário; não existem desafios predefinidos.
+As sequências usam o melhor registo alcançado no período. Só contam jogos finalizados depois do início do período e até ao momento da consulta. Missões e eventos por objetivo têm três âmbitos: individual (números do jogador), grupo (soma das contribuições individuais dos participantes) e equipa (totais da equipa do jogador em cada jogo em que participou). No modo equipa, contam todos os golos do resultado da própria equipa e todas as suas assistências, incluindo colegas fora da missão, sem somar os adversários nem multiplicar o resultado pelo número de participantes. As vitórias e sequências seguem os resultados da própria equipa. Quem não participou não soma progresso de equipa. O antigo modo coletivo é interpretado como equipa. A janela começa na abertura/desbloqueio do objetivo e usa a data de encerramento do jogo: um jogo realizado antes pode contar se for encerrado depois. Frequências especial, diária e semanal: períodos de 24 horas/7 dias a partir do início, com máximo de 12 conclusões configuráveis e uma entrega por jogador/período. Cada jogador reclama a própria conclusão; o servidor verifica o objetivo e ignora qualquer progresso enviado pelo cliente. A dificuldade é configurável. Os objetivos são escolhidos no formulário; não existem desafios predefinidos.
 
 ## Recompensas e equilíbrio
 
-Modalidades: Stats, carta semanal ou ambas.
+Modalidades: Stats, carta ou ambas. A duração da recompensa pode ser semanal, mensal ou permanente e aplica-se às stats e à carta.
 
-- Stats semanais: até +10 por atributo e +20 somados por prémio; acumulação de novos prémios limitada a +10 por atributo.
+- Stats semanais e mensais: até +10 por atributo e +20 somados por prémio; acumulação de novos prémios limitada a +10 por atributo.
 - Stats permanentes: máximo acumulado de +10 por atributo e por jogador, sem limite adicional para a soma dos atributos de uma recompensa.
 - Carta: qualquer tipo padrão ou tema guardado no Card Lab. O servidor guarda a aparência autorizada, ignorando temas falsificados pelo cliente.
-- Novos componentes temporários duram sete dias a partir do início da recompensa. Durante a pausa das cartas, o início temporário passa para a próxima abertura. Stats permanentes não expiram.
+- Recompensas semanais duram sete dias; as mensais duram um mês de calendário a partir do início, ajustando o dia ao último dia do mês quando necessário. Durante a pausa das cartas, o início temporário passa para a próxima abertura. Stats e cartas permanentes não expiram, mas podem ser anuladas pela administração.
 - Atributos respeitam o máximo 99. O registo conserva recompensa configurada e recompensa efetivamente atribuída, mesmo quando um limite reduz os pontos entregues.
 
 Os prémios ficam privados antes da atribuição; jogadores veem apenas o prémio entregue. Recompensas antigas mantêm limites e validade originais.
@@ -112,7 +112,7 @@ Eventos e missões admitem prazo indefinido, edição completa em qualquer estad
 
 O editor distingue **Votação**, **Competição controlada** (ordem dos vencedores escolhida no ADMIN) e **Competição** (os primeiros a atingir uma meta). É possível definir os participantes, posições premiadas, recompensa de cada posição, desempate, visibilidade do progresso e confirmação antes da entrega.
 
-As competições por objetivo aparecem nas Missões com o progresso individual. Os objetivos disponíveis incluem jogos, golos, assistências, vitórias, vitórias consecutivas, vitórias numa sequência sem derrotas, jogos consecutivos sem perder, golos e assistências somados e jogos sem sofrer golos.
+As competições por objetivo aparecem nas Missões com o progresso do âmbito escolhido: individual, grupo ou equipa. Os objetivos disponíveis incluem jogos, golos, assistências, vitórias, vitórias consecutivas, vitórias numa sequência sem derrotas, jogos consecutivos sem perder, golos e assistências somados e jogos sem sofrer golos.
 
 A ordem de chegada é verificada pelos jogos finalizados. Quem atingir a meta antes fica à frente, mesmo que outra pessoa tenha um total maior mais tarde. Se a meta for atingida no mesmo jogo, aplica-se o desempate configurado; uma ordem fixa resolve a igualdade restante. Não existem tempos individuais de golos registados dentro do mesmo jogo.
 

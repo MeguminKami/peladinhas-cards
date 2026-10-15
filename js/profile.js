@@ -1,4 +1,5 @@
 import { cardWeek } from "./card-week.js";
+import { historyForDisplay } from "./card-history.js";
 import {
   COUNTRIES,
   profileComplete,
@@ -10,7 +11,7 @@ import {
   isoWeek,
 } from "./utils.js";
 import { ASSET_PATHS, safeImage } from "./assets.js";
-import { card, bindImages } from "./cards.js";
+import { card, bindImages, weeklyEvolution } from "./cards.js";
 import { esc, empty, linkButton, pageHead, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
 import * as DB from "./db.js";
@@ -129,12 +130,21 @@ export async function playerPage(ctx, uid) {
           "edit",
         );
   const own = uid === ctx.user.uid,
-    history = (await DB.history(uid)).sort((a, b) =>
+    history = historyForDisplay(p, await DB.history(uid)).sort((a, b) =>
       b.weekId.localeCompare(a.weekId),
     ),
     s = p.matchStats,
     best = ATTRIBUTES.reduce((a, b) => (p.stats[b[0]] > p.stats[a[0]] ? b : a));
-  const previous = history.find((h) => h.weekId < cardWeek().weekId);
+  const cardChoices = [...new Map(p.specials.map((s) => [s.id, s])).values()];
+  const canChooseCard =
+    own &&
+    !p.cardLocked &&
+    cardWeek().phase === "open" &&
+    cardChoices.length > 1;
+  const previousWeek = cardWeek(new Date(+cardWeek().opensAt - 1)).weekId;
+  const attributePrevious = history.find((h) => h.weekId === previousWeek);
+  const previous = attributePrevious;
+  p.previousStats = attributePrevious?.stats || null;
   p.ovrDelta = Number.isFinite(previous?.ovr) ? p.ovr - previous.ovr : null;
   const growth = previous?.stats
     ? ATTRIBUTES.map(([key, name]) => ({
@@ -143,7 +153,7 @@ export async function playerPage(ctx, uid) {
       })).sort((a, b) => b.delta - a.delta)[0]
     : null;
   ctx.render(
-    `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? "Semana fechada · Quinta às 20h" : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
+    `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}${weeklyEvolution(p)}${canChooseCard ? '<button type="button" id="choose-weekly-card" class="btn btn-secondary">Escolher carta</button>' : ""}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? "Semana fechada · Quinta às 12h" : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
       ["Idade", `${age(p.birthDate)} anos`],
       ["Altura", p.heightCm ? `${p.heightCm} cm` : "—"],
       ["Peso", p.weightKg ? `${p.weightKg} kg` : "—"],
@@ -183,7 +193,7 @@ export async function playerPage(ctx, uid) {
       .map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`)
       .join(
         "",
-      )}</div></div></div><section class="panel"><div class="section-head"><h2>Os 12 atributos</h2><span class="muted">Escala 0–99</span></div><div class="attribute-grid">${ATTRIBUTES.map(([k, n]) => `<div><span>${n}</span><b>${p.stats[k]}</b><div class="progress"><span style="--progress:${p.stats[k]}%"></span></div></div>`).join("")}</div></section><section><div class="section-head"><h2>Estatísticas</h2></div><div class="metrics stats-metrics">${[
+      )}</div></div></div><section class="panel"><div class="section-head"><h2>Os 12 atributos</h2><span class="muted">Escala 0–99 · Variação face à semana anterior</span></div><div class="attribute-grid">${ATTRIBUTES.map(([k, n]) => `<div><span>${n}</span><span class="attribute-value"><b>${p.stats[k]}</b>${attributeChange(p.stats[k], attributePrevious?.stats?.[k])}</span><div class="progress"><span style="--progress:${p.stats[k]}%"></span></div></div>`).join("")}</div></section><section><div class="section-head"><h2>Estatísticas</h2></div><div class="metrics stats-metrics">${[
       ["Jogos", s.played],
       ["Vitórias", s.wins],
       ["Empates", s.draws],
@@ -229,6 +239,44 @@ export async function playerPage(ctx, uid) {
           )
     }</section>`,
   );
+  document
+    .querySelector("#choose-weekly-card")
+    ?.addEventListener("click", () => {
+      const selected = cardChoices.some((s) => s.id === p.selectedCardId)
+        ? p.selectedCardId
+        : cardChoices[0].id;
+      const close = modal(
+        "Escolher carta",
+        `<p>A carta selecionada fica guardada quando a semana fechar.</p><div class="weekly-card-choices">${cardChoices.map((choice) => `<button type="button" class="weekly-card-choice" data-select-card="${esc(choice.id)}" aria-pressed="${choice.id === selected}" aria-label="Escolher ${esc(choice.name)}">${card(p, { size: "sm", preview: true, theme: choice.id })}<strong>${esc(choice.name)}</strong><span>${choice.id === selected ? "✓ Selecionada" : "Escolher esta carta"}</span></button>`).join("")}</div>`,
+      );
+      const root = document.querySelector("#modal-root");
+      bindImages(root);
+      const buttons = [...root.querySelectorAll("[data-select-card]")];
+      buttons.forEach((button) => {
+        button.onclick = async () => {
+          buttons.forEach((item) => {
+            item.disabled = true;
+          });
+          try {
+            await busy(button, async () => {
+              await DB.callAdmin("selectWeeklyCard", {
+                weekId: cardWeek().weekId,
+                cardId: button.dataset.selectCard,
+              });
+              close();
+              toast("Carta selecionada.");
+              await ctx.refresh();
+              ctx.go(`#/player/${uid}`);
+            });
+          } catch {
+          } finally {
+            buttons.forEach((item) => {
+              item.disabled = false;
+            });
+          }
+        };
+      });
+    });
   document.querySelectorAll("[data-history-week]").forEach((button) => {
     button.onclick = () => {
       const snapshot = history.find(
@@ -259,6 +307,8 @@ export function historicalPlayer(player, snapshot, previous) {
     ...player,
     ...snapshot.appearance,
     stats: snapshot.stats || {},
+    selectedCardId: snapshot.selectedCardId || null,
+    previousStats: previous?.stats || null,
     cardPhoto: snapshot.cardPhoto || null,
     primaryPosition: snapshot.primaryPosition ?? player.primaryPosition,
     ovr: snapshot.ovr,
@@ -270,4 +320,20 @@ export function historicalPlayer(player, snapshot, previous) {
     official: snapshot.official,
     hasCard: true,
   };
+}
+
+function attributeChange(current, previous) {
+  if (!Number.isFinite(current) || !Number.isFinite(previous))
+    return '<small class="attribute-change is-neutral" title="Sem carta da semana anterior para comparar">—</small>';
+  const delta = Math.round((current - previous) * 100) / 100;
+  const amount = Math.abs(delta).toLocaleString("pt-PT", {
+    maximumFractionDigits: 2,
+  });
+  const description =
+    delta > 0
+      ? `Subiu ${amount}`
+      : delta < 0
+        ? `Desceu ${amount}`
+        : "Sem alteração";
+  return `<small class="attribute-change ${delta > 0 ? "is-positive" : delta < 0 ? "is-negative" : "is-neutral"}" aria-label="${description} face à carta da semana anterior" title="${description} face à carta da semana anterior"><span aria-hidden="true">${delta > 0 ? "↑" : delta < 0 ? "↓" : "="}</span> ${delta > 0 ? "+" : delta < 0 ? "−" : ""}${amount}</small>`;
 }

@@ -127,13 +127,14 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     `<details class="event-question" open><summary>${medal(index)} ${index}.ª posição · recompensa</summary><div class="event-question-fields"><div class="form-grid"><label>Modalidade<select name="rewardMode">${options(
       [
         ["stats", "Stats"],
-        ["card", "Carta semanal"],
+        ["card", "Carta"],
         ["both", "Stats + carta"],
       ],
       reward.mode || "stats",
-    )}</select></label><label>Duração das stats<select name="statDuration">${options(
+    )}</select></label><label>Duração da recompensa<select name="statDuration">${options(
       [
-        ["weekly", "Semana da recompensa"],
+        ["weekly", "Semanal · 7 dias"],
+        ["monthly", "Mensal · 1 mês"],
         ["permanent", "Permanente"],
       ],
       reward.statDuration || "weekly",
@@ -147,10 +148,11 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
             reward.specialId,
           )}</optgroup>`
         : ""
-    }</select></label></div><div class="event-boost-grid">${ATTRIBUTES.map(([key, name]) => `<label>${name} +<input name="boost-${key}" type="number" min="0" max="10" value="${reward.boosts?.[key] || 0}"></label>`).join("")}</div><p class="muted small">Semanais: até 10 por atributo e 20 por prémio. Permanentes: máximo acumulado de +10 por atributo e por jogador.</p></div></details>`;
+    }</select></label></div><div class="event-boost-grid">${ATTRIBUTES.map(([key, name]) => `<label>${name} +<input name="boost-${key}" type="number" min="0" max="10" value="${reward.boosts?.[key] || 0}"></label>`).join("")}</div><p class="muted small">Semanais e mensais: até 10 por atributo e 20 por prémio. A duração aplica-se às stats e à carta. Permanentes: máximo acumulado de +10 por atributo e por jogador.</p></div></details>`;
   const readReward = (section) => ({
     mode: section.querySelector('[name="rewardMode"]').value,
     statDuration: section.querySelector('[name="statDuration"]').value,
+    cardDuration: section.querySelector('[name="statDuration"]').value,
     specialId: section.querySelector('[name="specialId"]').value || null,
     boosts: Object.fromEntries(
       ATTRIBUTES.map(([key]) => [
@@ -204,9 +206,10 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     )}</select></label><label>Objetivo<select name="metric">${options(Object.entries(OBJECTIVES), event.objective?.metric || "games")}</select></label><label>Quantidade alvo<input name="target" type="number" min="1" max="1000" value="${event.objective?.target || 3}"></label><label>Âmbito<select name="scope">${options(
       [
         ["individual", "Individual"],
-        ["collective", "Coletivo · soma do grupo"],
+        ["group", "Grupo · soma dos participantes"],
+        ["team", "Equipa · totais da equipa de cada jogador"],
       ],
-      event.scope || "individual",
+      event.scope === "collective" ? "team" : event.scope || "individual",
     )}</select></label><label>Frequência<select name="cadence">${options(
       [
         ["once", "Especial · uma conclusão"],
@@ -429,7 +432,6 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
           ? "Mostrar progresso da competição"
           : "Mostrar contagens durante a votação";
       if (competition) {
-        form.elements.scope.value = "individual";
         form.elements.cadence.value = "once";
         form.elements.maxRepeats.value = "1";
       }
@@ -453,7 +455,9 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         );
       for (const key of ["scope", "cadence", "maxRepeats", "difficulty"])
         form.elements[key].closest("label").hidden =
-          key === "difficulty" ? !(mission || competition) : !mission;
+          key === "difficulty" || key === "scope"
+            ? !(mission || competition)
+            : !mission;
       if (mission && form.elements.cadence.value === "once") {
         form.elements.maxRepeats.value = "1";
         form.elements.maxRepeats.closest("label").hidden = true;

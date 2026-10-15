@@ -791,5 +791,132 @@ test("objective competition closes on first verified completion and preserves ch
     title: "Competição terminada editada",
   });
   assert.equal((await db.doc(`events/${id}`).get()).data().status, "closed");
-  await assert.rejects(call("create", { ...base, scope: "collective" }));
+  await call("create", { ...base, scope: "team" });
+  await call("create", { ...base, scope: "group" });
+});
+
+test("duração das recompensas: entrega semanal, mensal e permanente", async (t) => {
+  t.mock.timers.enable({
+    apis: ["Date"],
+    now: new Date("2026-10-23T12:00:00Z"),
+  });
+  t.after(() => t.mock.timers.reset());
+  await db
+    .doc(`users/${admin}`)
+    .set({ uid: admin, role: "admin", disabled: false });
+  for (const duration of ["weekly", "monthly", "permanent"]) {
+    const uid = `duration-${duration}`;
+    await db
+      .doc(`users/${uid}`)
+      .set({ uid, role: "member", disabled: false, primaryPosition: "AV" });
+    const stamp = Timestamp.fromDate(new Date("2026-10-22T12:00:00Z"));
+    await db.doc(`games/duration-${duration}`).set({
+      status: "closed",
+      scheduledAt: stamp,
+      closedAt: stamp,
+      teamA: { starters: [uid], bench: [] },
+      teamB: { starters: ["other"], bench: [] },
+      score: { teamA: 1, teamB: 0 },
+    });
+    const { id } = await call("create", {
+      ...payload(),
+      kind: "mission",
+      method: "objective",
+      audience: { mode: "selected", memberIds: [uid] },
+      winnerCount: 1,
+      positions: [
+        {
+          mode: "both",
+          statDuration: duration,
+          specialId: "mvp",
+          boosts: { shooting: 3 },
+        },
+      ],
+      objective: { metric: "games", target: 1 },
+      openNow: true,
+    });
+    await claimMission.run({ auth: { uid }, data: { eventId: id } });
+    const ledger = (
+      await db.collection("eventRewards").where("eventId", "==", id).get()
+    ).docs[0].data();
+    assert.equal(ledger.reward.statDuration, duration);
+    assert.equal(ledger.reward.cardDuration, duration);
+    assert.equal(ledger.reward.boosts.shooting, 3);
+    assert.equal(
+      ledger.startsAt.toDate().toISOString(),
+      "2026-10-23T12:00:00.000Z",
+    );
+    if (duration !== "permanent")
+      assert.equal(
+        ledger.expiresAt.toDate().toISOString(),
+        duration === "monthly"
+          ? "2026-11-23T12:00:00.000Z"
+          : "2026-10-30T12:00:00.000Z",
+      );
+  }
+});
+
+test("âmbitos em missões e eventos: grupo, equipa, adversários e data do jogo", async (t) => {
+  t.mock.timers.enable({
+    apis: ["Date"],
+    now: new Date("2026-10-23T12:00:00Z"),
+  });
+  t.after(() => t.mock.timers.reset());
+  await db
+    .doc(`users/${admin}`)
+    .set({ uid: admin, role: "admin", disabled: false });
+  const members = ["scope-a", "scope-b", "scope-c", "scope-absent"];
+  for (const uid of members)
+    await db.doc(`users/${uid}`).set({ uid, role: "member", disabled: false });
+  const match = {
+    status: "closed",
+    scheduledAt: Timestamp.fromDate(new Date("2026-10-22T20:00Z")),
+    closedAt: Timestamp.fromDate(new Date("2026-10-22T22:00Z")),
+    teamA: { starters: members.slice(0, 2), bench: [] },
+    teamB: { starters: [members[2]], bench: [] },
+    score: { teamA: 5, teamB: 7 },
+    performance: {
+      teamA: { goals: members.slice(0, 2), assists: [] },
+      teamB: { goals: [members[2], members[2]], assists: [] },
+    },
+  };
+  await db.doc("games/scope-current").set(match);
+  await db.doc("games/scope-old-late-close").set({
+    ...match,
+    scheduledAt: Timestamp.fromDate(new Date("2026-10-19T20:00Z")),
+    closedAt: Timestamp.fromDate(new Date("2026-10-19T22:00Z")),
+    score: { teamA: 99, teamB: 99 },
+  });
+  for (const kind of ["mission", "event"]) {
+    for (const scope of ["team", "collective", "group", "individual"]) {
+      const { id } = await call("create", {
+        ...payload(),
+        title: `${kind} ${scope}`,
+        kind,
+        scope,
+        method: "objective",
+        winnerCount: 1,
+        positions: [prize(5)],
+        audience: { mode: "selected", memberIds: members },
+        objective: { metric: "goals", target: 30 },
+        openNow: true,
+      });
+      const detail = await getEvent.run({
+        auth: { uid: admin },
+        data: { eventId: id },
+      });
+      const actual = Object.fromEntries(
+        detail.progress.map((row) => [row.uid, row.progress]),
+      );
+      const expected =
+        scope === "group"
+          ? [4, 4, 4, 4]
+          : scope === "individual"
+            ? [1, 1, 2, 0]
+            : [5, 5, 7, 0];
+      members.forEach((uid, index) =>
+        assert.equal(actual[uid], expected[index], `${kind} ${scope} ${uid}`),
+      );
+    }
+  }
 });
