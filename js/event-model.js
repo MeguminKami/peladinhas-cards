@@ -62,6 +62,22 @@ export function objectiveSummary(event) {
 
 export const medal = (position) =>
   ["🥇", "🥈", "🥉"][position - 1] || `${position}.º`;
+export const positionLabel = (position) =>
+  position <= 3 ? `${medal(position)} ${position}.º` : `${position}.º`;
+
+// Shared live positions do not change the order used to award prizes.
+export function sharedRankingPositions(event, rows) {
+  if (event.method === "admin" || ["closed", "cancelled"].includes(event.status)) return rows;
+  const key = event.method === "vote" ? "votes" : "progress";
+  const positions = new Map();
+  return rows.map((row, index) => {
+    // Reaching the objective fixes the official chronological podium.
+    if (event.method === "objective" && row.reachedAt) return row;
+    const value = row[key] ?? 0;
+    if (!positions.has(value)) positions.set(value, index + 1);
+    return { ...row, position: positions.get(value) };
+  });
+}
 export const hasTemporaryReward = (reward = {}) =>
   (!!reward.specialId && reward.cardDuration !== "permanent") ||
   (reward.statDuration !== "permanent" &&

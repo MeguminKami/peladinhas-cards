@@ -2514,15 +2514,15 @@ td small {
 
 .attribute-value { display: inline-flex; align-items: center; gap: 8px; }
 .attribute-change { display: inline-flex; align-items: center; gap: 3px; font-size: .72rem; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.attribute-change.is-positive { color: #58d68d; }
-.attribute-change.is-negative { color: #ff7b7b; }
+.attribute-change.is-positive { color: #22ed80; }
+.attribute-change.is-negative { color: #ff4865; }
 .attribute-change.is-neutral { color: var(--text-muted); }
 
 .weekly-evolution { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 16px 0; }
 .weekly-evolution-label { flex-basis: 100%; color: var(--text-muted); text-align: center; font-size: .75rem; }
 .weekly-evolution-value { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; font-size: .78rem; font-weight: 750; font-variant-numeric: tabular-nums; }
-.weekly-evolution-value.positive { color: #58d68d; }
-.weekly-evolution-value.negative { color: #ff7b7b; }
+.weekly-evolution-value.positive { color: #22ed80; }
+.weekly-evolution-value.negative { color: #ff4865; }
 .weekly-evolution-value.neutral, .weekly-evolution-note { color: var(--text-muted); }
 .weekly-evolution-note { font-size: .75rem; text-align: center; }
 
@@ -2537,7 +2537,7 @@ td small {
 .trend-arrow-facet { fill: #fff; opacity: .22; }
 .trend-arrow-edge { stroke: #fff; stroke-opacity: .38; stroke-width: .65; stroke-linejoin: round; }
 .trend-arrow-down { transform: rotate(180deg); }
-:is(.attribute-change,.weekly-evolution-value) > .trend-arrow { width: 11px; height: 14px; }
+:is(.attribute-change,.weekly-evolution-value) > .trend-arrow { width: 13px; height: 17px; }
 :is(.attribute-change.is-positive,.weekly-evolution-value.positive) { --trend-glow: #28d88935; }
 :is(.attribute-change.is-negative,.weekly-evolution-value.negative) { --trend-glow: #ff506835; }
 

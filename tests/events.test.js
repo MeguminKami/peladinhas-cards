@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   eventEndMillis,
+  positionLabel,
+  sharedRankingPositions,
   missionUnlockedAt,
   objectiveSummary,
   objectiveReachedAt,
@@ -521,4 +523,15 @@ test("objetivos usam a data de encerramento, mesmo quando o jogo foi realizado a
     objectiveProgress("a", config, [next], new Date("2026-10-16T21:00Z")),
     0,
   );
+});
+
+
+test("live leaderboard shares positions for equal progress without duplicated ordinals", () => {
+  const rows = [3, 2, 2, 2, 1, 1, 1, 0, 0].map((progress, i) => ({ uid: String(i), progress, position: i + 1 }));
+  assert.deepEqual(sharedRankingPositions({ method: "objective", status: "open" }, rows).map(r => r.position), [1, 2, 2, 2, 5, 5, 5, 8, 8]);
+  assert.equal(positionLabel(4), "4.\u00ba");
+  assert.deepEqual(sharedRankingPositions({ method: "admin", status: "open" }, rows), rows);
+  assert.deepEqual(sharedRankingPositions({ method: "objective", status: "closed" }, rows), rows);
+  const reached = [{ progress: 10, position: 1, reachedAt: "2026-10-15T12:00Z" }, { progress: 10, position: 2, reachedAt: "2026-10-15T13:00Z" }];
+  assert.deepEqual(sharedRankingPositions({ method: "objective", status: "review" }, reached), reached);
 });

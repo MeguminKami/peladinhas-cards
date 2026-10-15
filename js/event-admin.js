@@ -5,6 +5,7 @@ import { votersFor, eventDeadline } from "./event-rules.js";
 import {
   OBJECTIVES,
   medal,
+  positionLabel,
   rewardText,
   validEventReward,
   eventEndLabel,
@@ -124,7 +125,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     root.querySelector(`#${id}`).oninput = drawList;
   selectArea(initialArea);
   const rewardFields = (reward = {}, index = 1) =>
-    `<details class="event-question" open><summary>${medal(index)} ${index}.ª posição · recompensa</summary><div class="event-question-fields"><div class="form-grid"><label>Modalidade<select name="rewardMode">${options(
+    `<details class="event-question" open><summary>${positionLabel(index)} lugar · recompensa</summary><div class="event-question-fields"><div class="form-grid"><label>Modalidade<select name="rewardMode">${options(
       [
         ["stats", "Stats"],
         ["card", "Carta"],
@@ -524,7 +525,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       positions.querySelectorAll("summary").forEach((summary, i) => {
         summary.textContent = mission
           ? "Recompensa para cada jogador que concluir"
-          : `${medal(i + 1)} ${i + 1}.º lugar · prémio`;
+          : `${positionLabel(i + 1)} lugar · prémio`;
       });
       for (const section of positions.children) {
         const mode = section.querySelector('[name="rewardMode"]').value;
@@ -652,7 +653,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         const p = payload();
         modal(
           "Pré-visualização",
-          `<div class="event-preview"><span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p><p>${esc(p.rules)}</p>${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${medal(i + 1)} ${i + 1}.º lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
+          `<div class="event-preview"><span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p><p>${esc(p.rules)}</p>${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
         );
       } catch (error) {
         toast(error.message, "error");

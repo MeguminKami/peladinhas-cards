@@ -14,6 +14,8 @@ import {
 import { asDate, formatDate, formatDateTime } from "./utils.js";
 import {
   medal,
+  positionLabel,
+  sharedRankingPositions,
   rewardText,
   objectiveSummary,
   periodWindow,
@@ -177,10 +179,10 @@ export async function managedEventPage(ctx, event) {
     (uid) => event.allowSelfVote || uid !== ctx.user.uid,
   );
   const rankRows = (rows) =>
-    rows
+    sharedRankingPositions(event, rows)
       .map(
         (row) =>
-          `<tr><td>${event.kind === "mission" ? (row.reward ? "✓ Concluída" : "Em progresso") : `${medal(row.position)} ${row.position}.º`}</td><td>${esc(name(ctx, row.uid))}</td><td>${event.method === "vote" ? row.votes : row.progress}</td><td>${row.reward ? `${esc(rewardText(row.reward))}${row.expiresAt && hasTemporaryReward(row.reward) ? `<small>Bónus temporários até ${formatDate(row.expiresAt)}</small>` : ""}` : "—"}</td></tr>`,
+          `<tr><td>${event.kind === "mission" ? (row.reward ? "✓ Concluída" : "Em progresso") : positionLabel(row.position)}</td><td>${esc(name(ctx, row.uid))}</td><td>${event.method === "vote" ? row.votes : row.progress}</td><td>${row.reward ? `${esc(rewardText(row.reward))}${row.expiresAt && hasTemporaryReward(row.reward) ? `<small>Bónus temporários até ${formatDate(row.expiresAt)}</small>` : ""}` : "—"}</td></tr>`,
       )
       .join("");
   ctx.render(
