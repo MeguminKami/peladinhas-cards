@@ -1,3 +1,4 @@
+import { EVENT_RARITIES, eventRarityId, rarityBadge } from "../js/event-rarity.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -534,4 +535,15 @@ test("live leaderboard shares positions for equal progress without duplicated or
   assert.deepEqual(sharedRankingPositions({ method: "objective", status: "closed" }, rows), rows);
   const reached = [{ progress: 10, position: 1, reachedAt: "2026-10-15T12:00Z" }, { progress: 10, position: 2, reachedAt: "2026-10-15T13:00Z" }];
   assert.deepEqual(sharedRankingPositions({ method: "objective", status: "review" }, reached), reached);
+});
+
+
+test("event rarities have seven ordered cosmetic tiers and a safe legacy default", () => {
+  assert.deepEqual(Object.values(EVENT_RARITIES).map(r => r.level), [1, 2, 3, 4, 5, 6, 7]);
+  assert.equal(eventRarityId({}), "bronze");
+  assert.equal(eventRarityId({ rarity: "<invalid>" }), "bronze");
+  for (const id of Object.keys(EVENT_RARITIES)) {
+    assert.equal(eventRarityId({ rarity: id }), id);
+    assert.ok(rarityBadge({ rarity: id }).includes(`data-rarity="${id}"`));
+  }
 });

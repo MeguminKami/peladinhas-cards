@@ -122,3 +122,8 @@ Ao preencher as posições premiadas, a competição encerra automaticamente (ou
 
 
 Os objetivos usam um icon distinto por métrica e por método de decisão. As páginas dos desafios apresentam as recompensas por posição, com indicadores de stats/cartas e pré-visualização da carta usando os valores atuais do jogador. O detalhe público disponibiliza `rewardPreview`; a configuração administrativa e os boletins continuam reservados ao admin.
+
+
+## Raridade visual
+
+A raridade é escolhida no ADMIN ao criar ou editar eventos e missões. Bronze (Comum), Prata (Incomum), Ouro (Rara), Especial Dourada (Super Rara), Elite (Épica), Ícone (Lendária) e Ultimate (Suprema) definem apenas a identidade visual: cores, emblema, bordas e efeitos. Não alteram dificuldade, objetivos, classificação, cálculos, recompensas ou cartas atribuídas. Registos anteriores sem raridade aparecem como Bronze. O valor é validado no servidor, conservado nas edições que não o especificam e copiado ao duplicar.

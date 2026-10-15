@@ -2694,7 +2694,7 @@ main.wide-layout {
 /* Faceted movement marks are part of the card typography, without badges. */
 .football-card .card-stats b { display: flex; align-items: center; justify-content: center; gap: calc(var(--card-width) * .008); }
 .football-card .card-stat-trend { display: inline-flex; align-items: center; width: calc(var(--card-width) * .040); height: calc(var(--card-width) * .052); flex-shrink: 0; line-height: 1; }
-.football-card .card-ovr-trend { display: inline-flex; top: 28%; left: calc(100% + var(--card-width) * .012); width: calc(var(--card-width) * .052); height: calc(var(--card-width) * .068); }
+.football-card .card-ovr-trend { display: inline-flex; top: 28%; left: auto; right: calc(100% + var(--card-width) * .012); width: calc(var(--card-width) * .052); height: calc(var(--card-width) * .068); }
 .football-card :is(.card-stat-trend,.card-ovr-trend).positive { color: #00b84f; --trend-glow: #00d65b66; }
 .football-card :is(.card-stat-trend,.card-ovr-trend).negative { color: #f01f3d; --trend-glow: #ff244766; }
 .football-card.card-special :is(.card-stat-trend,.card-ovr-trend).positive { color: #22f586; }

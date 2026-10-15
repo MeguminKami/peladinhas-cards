@@ -1,3 +1,4 @@
+import { EVENT_RARITIES } from "../js/event-rarity.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { cardWeek } from "../js/card-week.js";
@@ -100,6 +101,8 @@ async function configuration(input, eventId = null) {
     db().collection("cardThemes").get(),
     db().collection("events").get(),
   ]);
+  const rarity = input.rarity ?? eventSnaps.docs.find(doc => doc.id === eventId)?.data().rarity ?? "bronze";
+  if (!Object.hasOwn(EVENT_RARITIES, rarity)) fail("Raridade invalida.");
   const indefinite = input.indefinite === true;
   if (input.indefinite !== undefined && typeof input.indefinite !== "boolean")
     fail("A opção de prazo é inválida.");
@@ -245,6 +248,7 @@ async function configuration(input, eventId = null) {
     participationReward: null,
     event: {
       schemaVersion: 2,
+      rarity,
       title: input.title.trim(),
       description: input.description || "",
       image: imageUrl(input.image),

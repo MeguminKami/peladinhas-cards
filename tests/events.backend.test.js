@@ -64,12 +64,16 @@ test("eventos modernos: permissão, privacidade, votos, revisão, pódio, entreg
       data: { action: "create", ...payload() },
     }),
   );
-  const { id } = await call("create", { ...payload(), openNow: true });
+  const { id } = await call("create", { ...payload(), rarity: "ultimate", openNow: true });
   const publicBefore = await getEvent.run({
     auth: { uid: ids[0] },
     data: { eventId: id },
   });
   assert.equal(publicBefore.configuration, undefined);
+  assert.equal(publicBefore.rarity, "ultimate");
+  await call("update", { ...payload(), eventId: id });
+  assert.equal((await getEvent.run({ auth: { uid: ids[0] }, data: { eventId: id } })).rarity, "ultimate");
+  await assert.rejects(call("create", { ...payload(), rarity: "invalid" }));
   assert.equal(publicBefore.rewardPreview.length, 3);
   assert.equal(publicBefore.rewardPreview[0].specialId, "mvp");
   assert.equal(publicBefore.ballots, undefined);

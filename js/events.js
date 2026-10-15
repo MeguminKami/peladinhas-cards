@@ -1,3 +1,4 @@
+import { eventRarityId, rarityBadge } from "./event-rarity.js";
 import * as DB from "./db.js";
 import { asDate, formatDate, formatDateTime } from "./utils.js";
 import { votersFor, candidatesFor, eventOutcome } from "./event-rules.js";
@@ -41,7 +42,7 @@ export async function eventPage(ctx, id) {
   if (event?.schemaVersion === 2) return managedEventPage(ctx, event);
   if (event && ["closed", "cancelled"].includes(event.status)) {
     ctx.render(
-      `${pageHead("Resultado da votação", event.title, "", linkButton("#/missions", "Missões", "ghost"))}<section class="panel event-result"><div class="section-intro"><h2>${event.status === "cancelled" ? "Evento cancelado" : "Votação encerrada"}</h2><p>${event.rewardsApplied === false ? "A atribuição das recompensas está a ser concluída." : esc(eventOutcome(event, ctx.league.users))}</p></div>${(event.winners || []).map((winner) => `<div class="event-result-question"><p>${esc(winner.label)} · ${winner.votes} ${winner.votes === 1 ? "voto" : "votos"}</p>${event.status === "closed" && winner.uids.length && winner.reward ? `<p class="event-revealed-reward"><strong>Recompensa atribuída</strong><br>${esc(rewardSummary(winner.reward))}</p>` : ""}</div>`).join("")}</section>`,
+      `${pageHead("Resultado da votação", event.title, "", linkButton("#/missions", "Missões", "ghost"))}<section class="panel event-result event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<div class="section-intro"><h2>${event.status === "cancelled" ? "Evento cancelado" : "Votação encerrada"}</h2><p>${event.rewardsApplied === false ? "A atribuição das recompensas está a ser concluída." : esc(eventOutcome(event, ctx.league.users))}</p></div>${(event.winners || []).map((winner) => `<div class="event-result-question"><p>${esc(winner.label)} · ${winner.votes} ${winner.votes === 1 ? "voto" : "votos"}</p>${event.status === "closed" && winner.uids.length && winner.reward ? `<p class="event-revealed-reward"><strong>Recompensa atribuída</strong><br>${esc(rewardSummary(winner.reward))}</p>` : ""}</div>`).join("")}</section>`,
     );
     legacyAudit(ctx, event);
     return;
@@ -80,7 +81,7 @@ export async function eventPage(ctx, id) {
       ),
     );
   ctx.render(
-    `${pageHead("Votação", event.title, event.description || "", linkButton("#/missions", "Missões", "ghost"))}<section class="panel event-voting"><p>Encerra: ${formatDateTime(event.endsAt)}</p><form id="event-vote-form" class="content-stack">${questions
+    `${pageHead("Votação", event.title, event.description || "", linkButton("#/missions", "Missões", "ghost"))}<section class="panel event-voting event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<p>Encerra: ${formatDateTime(event.endsAt)}</p><form id="event-vote-form" class="content-stack">${questions
       .map(
         (q) =>
           `<fieldset class="event-question"><legend>${esc(q.label)}</legend><label>Escolher jogador<select name="${q.id}" required><option value="">Escolhe um colega</option>${q.candidates

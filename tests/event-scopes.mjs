@@ -82,6 +82,10 @@ try {
       await page
         .locator(kind === "event" ? "#new-event" : "#new-mission")
         .click();
+      const rarity = page.locator('#event-editor [name="rarity"]');
+      assert.equal(await rarity.locator("option").count(), 7);
+      await rarity.selectOption("ultimate");
+      assert.equal(await page.locator("#event-rarity-preview").getAttribute("data-rarity"), "ultimate");
       await page.locator('[data-editor-step="1"]').click();
       if (kind === "event")
         await page.locator('[data-selection-method="objective"]').click();
@@ -152,6 +156,19 @@ try {
   }
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.locator(".event-reward-showcase").screenshot({ path: `test-results/event-scopes/reward-${isWebKit ? "webkit" : "chromium"}.png` });
+  await page.evaluate(async () => {
+    const { missionList } = await import("./js/missions.js");
+    const { EVENT_RARITIES } = await import("./js/event-rarity.js");
+    document.querySelector("main").innerHTML = missionList(Object.keys(EVENT_RARITIES).map(rarity => ({ type: "COMPETITION_OBJECTIVE", rarity, title: "A conquista da semana", description: "Ganha 3 jogos.", eventDescription: "Entra em campo e deixa a tua marca.", done: 1, total: 3, href: "#/event/example", icon: "wins" })));
+  });
+  assert.equal(await page.locator(".event-rarity-badge").count(), 7);
+  for (const width of [320, 390, 844, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Rarity overflow ${width}`);
+  }
+  await page.locator(".mission-list").screenshot({ animations: "disabled", style: "#header,.bottom-nav{visibility:hidden!important}", path: `test-results/event-scopes/rarities-${isWebKit ? "webkit" : "chromium"}.png` });
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await page.locator('.mission[data-rarity="ultimate"]').screenshot({ animations: "disabled", path: `test-results/event-scopes/rarity-mobile-${isWebKit ? "webkit" : "chromium"}.png` });
   await page.clock.install();
   await page.evaluate(async () => {
     const { mountHomePodium, podiumPlayers } = await import("./js/home-podium.js");
