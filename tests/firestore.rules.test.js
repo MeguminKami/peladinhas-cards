@@ -186,7 +186,7 @@ const vote = (raterId = "pedro", targetId = "joao", submitted = true) => ({
   updatedAt: serverTimestamp(),
   submittedAt: submitted ? serverTimestamp() : null,
 });
-test("feedback só de participantes, sem autoavaliação, IDs únicos", async () => {
+test("feedback só de participantes, com autoavaliação, IDs únicos", async () => {
   await assertSucceeds(
     setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), vote()),
   );
@@ -196,7 +196,7 @@ test("feedback só de participantes, sem autoavaliação, IDs únicos", async ()
       vote("outsider"),
     ),
   );
-  await assertFails(
+  await assertSucceeds(
     setDoc(
       doc(signed("pedro"), "games/closed/feedback/pedro_pedro"),
       vote("pedro", "pedro"),

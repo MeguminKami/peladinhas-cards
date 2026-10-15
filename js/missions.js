@@ -44,9 +44,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
   for (const g of league.games.filter(
     (g) => g.status === "closed" && participants(g).includes(user.uid),
   )) {
-    const targets = [...new Set(participants(g))].filter(
-        (uid) => uid !== user.uid,
-      ),
+    const targets = [...new Set(participants(g))],
       ratings = await DB.myFeedback(g.id, user.uid);
     const done = targets.filter((uid) =>
       ratings.some((r) => r.targetId === uid && r.submitted),

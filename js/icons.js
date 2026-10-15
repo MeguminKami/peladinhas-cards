@@ -1,4 +1,6 @@
 const paths = {
+  pause: "M8 5v14 M16 5v14",
+  play: "m8 4 12 8-12 8Z",
   goals: "M4 20V6h16v14 M4 10h16 M8 6v14 M16 6v14 M4 15h9 M20 15h-2 M17 17h.01 M20 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   assists: "M3 17h6a5 5 0 0 0 5-5V5 m-4 4 4-4 4 4 M3 7h4 M3 11h2 M18 17h3 M19.5 15.5v3",
   appearances: "m8 3-5 4 3 4 2-2v12h8V9l2 2 3-4-5-4 M9 3a3 3 0 0 0 6 0",

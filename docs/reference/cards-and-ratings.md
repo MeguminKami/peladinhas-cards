@@ -104,3 +104,6 @@ As avaliações (autoavaliação, comunidade e pós-jogo) podem ser editadas dur
 
 
 A carta base é Bronze comum para OVR inferior a 60 (incluindo 59) e Bronze rara de 60 a 64. Os restantes limites mantêm-se: Prata comum 65–69, Prata rara 70–74, Ouro comum 75–84 e Ouro rara a partir de 85.
+
+
+No pós-jogo, o jogador avalia também o seu próprio desempenho, no mesmo formulário da equipa, identificado como autoavaliação. Esta resposta tem o mesmo peso de cada resposta externa na média do jogo (a regra de 20%/4% pertence apenas à avaliação inicial). Após submeter, surge uma faixa de edição por baixo dos atalhos das equipas, com tempo restante e explicação acessível do prazo. Quando há submissões com prazos diferentes, o contador mostra o primeiro prazo ainda aberto; cada resposta bloqueia no seu próprio prazo.

@@ -1,3 +1,4 @@
+import { mountHomePodium } from "./home-podium.js";
 import {
   mountInstallButton,
   installSpotlight,
@@ -181,17 +182,6 @@ function header() {
   document.querySelector("#header").dataset.route = location.hash;
   if (dropdownOpen && p) toggleNotifications(ctx);
 }
-function weeklyPodium(players) {
-  const top = calculateWeeklyTopPlayers(players).slice(0, 3);
-  return top.length
-    ? `<div class="podium" tabindex="0" role="region" aria-label="Pódio semanal">${top.map((p, i) => `<div class="podium-place place-${i + 1}"><div class="podium-rank">${i === 0 ? icon("trophy") : ""}<b>${i + 1}.º</b><span>${i === 0 ? "Em destaque" : "Esta semana"}</span></div>${card(p, { size: "md" })}<p>${p.weeklyPerformance == null ? "" : `${p.weeklyPerformance.toFixed(2)} / 5 · forma semanal`}</p></div>`).join("")}</div>${top.length > 1 ? '<p class="podium-hint">Desliza para descobrir o pódio completo.</p>' : ""}`
-    : empty(
-        "O pódio está à tua espera",
-        "As primeiras cartas aparecem quando os jogadores concluírem a autoavaliação.",
-        linkButton("#/missions", "Ver missões"),
-        "trophy",
-      );
-}
 function home() {
   const me = ctx.league.players.find((p) => p.uid === ctx.user.uid),
     players = ctx.league.players.filter((p) => p.hasCard);
@@ -210,7 +200,7 @@ function home() {
     }).format(new Date()),
   );
   ctx.render(
-    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">A forma fala por si</p><h2>Melhores da semana</h2></div>${linkButton("#/ranking", "Ver classificação completa", "ghost", "trophy")}</div>${players.some((p) => p.weeklyPerformance == null) ? '<span class="pill">OVR como referência</span>' : ""}${weeklyPodium(players)}</section><div class="dashboard-columns"><section class="panel my-card-panel"><div class="section-head"><h2>A minha carta</h2>${linkButton("#/profile", "Ver perfil", "ghost")}</div>${me ? card(me, { size: "md" }) : empty("Perfil em preparação")}<div class="metrics compact-metrics">${[
+    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div>${linkButton("#/ranking", "Ver classificação completa", "ghost", "trophy")}</div><div id="home-podium"></div></section><div class="dashboard-columns"><section class="panel my-card-panel"><div class="section-head"><h2>A minha carta</h2>${linkButton("#/profile", "Ver perfil", "ghost")}</div>${me ? card(me, { size: "md" }) : empty("Perfil em preparação")}<div class="metrics compact-metrics">${[
       ["OVR", me?.hasCard ? me.ovr : "—"],
       [
         "Forma",
@@ -222,8 +212,11 @@ function home() {
       ["Vitórias", me?.matchStats.wins || 0],
       ["Golos", me?.matchStats.goals || 0],
       ["Assistências", me?.matchStats.assists || 0],
+      ["% vitórias", `${me?.matchStats.winRate || 0}%`, true],
+      ["Golos / jogo", me?.matchStats.played ? (me.matchStats.goals / me.matchStats.played).toLocaleString("pt-PT", { maximumFractionDigits: 1 }) : "0", true],
+      ["Assist. / jogo", me?.matchStats.played ? (me.matchStats.assists / me.matchStats.played).toLocaleString("pt-PT", { maximumFractionDigits: 1 }) : "0", true],
     ]
-      .map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`)
+      .map(([k, v, extra]) => `<div${extra ? ' class="dashboard-extra-stat"' : ""}><small>${k}</small><b>${v}</b></div>`)
       .join(
         "",
       )}</div><div class="my-card-actions">${linkButton("#/statistics", "Comparar na liga", "secondary", "chart")}</div></section><section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${ctx.missions.length} ${ctx.missions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions, { grouped: false })}${ctx.missions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
@@ -234,6 +227,7 @@ function home() {
     .insertAdjacentHTML("afterend", homePushInvitation());
   bindPushSettings(main);
   ctx.cleanup(bindInstallSpotlight(main));
+  ctx.cleanup(mountHomePodium(main.querySelector("#home-podium"), players));
 }
 function playersPage() {
   ctx.render(

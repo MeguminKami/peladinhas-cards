@@ -219,6 +219,25 @@ try {
         `${route} trend clipping ${width}`,
       );
     }
+    if (route === "#/") {
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.waitForTimeout(100);
+      const panels = await page.locator(".dashboard-columns > .panel").evaluateAll(els => els.map(el => el.getBoundingClientRect().height));
+      assert.ok(Math.abs(panels[0] - panels[1]) <= 1, "Dashboard panels must share their desktop height");
+      await page.locator(".dashboard-missions .mission-list").evaluate(el => {
+        while (el.children.length < 4) el.append(el.firstElementChild.cloneNode(true));
+      });
+      await page.waitForTimeout(150);
+
+      assert.equal(await page.locator(".dashboard-extra-stat:visible").count(), 3);
+      await page.locator(".dashboard-columns").screenshot({ path: `${output}/dashboard-balanced.png` });
+      await page.setViewportSize({ width: 390, height: 900 });
+      await page.waitForTimeout(100);
+      assert.equal(await page.locator(".dashboard-extra-stat:visible").count(), 0);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+
+      await page.setViewportSize({ width: 1440, height: 900 });
+    }
     await currentCard.screenshot({
       path: `${output}/${route === "#/" ? "home" : "players"}-growth.png`,
     });

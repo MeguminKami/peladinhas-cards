@@ -323,7 +323,6 @@ export function notificationFunctions(notify) {
           for (const uid of ids.filter((uid) => active.has(uid))) {
             const missing = ids.filter(
               (target) =>
-                target !== uid &&
                 !votes.some(
                   (v) =>
                     v.raterId === uid && v.targetId === target && v.submitted,

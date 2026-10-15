@@ -152,6 +152,55 @@ try {
   }
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.locator(".event-reward-showcase").screenshot({ path: `test-results/event-scopes/reward-${isWebKit ? "webkit" : "chromium"}.png` });
+  await page.clock.install();
+  await page.evaluate(async () => {
+    const { mountHomePodium, podiumPlayers } = await import("./js/home-podium.js");
+    if (podiumPlayers([{ hasCard: true, ovr: 80, aggregates: [], ovrDelta: -1 }], "performance").length || podiumPlayers([{ hasCard: true, ovr: 80, ovrDelta: -1 }], "growth").length) throw new Error("Empty rankings must not fall back to OVR");
+    const { cardWeek } = await import("./js/card-week.js");
+    const date = new Date(+cardWeek().opensAt + 60000).toISOString();
+    const main = document.querySelector("main");
+    main.innerHTML = '<section class="weekly-section"><div id="home-podium"></div></section>';
+    const players = [
+      { uid: "ovr", ovr: 90, ovrDelta: -2, performance: 3 },
+      { uid: "performance", ovr: 80, ovrDelta: 1, performance: 5 },
+      { uid: "growth", ovr: 70, ovrDelta: 4, performance: 4 },
+      { uid: "absent", ovr: 85, ovrDelta: null },
+    ].map(p => ({ ...p, username: p.uid, displayName: p.uid, hasCard: true, stats: {}, aggregates: p.performance ? [{ date, count: 2, overall: p.performance }] : [] }));
+    window.__disposePodium = mountHomePodium(main.querySelector("#home-podium"), players);
+  });
+  const podium = page.locator("#home-podium");
+  assert.equal(await podium.getAttribute("data-mode"), "ovr");
+  assert.equal(await podium.locator('.place-1 .football-card').getAttribute("href"), "#/player/ovr");
+  await page.mouse.move(0, 0);
+  await page.clock.fastForward(5001);
+  assert.equal(await podium.getAttribute("data-mode"), "performance");
+  assert.equal(await podium.locator('.place-1 .football-card').getAttribute("href"), "#/player/performance");
+  assert.equal(await podium.locator('.football-card[href="#/player/absent"]').count(), 0);
+  await page.clock.fastForward(5001);
+  assert.equal(await podium.getAttribute("data-mode"), "growth");
+  assert.equal(await podium.locator('.place-1 .football-card').getAttribute("href"), "#/player/growth");
+  assert.equal(await podium.locator(".podium-place").count(), 2);
+  await podium.locator(".podium-pause").click();
+  await page.locator("#podium-title").evaluate(el => { el.tabIndex = -1; el.focus(); el.blur(); });
+  await page.clock.fastForward(20001);
+  assert.equal(await podium.getAttribute("data-mode"), "growth");
+  for (const mode of ["ovr", "performance", "growth"]) {
+    await podium.locator(`[data-podium-mode="${mode}"]`).click();
+    assert.equal(await podium.getAttribute("data-mode"), mode);
+    for (const width of [320, 390, 430, 844, 1440]) {
+      await page.setViewportSize({ width, height: 1000 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Podium ${mode} overflow ${width}`);
+    }
+  }
+  await podium.locator('[data-podium-mode="ovr"]').click();
+  await page.setViewportSize({ width: 1100, height: 1000 });
+  await page.clock.fastForward(1000);
+  await podium.screenshot({ animations: "disabled", path: `test-results/event-scopes/podium-${isWebKit ? "webkit" : "chromium"}.png` });
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await podium.screenshot({ animations: "disabled", path: `test-results/event-scopes/podium-mobile-${isWebKit ? "webkit" : "chromium"}.png` });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  assert.equal(await podium.locator(".podium-place").first().evaluate(el => getComputedStyle(el).animationName), "none");
+  await page.evaluate(() => window.__disposePodium());
   assert.deepEqual(errors, []);
   console.log(
     `Event scopes ${isWebKit ? "WebKit" : "Chromium"}: mission/event scope choices and mobile layouts passed.`,

@@ -92,13 +92,15 @@ try {
   assert.equal(await page.locator(".feedback-team").count(), 2);
   assert.equal(
     await page.locator(".feedback-team-a .feedback-review").count(),
-    4,
+    5,
   );
   assert.equal(
     await page.locator(".feedback-team-b .feedback-review").count(),
     5,
   );
-  assert.equal(await page.locator('[data-target="pedro"]').count(), 0);
+  assert.equal(await page.locator('[data-target="pedro"]').count(), 1);
+  assert.equal(await page.locator(".feedback-self-review").count(), 1);
+  assert.equal(await page.locator("#edit-game-feedback").count(), 0);
   assert.equal(await form.locator("select").count(), 0);
   assert.equal(
     await field("overall").locator("[data-rating]").inputValue(),
@@ -279,6 +281,20 @@ try {
       .inputValue(),
     "na",
   );
+  assert.ok(await page.locator("[data-edit-remaining]").isVisible());
+  assert.ok((await page.locator("[data-edit-remaining]").textContent()).startsWith("Restam"));
+  assert.ok(await page.locator(".feedback-team-shortcuts").evaluate(el => el.getBoundingClientRect().bottom) <= await page.locator(".feedback-edit-bar").evaluate(el => el.getBoundingClientRect().top));
+  await page.locator(".feedback-info-button").focus();
+  assert.ok(await page.locator(".feedback-info-tooltip").isVisible());
+  assert.ok((await page.locator(".feedback-info-tooltip").textContent()).includes("7 dias"));
+  for (const width of [320, 390, 844, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Editing toolbar overflow ${width}`);
+  }
+  await page.locator(".feedback-self-review > summary").click();
+  assert.ok(await page.locator(".feedback-self-notice").isVisible());
+  await page.locator(".feedback-self-review").screenshot({ path: `${output}/self-review.png` });
+  await page.locator(".feedback-overview").screenshot({ path: `${output}/edit-toolbar.png` });
   const firstSubmission = await page.evaluate(() =>
     window.__testState.feedback
       .find(
@@ -292,6 +308,7 @@ try {
   await page
     .getByRole("button", { name: "Editar avaliações enviadas", exact: true })
     .click();
+  await page.locator('[data-target="ana"]').evaluate(form => form.closest("details").open = true);
   await page
     .locator(
       '[data-target="ana"] [data-dimension="attack"] .feedback-star[data-value="4"]',

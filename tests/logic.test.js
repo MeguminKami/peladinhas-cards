@@ -655,3 +655,11 @@ test("prazo de edição é de 7 dias desde a primeira submissão", () => {
     true,
   );
 });
+
+
+test("post-match self rating has exactly the same weight as each peer rating", () => {
+  const ratings = [{ raterId: "self", targetId: "self", submitted: true, ratings: { overall: 5 } }, { raterId: "peer", targetId: "self", submitted: true, ratings: { overall: 1 } }];
+  assert.equal(calculateGameAggregate(ratings).overall, 3);
+  ratings.push({ raterId: "peer2", targetId: "self", submitted: true, ratings: { overall: 3 } });
+  assert.equal(calculateGameAggregate(ratings).overall, 3);
+});
