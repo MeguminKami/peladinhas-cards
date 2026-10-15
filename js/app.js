@@ -1,3 +1,4 @@
+import { compareEventRarity } from "./event-rarity.js";
 import { mountHomePodium } from "./home-podium.js";
 import {
   mountInstallButton,
@@ -186,11 +187,7 @@ function home() {
   const me = ctx.league.players.find((p) => p.uid === ctx.user.uid),
     players = ctx.league.players.filter((p) => p.hasCard);
   const visibleMissions = [...ctx.missions]
-    .sort(
-      (a, b) =>
-        Number(b.type === "COMPETITION_OBJECTIVE") -
-        Number(a.type === "COMPETITION_OBJECTIVE"),
-    )
+    .sort(compareEventRarity)
     .slice(0, 4);
   const hour = Number(
     new Intl.DateTimeFormat("pt-PT", {

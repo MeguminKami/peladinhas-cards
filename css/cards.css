@@ -1130,3 +1130,178 @@ a.football-card:hover {
   fill: var(--card-edge);
   opacity: 0.4;
 }
+
+/* The portrait sits above every material effect and decorative engraving. */
+.football-card .card-photo {
+  z-index: 3;
+}
+.football-card .card-surface::after,
+.football-card .studio-effect {
+  z-index: 1;
+}
+.football-card :is(.card-rating, .card-caption, .card-stats) {
+  z-index: 4;
+}
+.football-card :is(.card-frame, .studio-border, .rare-rim-detail) {
+  /* Keep raised trim at the edge, including custom photo compositions. */
+  -webkit-mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+  -webkit-mask-size: 100% 100%, 82% 86%;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-composite: xor;
+  mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+  mask-size: 100% 100%, 82% 86%;
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-composite: exclude;
+}
+
+/* Earned editions: saturated enamel, prismatic shoulders and luminous trim. */
+.football-card.card-special {
+  --edition-light: #78f5ff;
+  --edition-flare: #547cff;
+  --card-glow: color-mix(in srgb, var(--card-edge) 32%, transparent);
+  filter: drop-shadow(0 10px 12px #00000055)
+    drop-shadow(0 0 9px var(--card-glow));
+}
+.card-special .card-surface {
+  background:
+    radial-gradient(ellipse at 95% 8%, var(--edition-light), transparent 36%),
+    radial-gradient(ellipse at 0% 56%, var(--edition-flare), transparent 48%),
+    radial-gradient(ellipse at 80% 100%, var(--card-a), transparent 55%),
+    linear-gradient(155deg, var(--card-a), var(--card-b) 62%);
+}
+.card-special .card-surface::before {
+  opacity: 0.58;
+}
+.card-special .card-surface::after {
+  background:
+    linear-gradient(118deg, transparent 5%, #ffffff80 6%, transparent 7% 14%,
+      #ffffff22 15% 19%, transparent 20% 77%, #ffffff55 78%, transparent 79%),
+    conic-gradient(from 210deg at 50% 62%, transparent 0deg 45deg,
+      var(--edition-flare) 65deg, transparent 85deg 260deg,
+      var(--edition-light) 285deg, transparent 305deg),
+    linear-gradient(0deg, #00000060, transparent 45%);
+  opacity: 0.65;
+}
+.card-special .special-outline {
+  stroke-width: 1.3;
+  filter: drop-shadow(0 0 1px var(--card-edge));
+}
+.card-special .special-inner {
+  stroke: #ffffff;
+  stroke-width: 0.35;
+  opacity: 0.65;
+}
+.card-special .special-motif {
+  stroke-width: 2;
+  opacity: 0.9;
+}
+.card-special .special-insignia {
+  bottom: 2.5%;
+  font-size: calc(var(--card-width) * 0.026);
+}
+.card-special .card-rating {
+  color: #fff9ef;
+  text-shadow: 0 2px 4px #000000aa;
+}
+.card-special .card-rating strong {
+  font-weight: 900;
+}
+.card-special .card-caption {
+  left: 6%;
+  width: 88%;
+  padding: 2.5% 3%;
+  background: linear-gradient(90deg, #080c20dd, #080c2099 70%, #080c20dd);
+  border-block: 1px solid var(--card-edge);
+  box-shadow: 0 3px 12px #00000040;
+  clip-path: polygon(4% 0, 96% 0, 100% 50%, 96% 100%, 4% 100%, 0 50%);
+}
+.card-special .card-stats {
+  top: 68%;
+  padding: 4% 2% 3%;
+  border-top: 0;
+  border-bottom: 1px solid var(--card-edge);
+  background: linear-gradient(135deg, #080c20cc, #080c2077);
+  border-radius: 0 0 10% 10%;
+  box-shadow: inset 0 1px 0 #ffffff30;
+}
+.card-special .card-stats small {
+  color: var(--card-edge);
+  opacity: 1;
+  letter-spacing: 0.06em;
+}
+.football-card.in-form {
+  --edition-light: #ffe9a0;
+  --edition-flare: #b47720;
+}
+.football-card.hot-streak {
+  --card-a: #d3421d;
+  --card-b: #390c28;
+  --edition-light: #ffd44a;
+  --edition-flare: #ff3870;
+}
+.football-card.playmaker {
+  --card-a: #126aae;
+  --card-b: #0b153f;
+  --edition-light: #5cffe1;
+  --edition-flare: #6850ef;
+}
+.football-card.sniper {
+  --card-a: #b52358;
+  --card-b: #350e38;
+  --edition-light: #ffb18f;
+  --edition-flare: #ef367d;
+}
+.football-card.the-wall {
+  --card-a: #446ca1;
+  --card-b: #101c3a;
+  --edition-light: #c9eeff;
+  --edition-flare: #3878e0;
+}
+.football-card.engine {
+  --card-a: #138953;
+  --card-b: #06362c;
+  --edition-light: #c3ff50;
+  --edition-flare: #06dbb4;
+}
+.football-card.safe-hands {
+  --card-a: #087d9f;
+  --card-b: #10264d;
+  --edition-light: #82fff6;
+  --edition-flare: #2876ea;
+}
+.football-card.perfect-five {
+  --card-a: #9c3cae;
+  --card-b: #301244;
+  --edition-light: #ffbfe9;
+  --edition-flare: #8062ff;
+}
+.football-card.mvp {
+  --edition-light: #fff8ce;
+  --edition-flare: #f5af24;
+}
+.football-card.mvp .card-rating {
+  color: #211b13;
+  text-shadow: 0 1px 3px #fff1cf80;
+}
+.football-card.mvp :is(.card-caption, .card-stats) {
+  color: #fff7e5;
+  text-shadow: 0 1px 3px #00000060;
+}
+.football-card.mvp .card-caption {
+  background: linear-gradient(90deg, #302013ee, #533719dd, #302013ee);
+}
+.football-card.mvp .card-stats {
+  background: linear-gradient(135deg, #302013ee, #533719cc);
+}
+.football-card.mvp .card-stats small {
+  color: #ffe2a2;
+}
+.football-card.legend-form {
+  --card-a: #7531a2;
+  --card-b: #1c123c;
+  --edition-light: #ffe5a1;
+  --edition-flare: #d94ebd;
+  --card-glow: #dba75660;
+}

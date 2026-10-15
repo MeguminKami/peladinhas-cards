@@ -126,4 +126,4 @@ Os objetivos usam um icon distinto por métrica e por método de decisão. As p�
 
 ## Raridade visual
 
-A raridade é escolhida no ADMIN ao criar ou editar eventos e missões. Bronze (Comum), Prata (Incomum), Ouro (Rara), Especial Dourada (Super Rara), Elite (Épica), Ícone (Lendária) e Ultimate (Suprema) definem apenas a identidade visual: cores, emblema, bordas e efeitos. Não alteram dificuldade, objetivos, classificação, cálculos, recompensas ou cartas atribuídas. Registos anteriores sem raridade aparecem como Bronze. O valor é validado no servidor, conservado nas edições que não o especificam e copiado ao duplicar.
+A raridade é escolhida no ADMIN ao criar ou editar eventos e missões. Bronze, Prata, Ouro, Especial Dourada, Elite, Ícone e Ultimate definem apenas a identidade visual: cores, emblema, bordas e efeitos. Não alteram dificuldade, objetivos, classificação, cálculos, recompensas ou cartas atribuídas. Registos anteriores sem raridade aparecem como Bronze. O valor é validado no servidor, conservado nas edições que não o especificam e copiado ao duplicar.

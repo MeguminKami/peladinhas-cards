@@ -1,4 +1,4 @@
-import { eventRarityId, rarityBadge } from "./event-rarity.js";
+import { eventRarityId, rarityBadge, compareEventRarity } from "./event-rarity.js";
 import { difficultyLabel } from "./labels.js";
 import {
   periodWindow,
@@ -183,10 +183,11 @@ export function missionList(missions, { grouped = true } = {}) {
       linkButton("#/games", "Ver jogos", "secondary"),
       "check",
     );
-  const competitions = missions.filter(
+  const ordered = [...missions].sort(compareEventRarity);
+  const competitions = ordered.filter(
     (m) => m.type === "COMPETITION_OBJECTIVE",
   );
-  const remaining = missions.filter((m) => m.type !== "COMPETITION_OBJECTIVE");
+  const remaining = ordered.filter((m) => m.type !== "COMPETITION_OBJECTIVE");
   const cards = (entries) =>
     `<div class="mission-list">${entries
       .map((m) => {
@@ -195,7 +196,7 @@ export function missionList(missions, { grouped = true } = {}) {
         return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${m.eventDescription?.trim() ? `<p class="mission-event-description">${esc(m.eventDescription.trim())}</p>` : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div><p>${esc(m.description)}</p>${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
       })
       .join("")}</div>`;
-  if (!grouped) return cards([...competitions, ...remaining]);
+  if (!grouped) return cards(ordered);
   if (!competitions.length) return cards(remaining);
   return `<div class="mission-groups"><section class="mission-competitions" aria-label="Competições em curso"><div class="mission-group-head"><h2>Competições em curso</h2><span class="pill">${competitions.length} ${competitions.length === 1 ? "ativa" : "ativas"}</span></div>${cards(competitions)}</section>${remaining.length ? `<section class="mission-group"><div class="mission-group-head"><h2>Missões</h2></div>${cards(remaining)}</section>` : ""}</div>`;
 }

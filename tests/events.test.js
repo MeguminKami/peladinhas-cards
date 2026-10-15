@@ -1,4 +1,4 @@
-import { EVENT_RARITIES, eventRarityId, rarityBadge } from "../js/event-rarity.js";
+import { EVENT_RARITIES, eventRarityId, rarityBadge, compareEventRarity } from "../js/event-rarity.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -546,4 +546,10 @@ test("event rarities have seven ordered cosmetic tiers and a safe legacy default
     assert.equal(eventRarityId({ rarity: id }), id);
     assert.ok(rarityBadge({ rarity: id }).includes(`data-rarity="${id}"`));
   }
+});
+
+
+test("player challenges sort by descending rarity and preserve ties", () => {
+  const rows = [{ id: 1, rarity: "bronze" }, { id: 2, rarity: "ultimate" }, { id: 3, rarity: "elite" }, { id: 4, rarity: "ultimate" }, { id: 5 }];
+  assert.deepEqual([...rows].sort(compareEventRarity).map(r => r.id), [2, 4, 3, 1, 5]);
 });

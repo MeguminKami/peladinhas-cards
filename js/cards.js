@@ -47,7 +47,7 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     )
     .join(", ");
   const specialArt = special
-    ? `<svg class="special-ornament" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polygon class="special-outline" points="${expandCardOutline(special.outline)}" transform="translate(1.5 1.5) scale(.97)"/><polygon class="special-inner" points="${expandCardOutline(special.outline)}" transform="translate(4 4) scale(.92)"/><g class="special-motif">${special.motif}</g></svg><span class="special-insignia" aria-hidden="true">${t === "perfect-five" ? "★★★★★" : "◆"}</span>`
+    ? `<svg class="special-ornament" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polygon class="special-outline" points="${expandCardOutline(special.outline)}" transform="translate(1.5 1.5) scale(.97)"/><polygon class="special-inner" points="${expandCardOutline(special.outline)}" transform="translate(4 4) scale(.92)"/><g class="special-motif" transform="translate(17 89) scale(.4 .16)">${special.motif}</g></svg><span class="special-insignia" aria-hidden="true">${t === "perfect-five" ? "★★★★★" : "◆"}</span>`
     : "";
   const normal = /^(bronze|silver|gold)-(common|rare)$/.test(t);
   const rare = normal && t.endsWith("-rare");

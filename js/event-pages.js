@@ -1,4 +1,4 @@
-import { eventRarityId, rarityBadge } from "./event-rarity.js";
+import { eventRarityId, rarityBadge, compareEventRarity } from "./event-rarity.js";
 import { icon, eventIcon } from "./icons.js";
 import { rewardShowcase } from "./event-presentation.js";
 import { bindImages } from "./cards.js";
@@ -82,6 +82,7 @@ export async function eventsPage(ctx) {
         )
         .sort(
           (a, b) =>
+            compareEventRarity(a, b) ||
             eventEndMillis(b) - eventEndMillis(a) ||
             a.title.localeCompare(b.title),
         )
