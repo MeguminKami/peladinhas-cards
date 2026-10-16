@@ -1,0 +1,12 @@
+{
+  "results": [
+    "Criar, atribuir jogadores, guardar, abrir, encerrar; posições históricas e golos persistidos; estrelas após resultado.",
+    "Avaliar colegas e próprio, guardar rascunhos, submeter e reabrir dentro do prazo de edição.",
+    "Autoavaliação inicial: alteração e gravação explícita na fila de rascunhos.",
+    "Foto semanal: URL, mover com teclado e persistir design.",
+    "Auditoria OVR tem 12 atributos; catálogo de cartas abre e fecha pré-visualização.",
+    "Apoio: criar pedido, resposta em direto, confirmar fecho definitivo e filtrar histórico.",
+    "Missões: objetivo incompleto bloqueia recompensa; objetivo elegível recebe uma vez e mantém estado após recarregar. Voto novo e atualização substituem a seleção anterior."
+  ],
+  "errors": []
+}

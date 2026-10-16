@@ -329,7 +329,7 @@ A PWA utiliza o mesmo frontend e Firebase do website. A instalação atual não 
 
 ## Documentação técnica
 
-O frontend utiliza **HTML, CSS e JavaScript com ES Modules**. O Firebase suporta autenticação, Firestore, Storage e processamento em Cloud Functions. Os procedimentos técnicos e as regras detalhadas ficam nos documentos abaixo.
+O frontend utiliza **React, TypeScript strict e Vite**, preservando o CSS e os módulos de domínio existentes. O Firebase suporta autenticação, Firestore, Storage e processamento em Cloud Functions. Os procedimentos técnicos e as regras detalhadas ficam nos documentos abaixo.
 
 | Desenvolvimento e operação                                    | Regras e funcionalidades                                                |
 | :------------------------------------------------------------ | :---------------------------------------------------------------------- |

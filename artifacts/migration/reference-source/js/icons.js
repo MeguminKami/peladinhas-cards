@@ -1,0 +1,63 @@
+const paths = {
+  ratingGames: "m12 2 3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1Z M3 22h18",
+  ratingAverage: "M3 20h18 M5 16l4-5 4 2 6-8 M16 5h3v3 M4 4h5 M6.5 2v4",
+  ratingStreak: "m13 2-3 7 5-1-5 14 1-9-5 1Z M18 10l2-2 2 2 M18 15l2-2 2 2",
+  ratingWins: "M8 3h8v7a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 14v7 M8 21h8 m-4-16 1 2 2 .5-1.5 1.5.5 2-2-1-2 1 .5-2L9 7.5l2-.5Z",
+  pause: "M8 5v14 M16 5v14",
+  play: "m8 4 12 8-12 8Z",
+  goals: "M4 20V6h16v14 M4 10h16 M8 6v14 M16 6v14 M4 15h9 M20 15h-2 M17 17h.01 M20 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  assists: "M3 17h6a5 5 0 0 0 5-5V5 m-4 4 4-4 4 4 M3 7h4 M3 11h2 M18 17h3 M19.5 15.5v3",
+  appearances: "m8 3-5 4 3 4 2-2v12h8V9l2 2 3-4-5-4 M9 3a3 3 0 0 0 6 0",
+  wins: "M8 3h8v8a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 15v6 M8 21h8 m2-13 1.5 1.5L14 7",
+  streak: "m13 2-2 7 5-2-1 5 4-1-7 11 1-8-5 2 2-7-4 1 7-8Z",
+  unbeatenWins: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z m-4 10 3 3 5-6 M12 5v2",
+  unbeatenGames: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z m-4 10 3 3 5-6",
+  cleanSheets: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z M9 9h6v7H9Z",
+  goalContributions: "M3 20V6h11v5 M3 10h11 M7 6v14 M3 15h7 M13 19h3a5 5 0 0 0 5-5v-3 m-3 3 3-3 2 3",
+  vote: "m9 3 8 5-5 8-8-5Z M4 14H2v7h20v-7h-5 M9 17h6",
+  decision: "m14 3 7 7-3 3-7-7Z m0 6-7 7 M3 21h12 M5 18h8v3",
+  rewardCard: "m8 2 4 2 4-2 5 4v12l-9 4-9-4V6Z M8 9h8 M8 13h8 M10 17h4",
+  rewardStats: "M4 20h16 M7 16v-5 M12 16V8 M17 16V4 m-3 3 3-3 3 3",
+
+  install: "M12 3v12 m-4-4 4 4 4-4 M4 16v5h16v-5",
+  menu: "M4 6h16 M4 12h16 M4 18h16",
+  tickets: "M4 4h16v12H9l-5 4Z M8 8h8 M8 12h5",
+  palette:
+    "M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7 1.5 1.5 0 0 1 1-2.8h2a4 4 0 0 0 4-4C21 6.4 17 3 12 3 M7 9h.01 M10 6h.01 M15 6h.01 M18 10h.01",
+  home: "M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-8H9v8H4a1 1 0 0 1-1-1Z",
+  players:
+    "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M16 3a4 4 0 0 1 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  games:
+    "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2",
+  missions: "m8 12 3 3 5-6 M21 12a9 9 0 1 1-4-7.5",
+  profile: "M20 21v-2a7 7 0 0 0-14 0v2 M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  bell: "M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4",
+  trophy:
+    "M8 3h8v8a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 15v6 M8 21h8",
+  chart: "M4 3v17h17 M8 16v-5 M13 16V7 M18 16V4",
+  edit: "m16 3 5 5-12 12-6 1 1-6Z M13 6l5 5",
+  plus: "M12 5v14 M5 12h14",
+  arrow: "M5 12h14 m-6-6 6 6-6 6",
+  camera: "M14 4h-4L8 7H4v13h16V7h-4Z M16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  shield: "M12 3 3 7v6c0 5 9 9 9 9s9-4 9-9V7Z",
+  lab: "M9 3h6 M10 3v7L4 20h16l-6-10V3 M7 16h10",
+  logout: "M9 3H3v18h6 M10 12h11 m-4-4 4 4-4 4",
+  close: "m6 6 12 12 M6 18 18 6",
+  ball: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M12 8l4 3-2 5h-4l-2-5Z",
+  trash: "M3 6h18 M8 6V3h8v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7",
+  check: "m4 12 5 5L20 6",
+  assets: "M3 3h7v7H3Z M14 3h7v7h-7Z M3 14h7v7H3Z M14 14h7v7h-7Z",
+};
+export const icon = (name, cls = "") =>
+  `<svg class="ui-icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name] || paths.ball}"/></svg>`;
+
+// A compact, faceted arrow shared by cards and profile comparisons.
+export const trendArrow = (delta) =>
+  `<svg class="trend-arrow${delta < 0 ? " trend-arrow-down" : ""}" viewBox="0 0 16 20" fill="none" aria-hidden="true" focusable="false"><path class="trend-arrow-body" d="M8 1.5 14.5 8H10v9.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-facet" d="M8 1.5V17.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-edge" d="m2 7.5 6-6 6 6"/></svg>`;
+
+export function eventIcon(event = {}) {
+  if (["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(event.objective?.metric) && event.method !== "vote" && event.method !== "admin") return event.objective.metric;
+  if (event.method === "vote" || (!event.method && event.kind === "vote")) return "vote";
+  if (event.method === "admin") return "decision";
+  return ({ games: "appearances", goals: "goals", assists: "assists", wins: "wins", winStreak: "streak", unbeatenWins: "unbeatenWins", unbeatenGames: "unbeatenGames", goalsAndAssists: "goalContributions", cleanSheets: "cleanSheets" })[event.objective?.metric] || "trophy";
+}

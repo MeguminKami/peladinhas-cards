@@ -1,0 +1,17 @@
+import { AdminMenu } from '../app/Chrome';
+import type { PageContext } from '../types';
+import { CATALOG_THEMES, COLLECTION_EDITIONS, ATTRIBUTES, themeName } from '../../js/utils.js';
+import { CARD_POLICY, durationName } from '../../js/card-achievements.js';
+import { Card } from '../presentation/cards';
+import { PageHead, LinkButton } from '../shared/ui';
+import { modal } from '../shared/overlays';
+
+export interface CatalogTemplate { id: string; name: string; baseTheme?: string; colors?: Record<string, string>; design?: Record<string, unknown> }
+export function AdminCardsPage({ ctx, uid, created }: { ctx: PageContext; uid?: string; created: CatalogTemplate[] }) {
+  const player = ctx.league.players.find(value => value.uid === uid) || { uid: 'catalog-preview', displayName: 'Jogador exemplo', primaryPosition: 'ALA', countryCode: 'PT', photoURL: './assets/default-avatar.svg', hasCard: true, ovr: 82, stats: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 82])) };
+  const entries = [...CATALOG_THEMES.map(type => ({ id: type, name: themeName(type), baseTheme: type, created: false })), ...created.map(template => ({ ...template, id: `saved:${template.id}`, created: true }))];
+  const card = (entry: typeof entries[number], size: string) => <Card player={entry.created ? { ...player, cardPhoto: null, specials: [{ id: entry.id, cardTheme: entry }] } : { ...player, cardPhoto: null }} size={size} theme={entry.created ? entry.id : entry.baseTheme || 'custom-test'} preview />;
+  const editions = COLLECTION_EDITIONS as Record<string, { detail: string }>;
+  const policies = CARD_POLICY as Record<string, { duration: string }>;
+  return <><PageHead tag="Administração" title="Cartas" description="Catálogo de tipos padrão e criados. Escolhe um jogador apenas para pré-visualizar." /><AdminMenu/><section className="panel card-types-toolbar"><label>Perfil na pré-visualização<select id="card-types-player" value={uid || ''} onChange={event => ctx.go(event.target.value ? `#/admin/card-types/${event.target.value}` : '#/admin/card-types')}><option value="">Jogador exemplo</option>{ctx.league.players.map(value => <option key={value.uid} value={value.uid}>{value.displayName || value.username}</option>)}</select></label><span className="pill">{CATALOG_THEMES.length - Object.keys(COLLECTION_EDITIONS).length} padrão · {Object.keys(COLLECTION_EDITIONS).length} novas edições · {created.length} criados</span></section><div id="card-type-gallery" className="card-type-gallery saved-card-gallery">{entries.map((entry, index) => <button key={entry.id} type="button" className="card-type-tile" data-card-type={entry.id} data-catalog-index={index} aria-label={`Pré-visualizar ${entry.name}`} onClick={() => modal(entry.name, <>{editions[entry.id] && <p className="muted">{editions[entry.id].detail}. {policies[entry.id] ? durationName(policies[entry.id].duration) : 'Design em reserva'}.</p>}<div className="history-card-expanded">{card(entry, 'lg')}</div>{ctx.user.role === 'admin' && <div className="actions"><LinkButton href={`#/admin/cards/${entry.id}`} symbol="edit">{entry.created ? 'Editar no Card Lab' : 'Criar a partir desta carta'}</LinkButton></div>}</>)}>{card(entry, 'sm')}<span>{entry.name}</span><small className="muted">{entry.created ? 'Criada no Card Lab' : policies[entry.id] ? durationName(policies[entry.id].duration) : editions[entry.id] ? 'Design em reserva' : 'Tipo padrão'}</small></button>)}</div></>;
+}

@@ -13,3 +13,8 @@ for (const dir of [".", "js", "functions", "scripts"])
   }
 if (!process.exitCode)
   console.log("Todos os módulos passam a verificação de sintaxe ES Modules.");
+if (!process.exitCode) {
+  const result = spawnSync(process.execPath, ["node_modules/typescript/bin/tsc", "--noEmit", "--noUnusedLocals", "--noUnusedParameters"], { stdio: "inherit" });
+  if (result.error) throw result.error;
+  if (result.status !== 0) process.exitCode = result.status || 1;
+}

@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import {resolve} from 'node:path';
+import {createServer} from 'vite';
+import {chromium} from 'playwright';
+const server=await createServer({mode:'test',server:{port:0}});
+await server.listen();
+const browser=await chromium.launch({headless:true,...(process.platform==='win32'?{channel:'msedge'}:{})});
+try{
+ const context=await browser.newContext({serviceWorkers:'block',reducedMotion:'reduce'});
+ await context.route(/https:\/\//,route=>route.abort());
+ const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto(server.resolvedUrls.local[0]);await page.locator('.dashboard-greeting').waitFor();
+ await page.locator('#theme-picker').click();await page.locator('.modal').waitFor();
+ assert.equal(await page.locator('#root').evaluate(element=>element.inert),true);
+ assert.equal(await page.locator('.close-modal').evaluate(element=>element===document.activeElement),true);
+ await page.keyboard.press('Shift+Tab');assert.equal(await page.locator('[data-interface-theme="ultimate"]').evaluate(element=>element===document.activeElement),true);
+ await page.keyboard.press('Tab');assert.equal(await page.locator('.close-modal').evaluate(element=>element===document.activeElement),true);
+ await page.locator('[data-interface-theme="ultimate"]').click();assert.equal(await page.locator('html').getAttribute('data-theme'),'ultimate');
+ await page.keyboard.press('Escape');assert.equal(await page.locator('.modal').count(),0);assert.equal(await page.locator('#root').evaluate(element=>element.inert),false);assert.equal(await page.locator('#theme-picker').evaluate(element=>element===document.activeElement),true);
+ const module=`/@fs/${resolve('src/shared/overlays.tsx').replaceAll('\\','/')}`;
+ await page.evaluate(async module=>{window.__confirmOutcome=undefined;void(await import(module)).confirmDialog('Confirmar teste de acessibilidade?').then(value=>window.__confirmOutcome=value)},module);
+ await page.locator('#cancel').click();await page.waitForFunction(()=>window.__confirmOutcome===false);
+ await page.evaluate(async module=>{window.__confirmOutcome=undefined;void(await import(module)).confirmDialog('Confirmar teste de acessibilidade?').then(value=>window.__confirmOutcome=value)},module);
+ await page.locator('#confirm').click();await page.waitForFunction(()=>window.__confirmOutcome===true);
+ await page.setViewportSize({width:320,height:960});await page.locator('#mobile-more').click();await page.locator('.more-menu').waitFor();
+ assert.equal(await page.locator('.more-menu a').count(),6);await page.locator('.more-menu a[href="#/statistics"]').click();await page.locator('#statistics-sort').waitFor({state:'attached'});assert.equal(await page.locator('.modal').count(),0);
+ await page.evaluate(async module=>{const {toast}=await import(module);toast('Primeira');toast('Segunda');toast('Erro de teste','error')},module);
+ assert.equal(await page.locator('#toast-region .toast').count(),2);assert.equal(await page.locator('#toast-region [role="alert"]').textContent(),'Erro de teste');
+ const guest=await context.newPage();guest.on('pageerror',error=>errors.push(error.message));await guest.addInitScript(()=>window.__guest=true);
+ await guest.setViewportSize({width:320,height:960});await guest.goto(server.resolvedUrls.local[0]);await guest.locator('.auth-tabs').waitFor();
+ await guest.locator('#theme-picker').click();await guest.locator('.theme-options').waitFor();await guest.keyboard.press('Escape');
+ assert.equal(await guest.locator('#theme-picker').evaluate(element=>element===document.activeElement),true);
+ await guest.getByRole('button',{name:'Instalar aplicação',exact:true}).click();await guest.locator('.modal').waitFor();await guest.keyboard.press('Escape');
+ assert.equal(await guest.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ assert.deepEqual(errors,[]);console.log('React overlays: focus trap, inert, Escape, theme, confirm, mobile navigation and toast passed.');
+}finally{await browser.close();await server.close();}

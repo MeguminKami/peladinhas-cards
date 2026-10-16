@@ -9,7 +9,7 @@
 | Qualquer módulo                          | `check`                                           |
 | Cálculos ou regras do produto            | `test`                                            |
 | Textos, imagens ou links da documentação | `test:docs`                                       |
-| Interface e fluxos                       | `test:ui` + `test:review`                         |
+| Interface React e fluxos                | `test:ui` + `test:visual`                         |
 | Permissões                               | `test:rules`                                      |
 | Functions                                | `test:backend`                                    |
 | Instalação, cache ou atualização         | `test:pwa`                                        |
@@ -17,6 +17,10 @@
 | Pacote público                           | `test:hosting`                                    |
 
 Executar os scripts com `npm.cmd run NOME`; para os testes de lógica, usar `npm.cmd test`.
+
+A suite principal da interface React é `test:ui` (também disponível em `test:react`): apresentação, fluxos, administração, modais, navegação e permissões com fixtures. `typecheck` verifica TypeScript e `check` inclui a análise estática do frontend. `test:visual` compara o React com o snapshot original, sem o substituir.
+
+Os testes browser anteriores, como `tests/feedback.mjs`, `tests/card-choice.mjs` e `tests/browser.mjs`, continuam disponíveis para a implementação de referência. Não constituem, por si só, validação da interface React; para a aplicação atual usam-se `tests/react-features.mjs`, `tests/react-presentation.mjs` e `tests/migration-*.mjs`.
 
 ```mermaid
 flowchart TB

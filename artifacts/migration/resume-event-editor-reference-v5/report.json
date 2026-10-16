@@ -1,0 +1,1728 @@
+{
+  "reference": true,
+  "errors": [],
+  "results": [
+    {
+      "name": "event-step-0",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "name": "title",
+          "value": "Taça Peladinhas de Outubro",
+          "visible": true
+        },
+        {
+          "name": "kind",
+          "value": "event",
+          "visible": true
+        },
+        {
+          "name": "rarity",
+          "value": "bronze",
+          "visible": true
+        },
+        {
+          "name": "image",
+          "value": "",
+          "visible": true
+        },
+        {
+          "name": "description",
+          "value": "Os melhores desempenhos da nossa liga.",
+          "visible": true
+        },
+        {
+          "name": "method",
+          "value": "vote",
+          "visible": false
+        },
+        {
+          "name": "votesPerUser",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "minVotes",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "allowSelfVote",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "tieBreak",
+          "value": "uid",
+          "visible": false
+        },
+        {
+          "name": "liveResults",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "metric",
+          "value": "games",
+          "visible": false
+        },
+        {
+          "name": "target",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "scope",
+          "value": "individual",
+          "visible": false
+        },
+        {
+          "name": "difficulty",
+          "value": "medium",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "overall",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attack",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "passing",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "defense",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "physical",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "goalkeeping",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attitude",
+          "visible": false
+        },
+        {
+          "name": "ratingThreshold",
+          "value": "4",
+          "visible": false
+        },
+        {
+          "name": "ratingComparison",
+          "value": "gte",
+          "visible": false
+        },
+        {
+          "name": "ratingCombine",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "ratingMinRatings",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "rules",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "startsAt",
+          "value": "2026-10-16T18:55",
+          "visible": false
+        },
+        {
+          "name": "endsAt",
+          "value": "2026-10-23T18:55",
+          "visible": false
+        },
+        {
+          "name": "votingStartsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "votingEndsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "month",
+          "value": "2026-10",
+          "visible": false
+        },
+        {
+          "name": "indefinite",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "audience",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "gameId",
+          "value": "demo-next",
+          "visible": false
+        },
+        {
+          "name": "memberIds",
+          "value": "pedro",
+          "visible": false
+        },
+        {
+          "name": "cadence",
+          "value": "once",
+          "visible": false
+        },
+        {
+          "name": "maxRepeats",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "winnerCount",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "rewardMode",
+          "value": "stats",
+          "visible": false
+        },
+        {
+          "name": "statDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "cardDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "specialId",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "boost-pace",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-shooting",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-passing",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-dribbling",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-defending",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-physical",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-goalkeeping",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-stamina",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-vision",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-positioning",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-teamwork",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-composure",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "needsConfirmation",
+          "value": "on",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "event-step-1",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "name": "title",
+          "value": "Taça Peladinhas de Outubro",
+          "visible": false
+        },
+        {
+          "name": "kind",
+          "value": "event",
+          "visible": false
+        },
+        {
+          "name": "rarity",
+          "value": "bronze",
+          "visible": false
+        },
+        {
+          "name": "image",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "description",
+          "value": "Os melhores desempenhos da nossa liga.",
+          "visible": false
+        },
+        {
+          "name": "method",
+          "value": "objective",
+          "visible": false
+        },
+        {
+          "name": "votesPerUser",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "minVotes",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "allowSelfVote",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "metric",
+          "value": "ratingGames",
+          "visible": true
+        },
+        {
+          "name": "target",
+          "value": "3",
+          "visible": true
+        },
+        {
+          "name": "scope",
+          "value": "individual",
+          "visible": true
+        },
+        {
+          "name": "difficulty",
+          "value": "medium",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "overall",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attack",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "passing",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "defense",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "physical",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "goalkeeping",
+          "visible": true
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attitude",
+          "visible": true
+        },
+        {
+          "name": "ratingThreshold",
+          "value": "4",
+          "visible": true
+        },
+        {
+          "name": "ratingComparison",
+          "value": "gte",
+          "visible": true
+        },
+        {
+          "name": "ratingCombine",
+          "value": "all",
+          "visible": true
+        },
+        {
+          "name": "ratingMinRatings",
+          "value": "3",
+          "visible": true
+        },
+        {
+          "name": "tieBreak",
+          "value": "uid",
+          "visible": true
+        },
+        {
+          "name": "liveResults",
+          "value": "on",
+          "visible": true
+        },
+        {
+          "name": "rules",
+          "value": "",
+          "visible": true
+        },
+        {
+          "name": "startsAt",
+          "value": "2026-10-16T18:55",
+          "visible": false
+        },
+        {
+          "name": "endsAt",
+          "value": "2026-10-23T18:55",
+          "visible": false
+        },
+        {
+          "name": "votingStartsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "votingEndsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "month",
+          "value": "2026-10",
+          "visible": false
+        },
+        {
+          "name": "indefinite",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "audience",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "gameId",
+          "value": "demo-next",
+          "visible": false
+        },
+        {
+          "name": "memberIds",
+          "value": "pedro",
+          "visible": false
+        },
+        {
+          "name": "cadence",
+          "value": "once",
+          "visible": false
+        },
+        {
+          "name": "maxRepeats",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "winnerCount",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "rewardMode",
+          "value": "stats",
+          "visible": false
+        },
+        {
+          "name": "statDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "cardDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "specialId",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "boost-pace",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-shooting",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-passing",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-dribbling",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-defending",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-physical",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-goalkeeping",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-stamina",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-vision",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-positioning",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-teamwork",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-composure",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "needsConfirmation",
+          "value": "on",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "event-step-2",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "name": "title",
+          "value": "Taça Peladinhas de Outubro",
+          "visible": false
+        },
+        {
+          "name": "kind",
+          "value": "event",
+          "visible": false
+        },
+        {
+          "name": "rarity",
+          "value": "bronze",
+          "visible": false
+        },
+        {
+          "name": "image",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "description",
+          "value": "Os melhores desempenhos da nossa liga.",
+          "visible": false
+        },
+        {
+          "name": "method",
+          "value": "objective",
+          "visible": false
+        },
+        {
+          "name": "votesPerUser",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "minVotes",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "allowSelfVote",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "metric",
+          "value": "ratingGames",
+          "visible": false
+        },
+        {
+          "name": "target",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "scope",
+          "value": "individual",
+          "visible": false
+        },
+        {
+          "name": "difficulty",
+          "value": "medium",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "overall",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attack",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "passing",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "defense",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "physical",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "goalkeeping",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attitude",
+          "visible": false
+        },
+        {
+          "name": "ratingThreshold",
+          "value": "4",
+          "visible": false
+        },
+        {
+          "name": "ratingComparison",
+          "value": "gte",
+          "visible": false
+        },
+        {
+          "name": "ratingCombine",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "ratingMinRatings",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "tieBreak",
+          "value": "uid",
+          "visible": false
+        },
+        {
+          "name": "liveResults",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "rules",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "startsAt",
+          "value": "2026-10-16T12:00",
+          "visible": true
+        },
+        {
+          "name": "endsAt",
+          "value": "2026-10-23T12:00",
+          "visible": true
+        },
+        {
+          "name": "votingStartsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "votingEndsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "month",
+          "value": "2026-10",
+          "visible": false
+        },
+        {
+          "name": "indefinite",
+          "value": "on",
+          "visible": true
+        },
+        {
+          "name": "audience",
+          "value": "all",
+          "visible": true
+        },
+        {
+          "name": "gameId",
+          "value": "demo-next",
+          "visible": false
+        },
+        {
+          "name": "memberIds",
+          "value": "pedro",
+          "visible": false
+        },
+        {
+          "name": "cadence",
+          "value": "once",
+          "visible": false
+        },
+        {
+          "name": "maxRepeats",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "winnerCount",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "rewardMode",
+          "value": "stats",
+          "visible": false
+        },
+        {
+          "name": "statDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "cardDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "specialId",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "boost-pace",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-shooting",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-passing",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-dribbling",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-defending",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-physical",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-goalkeeping",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-stamina",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-vision",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-positioning",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-teamwork",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-composure",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "needsConfirmation",
+          "value": "on",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "event-step-3",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "name": "title",
+          "value": "Taça Peladinhas de Outubro",
+          "visible": false
+        },
+        {
+          "name": "kind",
+          "value": "event",
+          "visible": false
+        },
+        {
+          "name": "rarity",
+          "value": "bronze",
+          "visible": false
+        },
+        {
+          "name": "image",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "description",
+          "value": "Os melhores desempenhos da nossa liga.",
+          "visible": false
+        },
+        {
+          "name": "method",
+          "value": "objective",
+          "visible": false
+        },
+        {
+          "name": "votesPerUser",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "minVotes",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "allowSelfVote",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "metric",
+          "value": "ratingGames",
+          "visible": false
+        },
+        {
+          "name": "target",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "scope",
+          "value": "individual",
+          "visible": false
+        },
+        {
+          "name": "difficulty",
+          "value": "medium",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "overall",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attack",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "passing",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "defense",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "physical",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "goalkeeping",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attitude",
+          "visible": false
+        },
+        {
+          "name": "ratingThreshold",
+          "value": "4",
+          "visible": false
+        },
+        {
+          "name": "ratingComparison",
+          "value": "gte",
+          "visible": false
+        },
+        {
+          "name": "ratingCombine",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "ratingMinRatings",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "tieBreak",
+          "value": "uid",
+          "visible": false
+        },
+        {
+          "name": "liveResults",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "rules",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "startsAt",
+          "value": "2026-10-16T12:00",
+          "visible": false
+        },
+        {
+          "name": "endsAt",
+          "value": "2026-10-23T12:00",
+          "visible": false
+        },
+        {
+          "name": "votingStartsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "votingEndsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "month",
+          "value": "2026-10",
+          "visible": false
+        },
+        {
+          "name": "indefinite",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "audience",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "gameId",
+          "value": "demo-next",
+          "visible": false
+        },
+        {
+          "name": "memberIds",
+          "value": "pedro",
+          "visible": false
+        },
+        {
+          "name": "cadence",
+          "value": "once",
+          "visible": false
+        },
+        {
+          "name": "maxRepeats",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "winnerCount",
+          "value": "1",
+          "visible": true
+        },
+        {
+          "name": "rewardMode",
+          "value": "both",
+          "visible": false
+        },
+        {
+          "name": "statDuration",
+          "value": "weekly",
+          "visible": true
+        },
+        {
+          "name": "cardDuration",
+          "value": "weekly",
+          "visible": true
+        },
+        {
+          "name": "specialId",
+          "value": "saved:test-studio",
+          "visible": true
+        },
+        {
+          "name": "boost-pace",
+          "value": "2",
+          "visible": true
+        },
+        {
+          "name": "boost-shooting",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-passing",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-dribbling",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-defending",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-physical",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-goalkeeping",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-stamina",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-vision",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-positioning",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-teamwork",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "boost-composure",
+          "value": "0",
+          "visible": true
+        },
+        {
+          "name": "needsConfirmation",
+          "value": "on",
+          "visible": true
+        }
+      ]
+    },
+    {
+      "name": "event-step-4",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "name": "title",
+          "value": "Taça Peladinhas de Outubro",
+          "visible": false
+        },
+        {
+          "name": "kind",
+          "value": "event",
+          "visible": false
+        },
+        {
+          "name": "rarity",
+          "value": "bronze",
+          "visible": false
+        },
+        {
+          "name": "image",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "description",
+          "value": "Os melhores desempenhos da nossa liga.",
+          "visible": false
+        },
+        {
+          "name": "method",
+          "value": "objective",
+          "visible": false
+        },
+        {
+          "name": "votesPerUser",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "minVotes",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "allowSelfVote",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "metric",
+          "value": "ratingGames",
+          "visible": false
+        },
+        {
+          "name": "target",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "scope",
+          "value": "individual",
+          "visible": false
+        },
+        {
+          "name": "difficulty",
+          "value": "medium",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "overall",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attack",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "passing",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "defense",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "physical",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "goalkeeping",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attitude",
+          "visible": false
+        },
+        {
+          "name": "ratingThreshold",
+          "value": "4",
+          "visible": false
+        },
+        {
+          "name": "ratingComparison",
+          "value": "gte",
+          "visible": false
+        },
+        {
+          "name": "ratingCombine",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "ratingMinRatings",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "tieBreak",
+          "value": "uid",
+          "visible": false
+        },
+        {
+          "name": "liveResults",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "rules",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "startsAt",
+          "value": "2026-10-16T12:00",
+          "visible": false
+        },
+        {
+          "name": "endsAt",
+          "value": "2026-10-23T12:00",
+          "visible": false
+        },
+        {
+          "name": "votingStartsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "votingEndsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "month",
+          "value": "2026-10",
+          "visible": false
+        },
+        {
+          "name": "indefinite",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "audience",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "gameId",
+          "value": "demo-next",
+          "visible": false
+        },
+        {
+          "name": "memberIds",
+          "value": "pedro",
+          "visible": false
+        },
+        {
+          "name": "cadence",
+          "value": "once",
+          "visible": false
+        },
+        {
+          "name": "maxRepeats",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "winnerCount",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "rewardMode",
+          "value": "both",
+          "visible": false
+        },
+        {
+          "name": "statDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "cardDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "specialId",
+          "value": "saved:test-studio",
+          "visible": false
+        },
+        {
+          "name": "boost-pace",
+          "value": "2",
+          "visible": false
+        },
+        {
+          "name": "boost-shooting",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-passing",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-dribbling",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-defending",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-physical",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-goalkeeping",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-stamina",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-vision",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-positioning",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-teamwork",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-composure",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "needsConfirmation",
+          "value": "on",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "name": "event-preview",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "name": "title",
+          "value": "Taça Peladinhas de Outubro",
+          "visible": false
+        },
+        {
+          "name": "kind",
+          "value": "event",
+          "visible": false
+        },
+        {
+          "name": "rarity",
+          "value": "bronze",
+          "visible": false
+        },
+        {
+          "name": "image",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "description",
+          "value": "Os melhores desempenhos da nossa liga.",
+          "visible": false
+        },
+        {
+          "name": "method",
+          "value": "objective",
+          "visible": false
+        },
+        {
+          "name": "votesPerUser",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "minVotes",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "allowSelfVote",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "metric",
+          "value": "ratingGames",
+          "visible": false
+        },
+        {
+          "name": "target",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "scope",
+          "value": "individual",
+          "visible": false
+        },
+        {
+          "name": "difficulty",
+          "value": "medium",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "overall",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attack",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "passing",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "defense",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "physical",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "goalkeeping",
+          "visible": false
+        },
+        {
+          "name": "ratingAttribute",
+          "value": "attitude",
+          "visible": false
+        },
+        {
+          "name": "ratingThreshold",
+          "value": "4",
+          "visible": false
+        },
+        {
+          "name": "ratingComparison",
+          "value": "gte",
+          "visible": false
+        },
+        {
+          "name": "ratingCombine",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "ratingMinRatings",
+          "value": "3",
+          "visible": false
+        },
+        {
+          "name": "tieBreak",
+          "value": "uid",
+          "visible": false
+        },
+        {
+          "name": "liveResults",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "rules",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "startsAt",
+          "value": "2026-10-16T12:00",
+          "visible": false
+        },
+        {
+          "name": "endsAt",
+          "value": "2026-10-23T12:00",
+          "visible": false
+        },
+        {
+          "name": "votingStartsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "votingEndsAt",
+          "value": "",
+          "visible": false
+        },
+        {
+          "name": "month",
+          "value": "2026-10",
+          "visible": false
+        },
+        {
+          "name": "indefinite",
+          "value": "on",
+          "visible": false
+        },
+        {
+          "name": "audience",
+          "value": "all",
+          "visible": false
+        },
+        {
+          "name": "gameId",
+          "value": "demo-next",
+          "visible": false
+        },
+        {
+          "name": "memberIds",
+          "value": "pedro",
+          "visible": false
+        },
+        {
+          "name": "cadence",
+          "value": "once",
+          "visible": false
+        },
+        {
+          "name": "maxRepeats",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "winnerCount",
+          "value": "1",
+          "visible": false
+        },
+        {
+          "name": "rewardMode",
+          "value": "both",
+          "visible": false
+        },
+        {
+          "name": "statDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "cardDuration",
+          "value": "weekly",
+          "visible": false
+        },
+        {
+          "name": "specialId",
+          "value": "saved:test-studio",
+          "visible": false
+        },
+        {
+          "name": "boost-pace",
+          "value": "2",
+          "visible": false
+        },
+        {
+          "name": "boost-shooting",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-passing",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-dribbling",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-defending",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-physical",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-goalkeeping",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-stamina",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-vision",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-positioning",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-teamwork",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "boost-composure",
+          "value": "0",
+          "visible": false
+        },
+        {
+          "name": "needsConfirmation",
+          "value": "on",
+          "visible": false
+        }
+      ]
+    }
+  ]
+}

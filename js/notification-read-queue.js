@@ -1,6 +1,6 @@
 import * as DB from "./db.js";
 
-const base = new URL("../", import.meta.url);
+const base = new URL("./", location.href);
 const memory = new Map(), flights = new Map(), storageFailed = new Set();
 const key = uid => `peladinhas-notification-reads:${base.pathname}:${uid}`;
 const revision = notice => JSON.stringify([notice.type, notice.title, notice.body, notice.href, notice.createdAt?.seconds, notice.createdAt?.nanoseconds]);

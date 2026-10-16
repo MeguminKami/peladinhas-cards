@@ -1,4 +1,9 @@
 import { icon } from "./icons.js";
+let toastRenderer;
+// Specialized editors can report through the application's owning renderer.
+export function setToastRenderer(renderer) {
+  toastRenderer = renderer;
+}
 export const esc = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,
@@ -8,6 +13,7 @@ export const esc = (s) =>
       ],
   );
 export function toast(message, type = "success") {
+  if (toastRenderer) return toastRenderer(message, type);
   const root = document.querySelector("#toast-region");
   while (root.children.length >= 2) root.firstElementChild.remove();
   const el = document.createElement("div");

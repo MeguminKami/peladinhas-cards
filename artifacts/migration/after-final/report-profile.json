@@ -1,0 +1,230 @@
+{
+  "mode": "after-final",
+  "errors": [],
+  "results": [
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "club",
+      "filename": "profile-1440-club.png",
+      "comparison": {
+        "changedPixels": 46,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "volt",
+      "filename": "profile-1440-volt.png",
+      "comparison": {
+        "changedPixels": 46,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "champions",
+      "filename": "profile-1440-champions.png",
+      "comparison": {
+        "changedPixels": 46,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "ultimate",
+      "filename": "profile-1440-ultimate.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "club",
+      "filename": "profile-768-club.png",
+      "comparison": {
+        "changedPixels": 52,
+        "totalPixels": 737280,
+        "changedPercent": 0.01
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "volt",
+      "filename": "profile-768-volt.png",
+      "comparison": {
+        "changedPixels": 52,
+        "totalPixels": 737280,
+        "changedPercent": 0.01
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "champions",
+      "filename": "profile-768-champions.png",
+      "comparison": {
+        "changedPixels": 51,
+        "totalPixels": 737280,
+        "changedPercent": 0.01
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "ultimate",
+      "filename": "profile-768-ultimate.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 737280,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "club",
+      "filename": "profile-390-club.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 374400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "volt",
+      "filename": "profile-390-volt.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 374400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "champions",
+      "filename": "profile-390-champions.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 374400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "ultimate",
+      "filename": "profile-390-ultimate.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 374400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "club",
+      "filename": "profile-320-club.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "volt",
+      "filename": "profile-320-volt.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "champions",
+      "filename": "profile-320-champions.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "ultimate",
+      "filename": "profile-320-ultimate.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    }
+  ]
+}

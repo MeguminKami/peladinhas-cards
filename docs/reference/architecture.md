@@ -7,7 +7,7 @@
 ```mermaid
 flowchart TB
     classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["Browser / PWA<br/>HTML · CSS · ES Modules"] --> B["Authentication<br/>Identidade"]
+    A["Browser / PWA<br/>React · TypeScript · Vite"] --> B["Authentication<br/>Identidade"]
     A --> C["Firestore<br/>Dados e regras"]
     A --> D["Storage<br/>Fotografias"]
     A --> E["Cloud Functions<br/>Operações protegidas"]
@@ -20,7 +20,7 @@ flowchart TB
 
 | Quero alterar…          | Pasta / entrada                     |
 | :---------------------- | :---------------------------------- |
-| Páginas e interações    | `js/`                               |
+| Páginas e interações    | `src/app/`, `src/presentation/`, `src/features/` |
 | Layout, temas e cartas  | `css/`                              |
 | Operações protegidas    | `functions/`                        |
 | Permissões de dados     | `firestore.rules` · `storage.rules` |
@@ -45,13 +45,15 @@ A interface mostra as ações disponíveis. **As regras e as Functions autorizam
 ```text
 peladinhas-cards/
 ├── README.md                  Apresentação visual e entradas para a documentação
-├── index.html                 Entrada da aplicação
+├── frontend/index.html        Entrada Vite da aplicação React
+├── src/                       Componentes, estado e adaptadores tipados
+├── index.html                 Entrada anterior conservada como referência
 ├── offline.html               Recuperação sem ligação
 ├── manifest.webmanifest       Identidade e instalação PWA
 ├── sw.js                      Cache, atualização e ligação ao worker push
 ├── assets/                    Recursos públicos prontos a entregar
 ├── css/                       Interface, cartas, temas e adaptação a ecrãs
-├── js/                        Páginas, componentes, dados e regras partilhadas
+├── js/                        Serviços Firebase, domínio e editor Card Lab existente
 ├── functions/                 Callables, triggers e tarefas agendadas
 ├── scripts/                   Desenvolvimento, validação, imagens e publicação
 ├── tests/                     Lógica, regras, backend, browser e fixtures
@@ -78,7 +80,7 @@ Na raiz ficam as entradas web e configurações usadas diretamente pelo browser/
 ```mermaid
 flowchart TB
     classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    UI[HTML, CSS e ES Modules] --> AUTH[Firebase Authentication]
+    UI[React, TypeScript e CSS existente] --> AUTH[Firebase Authentication]
     UI --> DB[Firestore e regras]
     UI --> ST[Storage: fotografias]
     UI --> FN[Functions: europe-west1]
@@ -95,20 +97,20 @@ flowchart TB
 
 O browser lê os dados permitidos pelas regras e chama operações protegidas no servidor. As Functions produzem agregados, recompensas e snapshots; as regras impedem a escrita direta do cliente nessas coleções. Fotografias usam Storage com validação e limites próprios.
 
-O frontend Firebase usa SDK web por importação remota; o servidor usa as dependências npm. A configuração web é pública e não concede permissões de administrador. As permissões dependem de Authentication, regras e verificações das Functions.
+O frontend usa o SDK modular Firebase instalado por npm e integrado pelo Vite. Os caminhos antigos do SDK nos serviços partilhados são resolvidos para essa dependência pelo build. A configuração web é pública e não concede permissões de administrador. As permissões dependem de Authentication, regras e verificações das Functions.
 
 ## Módulos
 
 | Área                      | Entradas principais                                                                       |
 | :------------------------ | :---------------------------------------------------------------------------------------- |
-| Navegação e sessão        | `js/app.js`, `navigation.js`, `auth.js`, `role-perspective.js`                            |
+| Navegação e sessão        | `src/app/Application.tsx`, `Chrome.tsx`, `src/services/league.ts`, `js/auth.js` |
 | Dados e liga              | `js/db.js`, `data.js`, `utils.js`, `match-time.js`                                        |
-| Cartas e criação          | `js/cards.js`, `card-design.js`, `card-photo.js`, `card-lab.js`, `card-studio-catalog.js` |
-| Jogos e avaliações        | `js/games.js`, `ratings.js`, `team-balance.js`, `missions.js`                             |
-| Eventos e objetivos       | `js/events.js`, `event-pages.js`, `event-admin.js`, `event-model.js`, `event-rules.js`    |
-| Administração             | `js/admin.js`, `admin-cards.js`, `admin-menu.js`, `ovr-audit.js`                          |
-| Componentes comuns        | `js/ui.js`, `icons.js`, `themes.js`, `assets.js`                                          |
-| Instalação e notificações | `js/pwa.js`, `push.js`, `push-worker.js`, `notifications.js`, `offline.js`                |
+| Cartas e criação          | `src/presentation/cards.tsx`, `profile.tsx`, `src/features/CardLab.tsx`; motor `js/card-lab.js` |
+| Jogos e avaliações        | `src/features/game-page.tsx`, `feedback.tsx`, `initial-rating.tsx`, `team-builder.tsx`, `use-rating-draft.ts` |
+| Eventos e objetivos       | `src/features/event-admin.tsx`, `managed-event.tsx`, `legacy-event.tsx`; domínio `js/event-model.js`, `event-rules.js` |
+| Administração             | `src/features/admin.tsx`, `admin-cards.tsx`, `weekly-photo.tsx`, `ovr-audit.tsx` |
+| Componentes comuns        | `src/shared/`, ícones/temas/assets existentes em `js/` |
+| Instalação e notificações | `src/app/Pwa.tsx`, `PushSettings.tsx`, `src/features/notifications.tsx`; serviços `js/push.js`, `push-worker.js`, `offline.js` |
 | Servidor                  | `functions/index.js`, `events.js`, `event-management.js`, `notifications.js`, `push.js`   |
 
 `css/styles.css` define a base, `cards.css` a linguagem das cartas e `responsive.css` os layouts específicos. `experience.css` reúne os refinamentos comuns, fontes e componentes da revisão. Usar as variáveis de tema existentes ao alterar cores.
@@ -141,7 +143,7 @@ A perspetiva visual de um papel não muda a identidade autenticada nem substitui
 
 ## Pacotes de publicação
 
-`build:hosting` copia apenas entradas web, `js/`, `css/` e `assets/` para `.firebase/site`, e injeta no worker um inventário e hash. Não publica documentação, fontes de trabalho, testes, ferramentas nem segredos.
+`build:hosting` verifica TypeScript, executa Vite e prepara `.firebase/site` com bundles, CSS e assets existentes, página offline e worker push. Injeta no service worker o inventário completo e o hash do conteúdo. Não publica documentação, fontes de trabalho, testes, ferramentas, código de servidor nem segredos.
 
 O pacote de Functions usa a raiz como fonte porque partilha regras de cálculo com `js/`. `firebase.json` exclui os recursos visuais, documentação, originais, caches, dependências locais e segredos; as dependências npm são instaladas no ambiente de Functions.
 

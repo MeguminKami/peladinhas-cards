@@ -1,0 +1,678 @@
+{
+  "mode": "verified-final",
+  "errors": [],
+  "results": [
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 1440,
+      "theme": "club",
+      "filename": "home-1440-club.png",
+      "comparison": {
+        "changedPixels": 565,
+        "totalPixels": 1382400,
+        "changedPercent": 0.04
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 1440,
+      "theme": "volt",
+      "filename": "home-1440-volt.png",
+      "comparison": {
+        "changedPixels": 566,
+        "totalPixels": 1382400,
+        "changedPercent": 0.04
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 1440,
+      "theme": "champions",
+      "filename": "home-1440-champions.png",
+      "comparison": {
+        "changedPixels": 549,
+        "totalPixels": 1382400,
+        "changedPercent": 0.04
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 1440,
+      "theme": "ultimate",
+      "filename": "home-1440-ultimate.png",
+      "comparison": {
+        "changedPixels": 466,
+        "totalPixels": 1382400,
+        "changedPercent": 0.03
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 1440,
+      "theme": "club",
+      "filename": "players-1440-club.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 1440,
+      "theme": "volt",
+      "filename": "players-1440-volt.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 1440,
+      "theme": "champions",
+      "filename": "players-1440-champions.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 1440,
+      "theme": "ultimate",
+      "filename": "players-1440-ultimate.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 1382400,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "club",
+      "filename": "profile-1440-club.png",
+      "comparison": {
+        "changedPixels": 15497,
+        "totalPixels": 1382400,
+        "changedPercent": 1.12
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "volt",
+      "filename": "profile-1440-volt.png",
+      "comparison": {
+        "changedPixels": 15498,
+        "totalPixels": 1382400,
+        "changedPercent": 1.12
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "champions",
+      "filename": "profile-1440-champions.png",
+      "comparison": {
+        "changedPixels": 15500,
+        "totalPixels": 1382400,
+        "changedPercent": 1.12
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 1440,
+      "theme": "ultimate",
+      "filename": "profile-1440-ultimate.png",
+      "comparison": {
+        "changedPixels": 15125,
+        "totalPixels": 1382400,
+        "changedPercent": 1.09
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 768,
+      "theme": "club",
+      "filename": "home-768-club.png",
+      "comparison": {
+        "changedPixels": 344,
+        "totalPixels": 737280,
+        "changedPercent": 0.05
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 768,
+      "theme": "volt",
+      "filename": "home-768-volt.png",
+      "comparison": {
+        "changedPixels": 352,
+        "totalPixels": 737280,
+        "changedPercent": 0.05
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 768,
+      "theme": "champions",
+      "filename": "home-768-champions.png",
+      "comparison": {
+        "changedPixels": 354,
+        "totalPixels": 737280,
+        "changedPercent": 0.05
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 768,
+      "theme": "ultimate",
+      "filename": "home-768-ultimate.png",
+      "comparison": {
+        "changedPixels": 279,
+        "totalPixels": 737280,
+        "changedPercent": 0.04
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 768,
+      "theme": "club",
+      "filename": "players-768-club.png",
+      "comparison": {
+        "changedPixels": 12846,
+        "totalPixels": 737280,
+        "changedPercent": 1.74
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 768,
+      "theme": "volt",
+      "filename": "players-768-volt.png",
+      "comparison": {
+        "changedPixels": 12810,
+        "totalPixels": 737280,
+        "changedPercent": 1.74
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 768,
+      "theme": "champions",
+      "filename": "players-768-champions.png",
+      "comparison": {
+        "changedPixels": 12815,
+        "totalPixels": 737280,
+        "changedPercent": 1.74
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 768,
+      "theme": "ultimate",
+      "filename": "players-768-ultimate.png",
+      "comparison": {
+        "changedPixels": 12850,
+        "totalPixels": 737280,
+        "changedPercent": 1.74
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "club",
+      "filename": "profile-768-club.png",
+      "comparison": {
+        "changedPixels": 12958,
+        "totalPixels": 737280,
+        "changedPercent": 1.76
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "volt",
+      "filename": "profile-768-volt.png",
+      "comparison": {
+        "changedPixels": 12954,
+        "totalPixels": 737280,
+        "changedPercent": 1.76
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "champions",
+      "filename": "profile-768-champions.png",
+      "comparison": {
+        "changedPixels": 12955,
+        "totalPixels": 737280,
+        "changedPercent": 1.76
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 768,
+      "theme": "ultimate",
+      "filename": "profile-768-ultimate.png",
+      "comparison": {
+        "changedPixels": 12723,
+        "totalPixels": 737280,
+        "changedPercent": 1.73
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 390,
+      "theme": "club",
+      "filename": "home-390-club.png",
+      "comparison": {
+        "changedPixels": 297,
+        "totalPixels": 374400,
+        "changedPercent": 0.08
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 390,
+      "theme": "volt",
+      "filename": "home-390-volt.png",
+      "comparison": {
+        "changedPixels": 296,
+        "totalPixels": 374400,
+        "changedPercent": 0.08
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 390,
+      "theme": "champions",
+      "filename": "home-390-champions.png",
+      "comparison": {
+        "changedPixels": 289,
+        "totalPixels": 374400,
+        "changedPercent": 0.08
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 390,
+      "theme": "ultimate",
+      "filename": "home-390-ultimate.png",
+      "comparison": {
+        "changedPixels": 229,
+        "totalPixels": 374400,
+        "changedPercent": 0.06
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 390,
+      "theme": "club",
+      "filename": "players-390-club.png",
+      "comparison": {
+        "changedPixels": 8983,
+        "totalPixels": 374400,
+        "changedPercent": 2.4
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 390,
+      "theme": "volt",
+      "filename": "players-390-volt.png",
+      "comparison": {
+        "changedPixels": 8963,
+        "totalPixels": 374400,
+        "changedPercent": 2.39
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 390,
+      "theme": "champions",
+      "filename": "players-390-champions.png",
+      "comparison": {
+        "changedPixels": 8971,
+        "totalPixels": 374400,
+        "changedPercent": 2.4
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 390,
+      "theme": "ultimate",
+      "filename": "players-390-ultimate.png",
+      "comparison": {
+        "changedPixels": 9028,
+        "totalPixels": 374400,
+        "changedPercent": 2.41
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "club",
+      "filename": "profile-390-club.png",
+      "comparison": {
+        "changedPixels": 14090,
+        "totalPixels": 374400,
+        "changedPercent": 3.76
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "volt",
+      "filename": "profile-390-volt.png",
+      "comparison": {
+        "changedPixels": 14080,
+        "totalPixels": 374400,
+        "changedPercent": 3.76
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "champions",
+      "filename": "profile-390-champions.png",
+      "comparison": {
+        "changedPixels": 14077,
+        "totalPixels": 374400,
+        "changedPercent": 3.76
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 390,
+      "theme": "ultimate",
+      "filename": "profile-390-ultimate.png",
+      "comparison": {
+        "changedPixels": 13740,
+        "totalPixels": 374400,
+        "changedPercent": 3.67
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 320,
+      "theme": "club",
+      "filename": "home-320-club.png",
+      "comparison": {
+        "changedPixels": 258,
+        "totalPixels": 307200,
+        "changedPercent": 0.08
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 320,
+      "theme": "volt",
+      "filename": "home-320-volt.png",
+      "comparison": {
+        "changedPixels": 262,
+        "totalPixels": 307200,
+        "changedPercent": 0.09
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 320,
+      "theme": "champions",
+      "filename": "home-320-champions.png",
+      "comparison": {
+        "changedPixels": 259,
+        "totalPixels": 307200,
+        "changedPercent": 0.08
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "home",
+      "hash": "#/",
+      "width": 320,
+      "theme": "ultimate",
+      "filename": "home-320-ultimate.png",
+      "comparison": {
+        "changedPixels": 231,
+        "totalPixels": 307200,
+        "changedPercent": 0.08
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 320,
+      "theme": "club",
+      "filename": "players-320-club.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 320,
+      "theme": "volt",
+      "filename": "players-320-volt.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 320,
+      "theme": "champions",
+      "filename": "players-320-champions.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "players",
+      "hash": "#/players",
+      "width": 320,
+      "theme": "ultimate",
+      "filename": "players-320-ultimate.png",
+      "comparison": {
+        "changedPixels": 0,
+        "totalPixels": 307200,
+        "changedPercent": 0
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "club",
+      "filename": "profile-320-club.png",
+      "comparison": {
+        "changedPixels": 11655,
+        "totalPixels": 307200,
+        "changedPercent": 3.79
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "volt",
+      "filename": "profile-320-volt.png",
+      "comparison": {
+        "changedPixels": 11651,
+        "totalPixels": 307200,
+        "changedPercent": 3.79
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "champions",
+      "filename": "profile-320-champions.png",
+      "comparison": {
+        "changedPixels": 11653,
+        "totalPixels": 307200,
+        "changedPercent": 3.79
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "profile",
+      "hash": "#/profile",
+      "width": 320,
+      "theme": "ultimate",
+      "filename": "profile-320-ultimate.png",
+      "comparison": {
+        "changedPixels": 11318,
+        "totalPixels": 307200,
+        "changedPercent": 3.68
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    }
+  ]
+}

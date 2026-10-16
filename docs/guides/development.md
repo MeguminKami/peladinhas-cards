@@ -6,7 +6,7 @@
 
 | Requisito              | Quando é necessário                                          |
 | :--------------------- | :----------------------------------------------------------- |
-| **Node.js 22**         | Instalar dependências, executar scripts e servir o frontend. |
+| **Node.js 22.12+ (22 LTS)**         | Instalar dependências, executar scripts e servir o frontend. |
 | **Java 21**            | Testes com emulador Firestore.                               |
 | **Python + fonttools** | Apenas para regenerar fontes.                                |
 
@@ -15,7 +15,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-**Abrir:** `http://localhost:8080` · **Outra porta:** `npm.cmd run dev -- --port 8081`
+**Abrir:** `http://127.0.0.1:5173` · **Outra porta:** `npm.cmd run dev -- --port 8081`
 
 ```mermaid
 flowchart TB
@@ -40,7 +40,7 @@ Os comandos usam `npm.cmd` no Windows; em macOS/Linux, usar `npm`.
 
 ## Ambiente
 
-O projeto usa HTML, CSS e ES Modules diretamente no browser. Não precisa de um bundler para desenvolvimento. Os scripts e o servidor usam **Node.js 22**, conforme `package.json`. Os emuladores Firestore precisam de **Java 21** no ambiente usado pelo projeto. A geração de fontes é opcional e usa Python com `fonttools`.
+O frontend usa React, TypeScript strict e Vite. A entrada é `frontend/index.html`, que monta `src/main.tsx`; CSS, assets e cálculos existentes são preservados. Usar Node.js 22.12 ou superior na linha 22 LTS. Os emuladores Firestore precisam de Java 21. A geração de fontes é opcional e usa Python com `fonttools`.
 
 Na raiz do projeto:
 
@@ -49,15 +49,15 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Abre `http://localhost:8080`. O servidor de desenvolvimento serve apenas os ficheiros públicos, incluindo os recursos PWA; não disponibiliza `.secret.local`, código de servidor ou documentação. A porta pode ser alterada com `npm.cmd run dev -- --port 8081`.
+Abre `http://127.0.0.1:5173`. O servidor de desenvolvimento serve apenas os ficheiros públicos, incluindo os recursos PWA; não disponibiliza `.secret.local`, código de servidor ou documentação. A porta pode ser alterada com `npm.cmd run dev -- --port 8081`.
 
-Em macOS/Linux, usa `npm` em vez de `npm.cmd`. Um servidor HTTP é necessário; abrir `index.html` com `file://` não carrega os módulos corretamente.
+Em macOS/Linux, usa `npm` em vez de `npm.cmd`. Usar Vite; abrir um HTML com `file://` não carrega a aplicação. `npm.cmd run dev:legacy` conserva o servidor anterior para comparação com a referência.
 
 ## Firebase
 
 A configuração pública da Web App está em [`js/config.js`](../../js/config.js). A instalação existente aponta para **`pedalinhas-cards`**; a grafia do ID não é igual à do nome da aplicação. `.firebaserc` é a associação local e os scripts de publicação usam o ID da configuração explicitamente.
 
-Servir o frontend localmente **não muda o Firebase para emuladores**. A aplicação usa o projeto configurado. Para explorar a interface sem dados reais, usa os testes Playwright e as fixtures locais, descritos no [guia de testes](testing.md).
+Servir o frontend localmente **não muda o Firebase para emuladores**. A aplicação usa o projeto configurado. Para explorar sem dados reais, usa `npm.cmd run dev:react:test`, que seleciona explicitamente as fixtures locais, ou os testes Playwright descritos no [guia de testes](testing.md). O modo de teste nunca é preparado para deploy.
 
 Para uma instalação independente:
 

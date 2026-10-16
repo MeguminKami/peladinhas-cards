@@ -1,0 +1,230 @@
+{
+  "mode": "resume-verified-support",
+  "errors": [],
+  "results": [
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 1440,
+      "theme": "club",
+      "filename": "admin-support-1440-club.png",
+      "comparison": {
+        "changedPixels": 19594,
+        "totalPixels": 1382400,
+        "changedPercent": 1.42
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 1440,
+      "theme": "volt",
+      "filename": "admin-support-1440-volt.png",
+      "comparison": {
+        "changedPixels": 29206,
+        "totalPixels": 1382400,
+        "changedPercent": 2.11
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 1440,
+      "theme": "champions",
+      "filename": "admin-support-1440-champions.png",
+      "comparison": {
+        "changedPixels": 31646,
+        "totalPixels": 1382400,
+        "changedPercent": 2.29
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 1440,
+      "theme": "ultimate",
+      "filename": "admin-support-1440-ultimate.png",
+      "comparison": {
+        "changedPixels": 13698,
+        "totalPixels": 1382400,
+        "changedPercent": 0.99
+      },
+      "overflow": false,
+      "scrollWidth": 1440
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 768,
+      "theme": "club",
+      "filename": "admin-support-768-club.png",
+      "comparison": {
+        "changedPixels": 13480,
+        "totalPixels": 737280,
+        "changedPercent": 1.83
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 768,
+      "theme": "volt",
+      "filename": "admin-support-768-volt.png",
+      "comparison": {
+        "changedPixels": 15831,
+        "totalPixels": 737280,
+        "changedPercent": 2.15
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 768,
+      "theme": "champions",
+      "filename": "admin-support-768-champions.png",
+      "comparison": {
+        "changedPixels": 15844,
+        "totalPixels": 737280,
+        "changedPercent": 2.15
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 768,
+      "theme": "ultimate",
+      "filename": "admin-support-768-ultimate.png",
+      "comparison": {
+        "changedPixels": 10757,
+        "totalPixels": 737280,
+        "changedPercent": 1.46
+      },
+      "overflow": false,
+      "scrollWidth": 768
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 390,
+      "theme": "club",
+      "filename": "admin-support-390-club.png",
+      "comparison": {
+        "changedPixels": 9634,
+        "totalPixels": 374400,
+        "changedPercent": 2.57
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 390,
+      "theme": "volt",
+      "filename": "admin-support-390-volt.png",
+      "comparison": {
+        "changedPixels": 10878,
+        "totalPixels": 374400,
+        "changedPercent": 2.91
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 390,
+      "theme": "champions",
+      "filename": "admin-support-390-champions.png",
+      "comparison": {
+        "changedPixels": 10887,
+        "totalPixels": 374400,
+        "changedPercent": 2.91
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 390,
+      "theme": "ultimate",
+      "filename": "admin-support-390-ultimate.png",
+      "comparison": {
+        "changedPixels": 7628,
+        "totalPixels": 374400,
+        "changedPercent": 2.04
+      },
+      "overflow": false,
+      "scrollWidth": 390
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 320,
+      "theme": "club",
+      "filename": "admin-support-320-club.png",
+      "comparison": {
+        "changedPixels": 9074,
+        "totalPixels": 307200,
+        "changedPercent": 2.95
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 320,
+      "theme": "volt",
+      "filename": "admin-support-320-volt.png",
+      "comparison": {
+        "changedPixels": 10108,
+        "totalPixels": 307200,
+        "changedPercent": 3.29
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 320,
+      "theme": "champions",
+      "filename": "admin-support-320-champions.png",
+      "comparison": {
+        "changedPixels": 10114,
+        "totalPixels": 307200,
+        "changedPercent": 3.29
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    },
+    {
+      "name": "admin-support",
+      "hash": "#/admin/support",
+      "width": 320,
+      "theme": "ultimate",
+      "filename": "admin-support-320-ultimate.png",
+      "comparison": {
+        "changedPixels": 7134,
+        "totalPixels": 307200,
+        "changedPercent": 2.32
+      },
+      "overflow": false,
+      "scrollWidth": 320
+    }
+  ]
+}

@@ -30,7 +30,12 @@
         "firebase.backend.json",
         ".firebase",
         ".env*",
-        ".secret.local"
+        ".secret.local",
+        "src",
+        "frontend",
+        "vite.config.ts",
+        "tsconfig.json",
+        "artifacts"
       ]
     }
   ],
@@ -53,7 +58,11 @@
   },
   "hosting": {
     "public": ".firebase/site",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "headers": [
       {
         "regex": ".*",
@@ -65,6 +74,8 @@
         ]
       }
     ],
-    "predeploy": ["npm --prefix \"$PROJECT_DIR\" run build:hosting"]
+    "predeploy": [
+      "npm --prefix \"$PROJECT_DIR\" run build:hosting"
+    ]
   }
 }

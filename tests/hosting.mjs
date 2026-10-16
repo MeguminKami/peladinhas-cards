@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-const base = "http://127.0.0.1:5000";
+const base = process.env.HOSTING_TEST_URL || "http://127.0.0.1:5000";
 for (const path of [
   "/",
-  "/js/app.js",
-  "/js/ovr-audit.js",
-  "/js/config.js",
+  "/js/offline.js",
+  "/js/push-worker.js",
   "/css/styles.css",
   "/assets/logo.svg",
   "/manifest.webmanifest",
@@ -17,7 +16,19 @@ for (const path of [
   assert.equal(response.status, 200, path);
   assert.match(response.headers.get("cache-control") || "", /no-cache/, path);
 }
+const document = await fetch(base + '/').then(response => response.text());
+assert.doesNotMatch(document, /\.\/js\/app\.js/, 'Hosting serves the React entry');
+const modules = [...document.matchAll(/(?:src|href)="(\.\/assets\/[^" ]+\.js)"/g)].map(match => match[1]);
+assert.ok(modules.length, 'The Vite entry and preloads are present');
+for (const module of modules) {
+  const response = await fetch(new URL(module, base + '/'));
+  assert.equal(response.status, 200, module);
+  assert.match(response.headers.get('content-type') || '', /javascript/);
+  assert.doesNotMatch(await response.text(), /BEGIN (?:RSA )?PRIVATE KEY|from ["']firebase-admin/);
+}
 for (const path of [
+  "/js/app.js",
+  "/src/main.tsx",
   "/functions/index.js",
   "/tests/backend.test.js",
   "/scripts/deploy.mjs",

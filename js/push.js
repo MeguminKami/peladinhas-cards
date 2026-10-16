@@ -1,10 +1,53 @@
 import * as DB from "./db.js";
 import { WEB_PUSH_PUBLIC_KEY } from "./push-config.js";
-import { busy, modal, toast } from "./ui.js";
+import { busy, modal, toast as legacyToast } from "./ui.js";
 import { icon } from "./icons.js";
 import { flushNotificationReads } from "./notification-read-queue.js";
 
-const base = new URL("../", import.meta.url),
+let toast = legacyToast;
+export function setPushNotifier(notify) {
+  toast = notify || legacyToast;
+}
+export function pushState() {
+  return { uid, enabled, enabling, connectionError, pendingSync,
+    available: supported(), installed: installed(), ios: ios(), online: navigator.onLine !== false,
+    permission: supported() ? Notification.permission : "unsupported", hasSavedOwner: !!uid && saved()?.uid === uid };
+}
+export async function activatePush() {
+  if (enabling) return;
+  if (navigator.onLine === false) throw Error("Liga-te à Internet para ativar as notificações neste dispositivo.");
+  if (!WEB_PUSH_PUBLIC_KEY) throw Error("As notificações do telemóvel ainda não estão disponíveis.");
+  const permission = Notification.requestPermission();
+  requestedUid = uid;
+  enabling = true;
+  updatePanels();
+  try { await enable(permission); }
+  finally { enabling = false; updatePanels(); }
+}
+export async function testPush() {
+  if (navigator.onLine === false) throw Error("Liga-te à Internet para enviar uma notificação de teste.");
+  const current = saved();
+  if (!supported() || Notification.permission !== "granted" || current?.uid !== uid) {
+    enabled = false; updatePanels();
+    throw Error("Ativa as notificações neste dispositivo antes de enviar um teste.");
+  }
+  const reg = await registration(), subscription = await reg?.pushManager?.getSubscription();
+  if (!subscription || !(await message({type: "PUSH_OWNER", ...current}))) {
+    enabled = false; updatePanels();
+    throw Error("A ligação às notificações perdeu-se. Volta a ativá-las neste dispositivo.");
+  }
+  await callDevice({action: "test", deviceId: current.deviceId});
+  toast("Teste solicitado. Aguarda o alerta nas notificações deste dispositivo.");
+}
+export async function recheckPush() {
+  registrationPending = true; pendingSync = true; syncCursor = null;
+  await recoverPushConnection();
+  toast(connectionError ? "Não foi possível verificar a ligação. Vamos tentar novamente." : "Ligação às notificações verificada.", connectionError ? "error" : "success");
+}
+
+// Resolve against the document, including nested Hosting paths. Resolving a
+// directory import.meta URL in a bundler can accidentally emit package.main.
+const base = new URL("./", location.href),
   storageKey = `peladinhas-push:${base.pathname}`;
 let uid = null,
   unsubscribe = () => {},
@@ -79,6 +122,7 @@ function updatePanels() {
   const next = JSON.stringify([uid, enabled, enabling, navigator.onLine, supported() ? Notification.permission : "unsupported", installed(), connectionError, pendingSync]);
   if (next === panelState) return;
   panelState = next;
+  window.dispatchEvent(new Event("peladinhas-push-state"));
   for (const panel of document.querySelectorAll("[data-push-settings]"))
     drawPanel(panel);
 }

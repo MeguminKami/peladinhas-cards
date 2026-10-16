@@ -3,7 +3,8 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 import { chromium } from "playwright";
-const root = resolve(".firebase/site");
+import { PLAYSTYLE_ICONS } from "../js/assets.js";
+const root = resolve(process.argv.includes('--react') ? '.firebase/react-test' : '.firebase/site');
 let revision = 0;
 const server = createServer((req, res) => {
   const requestPath = new URL(req.url, "http://localhost").pathname;
@@ -146,8 +147,7 @@ try {
       }, new URL(item.src, manifest.url).href);
       assert.equal(dimensions, item.sizes);
     }
-    const playstyles = await page.evaluate(async () => {
-      const { PLAYSTYLE_ICONS } = await import("./js/assets.js");
+    const playstyles = await page.evaluate(async (PLAYSTYLE_ICONS) => {
       return Promise.all(
         Object.values(PLAYSTYLE_ICONS).map(async (src) => {
           const image = new Image();
@@ -160,7 +160,7 @@ try {
           };
         }),
       );
-    });
+    }, PLAYSTYLE_ICONS);
     assert.equal(playstyles.length, 8);
     assert.ok(
       playstyles.every(
@@ -206,7 +206,9 @@ try {
         )
       ).flat();
     });
-    assert.ok(cachedURLs.length > 60);
+    for (const resource of ['index.html','manifest.webmanifest','offline.html','css/styles.css','js/push-worker.js','assets/pwa/icon-512.png']) {
+      assert.ok(cachedURLs.some(url => new URL(url).pathname === `${prefix}/${resource}`), `Precache includes ${resource}`);
+    }
     assert.ok(
       !cachedURLs.some(
         (url) =>
