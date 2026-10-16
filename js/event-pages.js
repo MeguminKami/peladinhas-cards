@@ -1,4 +1,8 @@
-import { eventRarityId, rarityBadge, compareEventRarity } from "./event-rarity.js";
+import {
+  eventRarityId,
+  rarityBadge,
+  compareEventRarity,
+} from "./event-rarity.js";
 import { icon, eventIcon } from "./icons.js";
 import { rewardShowcase } from "./event-presentation.js";
 import { bindImages } from "./cards.js";
@@ -12,13 +16,14 @@ import {
   confirmDialog,
   modal,
 } from "./ui.js";
-import { asDate, formatDate, formatDateTime } from "./utils.js";
+import { asDate, formatDate, formatDateTime, FEEDBACK } from "./utils.js";
 import {
   medal,
   positionLabel,
   sharedRankingPositions,
   rewardText,
   objectiveSummary,
+  isRatingObjective,
   periodWindow,
   hasTemporaryReward,
   eventEndLabel,
@@ -106,13 +111,23 @@ function challengeRules(event) {
   const paragraphs = [];
   if (event.method === "objective") {
     paragraphs.push(objectiveSummary(event));
+    if (isRatingObjective(event.objective)) {
+      paragraphs.push("Só contam jogos encerrados neste período, após o desbloqueio. Cada jogo tem o mesmo peso; dimensões sem avaliações suficientes não contam.");
+      paragraphs.push(event.objective.metric === "ratingAverage"
+        ? "A janela inclui os últimos jogos encerrados, mesmo quando ainda aguardam avaliações. O mínimo tem de estar cumprido no momento da verificação."
+        : event.objective.metric === "ratingStreak"
+          ? "Um jogo abaixo do mínimo ou por avaliar interrompe a sequência. Conta a melhor sequência alcançada."
+          : "Os jogos não precisam de ser consecutivos.");
+    }
     if (event.kind !== "mission") {
       paragraphs.push(
         event.winnerCount === 1
           ? "Vence quem atingir a meta primeiro."
           : `São premiados os primeiros ${event.winnerCount} jogadores a atingir a meta.`,
       );
-      paragraphs.push("O progresso é verificado no fim de cada jogo.");
+      paragraphs.push(
+        "O progresso é verificado com os resultados e as avaliações dos jogos.",
+      );
     }
     if (event.prerequisites?.missionIds?.length)
       paragraphs.push(
@@ -188,7 +203,7 @@ export async function managedEventPage(ctx, event) {
       )
       .join("");
   ctx.render(
-    `${pageHead("Eventos e missões", event.title, event.description || "", linkButton("#/events", "Calendário e histórico", "ghost"))}<div class="event-detail-layout"><section class="panel content-stack event-rarity-surface event-rarity-detail" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}${event.image ? `<img class="event-cover" src="${esc(event.image)}" alt="">` : ""}<div class="section-head"><span class="pill">${states[event.status]}</span><small>${event.participantIds.length} ${event.participantIds.length === 1 ? "participante" : "participantes"}</small></div><p>${formatDateTime(event.startsAt)} → ${eventEndLabel(event)}</p>${challengeRules(event)}${rewardShowcase(event, ctx.league.players.find(p => p.uid === ctx.user.uid) || ctx.user)}${event.method === "objective" && participant ? `<div class="mission-progress-panel"><h2>O teu progresso</h2>${event.myRewards?.length ? `<details><summary>Recompensas que recebeste</summary>${event.myRewards.map((delivery) => `<p>${esc(rewardText(delivery.reward))}${hasTemporaryReward(delivery.reward) ? ` · Bónus temporários até ${formatDate(delivery.expiresAt)}` : ""}</p>`).join("")}</details>` : ""}<strong>${progress?.progress || 0} / ${event.objective.target}</strong><div class="progress"><span style="--progress:${Math.min(100, ((progress?.progress || 0) / event.objective.target) * 100)}%"></span></div><p>${event.kind !== "mission" ? (event.status === "closed" ? "A competição terminou. Consulta os resultados." : event.status === "review" ? "A meta foi atingida. Os resultados aguardam confirmação." : progress?.eligible ? "Atingiste a meta. A tua posição fica registada na classificação." : "Acompanha o teu progresso até à meta.") : claimed ? "Já recebeste a recompensa deste período." : atLimit ? "Já recebeste todas as recompensas desta missão." : event.status === "closed" ? "Esta missão terminou." : event.status === "cancelled" ? "Esta missão foi cancelada." : progress?.eligible ? "Objetivo cumprido. A tua recompensa está pronta." : "O progresso é atualizado quando os jogos terminam."}</p>${event.kind === "mission" && active && !claimed && !atLimit ? `<button class="btn btn-primary" id="claim-mission" ${!progress?.eligible ? "disabled" : ""}>Receber recompensa</button>` : ""}</div>` : ""}${active && participant && event.method === "vote" && +asDate(event.votingStartsAt) <= now && (!event.votingEndsAt || +asDate(event.votingEndsAt) > now) ? `<form id="event-vote-form" class="content-stack"><h2>O teu voto</h2><p>Escolhe até ${event.votesPerUser} candidatos diferentes. Atualizar substitui o voto anterior.</p><div class="event-ballot">${candidates.map((uid) => `<label class="event-candidate"><input type="checkbox" name="selection" value="${esc(uid)}" ${saved?.selections?.includes(uid) ? "checked" : ""}><span>${esc(name(ctx, uid))}</span></label>`).join("")}</div><button class="btn btn-primary">${saved ? "Atualizar voto" : "Guardar voto"}</button></form>` : ""}${event.kind !== "mission" && event.status === "closed" && !event.winners.length ? '<p class="warning">Sem vencedores elegíveis; os critérios mínimos não foram cumpridos.</p>' : ""}${event.status === "cancelled" ? '<p class="warning">Desafio cancelado. As recompensas foram anuladas.</p>' : ""}</section><section id="event-leaderboard" class="panel content-stack"><h2>${event.kind === "mission" ? "Progresso e conclusões" : event.status === "closed" ? "Classificação final" : "Classificação"}</h2>${
+    `${pageHead("Eventos e missões", event.title, event.description || "", linkButton("#/events", "Calendário e histórico", "ghost"))}<div class="event-detail-layout"><section class="panel content-stack event-rarity-surface event-rarity-detail" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}${event.image ? `<img class="event-cover" src="${esc(event.image)}" alt="">` : ""}<div class="section-head"><span class="pill">${states[event.status]}</span><small>${event.participantIds.length} ${event.participantIds.length === 1 ? "participante" : "participantes"}</small></div><p>${formatDateTime(event.startsAt)} → ${eventEndLabel(event)}</p>${challengeRules(event)}${rewardShowcase(event, ctx.league.players.find((p) => p.uid === ctx.user.uid) || ctx.user)}${event.method === "objective" && participant ? `<div class="mission-progress-panel"><h2>O teu progresso</h2>${event.myRewards?.length ? `<details><summary>Recompensas que recebeste</summary>${event.myRewards.map((delivery) => `<p>${esc(rewardText(delivery.reward))}${hasTemporaryReward(delivery.reward) ? ` · Bónus temporários até ${formatDate(delivery.expiresAt)}` : ""}</p>`).join("")}</details>` : ""}<strong>${progress?.progress || 0} / ${event.objective.target}</strong><div class="progress"><span style="--progress:${Math.min(100, ((progress?.progress || 0) / event.objective.target) * 100)}%"></span></div><p>${event.kind !== "mission" ? (event.status === "closed" ? "A competição terminou. Consulta os resultados." : event.status === "review" ? "A meta foi atingida. Os resultados aguardam confirmação." : progress?.eligible ? "Atingiste a meta. A tua posição fica registada na classificação." : "Acompanha o teu progresso até à meta.") : claimed ? "Já recebeste a recompensa deste período." : atLimit ? "Já recebeste todas as recompensas desta missão." : event.status === "closed" ? "Esta missão terminou." : event.status === "cancelled" ? "Esta missão foi cancelada." : progress?.eligible ? "Objetivo cumprido. A tua recompensa está pronta." : "O progresso é atualizado com os resultados e as avaliações dos jogos."}</p>${event.kind === "mission" && active && !claimed && !atLimit ? `<button class="btn btn-primary" id="claim-mission" ${!progress?.eligible ? "disabled" : ""}>Receber recompensa</button>` : ""}</div>` : ""}${active && participant && event.method === "vote" && +asDate(event.votingStartsAt) <= now && (!event.votingEndsAt || +asDate(event.votingEndsAt) > now) ? `<form id="event-vote-form" class="content-stack"><h2>O teu voto</h2><p>Escolhe até ${event.votesPerUser} candidatos diferentes. Atualizar substitui o voto anterior.</p><div class="event-ballot">${candidates.map((uid) => `<label class="event-candidate"><input type="checkbox" name="selection" value="${esc(uid)}" ${saved?.selections?.includes(uid) ? "checked" : ""}><span>${esc(name(ctx, uid))}</span></label>`).join("")}</div><button class="btn btn-primary">${saved ? "Atualizar voto" : "Guardar voto"}</button></form>` : ""}${event.kind !== "mission" && event.status === "closed" && !event.winners.length ? '<p class="warning">Sem vencedores elegíveis; os critérios mínimos não foram cumpridos.</p>' : ""}${event.status === "cancelled" ? '<p class="warning">Desafio cancelado. As recompensas foram anuladas.</p>' : ""}</section><section id="event-leaderboard" class="panel content-stack"><h2>${event.kind === "mission" ? "Progresso e conclusões" : event.status === "closed" ? "Classificação final" : "Classificação"}</h2>${
       event.kind !== "mission" && event.winners.length
         ? `<div class="event-podium">${event.winners
             .slice(0, 3)
@@ -200,6 +215,24 @@ export async function managedEventPage(ctx, event) {
         : ""
     }${event.ranking?.length ? `${event.method === "vote" ? `<p>${event.totalVotes || 0} ${event.totalVotes === 1 ? "voto" : "votos"}</p>` : ""}<div class="table-wrap"><table><thead><tr><th>${event.kind === "mission" ? "Conclusão" : "Posição"}</th><th>Jogador</th><th>${event.method === "vote" ? "Votos" : "Progresso"}</th><th>Recompensa atribuída</th></tr></thead><tbody>${rankRows(event.ranking.map((row) => ({ ...row, ...((event.winners || []).find((w) => w.uid === row.uid) || (event.participationAwards || []).find((w) => w.uid === row.uid)), position: row.position })))}</tbody></table></div>` : `<p class="muted">${event.kind === "mission" ? "Ainda não há conclusões registadas." : "Os resultados ainda não estão disponíveis."}</p>`}</section></div>${admin ? `<section class="panel event-audit content-stack"><div class="section-head"><div><span class="eyebrow">ACESSO ADMIN</span><h2>${event.kind === "mission" ? "Conclusões e entregas" : "Resultados e auditoria"}</h2></div><div class="actions">${event.status === "open" ? (event.kind === "mission" ? '<button class="btn btn-secondary" data-manage="close">Encerrar missão</button>' : '<button class="btn btn-secondary" data-manage="prepare">Preparar resultados</button>') : ""}${event.status === "review" ? '<button class="btn btn-primary" data-manage="confirm">Confirmar e entregar prémios</button>' : ""}${event.status === "closed" ? '<button class="btn btn-danger" data-manage="revoke">Anular prémios com motivo</button>' : ""}</div></div>${event.method === "admin" && ["open", "review"].includes(event.status) ? `<div id="manual-winners" class="form-grid">${Array.from({ length: event.winnerCount }, (_, i) => `<label>${medal(i + 1)} ${i + 1}.º lugar<select name="manual-${i}"><option value="">Sem vencedor nesta posição</option>${event.participantIds.map((uid) => `<option value="${esc(uid)}" ${event.manualWinners?.[i] === uid ? "selected" : ""}>${esc(name(ctx, uid))}</option>`).join("")}</select></label>`).join("")}</div>` : ""}<details open><summary>Recompensas configuradas</summary>${(event.configuration?.positions || []).map((reward, i) => `<p>${event.kind === "mission" ? "Por conclusão" : `${medal(i + 1)} ${i + 1}.º`} · ${esc(rewardText(reward))}</p>`).join("")}</details><div class="event-toolbar"><label>Votante<input id="audit-voter" type="search" placeholder="Nome ou identificador"></label><label>Candidato<input id="audit-candidate" type="search" placeholder="Nome ou identificador"></label></div><div class="table-wrap"><table><thead><tr><th>Quem votou</th><th>Em quem</th><th>Data e hora</th><th>Ação</th></tr></thead><tbody id="audit-votes"></tbody></table></div>${event.flags?.length ? `<details><summary>${event.flags.length} padrões para revisão</summary>${event.flags.map((flag) => `<p>${esc(flag.users.map((uid) => name(ctx, uid)).join(" ↔ "))}: ${esc(flag.message)}</p>`).join("")}</details>` : ""}<details><summary>Participantes (${event.participantIds.length})</summary><p>${event.participantIds.map((uid) => esc(name(ctx, uid))).join(" · ")}</p></details><details><summary>Registo de entregas e anulações</summary>${(event.deliveries || []).map((delivery) => `<p>${esc(name(ctx, delivery.uid))} · ${delivery.revoked ? "Anulada" : "Entregue"} · ${esc(rewardText(delivery.reward))}</p>`).join("") || "<p>Sem entregas.</p>"}</details><details><summary>Ações administrativas</summary>${(event.audit || []).map((entry) => `<p>${formatDateTime(entry.createdAt)} · ${esc(name(ctx, entry.actorId))} · ${esc(auditLabels[entry.action] || entry.action)}${entry.details?.voterId ? ` · ${esc(name(ctx, entry.details.voterId))}` : ""}${entry.details?.original?.selections ? ` · voto original: ${entry.details.original.selections.map((uid) => esc(name(ctx, uid))).join(", ")}` : ""}${entry.details?.reason ? ` · ${esc(entry.details.reason)}` : ""}</p>`).join("")}</details></section>` : ""}`,
   );
+  if (event.objective?.metric === "ratingAverage" && progress?.ratingState) {
+    const state = progress.ratingState;
+    document
+      .querySelector(".mission-progress-panel > strong")
+      ?.insertAdjacentHTML(
+        "afterend",
+        `<div class="event-rating-preview"><p>Janela: ${state.games} / ${event.objective.target} jogos · ${state.ratedGames} com avaliações suficientes.</p>${
+          state.averages
+            ? Object.entries(state.averages)
+                .map(
+                  ([key, value]) =>
+                    `<p>${esc(FEEDBACK.find(([id]) => id === key)?.[1] || key)}: <b>${value.toLocaleString("pt-PT", { maximumFractionDigits: 2 })} / 5 estrelas</b></p>`,
+                )
+                .join("")
+            : "<p>A média fica disponível quando todos os jogos da janela tiverem avaliações suficientes.</p>"
+        }</div>`,
+      );
+  }
   bindImages(document.querySelector("#main"));
   if (
     event.liveResults &&

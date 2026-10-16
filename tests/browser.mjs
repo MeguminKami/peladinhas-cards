@@ -1198,17 +1198,19 @@ try {
   );
   await page.locator('[name="metric"]').selectOption("goalsAndAssists");
   await page.locator('[name="target"]').fill("20");
-  await page.locator('[data-editor-step="0"]').click();
+  await page.locator('[data-editor-step="2"]').click();
   await page.locator('[name="indefinite"]').check();
   assert.equal(await page.locator('[name="endsAt"]').isVisible(), false);
   await page.locator('[name="indefinite"]').uncheck();
   await page.locator('[data-editor-step="1"]').click();
   await page.locator('[data-selection-method="vote"]').click();
+  await page.locator('[data-editor-step="3"]').click();
   await page.locator('[name="needsConfirmation"]').check();
   await page.locator('[data-editor-step="1"]').click();
   await page
     .locator("#event-editor")
     .screenshot({ path: "test-results/event-editor-desktop.png" });
+  await page.locator('[data-editor-step="3"]').click();
   await page.locator('[name="winnerCount"]').fill("3");
   await page.locator('[name="winnerCount"]').dispatchEvent("change");
   assert.equal(await page.locator("#event-questions > details").count(), 3);
@@ -1218,11 +1220,13 @@ try {
   await page
     .locator('#event-builder-form [name="title"]')
     .fill("Votação da semana");
+  await page.locator('[data-editor-step="2"]').click();
   await page
     .locator('#event-builder-form [name="endsAt"]')
     .fill("2026-10-20T20:00");
-  await page.locator('[data-editor-step="2"]').click();
+  await page.locator('[data-editor-step="3"]').click();
   await page.locator('#event-questions [name="boost-vision"]').fill("5");
+  await page.locator('[data-editor-step="4"]').click();
   await page.locator("#event-preview").click();
   await page.getByRole("dialog").waitFor();
   await page.keyboard.press("Escape");
@@ -1334,6 +1338,7 @@ try {
     "true",
   );
   await page.locator('[name="title"]').fill("Missão personalizada");
+  await page.locator('[data-editor-step="2"]').click();
   await page.locator('[name="indefinite"]').check();
   assert.equal(await page.locator('[name="endsAt"]').isVisible(), false);
   assert.equal(await page.locator('[name="endsAt"]').isDisabled(), true);
@@ -1358,7 +1363,7 @@ try {
     .screenshot({ path: "test-results/mission-editor-mobile.png" });
   await page.setViewportSize({ width: 1440, height: 1000 });
 
-  await page.locator('[data-editor-step="2"]').click();
+  await page.locator('[data-editor-step="3"]').click();
   assert.match(
     await page.locator("#event-questions summary").textContent(),
     /cada jogador que concluir/,
@@ -1367,8 +1372,9 @@ try {
     await page.locator("#event-questions summary").textContent(),
     /🥇|lugar|posição/,
   );
-  await page.locator('[name="rewardMode"]').selectOption("card");
+  await page.locator('[data-reward-mode="card"]').click();
   await page.locator('[name="specialId"]').selectOption("mvp");
+  await page.locator('[data-editor-step="4"]').click();
   await page.locator("#event-preview").click();
   await page.getByRole("dialog").waitFor();
   assert.match(await page.getByRole("dialog").textContent(), /Melhor em campo/);
@@ -1421,8 +1427,9 @@ try {
   await page.locator('[data-editor-step="1"]').click();
   await page.locator('[name="metric"]').selectOption("assists");
   await page.locator('[name="target"]').fill("7");
-  await page.locator('[data-editor-step="2"]').click();
+  await page.locator('[data-editor-step="3"]').click();
   await page.locator('[name="specialId"]').selectOption("sniper");
+  await page.locator('[data-editor-step="4"]').click();
   assert.equal(
     await page.locator('[name="submitAction"][value="open"]').isVisible(),
     false,

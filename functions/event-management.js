@@ -9,6 +9,8 @@ import { asDate, ATTRIBUTES } from "../js/utils.js";
 import {
   EVENT_LIMITS,
   OBJECTIVES,
+  validRatingObjective,
+  isRatingObjective,
   validEventReward,
   eventRanking,
   periodWindow,
@@ -23,6 +25,22 @@ import {
 } from "../js/event-model.js";
 const db = () => getFirestore();
 const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+// Read both collections in the same transaction when granting rewards.
+async function objectiveGames(tx = null, includeRatings = true) {
+  const read = (path) => tx ? tx.get(db().collection(path)) : db().collection(path).get();
+  if (!includeRatings) return read("games");
+  const [games, summaries] = await Promise.all([read("games"), read("gameSummaries")]);
+  const byId = new Map(rows(summaries).map((row) => [row.id, row]));
+  return { docs: games.docs.map((doc) => ({ id: doc.id,
+    data: () => {
+      const game = doc.data(), summary = byId.get(doc.id);
+      const members = (value, side, kind) => [...(value?.[side]?.[kind] || [])].sort().join("\0");
+      const current = summary?.status === "closed" &&
+        +asDate(summary.closedAt || summary.scheduledAt) === +asDate(game.closedAt || game.scheduledAt) &&
+        ["teamA", "teamB"].every((side) => ["starters", "bench"].every((kind) => members(game, side, kind) === members(summary, side, kind)));
+      return { ...game, ratingSummary: current ? summary.players || {} : {} };
+    } })) };
+}
 const fail = (message) => {
   throw new HttpsError("invalid-argument", message);
 };
@@ -222,6 +240,8 @@ async function configuration(input, eventId = null) {
     objective.target > 1000
   )
     fail("Objetivo inválido.");
+  if (!validRatingObjective(objective, input.scope || "individual"))
+    fail("Configura dimensões, estrelas entre 0 e 5, comparação e mínimo de avaliações. Objetivos por estrelas são individuais.");
   if (
     !["individual", "collective", "team", "group"].includes(
       input.scope || "individual",
@@ -544,7 +564,7 @@ export function managedEvents(rebuild) {
       const event = snap.data();
       const [votesSnap, gamesSnap, rewardSnap, ledgerSnap] = await Promise.all([
         tx.get(ref.collection("votes")),
-        tx.get(db().collection("games")),
+        objectiveGames(tx, isRatingObjective(event.objective)),
         tx.get(ref.collection("private").doc("rewards")),
         tx.get(db().collection("eventRewards")),
       ]);
@@ -836,7 +856,7 @@ export function managedEvents(rebuild) {
       result.unlockedAt = unlocked ? unlocked.toISOString() : null;
     }
     if (event.method === "objective") {
-      const games = rows(await db().collection("games").get());
+      const games = rows(await objectiveGames(null, isRatingObjective(event.objective)));
       result.progress = eventRanking(
         event,
         [],
@@ -900,7 +920,7 @@ export function managedEvents(rebuild) {
     await db().runTransaction(async (tx) => {
       const ref = db().doc(`events/${id}`),
         snap = await tx.get(ref),
-        games = await tx.get(db().collection("games")),
+        games = await objectiveGames(tx, isRatingObjective(snap.data()?.objective)),
         rewards = await tx.get(ref.collection("private").doc("rewards")),
         ledgerSnap = await tx.get(db().collection("eventRewards"));
       const event = snap.data(),
@@ -990,7 +1010,7 @@ export function managedEvents(rebuild) {
         .doc(`eventRewards/${reward.id}`)
         .update({ expirationProcessed: true });
     const events = rows(await db().collection("events").get());
-    const games = rows(await db().collection("games").get());
+    const games = rows(await objectiveGames());
     for (const event of events.filter((e) => e.schemaVersion === 2)) {
       if (event.status === "scheduled" && +asDate(event.startsAt) <= Date.now())
         await db().runTransaction(async (tx) => {

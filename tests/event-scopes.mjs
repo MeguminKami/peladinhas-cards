@@ -76,13 +76,52 @@ try {
     location.hash = "#/admin/events";
   });
   await page.locator("#new-event").waitFor();
+  // Hidden collection conditions must not leak through generated or stale missions.
+  const missionChecks = await page.evaluate(async () => {
+    const { refreshMissionsForCurrentUser, missionList } = await import("./js/missions.js");
+    const { ACTIVE_COLLECTION_IDS } = await import("./js/card-collection.js");
+    const user = { uid: "hidden-card-member", hasCard: true };
+    const league = { players: [user], games: [], events: [] };
+    const generated = await refreshMissionsForCurrentUser(user, league);
+    const withRevokedCard = await refreshMissionsForCurrentUser(user, {
+      ...league,
+      players: [{ ...user, earnedCards: [{ themeId: ACTIVE_COLLECTION_IDS[0], revokedAt: "2026-10-01" }] }],
+    });
+    const visible = { id: "visible", type: "COMPLETE_PROFILE", title: "Visible mission",
+      description: "Complete your profile", done: 0, total: 1, href: "#/profile/edit", icon: "profile" };
+    const hidden = [
+      { ...visible, id: "secret-flag", title: "Secret flag condition", hiddenCard: true },
+      { ...visible, id: "secret-type", title: "Secret type condition", type: "HIDDEN_CARD" },
+      { ...visible, id: "secret-competition", title: "Secret competition condition", type: "COMPETITION_OBJECTIVE", hiddenCard: true },
+    ];
+    return {
+      generated, withRevokedCard,
+      renderings: [true, false].map(grouped => ({
+        mixed: missionList([...hidden, visible], { grouped }),
+        onlyHidden: missionList(hidden, { grouped }),
+        empty: missionList([], { grouped }),
+      })),
+    };
+  });
+  for (const missions of [missionChecks.generated, missionChecks.withRevokedCard]) {
+    assert.ok(missions.some(m => m.type === "COMPLETE_PROFILE"));
+    assert.ok(missions.some(m => m.type === "SELF_INITIAL_RATING"));
+    assert.ok(missions.every(m => !m.hiddenCard && m.type !== "HIDDEN_CARD"));
+  }
+  for (const rendering of missionChecks.renderings) {
+    assert.match(rendering.mixed, /Visible mission/);
+    assert.doesNotMatch(rendering.mixed, /Secret|Miss\u00e3o escondida|mission-competitions/);
+    assert.equal(rendering.onlyHidden, rendering.empty);
+  }
   for (const kind of ["event", "mission"]) {
     for (const width of [320, 390, 430, 1440]) {
       await page.setViewportSize({ width, height: 900 });
+      if (await page.locator("#event-editor").isVisible()) await page.locator("#close-editor").click();
       await page
         .locator(kind === "event" ? "#new-event" : "#new-mission")
         .click();
       const rarity = page.locator('#event-editor [name="rarity"]');
+      await page.locator(".event-optional-fields summary").first().click();
       assert.equal(await rarity.locator("option").count(), 7);
       await rarity.selectOption("ultimate");
       assert.equal(await page.locator("#event-rarity-preview").getAttribute("data-rarity"), "ultimate");
@@ -113,6 +152,7 @@ try {
       );
     }
   }
+  await page.locator("#close-editor").click();
   await page.evaluate(async () => {
     const { missionList } = await import("./js/missions.js");
     document.querySelector("main").innerHTML = missionList([{

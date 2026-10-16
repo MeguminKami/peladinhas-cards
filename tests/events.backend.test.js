@@ -38,6 +38,45 @@ const payload = () => ({
   needsConfirmation: true,
   tieBreak: "uid",
 });
+
+test("star missions: server validation, authoritative aggregates, rolling windows and one reward per period", async (t) => {
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="star-admin", uid="star-member";
+  for (const id of [owner,uid]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  const action=(action,data={})=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  const objective={metric:"ratingGames",target:2,attributes:["overall","passing"],threshold:4,comparison:"gte",combine:"all",minRatings:3};
+  const config={...payload(),kind:"mission",method:"objective",winnerCount:1,positions:[prize(5)],audience:{mode:"selected",memberIds:[uid]},objective,openNow:true};
+  await assert.rejects(action("create",{...config,objective:{...objective,attributes:["pace"]}}));
+  await assert.rejects(action("create",{...config,scope:"group"}));
+  const {id}=await action("create",config);
+  const claim=()=>claimMission.run({auth:{uid},data:{eventId:id,progress:999}});
+  for(let i=0;i<3;i++) await db.doc(`games/star-${i}`).set({status:"closed",closedAt:Timestamp.fromDate(new Date(`2026-10-${21+i}T09:00:00Z`)),teamA:{starters:[uid],bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:2,teamB:1}});
+  await assert.rejects(claim());
+  const summary=async(i,count=3,value=4.5)=>db.doc(`gameSummaries/star-${i}`).set({...(await db.doc(`games/star-${i}`).get()).data(),players:{[uid]:{overall:value,passing:value,evaluatedAt:`2026-10-${21+i}T10:00:00Z`,ratingCounts:{overall:count,passing:count}}}});
+  await summary(0,2); await summary(1,2);
+  await assert.rejects(claim());
+  await summary(0); await summary(1);
+  await claim(); await claim();
+  assert.equal((await db.collection("eventRewards").where("eventId","==",id).get()).size,1);
+  const rolling=await action("create",{...config,objective:{...objective,metric:"ratingAverage",target:3}});
+  const rollingClaim=()=>claimMission.run({auth:{uid},data:{eventId:rolling.id}});
+  await assert.rejects(rollingClaim());
+  await summary(2,3,1);
+  await assert.rejects(rollingClaim());
+  await summary(2);
+  const detail=await getEvent.run({auth:{uid},data:{eventId:rolling.id}});
+  assert.equal(detail.progress[0].ratingState.averages.overall,4.5);
+  await rollingClaim();
+  const race=await action("create",{...config,kind:"event",needsConfirmation:true});
+  await action("prepare",{eventId:race.id});
+  const stored=(await db.doc(`events/${race.id}`).get()).data();
+  assert.equal(stored.ranking[0].eligible,true);
+  assert.equal(stored.ranking[0].reachedAt,"2026-10-22T10:00:00.000Z");
+  const stale=await action("create",{...config,objective:{...objective,target:3}});
+  await db.doc("games/star-2").update({closedAt:Timestamp.fromDate(new Date("2026-10-23T11:00:00Z"))});
+  await assert.rejects(claimMission.run({auth:{uid},data:{eventId:stale.id}}));
+});
 test("eventos modernos: permissão, privacidade, votos, revisão, pódio, entrega única e anulação", async (t) => {
   t.mock.timers.enable({
     apis: ["Date"],

@@ -12,7 +12,13 @@ import {
   BALANCE_SETTINGS,
 } from "./team-balance.js";
 import * as DB from "./db.js";
-import { participants, formatDate, asDate, matchPerformance } from "./utils.js";
+import {
+  participants,
+  formatDate,
+  asDate,
+  matchPerformance,
+  FEEDBACK,
+} from "./utils.js";
 import {
   esc,
   pageHead,
@@ -26,12 +32,38 @@ import {
 import { icon } from "./icons.js";
 import { card } from "./cards.js";
 import { youtubeVideoId, youtubePlayer } from "./youtube.js";
-export function gameRows(games) {
-  return `<div class="game-list">${games.map((g) => `<a class="game-row" href="#/game/${g.id}"><span class="game-symbol">${icon("games")}</span><div><b>${esc(g.title)}</b><small>${formatMatchDate(g.scheduledAt)} · ${esc(g.location || "Local a definir")}</small></div><span class="pill ${g.status === "closed" ? "" : "success"}">${{ draft: "Rascunho", open: "Aberto", closed: "Encerrado" }[g.status]}</span><strong>${g.status === "closed" ? `${g.score.teamA} — ${g.score.teamB}` : "VS"}</strong>${icon("arrow")}</a>`).join("")}</div>`;
+export function matchStars(value) {
+  return Number.isFinite(value)
+    ? `<span class="match-stars" aria-label="${value.toFixed(1)} de 5 estrelas"><span aria-hidden="true">★★★★★<span style="width:${Math.max(0, Math.min(100, value * 20))}%">★★★★★</span></span><b>${value.toLocaleString("pt-PT", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></span>`
+    : '<span class="muted">Por avaliar</span>';
+}
+export function matchPositions(game, players) {
+  return Object.fromEntries(
+    participants(game).flatMap((uid) => {
+      // Preserve the position recorded in closed games when today's card changes.
+      const position =
+        (game.status === "closed" && game.positions?.[uid]) ||
+        players.find((player) => player.uid === uid)?.primaryPosition;
+      return ["GR", "DEF", "ALA", "MED", "AV"].includes(position)
+        ? [[uid, position]]
+        : [];
+    }),
+  );
+}
+export function gameRows(games, { uid, summaries = [] } = {}) {
+  return `<div class="game-list">${games
+    .map((g) => {
+      const ownRating =
+        g.status === "closed" && uid && participants(g).includes(uid)
+          ? `<div class="game-own-rating"><small>A tua avaliação</small>${matchStars(summaries.find((row) => row.id === g.id)?.players?.[uid]?.overall)}</div>`
+          : "";
+      return `<a class="game-row ${ownRating ? "has-own-rating" : ""}" href="#/game/${g.id}"><span class="game-symbol">${icon("games")}</span><div class="game-row-info"><b>${esc(g.title)}</b><small>${formatMatchDate(g.scheduledAt)} · ${esc(g.location || "Local a definir")}</small></div>${ownRating}<span class="pill ${g.status === "closed" ? "" : "success"}">${{ draft: "Rascunho", open: "Aberto", closed: "Encerrado" }[g.status]}</span><strong>${g.status === "closed" ? `${g.score.teamA} — ${g.score.teamB}` : "VS"}</strong>${icon("arrow")}</a>`;
+    })
+    .join("")}</div>`;
 }
 export function gamesPage(ctx) {
   ctx.render(
-    `${pageHead("Dentro de campo", "Jogos", "Organiza a próxima Peladinha e revê os resultados.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "")}${ctx.league.games.length ? gameRows(ctx.league.games) : empty("Ainda não existem jogos", "As equipas e os resultados ficam todos aqui.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}`,
+    `${pageHead("Dentro de campo", "Jogos", "Organiza a próxima Peladinha e revê os resultados.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "")}${ctx.league.games.length ? gameRows(ctx.league.games, { uid: ctx.user.uid, summaries: ctx.league.summaries }) : empty("Ainda não existem jogos", "As equipas e os resultados ficam todos aqui.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}`,
   );
 }
 function dateInput(timestamp) {
@@ -81,8 +113,45 @@ export async function gamePage(ctx, id) {
       ),
     );
   ctx.render(
-    `${pageHead("Peladinha", saved?.title || "Criar jogo", editable ? "Escolhe as equipas e guarda o jogo." : "Equipas e resultado desta Peladinha.", linkButton("#/games", "Todos os jogos", "ghost"))}<form id="game-form" class="content-stack"><div class="panel game-details-panel"><div class="form-grid"><label>Título<input name="title" required maxlength="80" value="${esc(g.title)}" ${editable ? "" : "disabled"}></label><label>Data e hora (Lisboa)<input type="datetime-local" name="scheduledAt" required value="${g.scheduledAt}" ${editable ? "" : "disabled"}></label><label>Local<input name="location" maxlength="120" value="${esc(g.location)}" ${editable ? "" : "disabled"}></label><input type="hidden" name="notes" value="${esc(g.notes)}"></div></div><div id="team-builder" class="content-stack"></div><div class="panel score-panel"><div class="score-heading"><h2>Resultado</h2></div><div class="score"><label>Equipa A<input type="number" min="0" max="999" name="scoreA" value="${g.score.teamA}" ${editable ? "" : "disabled"}></label><b>—</b><label>Equipa B<input type="number" min="0" max="999" name="scoreB" value="${g.score.teamB}" ${editable ? "" : "disabled"}></label></div><div id="match-performances"></div></div>${editable ? `<div class="actions"><button class="btn btn-primary" name="action" value="save">Guardar jogo</button>${saved && g.status === "draft" ? '<button class="btn btn-secondary" name="action" value="open">Abrir jogo</button>' : saved && g.status === "open" ? '<button class="btn btn-secondary" name="action" value="draft">Tornar rascunho</button><button class="btn btn-success" name="action" value="close">Encerrar jogo</button>' : ""}</div>` : ""}${saved && (ctx.user.role === "admin" || (ctx.user.role === "dbs" && g.status !== "closed")) ? '<div class="actions"><button type="button" id="delete-game" class="btn btn-danger">Eliminar jogo</button></div>' : ""}${saved?.status === "closed" && participants(saved).includes(ctx.user.uid) ? linkButton(`#/game/${id}/feedback`, "Avaliar jogadores", "primary", "missions") : ""}</form>`,
+    `${pageHead("Peladinha", saved?.title || "Criar jogo", editable ? "Escolhe as equipas e guarda o jogo." : "Equipas e resultado desta Peladinha.", "")}<form id="game-form" class="content-stack game-workspace"><div id="game-details" class="panel game-details-panel"><div class="form-grid"><label>Título<input name="title" required maxlength="80" value="${esc(g.title)}" ${editable ? "" : "disabled"}></label><label>Data e hora (Lisboa)<input type="datetime-local" name="scheduledAt" required value="${g.scheduledAt}" ${editable ? "" : "disabled"}></label><label>Local<input name="location" maxlength="120" value="${esc(g.location)}" ${editable ? "" : "disabled"}></label><input type="hidden" name="notes" value="${esc(g.notes)}"></div></div><div id="team-builder" class="content-stack"></div><div id="game-result" class="panel score-panel"><div class="score-heading"><h2>Resultado</h2></div><div class="score"><label>Equipa A<input type="number" min="0" max="999" name="scoreA" value="${g.score.teamA}" ${editable ? "" : "disabled"}></label><b>—</b><label>Equipa B<input type="number" min="0" max="999" name="scoreB" value="${g.score.teamB}" ${editable ? "" : "disabled"}></label></div><div id="game-ratings"></div><div id="match-performances"></div></div><div id="game-video"></div><div class="game-actionbar">${linkButton("#/games", "Todos os jogos", "ghost")}<button type="button" id="share-game" class="btn btn-ghost">Partilhar jogo</button>${editable ? `<div class="actions"><button class="btn btn-primary" name="action" value="save">Guardar jogo</button>${saved && g.status === "draft" ? '<button class="btn btn-secondary" name="action" value="open">Abrir jogo</button>' : saved && g.status === "open" ? '<button class="btn btn-secondary" name="action" value="draft">Tornar rascunho</button><button class="btn btn-success" name="action" value="close">Encerrar jogo</button>' : ""}</div>` : ""}${saved && (ctx.user.role === "admin" || (ctx.user.role === "dbs" && g.status !== "closed")) ? '<div class="actions"><button type="button" id="delete-game" class="btn btn-danger">Eliminar jogo</button></div>' : ""}${saved?.status === "closed" && participants(saved).includes(ctx.user.uid) ? linkButton(`#/game/${id}/feedback`, "Avaliar jogadores", "primary", "missions") : ""}</div></form>`,
   );
+  document.querySelector("#share-game").onclick = async () => {
+    if (!saved) return toast("Guarda o jogo antes de partilhar.");
+    const url = new URL(location.href);
+    url.hash = `/game/${id}`;
+    try {
+      if (navigator.share)
+        await navigator.share({
+          title: saved.title,
+          text: `${saved.title} · ${formatMatchDate(saved.scheduledAt)}`,
+          url: url.href,
+        });
+      else {
+        await navigator.clipboard.writeText(url.href);
+        toast("Link do jogo copiado.");
+      }
+    } catch (error) {
+      if (error.name !== "AbortError")
+        toast(
+          "Não foi possível partilhar o jogo. Copia o endereço da página.",
+          "error",
+        );
+    }
+  };
+  if (saved?.status === "closed") {
+    const summary =
+      ctx.league.summaries?.find((row) => row.id === id)?.players || {};
+    document.querySelector("#game-ratings").innerHTML =
+      `<section class="panel match-ratings"><div class="section-head"><div><small>O jogo aos olhos da equipa</small><h2>Estrelas do jogo</h2></div><span class="pill">Médias da comunidade</span></div><p class="muted">As estrelas vão surgindo à medida que as avaliações são enviadas. Abre um jogador para ver cada dimensão.</p><div class="match-ratings-list">${
+        participants(saved)
+          .map((uid) => {
+            const player = ctx.league.players.find((row) => row.uid === uid);
+            const rating = summary[uid] || {};
+            return `<details class="match-rating-player ${uid === ctx.user.uid ? "is-self" : ""}"><summary><span>${esc(player?.displayName || player?.username || "Jogador inativo")}${uid === ctx.user.uid ? " <small>Tu</small>" : ""}</span>${matchStars(rating.overall)}</summary><div class="match-rating-dimensions">${FEEDBACK.map(([key, label]) => `<div><span>${label}</span>${matchStars(rating[key])}</div>`).join("")}</div></details>`;
+          })
+          .join("") || '<p class="muted">Este jogo não tem jogadores.</p>'
+      }</div></section>`;
+  }
   const builder = document.querySelector("#team-builder");
   document
     .querySelector("#delete-game")
@@ -112,7 +181,7 @@ export async function gamePage(ctx, id) {
   }
   const video = document.createElement("div");
   video.innerHTML = youtubePlayer(g.youtubeVideoId);
-  document.querySelector("#game-form").after(video);
+  document.querySelector("#game-video").append(video);
   fields
     .querySelector('[name="youtubeUrl"]')
     ?.addEventListener("input", (event) => {
@@ -189,7 +258,7 @@ export async function gamePage(ctx, id) {
       );
       const total = (balance.teamA.average || 0) + (balance.teamB.average || 0);
       const share = total ? (100 * (balance.teamA.average || 0)) / total : 50;
-      return `<div class="team-balance-panel"><div class="section-head"><h3>Equilíbrio · OVR</h3>${ctx.user.role === "admin" ? `<button type="button" id="balance-details" class="btn btn-icon btn-ghost" aria-label="Ver detalhes das equipas">${icon("plus")}</button>` : ""}</div><div class="balance-summary">${badge("A", difference)}${badge("B", difference == null ? null : -difference)}</div><div class="balance-scale" aria-hidden="true"><span style="width:${share}%"></span><span style="width:${100 - share}%"></span></div><div class="balance-averages"><span>Equipa A · ${number(balance.teamA.average)} OVR</span><span>Equipa B · ${number(balance.teamB.average)} OVR</span></div><div class="game-highlights">${playerHighlight("Maior OVR", ranked[0])}${playerHighlight("Menor OVR", ranked.at(-1))}</div><div class="position-leaders">${[
+      return `<div class="team-balance-panel"><div class="section-head"><h3>Equilíbrio · OVR</h3>${ctx.user.role === "admin" ? `<button type="button" id="balance-details" class="btn btn-icon btn-ghost" aria-label="Ver detalhes das equipas">${icon("plus")}</button>` : ""}</div><div class="balance-summary">${badge("A", difference)}${badge("B", difference == null ? null : -difference)}</div><div class="balance-scale" aria-hidden="true"><span style="width:${share}%"></span><span style="width:${100 - share}%"></span></div><div class="balance-averages"><span>Equipa A · ${number(balance.teamA.average)} OVR</span><span>Equipa B · ${number(balance.teamB.average)} OVR</span></div><details class="game-scouting"><summary>Destaques e melhores por posição</summary><div class="game-highlights">${playerHighlight("Maior OVR", ranked[0])}${playerHighlight("Menor OVR", ranked.at(-1))}</div><div class="position-leaders">${[
         "GR",
         "DEF",
         "ALA",
@@ -203,7 +272,7 @@ export async function gamePage(ctx, id) {
               ranked.find((p) => p.primaryPosition === position),
             )}</div>`,
         )
-        .join("")}</div></div>`;
+        .join("")}</div></details></div>`;
     }
     return `<section class="balance-audit"><div class="section-head"><h2>Equilíbrio das equipas</h2><span class="pill">${g.status === "closed" ? (frozen ? "OVR de referência guardado" : "Sem referência guardada") : "Prévia com OVR atual"}</span></div><div class="metrics"><div><small>Média OVR · Equipa A</small><b>${number(balance.teamA.average)}</b><small>${balance.teamA.rated}/${balance.teamA.count} com carta</small></div><div><small>Média OVR · Equipa B</small><b>${number(balance.teamB.average)}</b><small>${balance.teamB.rated}/${balance.teamB.count} com carta</small></div><div><small>Diferença entre equipas</small><b>${number(balance.difference)}</b></div><div><small>Desvio médio entre equipas</small><b>${number(balance.meanDeviation)}</b></div></div><div class="table-wrap"><table><thead><tr><th>Equipa</th><th>Média dos titulares</th><th>Média de todos os jogadores</th></tr></thead><tbody>${[
       ["A", balance.teamA],
@@ -230,7 +299,7 @@ export async function gamePage(ctx, id) {
                 const player = ctx.league.players.find((p) => p.uid === uid),
                   row = performance.get(uid) || { goals: 0, assists: 0 };
                 performance.set(uid, row);
-                return `<div class="match-performance-row"><b>${esc(player?.displayName || player?.username || "Jogador")}</b><label>Posição no jogo<select data-game-position="${esc(uid)}" ${editable ? "" : "disabled"}><option value="">Não registada</option>${["GR", "DEF", "ALA", "MED", "AV"].map((position) => `<option value="${position}" ${g.positions?.[uid] === position ? "selected" : ""}>${position}</option>`).join("")}</select></label>${[
+                return `<div class="match-performance-row"><b>${esc(player?.displayName || player?.username || "Jogador")}</b>${[
                   ["goals", "Golos"],
                   ["assists", "Assistências"],
                 ]
@@ -253,14 +322,6 @@ export async function gamePage(ctx, id) {
         Math.min(999, Number(input.value) + Number(button.dataset.counter)),
       );
       input.dispatchEvent(new Event("input", { bubbles: true }));
-    };
-    root.onchange = (event) => {
-      if (event.target.dataset.gamePosition) {
-        g.positions ||= {};
-        if (event.target.value)
-          g.positions[event.target.dataset.gamePosition] = event.target.value;
-        else delete g.positions[event.target.dataset.gamePosition];
-      }
     };
     root.oninput = (event) => {
       const input = event.target;
@@ -519,11 +580,7 @@ export async function gamePage(ctx, id) {
             scheduledAt: parseLisbonDateInput(f.get("scheduledAt")),
             teamA: g.teamA,
             teamB: g.teamB,
-            positions: Object.fromEntries(
-              Object.entries(g.positions || {}).filter(([uid]) =>
-                participants(g).includes(uid),
-              ),
-            ),
+            positions: matchPositions(g, ctx.league.players),
             performance: Object.fromEntries(
               ["teamA", "teamB"].map((side) => [
                 side,

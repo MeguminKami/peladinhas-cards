@@ -1,5 +1,6 @@
 import {
   ATTRIBUTES,
+  FEEDBACK,
   THEMES,
   asDate,
   participants,
@@ -28,9 +29,124 @@ export const OBJECTIVES = Object.freeze({
   unbeatenGames: "Jogos sem perder",
   goalsAndAssists: "Golos e assistências",
   cleanSheets: "Jogos sem sofrer golos",
+  ratingGames: "Estrelas · jogos com mínimo",
+  ratingAverage: "Estrelas · média dos últimos jogos",
+  ratingStreak: "Estrelas · jogos consecutivos",
+  ratingWins: "Estrelas · vitórias com mínimo",
 });
+export const isRatingObjective = (objective) =>
+  ["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(
+    objective?.metric,
+  );
+
+export function validRatingObjective(objective, scope = "individual") {
+  if (!isRatingObjective(objective)) return true;
+  return (
+    scope === "individual" &&
+    Array.isArray(objective.attributes) &&
+    objective.attributes.length > 0 &&
+    objective.attributes.length <= FEEDBACK.length &&
+    new Set(objective.attributes).size === objective.attributes.length &&
+    objective.attributes.every((key) => FEEDBACK.some(([id]) => id === key)) &&
+    ["all", "mean"].includes(objective.combine) &&
+    ["gte", "gt"].includes(objective.comparison) &&
+    Number.isFinite(objective.threshold) &&
+    objective.threshold >= 0 &&
+    objective.threshold <= 5 &&
+    !(objective.comparison === "gt" && objective.threshold === 5) &&
+    Number.isInteger(objective.minRatings) &&
+    objective.minRatings >= 1 &&
+    objective.minRatings <= 100
+  );
+}
+
+// Only server-produced community aggregates are used; missing dimensions never become zeroes.
+export function ratingObjectiveState(
+  uid,
+  objective,
+  matches,
+  date = new Date(),
+) {
+  const attributes = objective.attributes || [];
+  const valueFor = (game) => {
+    const row = game.ratingSummary?.[uid];
+    if (
+      !row ||
+      !row.evaluatedAt ||
+      +asDate(row.evaluatedAt) > +date ||
+      !attributes.length
+    )
+      return null;
+    const values = attributes.map((key) =>
+      Number.isFinite(row[key]) &&
+      row[key] >= 0 &&
+      row[key] <= 5 &&
+      (row.ratingCounts?.[key] || 0) >= objective.minRatings
+        ? row[key]
+        : null,
+    );
+    return values.every((value) => value !== null) ? values : null;
+  };
+  const passes = (values) => {
+    if (!values) return false;
+    const selected =
+      objective.combine === "mean"
+        ? [values.reduce((sum, value) => sum + value, 0) / values.length]
+        : values;
+    return selected.every((value) =>
+      objective.comparison === "gt"
+        ? value > objective.threshold
+        : value >= objective.threshold,
+    );
+  };
+  if (objective.metric === "ratingAverage") {
+    const recent = matches.slice(-objective.target);
+    const rows = recent.map(valueFor);
+    const complete = recent.length === objective.target && rows.every(Boolean);
+    const averages = complete
+      ? attributes.map(
+          (_, index) =>
+            rows.reduce((sum, row) => sum + row[index], 0) / rows.length,
+        )
+      : null;
+    return {
+      progress: passes(averages) ? objective.target : 0,
+      games: recent.length,
+      ratedGames: rows.filter(Boolean).length,
+      averages: averages
+        ? Object.fromEntries(attributes.map((key, i) => [key, averages[i]]))
+        : null,
+    };
+  }
+  let progress = 0,
+    streak = 0;
+  for (const game of matches) {
+    const qualified =
+      passes(valueFor(game)) &&
+      (objective.metric !== "ratingWins" || matchOutcome(uid, game) > 0);
+    if (objective.metric === "ratingStreak") {
+      streak = qualified ? streak + 1 : 0;
+      progress = Math.max(progress, streak);
+    } else if (qualified) progress++;
+  }
+  return { progress };
+}
 export function objectiveSummary(event) {
   const count = event.objective?.target || 1;
+  if (isRatingObjective(event.objective)) {
+    const o = event.objective;
+    const attributes = (o.attributes || [])
+      .map((key) => FEEDBACK.find(([id]) => id === key)?.[1] || key)
+      .join(" + ");
+    const criterion = `${o.comparison === "gt" ? "mais de" : "pelo menos"} ${o.threshold} estrelas ${o.combine === "mean" ? "na média de" : "em cada dimensão:"} ${attributes}`;
+    const mode = {
+      ratingGames: `Completa ${count} jogos com`,
+      ratingStreak: `Completa ${count} jogos consecutivos com`,
+      ratingWins: `Ganha ${count} jogos com`,
+      ratingAverage: `Nos últimos ${count} jogos, mantém uma média de`,
+    }[o.metric];
+    return `${mode} ${criterion}. Mínimo de ${o.minRatings} avaliações por dimensão e jogo. Só contam jogos encerrados neste período, após o desbloqueio; dimensões sem avaliação não contam. ${o.metric === "ratingAverage" ? "A janela inclui os últimos jogos disputados, mesmo quando ainda aguardam avaliações; o mínimo tem de estar cumprido no momento da verificação." : o.metric === "ratingStreak" ? "Um jogo abaixo do mínimo ou por avaliar interrompe a sequência." : "Os jogos não precisam de ser consecutivos."}`;
+  }
   const games = `${count} ${count === 1 ? "jogo" : "jogos"}`;
   const wins = `${count} ${count === 1 ? "vitória" : "vitórias"}`;
   const action = {
@@ -222,6 +338,7 @@ export function objectiveProgress(
   games,
   date = new Date(),
   teamStats = ["team", "collective"].includes(event.scope),
+  ratingDetails = false,
 ) {
   const window = periodWindow(event, date);
   const matches = games
@@ -241,6 +358,15 @@ export function objectiveProgress(
           +asDate(b.closedAt || b.scheduledAt) ||
         String(a.id).localeCompare(String(b.id)),
     );
+  if (isRatingObjective(event.objective)) {
+    const state = ratingObjectiveState(
+      uid,
+      event.objective,
+      matches,
+      new Date(Math.min(+date, window.end ? +window.end - 1 : Infinity)),
+    );
+    return ratingDetails ? state : state.progress;
+  }
   let value = 0,
     streak = 0;
   for (const game of matches) {
@@ -328,6 +454,12 @@ export function objectiveReachedAt(
   date = new Date(),
   completions = [],
 ) {
+  if (
+    isRatingObjective(event.objective) &&
+    scopedObjectiveProgress(uid, event, games, date, completions) <
+      event.objective.target
+  )
+    return null;
   const times = [
     ...new Set(
       games
@@ -341,7 +473,12 @@ export function objectiveReachedAt(
                 )
               : participants(game).includes(uid)),
         )
-        .map((game) => +asDate(game.closedAt || game.scheduledAt))
+        .flatMap((game) => [
+          +asDate(game.closedAt || game.scheduledAt),
+          ...(isRatingObjective(event.objective)
+            ? [+asDate(game.ratingSummary?.[uid]?.evaluatedAt)]
+            : []),
+        ])
         .filter((time) => time <= +date),
     ),
   ].sort((a, b) => a - b);
@@ -408,6 +545,23 @@ export function eventRanking(
     uid,
     votes: counts[uid],
     progress: progressFor(uid),
+    ...(isRatingObjective(event.objective)
+      ? {
+          ratingState: missionUnlockedAt(event, uid, completions)
+            ? objectiveProgress(
+                uid,
+                {
+                  ...event,
+                  progressStartsAt: missionUnlockedAt(event, uid, completions),
+                },
+                games,
+                date,
+                false,
+                true,
+              )
+            : null,
+        }
+      : {}),
     tieScore: scores[uid],
     ...(race ? { reachedAt: reached[uid] } : {}),
   }));

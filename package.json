@@ -17,6 +17,7 @@
     "test:backend": "firebase emulators:exec --config firebase.backend.json --project demo-peladinhas-backend --only firestore \"node --test --test-concurrency=1 tests/backend.test.js tests/card-collection.backend.test.js tests/events.backend.test.js tests/push.backend.test.js\"",
     "test:push": "node tests/push-worker.mjs && node tests/push-ui.mjs",
     "test:ui": "node tests/browser.mjs",
+    "test:game-layout": "node tests/game-layout.mjs",
     "test:review": "node tests/review.mjs",
     "test:pwa": "node scripts/build-hosting.mjs && node tests/pwa.mjs",
     "setup:push": "node scripts/setup-push.mjs",
@@ -33,7 +34,8 @@
     "test:profile": "node tests/profile-growth.mjs",
     "test:card-choice": "node tests/card-choice.mjs",
     "test:card-collection": "node tests/card-collection.mjs",
-    "test:event-scopes": "node tests/event-scopes.mjs"
+    "test:event-scopes": "node tests/event-scopes.mjs",
+    "test:event-creation": "node tests/event-creation.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

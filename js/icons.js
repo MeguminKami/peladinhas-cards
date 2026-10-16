@@ -1,4 +1,8 @@
 const paths = {
+  ratingGames: "m12 2 3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1Z M3 22h18",
+  ratingAverage: "M3 20h18 M5 16l4-5 4 2 6-8 M16 5h3v3 M4 4h5 M6.5 2v4",
+  ratingStreak: "m13 2-3 7 5-1-5 14 1-9-5 1Z M18 10l2-2 2 2 M18 15l2-2 2 2",
+  ratingWins: "M8 3h8v7a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 14v7 M8 21h8 m-4-16 1 2 2 .5-1.5 1.5.5 2-2-1-2 1 .5-2L9 7.5l2-.5Z",
   pause: "M8 5v14 M16 5v14",
   play: "m8 4 12 8-12 8Z",
   goals: "M4 20V6h16v14 M4 10h16 M8 6v14 M16 6v14 M4 15h9 M20 15h-2 M17 17h.01 M20 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
@@ -52,6 +56,7 @@ export const trendArrow = (delta) =>
   `<svg class="trend-arrow${delta < 0 ? " trend-arrow-down" : ""}" viewBox="0 0 16 20" fill="none" aria-hidden="true" focusable="false"><path class="trend-arrow-body" d="M8 1.5 14.5 8H10v9.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-facet" d="M8 1.5V17.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-edge" d="m2 7.5 6-6 6 6"/></svg>`;
 
 export function eventIcon(event = {}) {
+  if (["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(event.objective?.metric) && event.method !== "vote" && event.method !== "admin") return event.objective.metric;
   if (event.method === "vote" || (!event.method && event.kind === "vote")) return "vote";
   if (event.method === "admin") return "decision";
   return ({ games: "appearances", goals: "goals", assists: "assists", wins: "wins", winStreak: "streak", unbeatenWins: "unbeatenWins", unbeatenGames: "unbeatenGames", goalsAndAssists: "goalContributions", cleanSheets: "cleanSheets" })[event.objective?.metric] || "trophy";

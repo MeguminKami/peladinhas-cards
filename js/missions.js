@@ -16,30 +16,10 @@ import * as DB from "./db.js";
 import { ATTRIBUTES, profileComplete, participants } from "./utils.js";
 import { esc, empty, linkButton } from "./ui.js";
 import { icon, eventIcon } from "./icons.js";
-import { CARD_POLICY } from "./card-achievements.js";
-import { ACTIVE_COLLECTION_IDS } from "./card-collection.js";
 import { rewardMarkers } from "./event-presentation.js";
 export async function refreshMissionsForCurrentUser(user, league) {
   const p = league.players.find((x) => x.uid === user.uid) || user;
   const missions = [];
-  if (p.hasCard)
-    for (const id of ACTIVE_COLLECTION_IDS) {
-      const unlocked = [...(p.earnedCards || []), ...(p.specials || [])].some(
-        (card) => !card.revokedAt && (card.themeId || card.id) === id,
-      );
-      if (!unlocked && CARD_POLICY[id])
-        missions.push({
-          id: `collection-${id}`,
-          type: "HIDDEN_CARD",
-          title: "Carta por descobrir",
-          description: CARD_POLICY[id].hint,
-          done: 0,
-          total: 1,
-          href: "#/profile",
-          icon: "shield",
-          hiddenCard: true,
-        });
-    }
   if (!profileComplete(p))
     missions.push({
       id: "profile",
@@ -200,6 +180,9 @@ export async function refreshMissionsForCurrentUser(user, league) {
   return missions;
 }
 export function missionList(missions, { grouped = true } = {}) {
+  missions = missions.filter(
+    (mission) => !mission.hiddenCard && mission.type !== "HIDDEN_CARD",
+  );
   if (!missions.length)
     return empty(
       "Tudo tratado!",
@@ -217,7 +200,7 @@ export function missionList(missions, { grouped = true } = {}) {
       .map((m) => {
         const competition = m.type === "COMPETITION_OBJECTIVE";
         const percentage = Math.round((m.done / m.total) * 100);
-        return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${m.eventDescription?.trim() ? `<p class="mission-event-description">${esc(m.eventDescription.trim())}</p>` : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div><p>${esc(m.description)}</p>${rewardMarkers(m.rewards)}${m.hiddenCard ? "<small>Missão escondida · Condição revelada ao conquistar</small>" : `<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small>`}</div><span class="mission-arrow">${icon("arrow")}</span></a>`;
+        return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${m.eventDescription?.trim() ? `<p class="mission-event-description">${esc(m.eventDescription.trim())}</p>` : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div><p>${esc(m.description)}</p>${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
       })
       .join("")}</div>`;
   if (!grouped) return cards(ordered);

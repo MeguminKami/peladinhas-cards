@@ -2,10 +2,22 @@ import { EVENT_RARITIES, eventRarityId, rarityBadge } from "./event-rarity.js";
 import { CARD_POLICY } from "./card-achievements.js";
 import { DIFFICULTY_LABELS } from "./labels.js";
 import * as DB from "./db.js";
-import { ATTRIBUTES, THEMES, themeName, asDate, formatDate } from "./utils.js";
+import {
+  ATTRIBUTES,
+  FEEDBACK,
+  THEMES,
+  themeName,
+  asDate,
+  formatDate,
+  formatDateTime,
+} from "./utils.js";
+import { icon, eventIcon } from "./icons.js";
 import { votersFor, eventDeadline } from "./event-rules.js";
 import {
   OBJECTIVES,
+  isRatingObjective,
+  validRatingObjective,
+  objectiveSummary,
   medal,
   positionLabel,
   rewardText,
@@ -119,6 +131,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         ? "Cada participante cumpre um objetivo e recebe a recompensa de conclusão. Acompanha missões ativas, agendadas e concluídas."
         : "Define uma classificação, escolhe quantos jogadores recebem prémios e confirma os resultados.";
     editor.hidden = true;
+    delete root.querySelector(".event-workspace").dataset.editing;
     drawList();
   };
   root.querySelector("#events-tab").onclick = () => selectArea("event");
@@ -168,11 +181,16 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     mode: section.querySelector('[name="rewardMode"]').value,
     statDuration: section.querySelector('[name="statDuration"]').value,
     cardDuration: section.querySelector('[name="cardDuration"]').value,
-    specialId: section.querySelector('[name="specialId"]').value || null,
+    specialId:
+      section.querySelector('[name="rewardMode"]').value === "stats"
+        ? null
+        : section.querySelector('[name="specialId"]').value || null,
     boosts: Object.fromEntries(
       ATTRIBUTES.map(([key]) => [
         key,
-        Number(section.querySelector(`[name="boost-${key}"]`).value),
+        section.querySelector('[name="rewardMode"]').value === "card"
+          ? 0
+          : Number(section.querySelector(`[name="boost-${key}"]`).value),
       ]),
     ),
   });
@@ -181,6 +199,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     selectArea(isMission ? "mission" : "event");
     editing = event.id || null;
     editor.hidden = false;
+    root.querySelector(".event-workspace").dataset.editing = "true";
     editor.dataset.creationType = isMission ? "mission" : "event";
     const start = event.startsAt || new Date(),
       end =
@@ -241,6 +260,126 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     )}</select></label></div><div class="event-switches"><label class="check-label"><input name="allowSelfVote" type="checkbox" ${event.allowSelfVote ? "checked" : ""}>Permitir votar em si próprio</label><label class="check-label"><input name="liveResults" type="checkbox" ${event.liveResults ? "checked" : ""}>Mostrar contagens durante a votação</label><label class="check-label"><input name="needsConfirmation" type="checkbox" ${event.needsConfirmation !== false ? "checked" : ""}>ADMIN confirma antes da entrega</label></div></fieldset><fieldset class="event-form-section"><legend>${isMission ? "Recompensa por conclusão" : "Prémios da classificação"}</legend><div id="event-questions" class="content-stack"></div><p class="muted">A recompensa só é revelada depois da atribuição.</p></fieldset><div class="actions event-create-actions"><button class="btn btn-ghost" type="button" id="event-preview">Pré-visualizar</button><button class="btn btn-secondary" name="submitAction" value="draft">Guardar rascunho</button><button class="btn btn-primary" name="submitAction" value="open">${isMission ? "Publicar missão" : "Publicar evento"}</button></div></form>`;
     const form = editor.querySelector("form"),
       positions = editor.querySelector("#event-questions");
+    editor.querySelector(".section-head .eyebrow").textContent =
+      "DESAFIOS DA LIGA";
+    const ratingFields = document.createElement("div");
+    ratingFields.className = "event-rating-config content-stack";
+    const rating = event.objective || {};
+    ratingFields.innerHTML = `<div class="event-rating-presets" aria-label="Exemplos de objetivos por estrelas">${[
+      ["ratingGames", "Regularidade", "4 estrelas em 5 jogos"],
+      ["ratingAverage", "Em forma", "Média superior a 4 nos últimos 3 jogos"],
+      ["ratingStreak", "Consistência", "4 estrelas em 3 jogos seguidos"],
+      ["ratingWins", "Vitórias de classe", "3 vitórias com 4 estrelas"],
+    ]
+      .map(
+        ([metric, title, description]) =>
+          `<button type="button" class="btn btn-ghost" data-rating-preset="${metric}">${icon(eventIcon({ objective: { metric } }))}<span><b>${title}</b><small>${description}</small></span></button>`,
+      )
+      .join(
+        "",
+      )}</div><div id="rating-conditions"><p class="muted">Escolhe as dimensões avaliadas em estrelas no final do jogo.</p><div class="event-rating-attributes">${FEEDBACK.map(([key, label]) => `<label class="check-label"><input type="checkbox" name="ratingAttribute" value="${key}" ${(rating.attributes || ["overall"]).includes(key) ? "checked" : ""}>${label}</label>`).join("")}</div><div class="form-grid"><label>Estrelas exigidas<input name="ratingThreshold" type="number" min="0" max="5" step="0.1" value="${rating.threshold ?? 4}"></label><label>Comparação<select name="ratingComparison">${options(
+      [
+        ["gte", "Pelo menos (≥)"],
+        ["gt", "Superior a (>)"],
+      ],
+      rating.comparison || "gte",
+    )}</select></label><label>Várias dimensões<select name="ratingCombine">${options(
+      [
+        ["all", "Exigir mínimo em cada dimensão"],
+        ["mean", "Usar a média das dimensões escolhidas"],
+      ],
+      rating.combine || "all",
+    )}</select></label><label>Avaliações mínimas por dimensão e jogo<input name="ratingMinRatings" type="number" min="1" max="100" step="1" value="${rating.minRatings ?? 3}"></label></div><p class="muted">Jogos por avaliar não são ignorados na janela dos últimos jogos e interrompem sequências. A janela começa no início do período ou no desbloqueio da missão. Para médias, o critério tem de estar cumprido quando se verifica o objetivo.</p></div><div id="rating-objective-preview" class="event-rating-preview" role="status" aria-live="polite"></div>`;
+    const presets = document.createElement("details");
+    presets.className = "event-optional-fields event-rating-examples";
+    presets.innerHTML =
+      "<summary>Começar com um exemplo <small>Opcional</small></summary>";
+    presets.append(ratingFields.querySelector(".event-rating-presets"));
+    ratingFields.prepend(presets);
+    const ratingAdvanced = document.createElement("details");
+    ratingAdvanced.className = "event-optional-fields";
+    ratingAdvanced.innerHTML =
+      "<summary>Critérios de avaliação</summary><div class='form-grid'></div>";
+    for (const key of ["ratingComparison", "ratingCombine", "ratingMinRatings"])
+      ratingAdvanced
+        .querySelector(".form-grid")
+        .append(ratingFields.querySelector(`[name="${key}"]`).closest("label"));
+    const conditions = ratingFields.querySelector("#rating-conditions");
+    ratingAdvanced.append(conditions.querySelector(":scope > p:last-child"));
+    conditions.append(ratingAdvanced);
+    form.elements.metric.closest(".form-grid").after(ratingFields);
+    for (const key of [
+      "target",
+      "winnerCount",
+      "votesPerUser",
+      "minVotes",
+      "maxRepeats",
+      "ratingThreshold",
+      "ratingMinRatings",
+    ])
+      form.elements[key].required = true;
+    const readObjective = () => ({
+      metric: form.elements.metric.value,
+      target: Number(form.elements.target.value),
+      ...(isRatingObjective({ metric: form.elements.metric.value })
+        ? {
+            attributes: [
+              ...form.querySelectorAll('[name="ratingAttribute"]:checked'),
+            ].map((input) => input.value),
+            threshold: Number(form.elements.ratingThreshold.value),
+            comparison: form.elements.ratingComparison.value,
+            combine: form.elements.ratingCombine.value,
+            minRatings: Number(form.elements.ratingMinRatings.value),
+          }
+        : {}),
+    });
+    const refreshRating = () => {
+      const objective = readObjective();
+      const enabled = form.elements.method.value === "objective";
+      const stars = enabled && isRatingObjective(objective);
+      ratingFields.hidden = !stars;
+      ratingFields
+        .querySelectorAll("[data-rating-preset]")
+        .forEach((button) =>
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.ratingPreset === objective.metric),
+          ),
+        );
+      ratingFields.querySelector("#rating-conditions").hidden = !stars;
+      ratingFields.querySelector("#rating-objective-preview").hidden = !stars;
+      ratingFields
+        .querySelectorAll("#rating-conditions input, #rating-conditions select")
+        .forEach((input) => (input.disabled = !stars));
+      if (stars) {
+        form.elements.scope.value = "individual";
+        form.elements.scope.disabled = true;
+        ratingFields.querySelector("#rating-objective-preview").textContent =
+          objectiveSummary({ objective }).split(". Mínimo")[0] +
+          `. Mínimo de ${objective.minRatings} avaliações por dimensão e jogo.`;
+      } else form.elements.scope.disabled = false;
+      const targetLabel = form.elements.target.closest("label");
+      targetLabel.firstChild.textContent =
+        objective.metric === "ratingAverage"
+          ? "Últimos quantos jogos"
+          : stars
+            ? "Número de jogos a cumprir"
+            : "Quantidade alvo";
+    };
+    ratingFields.querySelectorAll("[data-rating-preset]").forEach(
+      (button) =>
+        (button.onclick = () => {
+          const metric = button.dataset.ratingPreset;
+          form.elements.metric.value = metric;
+          form.elements.target.value = metric === "ratingGames" ? "5" : "3";
+          form.elements.ratingThreshold.value = "4";
+          form.elements.ratingComparison.value =
+            metric === "ratingAverage" ? "gt" : "gte";
+          refreshRating();
+        }),
+    );
+    form.addEventListener("input", refreshRating);
+    form.addEventListener("change", refreshRating);
     form.elements.rarity.addEventListener("change", () => {
       const preview = editor.querySelector("#event-rarity-preview");
       preview.dataset.rarity = form.elements.rarity.value;
@@ -260,34 +399,74 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     }
 
     const sections = [...form.querySelectorAll("fieldset.event-form-section")];
-    const steps = [
-      document.createElement("div"),
-      document.createElement("div"),
-      document.createElement("div"),
+    const stepLabels = [
+      "Identidade",
+      isMission ? "Objetivo" : "Regras",
+      "Participantes e datas",
+      "Recompensas",
+      "Revisão",
     ];
+    const stepDescriptions = [
+      "Dá um nome ao desafio e escolhe como o apresentas à liga.",
+      isMission
+        ? "Define o que cada jogador precisa de cumprir."
+        : "Escolhe como se chega à classificação final.",
+      "Escolhe quem participa e quando o desafio está disponível.",
+      isMission
+        ? "Define a recompensa de cada conclusão."
+        : "Define o prémio de cada posição da classificação.",
+      "Confirma as escolhas antes de guardar ou publicar.",
+    ];
+    const steps = stepLabels.map(() => document.createElement("div"));
     steps.forEach((step, i) => {
       step.className = "event-editor-step content-stack";
       step.dataset.step = String(i);
     });
     form.prepend(...steps);
-    steps[0].append(sections[0], sections[1]);
+    steps[0].append(sections[0]);
     steps[1].append(sections[2]);
-    steps[2].append(sections[3]);
+    steps[2].append(sections[1]);
+    steps[3].append(sections[3]);
+    steps[4].innerHTML =
+      '<div id="event-review" class="event-review-grid"></div>';
+    steps.forEach((step, index) =>
+      step.insertAdjacentHTML(
+        "afterbegin",
+        `<header class="event-step-heading"><span class="eyebrow">ETAPA ${index + 1} DE ${steps.length}</span><h3 tabindex="-1">${stepLabels[index]}</h3><p>${stepDescriptions[index]}</p></header>`,
+      ),
+    );
+    steps.forEach((step) =>
+      step
+        .querySelector("header")
+        .insertAdjacentHTML(
+          "afterend",
+          '<p class="event-editor-error" role="alert" hidden></p>',
+        ),
+    );
     const navigation = document.createElement("div");
     navigation.className = "event-editor-navigation";
     navigation.innerHTML = `<button type="button" class="btn btn-ghost" id="editor-back">← Anterior</button><span id="editor-step-note"></span><button type="button" class="btn btn-primary" id="editor-next">Continuar →</button>`;
     form.append(navigation);
+    navigation.append(form.querySelector(".event-create-actions"));
+    form.noValidate = true;
     editor
       .querySelector(".section-head")
       .insertAdjacentHTML(
         "afterend",
-        `<p class="event-editor-intro">${isMission ? "Define um objetivo e a recompensa de quem o cumprir." : "Define a classificação e os prémios de cada posição."}</p><nav class="event-editor-steps" aria-label="Passos de criação">${["Detalhes", isMission ? "Objetivo" : "Classificação", "Recompensas"].map((label, i) => `<button type="button" data-editor-step="${i}"><span>${i + 1}</span>${label}</button>`).join("")}</nav>`,
+        `<p class="event-editor-intro">${isMission ? "Um objetivo claro. Uma recompensa por conclusão." : "Uma competição com regras e prémios claros."}</p><nav class="event-editor-steps" aria-label="Passos de criação">${stepLabels.map((label, i) => `<button type="button" data-editor-step="${i}" aria-controls="event-creation-step-${i}" aria-label="Etapa ${i + 1}: ${label}"><span aria-hidden="true">${i + 1}</span><b class="event-step-full" aria-hidden="true">${label}</b><b class="event-step-short" aria-hidden="true">${["Nome", isMission ? "Meta" : "Regras", "Agenda", "Prémios", "Rever"][i]}</b></button>`).join("")}</nav>`,
       );
     let currentStep = 0;
+    form.addEventListener("input", () => {
+      steps[currentStep].querySelector(".event-editor-error").hidden = true;
+    });
+    form.addEventListener("change", () => {
+      steps[currentStep].querySelector(".event-editor-error").hidden = true;
+    });
     const showStep = (step) => {
       currentStep = step;
       steps.forEach((element, i) => {
         element.hidden = i !== step;
+        element.id = `event-creation-step-${i}`;
       });
       editor
         .querySelectorAll("[data-editor-step]")
@@ -297,22 +476,82 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
             Number(button.dataset.editorStep) === step ? "step" : "false",
           ),
         );
-      form.querySelector(".event-create-actions").hidden = step !== 2;
+      form.querySelector(".event-create-actions").hidden =
+        step !== steps.length - 1;
       form.querySelector("#editor-back").hidden = step === 0;
-      form.querySelector("#editor-next").hidden = step === 2;
+      form.querySelector("#editor-next").hidden = step === steps.length - 1;
+      form.querySelector("#editor-next").textContent =
+        step === steps.length - 2 ? "Rever escolhas →" : "Continuar →";
       form.querySelector("#editor-step-note").textContent =
-        `Passo ${step + 1} de 3`;
+        `Passo ${step + 1} de ${steps.length}`;
+      if (step === steps.length - 1) renderReview();
+    };
+    const validateStep = (index) => {
+      const error = steps[index].querySelector(".event-editor-error");
+      error.hidden = true;
+      let message = "";
+      if (index === 0 && !form.elements.title.value.trim())
+        message = "Dá um título ao desafio para continuar.";
+      if (
+        index === 1 &&
+        form.elements.method.value === "objective" &&
+        !validRatingObjective(readObjective(), form.elements.scope.value)
+      )
+        message =
+          "Escolhe as dimensões, as estrelas exigidas e um mínimo válido de avaliações.";
+      if (
+        index === 2 &&
+        isMission &&
+        form.elements.unlockMode.value !== "none" &&
+        !form.elements.prerequisiteIds.selectedOptions.length
+      )
+        message =
+          "Escolhe as missões que precisam de ser concluídas antes desta.";
+      if (
+        index === 3 &&
+        ![...positions.children]
+          .map(readReward)
+          .every((reward) => validEventReward(reward, themes))
+      )
+        message =
+          "Completa a recompensa: escolhe uma carta ou atribui melhorias aos atributos, dentro dos limites indicados.";
+      if (message) {
+        showStep(index);
+        error.textContent = message;
+        error.hidden = false;
+        error.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        return false;
+      }
+      const invalid = [
+        ...steps[index].querySelectorAll("input, select, textarea"),
+      ].find((input) => {
+        const hidden = input.closest("[hidden]");
+        return (!hidden || hidden === steps[index]) && !input.checkValidity();
+      });
+      if (!invalid) return true;
+      showStep(index);
+      const details = invalid.closest("details");
+      if (details) details.open = true;
+      invalid.reportValidity();
+      return false;
+    };
+    const navigate = (step) => {
+      showStep(step);
+      steps[step].querySelector("h3").focus({ preventScroll: true });
+      editor.scrollIntoView({ behavior: "smooth", block: "start" });
     };
     editor
       .querySelectorAll("[data-editor-step]")
       .forEach(
         (button) =>
-          (button.onclick = () => showStep(Number(button.dataset.editorStep))),
+          (button.onclick = () => navigate(Number(button.dataset.editorStep))),
       );
     form.querySelector("#editor-back").onclick = () =>
-      showStep(Math.max(0, currentStep - 1));
-    form.querySelector("#editor-next").onclick = () =>
-      showStep(Math.min(2, currentStep + 1));
+      navigate(Math.max(0, currentStep - 1));
+    form.querySelector("#editor-next").onclick = () => {
+      if (validateStep(currentStep))
+        navigate(Math.min(steps.length - 1, currentStep + 1));
+    };
     showStep(0);
     form.addEventListener(
       "invalid",
@@ -328,12 +567,14 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     const presentation = document.createElement("details");
     presentation.className = "event-optional-fields";
     presentation.innerHTML =
-      "<summary>Descrição, imagem e regras · opcional</summary>";
-    for (const key of ["description", "image", "rules"])
+      "<summary>Personalizar apresentação <small>Opcional</small></summary><p class='muted'>Descrição, imagem e raridade visual para a página do desafio.</p>";
+    for (const key of ["description", "image", "rarity"])
       presentation.append(
         form.elements[key].closest(key === "image" ? ".field-wide" : "label"),
       );
     sections[0].append(presentation);
+    presentation.append(form.querySelector("#event-rarity-preview"));
+    sections[2].append(form.elements.rules.closest("label"));
     if (!isMission) {
       const methodCards = document.createElement("div");
       methodCards.className = "event-method-options";
@@ -378,7 +619,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         .join(
           "",
         )}</select><small>Escolhe uma ou várias missões. Só contam jogos finalizados depois do desbloqueio. As recompensas anteriores podem ter expirado; as conclusões continuam válidas.</small></label>`;
-      steps[1].append(gate);
+      steps[2].append(gate);
     }
     const votingSettings = document.createElement("details");
     votingSettings.className = "event-optional-fields";
@@ -397,11 +638,118 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         .querySelector(".form-grid")
         .append(form.elements[key].closest("label"));
     sections[2].append(votingSettings);
-    if (isMission)
-      sections[2].insertAdjacentHTML(
-        "afterbegin",
-        '<p class="event-context-note">Cada jogador recebe a recompensa ao cumprir o objetivo. O progresso é verificado nos jogos finalizados.</p>',
+    const groupFields = (parent, title, keys) => {
+      const group = document.createElement("section");
+      group.className = "event-config-group";
+      group.innerHTML = `<h4>${title}</h4><div class="form-grid"></div>`;
+      keys.forEach((key) =>
+        group
+          .querySelector(".form-grid")
+          .append(form.elements[key].closest("label")),
       );
+      parent.append(group);
+      return group;
+    };
+    const objectiveGroup = groupFields(sections[2], "A meta a atingir", [
+      "metric",
+      "target",
+      "scope",
+      "difficulty",
+    ]);
+    const objectiveOptions = document.createElement("details");
+    objectiveOptions.className = "event-optional-fields";
+    objectiveOptions.innerHTML =
+      "<summary>Classificar dificuldade <small>Opcional</small></summary>";
+    objectiveOptions.append(form.elements.difficulty.closest("label"));
+    objectiveGroup.append(objectiveOptions);
+    objectiveGroup.append(ratingFields, objectiveOptions);
+    const objectiveFamilies = document.createElement("div");
+    objectiveFamilies.className = "event-choice-grid";
+    objectiveFamilies.innerHTML = `<button type="button" data-objective-family="results"><strong>Resultados dos jogos</strong><span>Jogos, golos, assistências e vitórias.</span></button><button type="button" data-objective-family="stars"><strong>Avaliações em estrelas</strong><span>Desempenho avaliado pelos jogadores.</span></button>`;
+    objectiveGroup.querySelector("h4").after(objectiveFamilies);
+    const rememberedMetrics = { results: "games", stars: "ratingGames" };
+    let resultScope = form.elements.scope.value;
+    const selectObjectiveFamily = (family) => {
+      const stars = family === "stars";
+      const current = form.elements.metric.value;
+      if (current)
+        rememberedMetrics[
+          isRatingObjective({ metric: current }) ? "stars" : "results"
+        ] = current;
+      form.elements.metric.innerHTML = options(
+        Object.entries(OBJECTIVES).filter(
+          ([metric]) => isRatingObjective({ metric }) === stars,
+        ),
+        rememberedMetrics[family],
+      );
+      objectiveFamilies
+        .querySelectorAll("button")
+        .forEach((button) =>
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.objectiveFamily === family),
+          ),
+        );
+    };
+    selectObjectiveFamily(
+      isRatingObjective(event.objective) ? "stars" : "results",
+    );
+    objectiveFamilies.onclick = (e) => {
+      const button = e.target.closest("[data-objective-family]");
+      if (!button) return;
+      if (!isRatingObjective({ metric: form.elements.metric.value }))
+        resultScope = form.elements.scope.value;
+      selectObjectiveFamily(button.dataset.objectiveFamily);
+      if (button.dataset.objectiveFamily === "results")
+        form.elements.scope.value = resultScope;
+      update();
+      refreshRating();
+    };
+    const votingGroup = groupFields(
+      sections[2],
+      "Classificação e visibilidade",
+      ["tieBreak", "liveResults"],
+    );
+    const voteLimits = groupFields(sections[2], "Regras da votação", [
+      "votesPerUser",
+      "minVotes",
+    ]);
+    sections[2].insertBefore(voteLimits, votingSettings);
+    votingSettings.querySelector("summary").textContent =
+      "Desempate e visibilidade · opcional";
+    groupFields(sections[1], "Quando acontece", [
+      "startsAt",
+      "indefinite",
+      "endsAt",
+      "month",
+      "votingStartsAt",
+      "votingEndsAt",
+    ]);
+    const audienceGroup = groupFields(sections[1], "Quem participa", [
+      "audience",
+      "gameId",
+      "memberIds",
+    ]);
+    groupFields(sections[1], "Repetição da missão", [
+      "cadence",
+      "maxRepeats",
+    ]).hidden = !isMission;
+    const prizeGroup = groupFields(sections[3], "Lugares premiados", [
+      "winnerCount",
+    ]);
+    sections[3].prepend(prizeGroup);
+    sections[3].querySelector(":scope > p").textContent =
+      "As recompensas ficam visíveis na página do desafio. A entrega segue as regras escolhidas.";
+    groupFields(sections[3], "Entrega das recompensas", [
+      "needsConfirmation",
+    ]).hidden = isMission;
+    form.elements.rules.closest("label").classList.add("event-written-rules");
+    const writtenRules = document.createElement("details");
+    writtenRules.className = "event-optional-fields";
+    writtenRules.innerHTML =
+      "<summary>Acrescentar regras escritas <small>Opcional</small></summary>";
+    writtenRules.append(form.elements.rules.closest("label"));
+    sections[2].append(writtenRules);
     const updatePositions = () => {
       const count = Math.max(
         1,
@@ -415,6 +763,25 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
           "beforeend",
           rewardFields(configuration.positions?.[i], i + 1),
         );
+        const section = positions.lastElementChild;
+        const modeLabel = section
+          .querySelector('[name="rewardMode"]')
+          .closest("label");
+        modeLabel.hidden = true;
+        const choices = document.createElement("div");
+        choices.className = "event-choice-grid event-reward-choices";
+        choices.setAttribute("aria-label", "Tipo de recompensa");
+        choices.innerHTML = [
+          ["stats", "Atributos", "Melhora os atributos da carta."],
+          ["card", "Carta", "Atribui uma edição de carta."],
+          ["both", "Atributos + carta", "Combina as duas recompensas."],
+        ]
+          .map(
+            ([value, title, description]) =>
+              `<button type="button" data-reward-mode="${value}"><strong>${title}</strong><span>${description}</span></button>`,
+          )
+          .join("");
+        section.querySelector(".event-question-fields").prepend(choices);
       }
     };
     const raceNote = document.createElement("p");
@@ -445,6 +812,9 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       form.elements.winnerCount.closest("label").hidden = mission;
       const competition =
         !mission && form.elements.method.value === "objective";
+      objectiveGroup.hidden = form.elements.method.value !== "objective";
+      votingGroup.hidden = !competition;
+      prizeGroup.hidden = mission;
       raceNote.hidden = !competition;
       form.elements.allowSelfVote.closest("label").hidden =
         mission || form.elements.method.value !== "vote";
@@ -492,6 +862,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       form.elements.gameId.closest("label").hidden =
         form.elements.audience.value !== "game";
       const vote = form.elements.method.value === "vote";
+      voteLimits.hidden = !vote;
       votingSettings.hidden = !vote;
       for (const key of [
         "votesPerUser",
@@ -502,7 +873,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         form.elements[key].closest("label").hidden = !vote;
       for (const key of ["tieBreak", "liveResults"]) {
         const destination = competition
-          ? sections[2].querySelector(".form-grid")
+          ? votingGroup.querySelector(".form-grid")
           : votingSettings.querySelector(".form-grid");
         destination.append(form.elements[key].closest("label"));
       }
@@ -540,9 +911,29 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         .join("");
       form.elements.memberIds.disabled =
         form.elements.audience.value !== "selected";
+      form.elements.memberIds.closest("label").hidden =
+        form.elements.audience.value !== "selected";
+      form.elements.memberIds.required =
+        form.elements.audience.value === "selected";
+      form.elements.gameId.required = form.elements.audience.value === "game";
+      form.elements.gameId.disabled = form.elements.audience.value !== "game";
+      form.elements.endsAt.setCustomValidity(
+        !unlimited && form.elements.endsAt.value <= form.elements.startsAt.value
+          ? "Escolhe uma data de fim posterior ao início."
+          : "",
+      );
       editor.querySelector("#event-participant-summary").textContent = mission
         ? `${form.elements.memberIds.selectedOptions.length} jogadores podem cumprir este objetivo e receber a recompensa.`
         : `${form.elements.memberIds.selectedOptions.length} participantes · a mesma lista define candidatos e votantes.`;
+      let audienceSummary = audienceGroup.querySelector(
+        ".event-audience-summary",
+      );
+      if (!audienceSummary) {
+        audienceSummary = document.createElement("p");
+        audienceSummary.className = "event-audience-summary";
+        audienceGroup.append(audienceSummary);
+      }
+      audienceSummary.textContent = `${form.elements.memberIds.selectedOptions.length} participantes${mission ? " podem cumprir a missão." : competition ? " entram na competição." : form.elements.method.value === "admin" ? " podem ser escolhidos como vencedores." : " podem votar e receber votos."}`;
       updatePositions();
       positions.querySelectorAll("summary").forEach((summary, i) => {
         summary.textContent = mission
@@ -551,6 +942,14 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       });
       for (const section of positions.children) {
         const mode = section.querySelector('[name="rewardMode"]').value;
+        section
+          .querySelectorAll("[data-reward-mode]")
+          .forEach((button) =>
+            button.setAttribute(
+              "aria-pressed",
+              String(button.dataset.rewardMode === mode),
+            ),
+          );
         const stats = mode === "stats" || mode === "both",
           card = mode === "card" || mode === "both";
         section.querySelector(".event-boost-grid").hidden = !stats;
@@ -563,15 +962,21 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         if (CARD_POLICY[special.value])
           cardDuration.value = CARD_POLICY[special.value].duration;
         special.closest("label").hidden = !card;
-        if (!card) special.value = "";
         section.querySelectorAll('[name^="boost-"]').forEach((input) => {
           input.max = "10";
-          if (!stats) input.value = "0";
         });
       }
     };
     const payload = () => {
       const f = form.elements;
+      const objective = readObjective();
+      if (
+        f.method.value === "objective" &&
+        !validRatingObjective(objective, f.scope.value)
+      )
+        throw Error(
+          "Escolhe pelo menos uma dimensão, um mínimo válido de estrelas e de avaliações. Estes objetivos são individuais.",
+        );
       if (
         isMission &&
         f.unlockMode.value !== "none" &&
@@ -628,15 +1033,69 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         allowSelfVote: f.allowSelfVote.checked,
         liveResults: f.liveResults.checked,
         needsConfirmation: f.needsConfirmation.checked,
-        objective: { metric: f.metric.value, target: Number(f.target.value) },
+        objective,
         scope: f.scope.value,
         cadence: f.cadence.value,
         maxRepeats: Number(f.maxRepeats.value),
         difficulty: f.difficulty.value,
       };
     };
+    const renderReview = () => {
+      const f = form.elements;
+      const dateText = (value) =>
+        value ? formatDateTime(eventDeadline(value)) : "Por definir";
+      const selectedText = (key) =>
+        f[key].selectedOptions?.[0]?.textContent || f[key].value;
+      const summaryCard = (title, step, body) =>
+        `<section class="event-review-card"><div><h4>${title}</h4><button type="button" class="btn btn-ghost" data-review-step="${step}" aria-label="Editar ${title}">Editar</button></div>${body}</section>`;
+      form.querySelector("#event-review").innerHTML = [
+        summaryCard(
+          "Identidade",
+          0,
+          `<h3>${esc(f.title.value || "Sem título")}</h3><p>${esc(f.description.value || "Sem descrição adicional.")}</p>${rarityBadge({ rarity: f.rarity.value })}`,
+        ),
+        summaryCard(
+          isMission ? "Objetivo" : "Regras",
+          1,
+          `<p>${esc(f.method.value === "objective" ? objectiveSummary({ objective: readObjective() }) : f.method.value === "vote" ? "Os participantes votam nos vencedores." : "A classificação é definida pelo administrador.")}</p>${f.method.value === "objective" ? `<small>${esc(selectedText("scope"))}</small>` : ""}${f.rules.value ? `<p>${esc(f.rules.value)}</p>` : ""}`,
+        ),
+        summaryCard(
+          "Participantes e datas",
+          2,
+          `<p>${esc(audienceSummaryText())}</p><p>${esc(dateText(f.startsAt.value))} → ${f.indefinite.checked ? "Sem prazo de conclusão" : esc(dateText(f.endsAt.value))}</p>${isMission ? `<p>${esc(selectedText("cadence"))}${f.cadence.value !== "once" ? ` · até ${esc(f.maxRepeats.value)} conclusões` : ""}</p>${f.unlockMode.value !== "none" ? `<p>Após concluir ${f.unlockMode.value === "all" ? "todas" : "pelo menos uma"}: ${[...f.prerequisiteIds.selectedOptions].map((option) => esc(option.textContent)).join(", ") || "Escolhe as missões anteriores."}</p>` : ""}` : ""}`,
+        ),
+        summaryCard(
+          "Recompensas",
+          3,
+          [...positions.children]
+            .map(
+              (section, i) =>
+                `<div class="event-review-prize"><strong>${isMission ? "Por conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(readReward(section)))}</p></div>`,
+            )
+            .join(""),
+        ),
+      ].join("");
+      form.querySelectorAll("[data-review-step]").forEach((button) => {
+        button.onclick = () => navigate(Number(button.dataset.reviewStep));
+      });
+    };
+    const audienceSummaryText = () =>
+      audienceGroup.querySelector(".event-audience-summary")?.textContent ||
+      "Escolhe os participantes.";
+    positions.onclick = (e) => {
+      const button = e.target.closest("[data-reward-mode]");
+      if (!button) return;
+      button
+        .closest(".event-question")
+        .querySelector('[name="rewardMode"]').value = button.dataset.rewardMode;
+      update();
+    };
     update();
-    form.onchange = update;
+    refreshRating();
+    form.onchange = () => {
+      update();
+      refreshRating();
+    };
     const imageInput = form.elements.image;
     imageInput.addEventListener("paste", (e) => {
       const value =
@@ -675,13 +1134,14 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     };
     editor.querySelector("#close-editor").onclick = () => {
       editor.hidden = true;
+      delete root.querySelector(".event-workspace").dataset.editing;
     };
     editor.querySelector("#event-preview").onclick = () => {
       try {
         const p = payload();
         modal(
           "Pré-visualização",
-          `<div class="event-preview event-rarity-surface" data-rarity="${eventRarityId(p)}">${rarityBadge(p)}<span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p><p>${esc(p.rules)}</p>${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
+          `<div class="event-preview event-rarity-surface" data-rarity="${eventRarityId(p)}">${rarityBadge(p)}<span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p><p>${esc(p.rules)}</p>${p.method === "objective" ? `<p>${icon(eventIcon(p))}${esc(objectiveSummary(p))}</p>` : ""}${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
         );
       } catch (error) {
         toast(error.message, "error");
@@ -689,10 +1149,11 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     };
     form.onsubmit = async (e) => {
       e.preventDefault();
-      if (currentStep < 2) {
-        showStep(currentStep + 1);
+      if (currentStep < steps.length - 1) {
+        if (validateStep(currentStep)) navigate(currentStep + 1);
         return;
       }
+      if (!steps.every((_, index) => validateStep(index))) return;
       try {
         const p = payload();
         p.openNow = e.submitter.value === "open";

@@ -12,6 +12,7 @@ import {
   sharedRankingPositions,
   missionUnlockedAt,
   objectiveSummary,
+  validRatingObjective,
   objectiveReachedAt,
   objectiveProgress,
   periodWindow,
@@ -23,6 +24,7 @@ import {
   votingFlags,
 } from "../js/event-model.js";
 import { applyEventRewards } from "../js/event-rules.js";
+import { eventIcon } from "../js/icons.js";
 const date = new Date("2026-10-20T12:00:00Z");
 const event = {
   startsAt: "2026-10-01",
@@ -48,6 +50,66 @@ const game = (i, outcome, goals = 0, assists = 0) => ({
   performance: {
     teamA: { goals: Array(goals).fill("a"), assists: Array(assists).fill("a") },
   },
+});
+
+const starObjective = (metric, extra = {}) => ({ metric, target: 3,
+  attributes: ["overall", "passing"], threshold: 4, comparison: "gte",
+  combine: "all", minRatings: 3, ...extra });
+const ratedGame = (i, overall, passing = overall, outcome = 1) => ({
+  ...game(i, outcome), ratingSummary: { a: { overall, passing,
+    evaluatedAt: new Date(Date.UTC(2026, 9, i, 12)).toISOString(),
+    ratingCounts: { overall: 3, passing: 3 } } },
+});
+test("stars: count, winning games and streaks use each selected dimension", () => {
+  const games = [ratedGame(1,4), ratedGame(2,5,3), ratedGame(3,4.5,4.5,-1), ratedGame(4,4), ratedGame(5,4)];
+  const progress = (metric, extra) => objectiveProgress("a", { ...event,
+    objective: starObjective(metric, extra) }, games, date);
+  assert.equal(progress("ratingGames"),4);
+  assert.equal(progress("ratingWins"),3);
+  assert.equal(progress("ratingStreak"),3);
+  assert.equal(progress("ratingGames",{comparison:"gt"}),1);
+  assert.equal(progress("ratingGames",{combine:"mean"}),5);
+  assert.equal(progress("ratingGames",{minRatings:4}),0);
+  assert.equal(new Set(["ratingGames","ratingAverage","ratingStreak","ratingWins"].map(metric=>eventIcon({objective:{metric}}))).size,4);
+});
+test("stars: rolling average includes the latest played games and never skips missing ratings", () => {
+  const config = { ...event, objective: starObjective("ratingAverage") };
+  const games = [ratedGame(1,5),ratedGame(2,4),ratedGame(3,4)];
+  assert.equal(objectiveProgress("a",config,games,date),3);
+  assert.equal(objectiveProgress("a",config,[...games,{...game(4,1)}],date),0);
+  assert.equal(objectiveProgress("a",config,[...games,ratedGame(4,1)],date),0);
+  assert.equal(objectiveProgress("a",config,games.slice(0,2),date),0);
+  const partial = ratedGame(4,5); delete partial.ratingSummary.a.passing;
+  assert.equal(objectiveProgress("a",config,[...games,partial],date),0);
+  const atBoundary = [ratedGame(1,4),ratedGame(2,4),ratedGame(3,4)];
+  assert.equal(objectiveProgress("a",{...config,objective:starObjective("ratingAverage",{comparison:"gt"})},atBoundary,date),0);
+  const row = eventRanking({...config,method:"objective"},[],games,[],date)[0];
+  assert.equal(row.ratingState.ratedGames,3);
+  assert.equal(row.ratingState.averages.overall,13/3);
+});
+test("stars: late ratings, reopened games, period boundaries and prerequisites are respected", () => {
+  const config = { ...event, method:"objective", objective:starObjective("ratingGames",{target:1}) };
+  const match = ratedGame(3,5);
+  match.ratingSummary.a.evaluatedAt = "2026-10-10T12:00:00Z";
+  assert.equal(objectiveProgress("a",config,[match],new Date("2026-10-05")),0);
+  assert.equal(objectiveReachedAt("a",config,[match],date),"2026-10-10T12:00:00.000Z");
+  assert.equal(objectiveProgress("a",config,[{...match,status:"open"}],date),0);
+  assert.equal(objectiveProgress("a",config,[{...match,deleting:true}],date),0);
+  match.ratingSummary.a.evaluatedAt = "2026-11-02T00:00:00Z";
+  assert.equal(objectiveProgress("a",config,[match],new Date("2026-11-03")),0);
+  const gated = {...config,kind:"mission",prerequisites:{mode:"all",missionIds:["intro"]}};
+  const credits = [{uid:"a",eventId:"intro",periodKey:"once",completedAt:"2026-10-04"}];
+  assert.equal(eventRanking(gated,[],[ratedGame(3,5)],[],date,credits).find(r=>r.uid==="a").progress,0);
+  assert.equal(eventRanking(gated,[],[ratedGame(5,5)],[],date,credits).find(r=>r.uid==="a").progress,1);
+});
+test("stars: validation rejects unknown dimensions, duplicates, impossible thresholds and shared scopes", () => {
+  const valid = starObjective("ratingGames");
+  assert.ok(validRatingObjective(valid));
+  for (const change of [{attributes:[]},{attributes:["pace"]},{attributes:["overall","overall"]},{threshold:NaN},{threshold:6},{threshold:-1},{threshold:5,comparison:"gt"},{minRatings:0},{minRatings:1.5},{comparison:"bad"},{combine:"bad"}])
+    assert.equal(validRatingObjective({...valid,...change}),false,JSON.stringify(change));
+  assert.equal(validRatingObjective(valid,"group"),false);
+  assert.equal(validRatingObjective(valid,"team"),false);
+  assert.match(objectiveSummary({objective:valid}),/Desempenho geral/);
 });
 test("objetivos: jogos, golos, assistências, vitórias e sequências verificadas", () => {
   const games = [
