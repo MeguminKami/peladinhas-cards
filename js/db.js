@@ -278,8 +278,8 @@ export async function syncNotifications(uid, missions) {
   }
   return notifications(uid);
 }
-export const callAdmin = (name, data) =>
-  httpsCallable(getFunctions(undefined, "europe-west1"), name)(data);
+export const callAdmin = (name, data, options) =>
+  httpsCallable(getFunctions(undefined, "europe-west1"), name, options)(data);
 
 export const weeklyCardPhotos = (weekId) =>
   list("weeklyCardPhotos", where("weekId", "==", weekId));

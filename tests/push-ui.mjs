@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync } from "node:fs";
 import { chromium } from "playwright";
 const browser = await chromium.launch({
   headless: true,
@@ -17,19 +17,21 @@ try {
     if (path === "/")
       return route.fulfill({
         contentType: "text/html",
-        body: '<!doctype html><div id="main"></div><div id="toast-region"></div><div id="modal-root"></div>',
+        body: '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/responsive.css"><link rel="stylesheet" href="/css/experience.css"><main id="main"></main><div id="toast-region"></div><div id="modal-root"></div>',
       });
     if (path === "/js/db.js")
       return route.fulfill({
         contentType: "text/javascript",
         body: `
       export const watchNotifications=(uid,callback)=>{window.__watch=callback;return ()=>{window.__stops++;};};
+      export const notifications=async()=>window.__notices||[];
+      export const markRead=async(uid,items)=>{if(window.__readFail)throw Error('Offline'); window.__readCalls.push({uid,ids:items.map(i=>i.id)});};
       export const callAdmin=async(name,data)=>{window.__calls.push({name,...data});if(window.__fail)throw Error('Backend indisponível');return {data:{deviceId:'a'.repeat(64)}};};
     `,
       });
-    if (/^\/js\/[\w-]+\.js$/.test(path))
+    if (/^\/(js|css)\/[\w-]+\.(js|css)$/.test(path))
       return route.fulfill({
-        contentType: "text/javascript",
+        contentType: path.endsWith('.css') ? "text/css" : "text/javascript",
         body: readFileSync("." + path, "utf8"),
       });
     return route.fulfill({ status: 404 });
@@ -139,6 +141,7 @@ try {
     true,
   );
   await page.locator("[data-push-test]").click();
+  await page.waitForFunction(() => window.__calls.at(-1).action === 'test');
   assert.equal(await page.evaluate(() => window.__calls.at(-1).action), "test");
   await page.evaluate(() =>
     window.__watch([
@@ -270,7 +273,58 @@ try {
       value: false,
     });
   });
+  // Offline read intent survives reload, remains private and does not consume newer revisions.
+  await page.evaluate(async () => {
+    const queue = await import('/js/notification-read-queue.js');
+    const item = { id:'offline', title:'Game', body:'Ready', createdAt:{seconds:1} };
+    window.__readCalls = [];
+    window.__notices = [item];
+    Object.defineProperty(navigator, 'onLine', {configurable:true, value:false});
+    queue.queueNotificationReads('two', [item]);
+    if (await queue.flushNotificationReads('two')) throw Error('Flushed offline');
+    if (!queue.applyPendingReads('two', [item])[0].read) throw Error('Missing optimistic read');
+    if (queue.applyPendingReads('other', [item])[0].read) throw Error('Account leak');
+    const reloaded = await import('/js/notification-read-queue.js?reload');
+    if (!reloaded.pendingReadIds('two').includes(item.id)) throw Error('Missing persisted intent');
+    Object.defineProperty(navigator, 'onLine', {configurable:true, value:true});
+    window.__readFail = true;
+    if (await reloaded.flushNotificationReads('two')) throw Error('Failure lost');
+    if (!reloaded.pendingReadIds('two').length) throw Error('Failure erased queue');
+    window.__readFail = false;
+    await reloaded.flushNotificationReads('two');
+    if (queue.pendingReadIds('two').length) throw Error('Stale in-memory queue');
+    queue.queueNotificationReads('two', [item]);
+    window.__notices = [{...item, title:'New version'}];
+    await queue.flushNotificationReads('two');
+    if (window.__readCalls.length !== 1) throw Error('Marked obsolete revision');
+    if (window.__push.PUSH_RECHECK_MS !== 10000) throw Error('Wrong recovery interval');
+  });
+  await page.evaluate(async () => {
+    const {notificationsPage} = await import('/js/notifications.js');
+    location.hash = '#/notifications';
+    const ctx = {
+      user:{uid:'two'}, notifications:[{id:'page-read',title:'Novo jogo da liga',body:'A tua equipa conta contigo.',href:'#/games',createdAt:{seconds:1700000000,toDate:()=>new Date(1700000000000)}}],
+      render:html=>document.querySelector('#main').innerHTML=html, go:()=>{}
+    };
+    window.__notificationCtx=ctx;
+    Object.defineProperty(navigator,'onLine',{configurable:true,value:false});
+    notificationsPage(ctx);
+  });
+  await page.locator('[data-read="page-read"]').click();
+  await page.locator('[data-notification-sync]:visible').waitFor();
+  await page.locator('[data-notification-view="read"]').click();
+  await page.getByText('Novo jogo da liga', {exact:true}).waitFor();
+  mkdirSync('artifacts/push', {recursive:true});
+  for (const width of [320,390,768,1440]) {
+    await page.setViewportSize({width,height:1000});
+    for (const theme of ['volt','champions','ultimate','default']) {
+      await page.evaluate(theme => document.documentElement.dataset.theme=theme, theme);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${theme} at ${width} overflows`);
+    }
+    await page.screenshot({path:`artifacts/push/settings-${width}.png`, fullPage:true});
+  }
   await page.evaluate(() => {
+    Object.defineProperty(navigator,'onLine',{configurable:true,value:true});
     Object.defineProperty(navigator, "userAgent", {
       configurable: true,
       value: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",

@@ -39,7 +39,7 @@ flowchart TB
 
 1. A notificação aparece no sino? Confirmar destinatário e conta.
 2. O dispositivo concluiu **Ativar no telemóvel**? Verificar permissão no browser e no sistema.
-3. Foi enviada **depois** de ativar? Mensagens antigas não são reenviadas automaticamente.
+3. Está por ler e foi enviada nos últimos sete dias? A ativação e a reconexão recuperam estas mensagens sem repetir entregas concluídas.
 4. **Enviar teste** apresenta erro? Consultar configuração VAPID e logs das Functions.
 5. O servidor confirmou envio? Verificar concentração, poupança de energia e definições de alertas do aparelho.
 
@@ -57,7 +57,7 @@ O projeto usa Web Push com subscrições nativas do browser, VAPID e mensagens e
 ## Experiência
 
 - Na página **Notificações**, o utilizador escolhe **Ativar no telemóvel**. A permissão é pedida apenas ao tocar nesse botão. Não aparece um pedido automático ao entrar na aplicação.
-- Na aplicação instalada, o Início também apresenta um convite compacto para ativar alertas; desaparece depois de concluir a ativação. Uma mensagem enviada pelo ADMIN não pede permissão nos dispositivos: aparece no sino de todos os destinatários e só gera push nos que já ativaram as notificações. Depois de ativar, enviar um novo teste; mensagens anteriores não são reenviadas como push automaticamente.
+- Na aplicação instalada, o Início também apresenta um convite compacto para ativar alertas; desaparece depois de concluir a ativação. Uma mensagem enviada pelo ADMIN não pede permissão nos dispositivos: aparece no sino de todos os destinatários e só gera push nos que já ativaram as notificações. Depois de ativar, as mensagens por ler dos últimos sete dias são recuperadas; usar Enviar teste para confirmar o dispositivo.
 - O Chrome pode apresentar um pedido discreto ou permitir a alteração nas definições do site depois do pedido inicial. A interface acompanha alterações de permissão e conclui a subscrição após uma autorização tardia, apenas quando o utilizador já pediu a ativação nessa sessão/conta. Se a permissão estiver bloqueada, mostra instruções do browser/Android.
 - No iPhone/iPad, é necessário iOS/iPadOS 16.4 ou superior e abrir a aplicação instalada pelo ecrã inicial. A versão no Safari orienta primeiro a instalação. No Android, um browser compatível pode receber push; a instalação oferece a experiência da aplicação.
 - Depois de ativar, **Enviar teste** cria um alerta apenas para esse dispositivo. Há um intervalo mínimo de um minuto entre testes. **Desativar neste dispositivo** remove a subscrição local e o registo no servidor.
@@ -68,6 +68,13 @@ O projeto usa Web Push com subscrições nativas do browser, VAPID e mensagens e
 - A leitura é comum à conta. Outros dispositivos com a aplicação aberta recebem a alteração em tempo real e fecham os respetivos alertas. Num segundo dispositivo com a aplicação fechada, a reconciliação ocorre ao voltar a abrir: não se enviam pushes silenciosos, que não são permitidos no iOS. Desativar ou terminar sessão limpa alertas e badges locais.
 
 Os sistemas operativos decidem a apresentação final, som, agrupamento e efeitos do modo de concentração. O badge é uma melhoria progressiva quando existe suporte. Os textos dos alertas podem aparecer no ecrã bloqueado segundo as preferências do utilizador.
+
+## Recuperação da ligação
+
+- O fornecedor push guarda entregas durante até sete dias (TTL). Com a app fechada, o navegador e o sistema gerem a entrega quando a rede volta. As permissões e a gestão de energia podem atrasar ou bloquear alertas.
+- Enquanto a app está visível, uma verificação a cada **10 segundos** recupera o registo e sincroniza pendentes em páginas de 100. Também corre ao voltar à app ou recuperar Internet. Não existe polling contínuo com a app fechada.
+- Marcar como lida funciona offline: a intenção fica guardada por conta no dispositivo, aparece de imediato no histórico e sincroniza ao recuperar ligação. Uma revisão posterior da mesma mensagem não é marcada por uma leitura antiga.
+- O worker guarda recibos de apresentação e leitura para impedir que uma entrega repetida volte a mostrar um alerta já apresentado ou lido neste dispositivo.
 
 ## Servidor e proteção
 

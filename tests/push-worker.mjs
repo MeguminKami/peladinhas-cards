@@ -252,9 +252,26 @@ try {
     await push(payload("i", { ackURL: "https://evil.test/" }));
     assert(notifications.length === unsafeBefore, "unsafe receipt accepted");
     checks.push("links and receipt endpoint are restricted to this app");
+    await push(payload("bb"));
+    current("bb").close();
+    const dismissedCount = notifications.length;
+    start();
+    await push(payload("bb"));
+    assert(notifications.length === dismissedCount, "dismissed alert reappeared after restart");
+    await push(payload("bc", { expiresAt: Date.now() - 1000 }));
+    assert(notifications.length === dismissedCount, "expired alert displayed");
+    await message({ type:"PUSH_CLEAR_READ", uid:"one", ids:["bd"], count:0 });
+    await push(payload("bd", { createdAt: Date.now() - 1000 }));
+    assert(notifications.length === dismissedCount, "delayed read alert displayed");
+    checks.push("persistent deduplication, expiry and read-before-delivery suppression");
+    mock.clients.matchAll = async () => [];
+    start();
+    await push(payload("be"));
+    assert(!!current("be"), "push required an open app client");
+    checks.push("worker displays native alerts with all app clients closed");
     return checks;
   }, source);
-  assert.equal(checks.length, 8);
+  assert.equal(checks.length, 10);
   console.log(
     `${engine === webkit ? "WebKit" : "Chromium"}: ${checks.length} native push lifecycle scenarios passed.`,
   );

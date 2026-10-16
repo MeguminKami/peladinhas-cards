@@ -93,7 +93,7 @@ A carta **Em forma (In Form)** tem três versões visuais: bronze, prata e ouro.
 
 A [coleção especial](card-collection.md) acrescenta dezanove edições visuais ao catálogo e ao Card Lab, incluindo nove temas inspirados no Ultimate Team. Quinze têm [condições de conquista e validade](card-unlocks.md); quatro designs ficam em reserva.
 
-Há seis raridades base e cartas especiais reconhecidas por performances/recompensas. O Card Lab é um estúdio para compor estilos com modelos, paletas, camadas, molduras, fontes, efeitos e fotografia; inclui desfazer/refazer, importação/exportação JSON e composições guardadas.
+Há seis raridades base e cartas especiais reconhecidas por performances/recompensas. O Card Lab permite ao ADMIN compor estilos com todos os modelos do catálogo, paletas, camadas, molduras, fontes, efeitos e fotografia. A biblioteca permite reabrir e editar uma composição guardada, guardar alterações mantendo o seu ID ou criar uma cópia. Inclui desfazer/refazer e importação/exportação JSON; importar um projeto inicia uma nova composição. O catálogo dá acesso direto à edição dos modelos guardados e à criação a partir dos modelos padrão.
 
 Eventos e missões podem atribuir stats temporárias ou permanentes, cartas semanais, prestígio e conquistas. Elegibilidade, limites e privacidade estão na [referência de eventos e missões](events-and-missions.md).
 

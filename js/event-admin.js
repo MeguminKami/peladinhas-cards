@@ -59,6 +59,85 @@ const options = (values, selected) =>
         `<option value="${esc(id)}" ${id === selected ? "selected" : ""}>${esc(label)}</option>`,
     )
     .join("");
+const creationRules = (event) => {
+  const o = event.objective || {};
+  const entries = [];
+  const add = (symbol, title, text) =>
+    entries.push(
+      `<li>${icon(symbol)}<div><strong>${esc(title)}</strong><p>${esc(text)}</p></div></li>`,
+    );
+  if (event.method === "objective" && isRatingObjective(o)) {
+    const goals = {
+      ratingAverage: `Média dos últimos ${o.target} jogos`,
+      ratingGames: `${o.target} jogos com avaliação mínima`,
+      ratingStreak: `${o.target} jogos consecutivos`,
+      ratingWins: `${o.target} vitórias com avaliação mínima`,
+    };
+    add(eventIcon(event), "Meta", goals[o.metric]);
+    add(
+      "ratingGames",
+      "Estrelas",
+      `${o.comparison === "gt" ? "Mais de" : "Pelo menos"} ${o.threshold} em ${o.combine === "mean" ? "média entre as dimensões" : "cada dimensão"}.`,
+    );
+    add(
+      "players",
+      "Dimensões",
+      (o.attributes || [])
+        .map((key) => FEEDBACK.find(([id]) => id === key)?.[1] || key)
+        .join(" · "),
+    );
+    add(
+      "check",
+      "Avaliações mínimas",
+      `${o.minRatings} por dimensão e por jogo.`,
+    );
+    add(
+      "games",
+      "Jogos válidos",
+      "Encerrados neste período, após o desbloqueio. As dimensões precisam de avaliações suficientes.",
+    );
+    if (o.metric === "ratingAverage")
+      add(
+        "ratingAverage",
+        "Janela de cálculo",
+        "Inclui os últimos jogos disputados. Um jogo sem avaliações suficientes impede a conclusão; o mínimo tem de estar cumprido na verificação.",
+      );
+    if (o.metric === "ratingStreak")
+      add(
+        "streak",
+        "Sequência",
+        "Conta a melhor sequência. Um jogo abaixo do mínimo ou por avaliar interrompe-a.",
+      );
+  } else if (event.method === "objective") {
+    add(eventIcon(event), "Meta", objectiveSummary(event));
+  } else if (event.method === "vote") {
+    add("vote", "Votação", "Os participantes escolhem os vencedores.");
+    add("players", "Escolhas por votante", String(event.votesPerUser || 1));
+    add("check", "Votos mínimos", String(event.minVotes || 1));
+  } else
+    add(
+      "decision",
+      "Classificação",
+      "O administrador escolhe os vencedores e a ordem.",
+    );
+  if (event.method === "objective")
+    add(
+      "shield",
+      "Progresso",
+      {
+        individual: "Individual",
+        group: "Soma dos participantes",
+        team: "Totais da equipa",
+        collective: "Totais da equipa",
+      }[event.scope] || "Individual",
+    );
+  for (const rule of (event.rules || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean))
+    add("check", "Regra adicional", rule);
+  return `<ul class="event-rule-list">${entries.join("")}</ul>`;
+};
 export async function mountEventAdmin(ctx, root, initialArea = "event") {
   const [events, themes] = await Promise.all([
     DB.list("events"),
@@ -363,9 +442,12 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       if (stars) {
         form.elements.scope.value = "individual";
         form.elements.scope.disabled = true;
-        ratingFields.querySelector("#rating-objective-preview").textContent =
-          objectiveSummary({ objective }).split(". Mínimo")[0] +
-          `. Mínimo de ${objective.minRatings} avaliações por dimensão e jogo.`;
+        ratingFields.querySelector("#rating-objective-preview").innerHTML =
+          creationRules({
+            method: "objective",
+            objective,
+            scope: form.elements.scope.value,
+          });
       } else form.elements.scope.disabled = false;
       const targetLabel = form.elements.target.closest("label");
       targetLabel.firstChild.textContent =
@@ -590,6 +672,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         form.elements[key].closest(key === "image" ? ".field-wide" : "label"),
       );
     const rarityLabel = form.elements.rarity.closest("label");
+    rarityLabel.classList.add("field-wide");
     const rarityControl = document.createElement("div");
     rarityControl.className = "event-rarity-control";
     rarityLabel.append(rarityControl);
@@ -603,6 +686,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     form.elements.image.closest(".field-wide").classList.remove("field-wide");
     form.elements.image.parentElement.parentElement.classList.add(
       "event-image-field",
+      "field-wide",
     );
     editor.querySelector(".event-editor-intro").remove();
     steps.forEach((step) =>
@@ -819,10 +903,9 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         section.querySelector(".event-question-fields").prepend(choices);
       }
     };
-    const raceNote = document.createElement("p");
+    const raceNote = document.createElement("div");
     raceNote.className = "event-context-note";
-    raceNote.textContent =
-      "Os objetivos são verificados no fim de cada jogo. Vencem os primeiros a atingir a meta. Se a meta for atingida no mesmo jogo, aplica-se o desempate escolhido. A competição termina quando todas as posições premiadas forem preenchidas.";
+    raceNote.innerHTML = `<ul class="event-rule-list"><li>${icon("wins")}<div><strong>Vencedores</strong><p>Os primeiros a atingir a meta.</p></div></li><li>${icon("check")}<div><strong>Verificação</strong><p>Resultados e avaliações dos jogos.</p></div></li><li>${icon("decision")}<div><strong>Desempate</strong><p>Se a meta for atingida no mesmo jogo, aplica-se o critério escolhido.</p></div></li><li>${icon("shield")}<div><strong>Fim da competição</strong><p>Quando todas as posições premiadas estiverem preenchidas.</p></div></li></ul>`;
     sections[2].append(raceNote);
     const update = () => {
       const mission = form.elements.kind.value === "mission",
@@ -1098,7 +1181,14 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         summaryCard(
           isMission ? "Objetivo" : "Regras",
           1,
-          `<p>${esc(f.method.value === "objective" ? objectiveSummary({ objective: readObjective() }) : f.method.value === "vote" ? "Os participantes votam nos vencedores." : "A classificação é definida pelo administrador.")}</p>${f.method.value === "objective" ? `<small>${esc(selectedText("scope"))}</small>` : ""}${f.rules.value ? `<p>${esc(f.rules.value)}</p>` : ""}`,
+          creationRules({
+            method: f.method.value,
+            objective: readObjective(),
+            scope: f.scope.value,
+            rules: f.rules.value,
+            votesPerUser: Number(f.votesPerUser.value),
+            minVotes: Number(f.minVotes.value),
+          }),
         ),
         summaryCard(
           "Participantes e datas",
@@ -1131,6 +1221,14 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         .querySelector('[name="rewardMode"]').value = button.dataset.rewardMode;
       update();
     };
+    form.querySelectorAll(".check-label").forEach((label) => {
+      const copy = document.createElement("span");
+      copy.className = "event-check-copy";
+      [...label.childNodes]
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .forEach((node) => copy.append(node));
+      label.append(copy);
+    });
     update();
     refreshRating();
     form.onchange = () => {
@@ -1182,7 +1280,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         const p = payload();
         modal(
           "Pré-visualização",
-          `<div class="event-preview event-rarity-surface" data-rarity="${eventRarityId(p)}">${rarityBadge(p)}<span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p><p>${esc(p.rules)}</p>${p.method === "objective" ? `<p>${icon(eventIcon(p))}${esc(objectiveSummary(p))}</p>` : ""}${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
+          `<div class="event-preview event-rarity-surface" data-rarity="${eventRarityId(p)}">${rarityBadge(p)}<span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p>${creationRules(p)}${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
         );
       } catch (error) {
         toast(error.message, "error");

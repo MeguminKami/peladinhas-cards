@@ -171,6 +171,11 @@
         const owner = await state("owner");
         // A device is explicitly detached on sign-out. Never expose another account's data.
         if (!owner || owner.uid !== data.uid) return;
+        if (Number.isFinite(data.expiresAt) && data.expiresAt <= Date.now()) return;
+        if (await state(`shown:${data.receiptId}`)) return;
+        if (await store("acknowledgements", "readonly", s => s.get(data.receiptId))) return;
+        const readAt = await state(`read:${data.uid}:${data.notificationId}`);
+        if (readAt && Number.isFinite(data.createdAt) && data.createdAt <= readAt) return;
         await self.registration.showNotification(
           String(data.title || "Peladinhas Cards").slice(0, 120),
           {
@@ -189,6 +194,7 @@
             ],
           },
         );
+        await putState(`shown:${data.receiptId}`, Date.now());
         await badge(
           (await self.registration.getNotifications()).filter(
             (n) => n.data?.uid === data.uid,
@@ -226,6 +232,7 @@
         const owner = await state("owner");
         if (owner?.uid === data.uid) {
           const wanted = new Set(Array.isArray(data.ids) ? data.ids : []);
+          await Promise.all([...wanted].map(id => putState(`read:${data.uid}:${id}`, Date.now())));
           const native = (await self.registration.getNotifications()).filter(
             (n) =>
               n.data?.uid === data.uid && wanted.has(n.data?.notificationId),

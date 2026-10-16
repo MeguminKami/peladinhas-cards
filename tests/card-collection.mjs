@@ -236,16 +236,97 @@ try {
   await page.locator('#lab-controls select[name="theme"]').waitFor();
   for (const id of Object.keys(COLLECTION_EDITIONS)) {
     await page.locator('#lab-controls select[name="theme"]').selectOption(id);
-    assert.equal(
-      await page.locator("#save-theme").isDisabled(),
-      RESERVED_COLLECTION_IDS.includes(id),
-    );
+    assert.equal(await page.locator("#save-theme").isDisabled(), false);
     assert.equal(await page.locator(`#card-preview .${id}`).count(), 1);
   }
   await page
     .locator('#lab-controls select[name="theme"]')
     .selectOption("gold-rare");
   assert.equal(await page.locator("#save-theme").isEnabled(), true);
+  // Every catalog edition can be used in an editable saved composition.
+  assert.equal(
+    await page.locator("[data-studio-edition]").count(),
+    Object.keys(COLLECTION_EDITIONS).length,
+  );
+  await page.locator('[data-studio-edition="apogee"]').click();
+  await page.locator('[name="themeName"]').fill("Edição do ADMIN");
+  await page.locator("#save-theme").click();
+  const original = await page.evaluate(() => ({
+    count: window.__testState.cardThemes.length,
+    theme: structuredClone(window.__testState.cardThemes.at(-1)),
+  }));
+  assert.equal(original.theme.baseTheme, "apogee");
+  assert.match(
+    await page.locator("#save-theme").innerText(),
+    /Guardar alterações/,
+  );
+  await page.locator('[name="themeName"]').fill("Edição revista");
+  await page.locator('[data-studio-edition="toty"]').click();
+  await page.locator("#save-theme").click();
+  const updated = await page.evaluate(
+    (id) => ({
+      count: window.__testState.cardThemes.length,
+      theme: window.__testState.cardThemes.find((theme) => theme.id === id),
+    }),
+    original.theme.id,
+  );
+  assert.equal(updated.count, original.count);
+  assert.equal(updated.theme.name, "Edição revista");
+  assert.equal(updated.theme.baseTheme, "toty");
+  await page.locator("#save-theme-copy").click();
+  assert.equal(
+    await page.evaluate(() => window.__testState.cardThemes.length),
+    original.count + 1,
+  );
+  await page.locator("#lab-new-project").click();
+  assert.equal(await page.locator('[name="projectId"]').inputValue(), "");
+  await page.locator("#studio-saved-project").selectOption(original.theme.id);
+  assert.equal(
+    await page.locator('[name="themeName"]').inputValue(),
+    "Edição revista",
+  );
+  assert.equal(await page.locator("#card-preview .toty").count(), 1);
+  await page.evaluate(() => {
+    location.hash = "#/admin/card-types";
+  });
+  await page.locator("#card-type-gallery").waitFor();
+  await page.locator(`[data-card-type="saved:${original.theme.id}"]`).click();
+  await page.getByRole("link", { name: "Editar no Card Lab" }).click();
+  await page.locator("#studio-saved-project").waitFor();
+  assert.equal(
+    await page.locator('[name="projectId"]').inputValue(),
+    original.theme.id,
+  );
+  assert.equal(
+    await page.locator('[name="themeName"]').inputValue(),
+    "Edição revista",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+      `Card Lab library overflow ${width}`,
+    );
+    await page.locator(".studio-library").screenshot({
+      path: `test-results/card-lab-library-${width}.png`,
+      animations: "disabled",
+      style: "#header,.bottom-nav,#toast-region{visibility:hidden!important}",
+    });
+    if ([320, 1440].includes(width))
+      await page
+        .locator(".studio-edition-grid")
+        .screenshot({
+          path: `test-results/card-lab-editions-${width}.png`,
+          animations: "disabled",
+          style:
+            "#header,.bottom-nav,#toast-region{visibility:hidden!important}",
+        });
+  }
+  await page.locator("#lab-new-project").click();
   for (const [metal, edge] of [
     ["bronze", "#e8b58b"],
     ["silver", "#dceaf8"],

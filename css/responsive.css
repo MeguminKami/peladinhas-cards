@@ -1214,6 +1214,24 @@ main.wide-layout {
   gap: 8px;
   flex-wrap: wrap;
 }
+.studio-library { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,1fr); gap:20px 24px; align-items:center; padding:24px; margin-bottom:24px; border-left:3px solid var(--accent); }
+.studio-library h2 { margin:8px 0; font-size:1.2rem; }
+.studio-library p { margin:0; color:var(--text-secondary); font-size:.82rem; }
+.studio-library > label { min-width:0; margin:0; }
+.studio-library select { width:100%; height:46px; min-width:0; text-overflow:ellipsis; }
+.studio-library .actions { grid-column:1/-1; margin:0; display:flex; flex-wrap:wrap; gap:12px; }
+.studio-library [hidden] { display:none; }
+.studio-edition-catalog { margin:24px 0; padding-block:24px; border-block:1px solid var(--border); }
+.studio-edition-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.studio-edition-choice { display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:16px; min-width:0; padding:16px 8px; border:1px solid var(--border); border-radius:12px; color:var(--text-primary); background:var(--bg-surface); cursor:pointer; }
+.studio-edition-choice:hover,.studio-edition-choice[aria-pressed="true"] { border-color:var(--accent); background:var(--accent-tint); }
+.studio-edition-choice:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.studio-edition-choice > strong { font-size:.7rem; line-height:1.5; text-align:center; overflow-wrap:anywhere; }
+.studio-edition-preview { display:grid; place-items:center; width:100%; height:140px; pointer-events:none; }
+.studio-edition-preview .football-card { --card-width:86px; filter:none; }
+.studio-edition-preview :is(.card-rating,.card-caption,.card-stats,.card-photo,.collection-edition,.special-insignia,.card-playstyles) { display:none; }
+@media(prefers-reduced-motion:no-preference) { .studio-edition-choice { transition:border-color .16s,background .16s; } }
+@media(max-width:660px) { .studio-library { grid-template-columns:minmax(0,1fr); padding:20px; gap:20px; } .studio-library .actions .btn { flex:1 1 160px; } .studio-edition-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .studio-import {
   margin: 0;
   cursor: pointer;

@@ -1716,6 +1716,8 @@ td small {
 }
 .notification > a {
   flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .notification b {
   font-size: 0.85rem;
@@ -1742,8 +1744,9 @@ td small {
   color: var(--text-primary);
 }
 .notification-list {
-  max-width: 850px;
+  width: 100%;
 }
+.notification:last-child { border-bottom: 0; }
 .assets-preview {
   display: flex;
   align-items: center;

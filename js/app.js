@@ -1,5 +1,6 @@
 import { compareEventRarity } from "./event-rarity.js";
 import { mountHomePodium } from "./home-podium.js";
+import { applyPendingReads } from "./notification-read-queue.js";
 import {
   mountInstallButton,
   installSpotlight,
@@ -134,7 +135,7 @@ const ctx = {
       this.realUser && !this.realUser.disabled ? this.realUser.uid : null,
       (items) => {
         if (!ctx.realUser || ctx.realUser.disabled) return;
-        ctx.notifications = items.sort(
+        ctx.notifications = applyPendingReads(ctx.realUser.uid, items).sort(
           (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
         );
         header();
@@ -486,6 +487,12 @@ async function route() {
   }
 }
 window.addEventListener("hashchange", route);
+window.addEventListener("peladinhas-notification-read", event => {
+  if (ctx.user?.uid !== event.detail.uid) return;
+  const ids = new Set(event.detail.ids);
+  ctx.notifications = ctx.notifications.map(notice => ids.has(notice.id) ? { ...notice, read: true } : notice);
+  header();
+});
 window.addEventListener("peladinhas-push-read", async (event) => {
   const notice = event.detail;
   if (ctx.realUser?.uid !== notice.uid || !ctx.user || ctx.user.disabled)

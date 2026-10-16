@@ -192,7 +192,7 @@ test("push: secure devices, delivery retries, private read receipts and account 
       await fire("one");
       assert.equal(delivered.length, 2);
       const receipt = delivered[0].payload;
-      assert.equal(delivered[0].options.TTL, 86400);
+      assert.equal(delivered[0].options.TTL, 604800);
       assert.equal(receipt.notificationId, "one");
       await assert.rejects(
         ack({ ...receipt, receiptToken: "X".repeat(43) }),
@@ -292,6 +292,32 @@ test("push: secure devices, delivery retries, private read receipts and account 
       assert.equal(delivered.at(-1).sub.endpoint, first.endpoint);
     },
   );
+  await t.test("offline backlog sync is private, paginated and idempotent", async () => {
+    await assert.rejects(call({ action: "sync", deviceId: device1 }, other));
+    await assert.rejects(call({ action: "sync", deviceId: device1, cursor: { id: "../bad" } }));
+    await create("old-backlog", { createdAt: Timestamp.fromMillis(Date.now() - 8 * 86400000) });
+    await create("read-backlog", { read: true });
+    for (let i = 0; i < 105; i++) await create(`backlog-${i}`);
+    let cursor, pages = 0;
+    do {
+      const result = await call({ action: "sync", deviceId: device1, ...(cursor ? { cursor } : {}) });
+      assert.equal(result.pending, 0);
+      cursor = result.nextCursor;
+      assert.ok(++pages < 10);
+    } while (cursor);
+    assert.ok(pages >= 2);
+    assert.equal(delivered.filter(d => d.payload.notificationId.startsWith("backlog-")).length, 105);
+    assert.equal(delivered.some(d => ["old-backlog", "read-backlog"].includes(d.payload.notificationId)), false);
+    await call({ action: "sync", deviceId: device1 });
+    assert.equal(delivered.filter(d => d.payload.notificationId.startsWith("backlog-")).length, 105);
+    await create("reconnect-retry");
+    failure = Object.assign(Error("offline"), { statusCode: 503 });
+    const retry = await call({ action: "sync", deviceId: device1 });
+    assert.equal(retry.synchronized, false);
+    assert.equal(retry.pending, 1);
+    await call({ action: "sync", deviceId: device1 });
+    assert.equal(delivered.filter(d => d.payload.notificationId === "reconnect-retry").length, 1);
+  });
   await t.test(
     "unsubscribed devices are removed and account transfers prevent stale sends",
     async () => {

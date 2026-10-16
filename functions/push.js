@@ -7,12 +7,13 @@ import {
   createECDH,
 } from "node:crypto";
 import * as logger from "firebase-functions/logger";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, FieldPath, Timestamp } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
+export const PUSH_TTL_SECONDS = 7 * 24 * 60 * 60;
 const revision = (notification) =>
   digest(
     JSON.stringify([
@@ -192,6 +193,32 @@ export function pushFunctions({
       }
       if (!validId(input.deviceId)) bad("Dispositivo inválido.");
       const ref = db().doc(`pushDevices/${input.deviceId}`);
+      if (input.action === "sync") {
+        const device = (await ref.get()).data();
+        if (!device?.enabled || device.uid !== uid)
+          throw new HttpsError("permission-denied", "Ativa as notificações neste dispositivo.");
+        // Recover recent unread alerts after a reconnect or a repaired subscription.
+        // sentAt is acceptance by the push provider; the provider retains offline deliveries.
+        let query = db().collection(`users/${uid}/notifications`)
+          .where("createdAt", ">=", Timestamp.fromMillis(Date.now() - PUSH_TTL_SECONDS * 1000))
+          .orderBy("createdAt", "desc").orderBy(FieldPath.documentId(), "desc").limit(100);
+        if (input.cursor) {
+          const { seconds, nanoseconds, id } = input.cursor;
+          if (!Number.isSafeInteger(seconds) || seconds < 0 || seconds > 253402300799 || !Number.isInteger(nanoseconds) || nanoseconds < 0 || nanoseconds > 999999999 || typeof id !== "string" || !id || id.length > 256 || id.includes("/")) bad("Página de notificações inválida.");
+          query = query.startAfter(new Timestamp(seconds, nanoseconds), id);
+        }
+        const recent = await query.get();
+        const pending = recent.docs.filter(doc => !doc.data().read);
+        let failures = 0;
+        for (let i = 0; i < pending.length; i += 10) {
+          const results = await Promise.allSettled(pending.slice(i, i + 10).map(doc => deliver(uid, doc.id, input.deviceId)));
+          failures += results.filter(result => result.status === "rejected").length;
+        }
+        const last = recent.docs.at(-1);
+        const stamp = last?.data().createdAt;
+        const nextCursor = failures ? input.cursor || null : recent.size === 100 ? { seconds: stamp.seconds, nanoseconds: stamp.nanoseconds, id: last.id } : null;
+        return { synchronized: failures === 0 && !nextCursor, pending: failures, nextCursor };
+      }
       if (input.action === "unregister") {
         await db().runTransaction(async (tx) => {
           const device = (await tx.get(ref)).data();
@@ -271,9 +298,8 @@ export function pushFunctions({
       )
         throw Error("A entrega anterior ainda está em curso.");
       if (
-        (current?.attempts || 0) >= 20 ||
         (current?.createdAt &&
-          Date.now() - current.createdAt.toMillis() > 86400000)
+          Date.now() - current.createdAt.toMillis() > PUSH_TTL_SECONDS * 1000)
       )
         return null;
       const value = {
@@ -333,6 +359,8 @@ export function pushFunctions({
       receiptId,
       receiptToken: receipt.token,
       ackURL,
+      createdAt: notification.createdAt?.toMillis?.() || Date.now(),
+      expiresAt: Date.now() + PUSH_TTL_SECONDS * 1000,
     };
     try {
       await send(device.subscription, JSON.stringify(payload), {
@@ -341,7 +369,7 @@ export function pushFunctions({
           publicKey,
           privateKey: validateVapidKeyPair(publicKey, privateKey()),
         },
-        TTL: 86400,
+        TTL: PUSH_TTL_SECONDS,
         urgency: "normal",
         timeout: 10000,
         topic: receiptId.slice(0, 32),

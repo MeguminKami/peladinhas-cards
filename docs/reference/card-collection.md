@@ -30,7 +30,7 @@ Os desenhos são originais em SVG/CSS, inspirados na linguagem de cartas de cole
 
 ## Estado da atribuição
 
-Quinze edições têm [condições de conquista e validade](card-unlocks.md). Apogeu (design original), Legado, Titã e Carnaval (design original) ficam em reserva: podem ser vistos no catálogo e no Card Lab, mas não atribuídos automaticamente nem gravados como novos modelos. Apogeu usa o visual TOTY, Equipa da Época usa TOTS e Carnaval usa FUT BIRTHDAY, evitando prémios duplicados.
+Quinze edições têm [condições de conquista e validade](card-unlocks.md). Apogeu (design original), Legado, Titã e Carnaval (design original) ficam em reserva para atribuição automática. O ADMIN pode usar as dezanove edições no Card Lab para criar e guardar composições personalizadas, incluindo as que estão em reserva. Apogeu usa o visual TOTY, Equipa da Época usa TOTS e Carnaval usa FUT BIRTHDAY, evitando prémios duplicados.
 
 `js/card-collection.js` mantém os IDs e metadados, incluindo os nove temas de `js/card-fut-themes.js`. `CATALOG_THEMES` inclui todas as edições para apresentação; `THEMES` inclui apenas as elegíveis para recompensas. `js/card-achievements.js` centraliza pistas e durações. Os critérios exatos ficam em `functions/card-unlock-rules.js`, fora dos recursos públicos, e `functions/card-collection.js` guarda as conquistas no servidor.
 

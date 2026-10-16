@@ -112,7 +112,52 @@ try {
             return matches;
           });
         assert.ok(matchesTheme, `Consistent selected color: ${kind}, ${theme}`);
-        if (index === 0 && width >= 768) {
+        const checkboxIssues = await page
+          .locator("#event-builder-form .check-label")
+          .evaluateAll((labels) =>
+            labels.flatMap((label) => {
+              const input = label.querySelector('input[type="checkbox"]');
+              const text = label.querySelector(".event-check-copy");
+              if (!input || !text || !input.getClientRects().length) return [];
+              const a = input.getBoundingClientRect(),
+                b = text.getBoundingClientRect();
+              return a.right > b.left ||
+                Math.abs(a.y + a.height / 2 - b.y - b.height / 2) > 1
+                ? [text.textContent]
+                : [];
+            }),
+          );
+        assert.deepEqual(
+          checkboxIssues,
+          [],
+          "Checkbox and text share an aligned row",
+        );
+        const footer = await page
+          .locator(".event-editor-navigation")
+          .boundingBox();
+        const note = await page.locator("#editor-step-note").boundingBox();
+        assert.ok(
+          Math.abs(note.x + note.width - footer.x - footer.width) <= 1,
+          "Step note in the right corner",
+        );
+        if (index === 3 && kind === "event") {
+          const countGroup = await field("winnerCount")
+            .locator("xpath=ancestor::section[1]")
+            .boundingBox();
+          const prizes = await page.locator("#event-questions").boundingBox();
+          const delivery = await field("needsConfirmation")
+            .locator("xpath=ancestor::section[1]")
+            .boundingBox();
+          assert.ok(
+            prizes.y - countGroup.y - countGroup.height >= 24,
+            "Space before prize cards",
+          );
+          assert.ok(
+            delivery.y - prizes.y - prizes.height >= 24,
+            "Space before delivery settings",
+          );
+        }
+        if (index === 0) {
           const rarityBox = await page
             .locator(".event-rarity-control")
             .boundingBox();
@@ -120,14 +165,30 @@ try {
             .locator(".event-image-input")
             .boundingBox();
           assert.ok(
-            Math.abs(rarityBox.y - imageBox.y) <= 1,
-            "Aligned presentation controls",
+            imageBox.y >= rarityBox.y + rarityBox.height,
+            "Image occupies the next row",
           );
           assert.ok(
             Math.abs(rarityBox.width - imageBox.width) <= 1,
-            "Equal presentation columns",
+            "Full-width presentation rows",
           );
           assert.equal(rarityBox.height, imageBox.height);
+          const selectBox = await field("rarity").boundingBox();
+          const previewBox = await page
+            .locator("#event-rarity-preview")
+            .boundingBox();
+          assert.ok(
+            Math.abs(selectBox.width - previewBox.width) <= 1,
+            "Rarity uses equal halves",
+          );
+          assert.equal(selectBox.height, previewBox.height);
+          assert.equal(selectBox.y, previewBox.y);
+          const imageInput = await field("image").boundingBox();
+          const pasteButton = await page
+            .locator("#paste-event-image")
+            .boundingBox();
+          assert.equal(imageInput.y, pasteButton.y);
+          assert.equal(imageInput.height, pasteButton.height);
         }
         if (theme === "club" && [320, 1440].includes(width))
           await page.locator("#event-editor").screenshot({
@@ -160,6 +221,10 @@ try {
     assert.equal(await field("startsAt").isVisible(), false);
     await field("description").fill("Descrição preservada entre etapas.");
     await field("rarity").selectOption("ultimate");
+    const initialRarity = await field("rarity").boundingBox();
+    const initialPreview = await page
+      .locator("#event-rarity-preview")
+      .boundingBox();
     for (const rarity of [
       "bronze",
       "silver",
@@ -177,10 +242,19 @@ try {
           height: element.getBoundingClientRect().height,
           outline: getComputedStyle(element).outlineStyle,
         }));
-      assert.ok(
-        preview.width < 180 && preview.height <= 46,
-        `Compact badge: ${rarity}`,
+      assert.equal(
+        preview.width,
+        initialPreview.width,
+        `Stable preview width: ${rarity}`,
       );
+      const select = await field("rarity").boundingBox();
+      assert.equal(
+        select.width,
+        initialRarity.width,
+        `Stable select width: ${rarity}`,
+      );
+      assert.equal(select.height, 46);
+      assert.equal(preview.height, 46);
       assert.equal(preview.outline, "none");
     }
     await checkLayout(kind, 0);
@@ -280,6 +354,23 @@ try {
     await checkLayout(kind, 3);
     await next();
     assert.equal(await page.locator(".event-review-card").count(), 4);
+    const ruleList = page
+      .locator(".event-review-card")
+      .nth(1)
+      .locator(".event-rule-list");
+    assert.ok(
+      (await ruleList.locator("li").count()) >= (kind === "mission" ? 6 : 3),
+    );
+    assert.equal(
+      await ruleList.locator("li > .ui-icon").count(),
+      await ruleList.locator("li").count(),
+    );
+    await page.locator("#event-preview").click();
+    await page.getByRole("dialog").waitFor();
+    assert.ok(
+      (await page.locator(".event-preview .event-rule-list > li").count()) > 0,
+    );
+    await page.keyboard.press("Escape");
     assert.match(
       await page.locator("#event-review").innerText(),
       /fluid creation/,

@@ -49,6 +49,7 @@ import {
   FEEDBACK,
   THEMES,
   INFORM_THEMES,
+  CATALOG_THEMES,
   matchOutcome,
   matchGoalMargin,
   matchEvolutionContext,
@@ -993,28 +994,44 @@ export const adminMessage = onCall(async (request) => {
 });
 export const saveTheme = onCall(async (request) => {
   await requireAdmin(request);
-  const { name, colors, texture, design, baseTheme } = request.data;
+  const { id, name, colors, texture, design, baseTheme } = request.data;
   if (
     typeof name !== "string" ||
     !name.trim() ||
     name.length > 40 ||
+    (id !== undefined &&
+      (typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(id))) ||
     !colors ||
     !["primary", "secondary", "text", "border", "glow"].every((k) =>
       /^#[0-9a-f]{6}$/i.test(colors[k] || ""),
     ) ||
     (design !== undefined && !validCardDesign(design)) ||
     (baseTheme !== undefined &&
-      ![...THEMES, ...INFORM_THEMES, "custom-test"].includes(baseTheme)) ||
+      ![...CATALOG_THEMES, "in-form", "custom-test"].includes(baseTheme)) ||
     !["diagonal", "radial", "plain"].includes(texture)
   )
     throw new HttpsError("invalid-argument", "Tema inválido.");
-  const r = await db.collection("cardThemes").add({
-    name,
+  const theme = {
+    name: name.trim(),
     colors,
     texture,
     ...(design ? { design } : {}),
     ...(baseTheme ? { baseTheme } : {}),
     experimental: true,
+    updatedBy: request.auth.uid,
+    updatedAt: FieldValue.serverTimestamp(),
+  };
+  if (id !== undefined) {
+    const ref = db.doc(`cardThemes/${id}`);
+    await db.runTransaction(async (tx) => {
+      if (!(await tx.get(ref)).exists)
+        throw new HttpsError("not-found", "Composição não encontrada.");
+      tx.update(ref, theme);
+    });
+    return { id };
+  }
+  const r = await db.collection("cardThemes").add({
+    ...theme,
     createdBy: request.auth.uid,
     createdAt: FieldValue.serverTimestamp(),
   });

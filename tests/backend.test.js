@@ -46,6 +46,67 @@ import {
 } from "../js/utils.js";
 const db = getFirestore(),
   now = Timestamp.now();
+test("Card Lab: ADMIN creates and edits every edition without duplicating or changing ownership", async () => {
+  const { CATALOG_THEMES } = await import("../js/utils.js");
+  for (const [uid, role, disabled] of [
+    ["lab-admin", "admin", false],
+    ["lab-member", "member", false],
+    ["lab-dbs", "dbs", false],
+    ["lab-disabled", "admin", true],
+  ])
+    await db.doc(`users/${uid}`).set({ uid, role, disabled });
+  const payload = {
+    name: "Composição",
+    baseTheme: "toty",
+    colors: {
+      primary: "#123456",
+      secondary: "#abcdef",
+      text: "#ffffff",
+      border: "#123456",
+      glow: "#abcdef",
+    },
+    texture: "plain",
+    design: { shape: "original", decoration: "original", nameFont: "modern" },
+  };
+  const call = (data, uid = "lab-admin") =>
+    saveTheme.run({ auth: { uid }, data });
+  for (const uid of ["lab-member", "lab-dbs", "lab-disabled"])
+    await assert.rejects(call(payload, uid));
+  await assert.rejects(saveTheme.run({ data: payload }));
+  const { id } = await call(payload);
+  const ref = db.doc(`cardThemes/${id}`);
+  const original = (await ref.get()).data();
+  const count = (await db.collection("cardThemes").get()).size;
+  for (const baseTheme of CATALOG_THEMES) {
+    assert.deepEqual(
+      await call({ ...payload, id, name: "Revista", baseTheme }),
+      { id },
+    );
+    const stored = (await ref.get()).data();
+    assert.equal(stored.baseTheme, baseTheme);
+    assert.equal(stored.createdBy, original.createdBy);
+    assert.ok(stored.createdAt.isEqual(original.createdAt));
+    assert.equal(stored.updatedBy, "lab-admin");
+  }
+  assert.equal((await db.collection("cardThemes").get()).size, count);
+  for (const uid of ["lab-member", "lab-dbs", "lab-disabled"])
+    await assert.rejects(call({ ...payload, id }, uid));
+  for (const invalid of [
+    { id: "../other" },
+    { id: "" },
+    { id: 1 },
+    { baseTheme: "missing-edition" },
+    { colors: { primary: "red" } },
+    { design: { shape: "script" } },
+  ])
+    await assert.rejects(call({ ...payload, ...invalid }));
+  await assert.rejects(
+    call({ ...payload, id: "missing-card-lab-theme" }),
+    /não encontrada/,
+  );
+  const copy = await call({ ...payload, baseTheme: "apogee" });
+  assert.notEqual(copy.id, id);
+});
 test("tickets: autoria, acesso, notificações e fecho irreversível", async () => {
   for (const [uid, role] of [
     ["ticket-member", "member"],
@@ -1252,7 +1313,10 @@ test("eventos e presets: permissões, eleições, fecho idempotente, recompensa 
       auth: { uid: ids[0] },
       data: { eventId: mixed },
     });
-    assert.deepEqual(mixedResult.winners[0].reward, { ...reward, criterion: CARD_CRITERIA.mvp });
+    assert.deepEqual(mixedResult.winners[0].reward, {
+      ...reward,
+      criterion: CARD_CRITERIA.mvp,
+    });
     assert.deepEqual(mixedResult.winners[1].uids, []);
     assert.equal(mixedResult.winners[1].reward, undefined);
     const { id: tie } = await call(admin, {

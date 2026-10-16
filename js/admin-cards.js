@@ -314,6 +314,13 @@ export async function adminCardsPage(ctx, uid) {
       `${COLLECTION_EDITIONS[entry.id] ? `<p class="muted">${esc(COLLECTION_EDITIONS[entry.id].detail)}. ${CARD_POLICY[entry.id] ? durationName(CARD_POLICY[entry.id].duration) : "Design em reserva"}.</p>` : ""}<div class="history-card-expanded">${card(previewPlayer, { size: "lg", theme: entry.baseTheme || "custom-test", preview: true })}</div>`,
     );
     decorate(document.querySelector("#modal-root .football-card"), entry);
+    if (ctx.user.role === "admin")
+      document
+        .querySelector("#modal-root .modal")
+        .insertAdjacentHTML(
+          "beforeend",
+          `<div class="actions">${linkButton(`#/admin/cards/${entry.id}`, entry.created ? "Editar no Card Lab" : "Criar a partir desta carta", "primary", "edit")}</div>`,
+        );
     bindImages(document.querySelector("#modal-root"));
   };
   bindImages();

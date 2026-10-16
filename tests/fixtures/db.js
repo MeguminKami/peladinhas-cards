@@ -163,6 +163,15 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if (name === "saveTheme") {
+    state.cardThemes ||= [];
+    const existing = state.cardThemes.find((theme) => theme.id === data.id);
+    if (data.id && !existing) throw Error("Composição não encontrada.");
+    const id = existing?.id || `studio-theme-${state.cardThemes.length}`;
+    if (existing) Object.assign(existing, data);
+    else state.cardThemes.push({ ...data, id });
+    return { data: { id } };
+  }
   if (name === "selectWeeklyCard") {
     state.cardSelections ||= [];
     const choice = state.cardSelections.find((row) => row.uid === "pedro");

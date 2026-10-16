@@ -7,9 +7,8 @@ import {
   themeName,
   clamp,
 } from "./utils.js";
-import { esc, pageHead, linkButton, busy, toast } from "./ui.js";
+import { esc, pageHead, linkButton, busy, toast, empty } from "./ui.js";
 import { icon } from "./icons.js";
-import { RESERVED_COLLECTION_IDS } from "./card-collection.js";
 import { card, bindImages } from "./cards.js";
 import {
   DESIGN_FIELDS,
@@ -50,6 +49,17 @@ const defaults = () => ({
   positionFont: "heavy",
 });
 export async function cardLab(ctx, uid) {
+  if (ctx.user?.role !== "admin") {
+    ctx.render(
+      empty(
+        "Acesso reservado",
+        "O Card Lab está disponível para ADMIN.",
+        "",
+        "shield",
+      ),
+    );
+    return;
+  }
   const players = ctx.league.players,
     experimental = await DB.list("cardThemes"),
     selected = players.find((p) => p.uid === uid) || players[0];
@@ -217,6 +227,41 @@ export async function cardLab(ctx, uid) {
     preview = document.querySelector("#card-preview"),
     history = [],
     tools = { tab: "models", photo: "move" };
+  form.insertAdjacentHTML(
+    "afterbegin",
+    '<input type="hidden" name="projectId" value="">',
+  );
+  document
+    .querySelector(".studio-project-bar")
+    .insertAdjacentHTML(
+      "afterend",
+      `<section class="studio-library panel"><div><span class="eyebrow">BIBLIOTECA DO ADMIN</span><h2>As tuas composições</h2><p id="studio-project-status" role="status">Nova composição</p></div><label>Editar composição guardada<select id="studio-saved-project"><option value="">Selecionar composição</option></select></label><div class="actions"><button type="button" class="btn btn-secondary" id="lab-new-project">${icon("plus")}Nova composição</button><button type="button" class="btn btn-secondary" id="save-theme-copy" hidden>${icon("assets")}Guardar uma cópia</button></div></section>`,
+    );
+  const library = document.querySelector("#studio-saved-project");
+  const refreshLibrary = () => {
+    const selected = form.elements.projectId.value;
+    library.innerHTML =
+      '<option value="">Selecionar composição</option>' +
+      experimental
+        .map(
+          (theme) =>
+            `<option value="${esc(theme.id)}" ${theme.id === selected ? "selected" : ""}>${esc(theme.name)}</option>`,
+        )
+        .join("");
+  };
+  refreshLibrary();
+  const models = form.querySelector('[data-studio-panel="models"]');
+  const editionCatalog = document.createElement("section");
+  editionCatalog.className = "studio-edition-catalog";
+  editionCatalog.innerHTML = `<h3>Edições da coleção</h3><div class="studio-edition-grid">${Object.entries(
+    COLLECTION_EDITIONS,
+  )
+    .map(
+      ([id, edition]) =>
+        `<button type="button" class="studio-edition-choice" data-studio-edition="${id}" aria-pressed="false"><span class="studio-edition-preview" aria-hidden="true">${card(sample, { theme: id, preview: true, size: "sm" })}</span><strong>${esc(themeName(id))}</strong></button>`,
+    )
+    .join("")}</div>`;
+  models.querySelector('[name="theme"]').closest("label").after(editionCatalog);
   let historyIndex = -1,
     timer,
     dragging;
@@ -246,12 +291,23 @@ export async function cardLab(ctx, uid) {
       saved = experimental.find((t) => `saved:${t.id}` === f.theme);
     document.querySelector("#name-background-transparency").value =
       `${f.nameBackgroundTransparency}%`;
-    const collectionPreview = RESERVED_COLLECTION_IDS.includes(f.theme);
     const saveButton = document.querySelector("#save-theme");
-    saveButton.disabled = RESERVED_COLLECTION_IDS.includes(f.theme);
-    saveButton.innerHTML = RESERVED_COLLECTION_IDS.includes(f.theme)
-      ? "Design em reserva · Só pré-visualização"
-      : `${icon("check")}Guardar composição`;
+    saveButton.innerHTML = `${icon("check")}${f.projectId ? "Guardar alterações" : "Guardar composição"}`;
+    document.querySelector("#save-theme-copy").hidden = !f.projectId;
+    document.querySelector("#studio-project-status").textContent = f.projectId
+      ? `A editar: ${experimental.find((theme) => theme.id === f.projectId)?.name || f.themeName}`
+      : "Nova composição";
+    library.value = f.projectId || "";
+    editionCatalog
+      .querySelectorAll("[data-studio-edition]")
+      .forEach((button) =>
+        button.setAttribute(
+          "aria-pressed",
+          String(
+            button.dataset.studioEdition === (saved?.baseTheme || f.theme),
+          ),
+        ),
+      );
     const p = {
       ...(players.find((p) => p.uid === f.player) || sample),
       displayName: f.displayName,
@@ -274,16 +330,6 @@ export async function cardLab(ctx, uid) {
     form.style.setProperty("--studio-secondary", f.color2);
     const el = preview.firstElementChild;
     el.classList.add("lab-designed");
-    if (collectionPreview) {
-      for (const [studio, material] of [
-        ["--studio-primary", "--card-a"],
-        ["--studio-secondary", "--card-b"],
-        ["--studio-text", "--card-text"],
-        ["--studio-edge", "--card-edge"],
-        ["--studio-glow", "--card-glow"],
-      ])
-        el.style.setProperty(studio, `var(${material})`);
-    }
     for (const [key, v] of [
       ["color1", "--studio-primary"],
       ["color2", "--studio-secondary"],
@@ -291,7 +337,7 @@ export async function cardLab(ctx, uid) {
       ["borderColor", "--studio-edge"],
       ["glowColor", "--studio-glow"],
     ])
-      if (!collectionPreview) el.style.setProperty(v, f[key]);
+      el.style.setProperty(v, f[key]);
     for (const [key, v] of [
       ["color1", "--card-a"],
       ["color2", "--card-b"],
@@ -299,7 +345,7 @@ export async function cardLab(ctx, uid) {
       ["borderColor", "--card-edge"],
       ["glowColor", "--card-glow"],
     ])
-      if (!collectionPreview) el.style.setProperty(v, f[key]);
+      el.style.setProperty(v, f[key]);
     applyCardDesign(el, readDesign());
     el.querySelector(".card-surface").insertAdjacentHTML(
       "beforeend",
@@ -473,10 +519,7 @@ export async function cardLab(ctx, uid) {
     const saved = experimental.find(
       (t) => `saved:${t.id}` === form.theme.value,
     );
-    if (
-      COLLECTION_EDITIONS[form.theme.value] &&
-      !RESERVED_COLLECTION_IDS.includes(form.theme.value)
-    ) {
+    if (COLLECTION_EDITIONS[form.theme.value]) {
       const probe = document.createElement("div");
       probe.hidden = true;
       probe.innerHTML = card(sample, {
@@ -509,10 +552,9 @@ export async function cardLab(ctx, uid) {
       );
     }
     if (saved) {
-      for (const [key, , , , value] of DESIGN_FIELDS.filter(([name]) =>
-        name.startsWith("nameBackground"),
-      ))
-        set(key, value);
+      set("projectId", saved.id);
+      set("themeName", saved.name);
+      Object.entries(defaults()).forEach(([key, value]) => set(key, value));
       Object.entries(saved.design || {}).forEach(([key, value]) =>
         set(key, value),
       );
@@ -524,6 +566,27 @@ export async function cardLab(ctx, uid) {
           ),
       );
     }
+    changed();
+  };
+  library.onchange = () => {
+    if (!library.value) return;
+    set("theme", `saved:${library.value}`);
+    form.theme.onchange();
+  };
+  editionCatalog.onclick = (e) => {
+    const button = e.target.closest("[data-studio-edition]");
+    if (!button) return;
+    set("theme", button.dataset.studioEdition);
+    form.theme.onchange();
+  };
+  document.querySelector("#lab-new-project").onclick = () => {
+    set("projectId", "");
+    set("theme", "gold-rare");
+    set("themeName", "A minha carta");
+    Object.entries(defaults()).forEach(([key, value]) => set(key, value));
+    palette("gold");
+    history.length = 0;
+    historyIndex = -1;
     changed();
   };
   form.player.onchange = () => {
@@ -648,12 +711,14 @@ export async function cardLab(ctx, uid) {
       document.querySelector("#lab-undo").disabled = next < 1;
       document.querySelector("#lab-redo").disabled = next >= history.length - 1;
     };
-  document.querySelector("#save-theme").onclick = async (e) => {
-    if (RESERVED_COLLECTION_IDS.includes(fields().theme)) return;
+  let saving = false;
+  const saveComposition = async (e, copy = false) => {
+    if (saving) return;
     commit();
     const f = fields(),
       saved = experimental.find((t) => `saved:${t.id}` === f.theme),
       payload = {
+        ...(!copy && f.projectId ? { id: f.projectId } : {}),
         name: f.themeName,
         baseTheme: saved?.baseTheme || (saved ? "custom-test" : f.theme),
         design: readDesign(),
@@ -666,23 +731,49 @@ export async function cardLab(ctx, uid) {
         },
         texture: "plain",
       };
+    if (!payload.name.trim()) return toast("Dá um nome à composição.", "error");
+    saving = true;
     try {
       const result = await busy(e.currentTarget, () =>
         DB.callAdmin("saveTheme", payload),
       );
       if (result.data.id) {
-        experimental.push({ ...payload, id: result.data.id });
-        form.theme.add(
-          new Option(`${payload.name} · guardado`, `saved:${result.data.id}`),
+        const index = experimental.findIndex(
+          (theme) => theme.id === result.data.id,
         );
+        const next = {
+          ...(experimental[index] || {}),
+          ...payload,
+          id: result.data.id,
+        };
+        if (index < 0) experimental.push(next);
+        else experimental[index] = next;
+        const option = [...form.theme.options].find(
+          (option) => option.value === `saved:${result.data.id}`,
+        );
+        if (option) option.textContent = `${payload.name} · guardado`;
+        else
+          form.theme.add(
+            new Option(`${payload.name} · guardado`, `saved:${result.data.id}`),
+          );
+        set("projectId", result.data.id);
         set("theme", `saved:${result.data.id}`);
+        refreshLibrary();
+        commit();
         draw();
       }
       document.querySelector("#studio-change-state").textContent =
         "Composição guardada";
       toast("Composição guardada.");
-    } catch {}
+    } catch (error) {
+      toast(error.message || "Não foi possível guardar a composição.", "error");
+    } finally {
+      saving = false;
+    }
   };
+  document.querySelector("#save-theme").onclick = (e) => saveComposition(e);
+  document.querySelector("#save-theme-copy").onclick = (e) =>
+    saveComposition(e, true);
   document.querySelector("#lab-export").onclick = () => {
     const url = URL.createObjectURL(
         new Blob([JSON.stringify({ version: 2, fields: fields() }, null, 2)], {
@@ -732,6 +823,7 @@ export async function cardLab(ctx, uid) {
           v.length < 2000
         )
           set(key, v);
+      set("projectId", "");
       changed();
       toast("Projeto carregado.");
     } catch (error) {
@@ -740,6 +832,10 @@ export async function cardLab(ctx, uid) {
     e.target.value = "";
   };
   ctx.cleanup(() => clearTimeout(timer));
+  if (uid && [...form.theme.options].some((option) => option.value === uid)) {
+    set("theme", uid);
+    form.theme.onchange();
+  }
   draw();
   commit();
   document.querySelector("#studio-change-state").textContent =

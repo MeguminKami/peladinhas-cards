@@ -2,6 +2,7 @@ import * as DB from "./db.js";
 import { WEB_PUSH_PUBLIC_KEY } from "./push-config.js";
 import { busy, modal, toast } from "./ui.js";
 import { icon } from "./icons.js";
+import { flushNotificationReads } from "./notification-read-queue.js";
 
 const base = new URL("../", import.meta.url),
   storageKey = `peladinhas-push:${base.pathname}`;
@@ -10,9 +11,19 @@ let uid = null,
   snapshotCallback,
   enabled = false,
   epoch = 0,
+  deviceEpoch = 0,
   identityInitialized = false,
   enabling = false,
-  requestedUid = null;
+  requestedUid = null,
+  monitor,
+  registrationPending = false,
+  pendingSync = false,
+  syncCursor = null,
+  connectionError = false,
+  recoveryFlight,
+  panelState = "";
+export const PUSH_RECHECK_MS = 10000;
+const callDevice = data => DB.callAdmin("pushDeviceAction", data, { timeout: 10000 });
 const installed = () =>
   matchMedia("(display-mode: standalone)").matches ||
   navigator.standalone === true;
@@ -65,6 +76,9 @@ async function message(data) {
   });
 }
 function updatePanels() {
+  const next = JSON.stringify([uid, enabled, enabling, navigator.onLine, supported() ? Notification.permission : "unsupported", installed(), connectionError, pendingSync]);
+  if (next === panelState) return;
+  panelState = next;
   for (const panel of document.querySelectorAll("[data-push-settings]"))
     drawPanel(panel);
 }
@@ -81,6 +95,9 @@ function drawPanel(panel) {
     requiresInstall = ios() && !installed();
   const mobile = ios() || /Android/i.test(navigator.userAgent);
   const blocked = available && Notification.permission === "denied";
+  const online = navigator.onLine !== false;
+  const permissionLabel = !available ? "Indisponível" : Notification.permission === "granted" ? "Permitida" : blocked ? "Bloqueada" : "Por pedir";
+  const stateLabel = requiresInstall ? "Instalação necessária" : !available ? "Não suportadas" : blocked ? "Bloqueadas" : !online ? "Sem ligação" : connectionError ? "A recuperar ligação" : enabled ? "Ativas" : "Por ativar";
   const title = enabled
     ? "Notificações ativadas neste dispositivo."
     : invitation
@@ -97,11 +114,23 @@ function drawPanel(panel) {
           : invitation
             ? "Jogos e mensagens, mesmo com a app fechada."
             : "Escolhe receber convocatórias, lembretes e novidades na barra de notificações.";
-  panel.innerHTML = `<div class="push-settings-symbol">${icon("bell")}</div><div class="push-settings-copy">${invitation ? "" : `<p class="eyebrow">${enabled ? "LIGADO À TUA LIGA" : "NÃO PERDAS A PRÓXIMA PELADINHA"}</p>`}<h2>${title}</h2><p>${description}</p></div><div class="push-settings-actions">${enabled ? '<button type="button" class="btn btn-secondary" data-push-test>Enviar teste</button><button type="button" class="btn btn-ghost" data-push-disable>Desativar neste dispositivo</button>' : `<button type="button" class="btn btn-primary" data-push-enable ${!available && !requiresInstall ? "disabled" : ""}>${requiresInstall ? "Instalar a APP" : blocked ? "Ver como permitir" : mobile ? "Ativar no telemóvel" : "Ativar neste dispositivo"}</button>`}</div>`;
+  panel.dataset.pushState = enabled ? "enabled" : "disabled";
+  panel.innerHTML = `<div class="push-settings-symbol">${icon("bell")}</div><div class="push-settings-copy">${invitation ? "" : '<p class="eyebrow">NESTE DISPOSITIVO</p>'}<h2>${invitation ? title : "Alertas na barra de notificações"}</h2><p>${!invitation && !online ? "As entregas e as leituras pendentes retomam quando a ligação voltar." : !invitation && connectionError ? "A ligação ao serviço será tentada novamente. Também podes verificar agora." : description}</p>${invitation ? "" : `<span class="push-state" role="status">${enabled && online && !connectionError ? icon("check") : icon("bell")}${stateLabel}</span>`}</div><div class="push-settings-actions">${enabled ? `<button type="button" class="btn btn-secondary" data-push-test ${online && !enabling ? "" : "disabled"}>Enviar teste</button><button type="button" class="btn btn-ghost" data-push-disable>Desativar neste dispositivo</button>` : `<button type="button" class="btn btn-primary" data-push-enable ${!available && !requiresInstall ? "disabled" : ""}>${requiresInstall ? "Instalar a APP" : blocked ? "Ver como permitir" : mobile ? "Ativar no telemóvel" : "Ativar neste dispositivo"}</button>`}${!invitation && available && !blocked && saved()?.uid === uid ? `<button type="button" class="btn btn-ghost" data-push-retry ${online ? "" : "disabled"}>Verificar ligação</button>` : ""}</div>${invitation ? "" : `<dl class="push-device-facts"><div><dt>Permissão</dt><dd>${permissionLabel}</dd></div><div><dt>Alertas do dispositivo</dt><dd>${enabled ? "Ativados" : "Por ativar"}</dd></div><div><dt>Internet</dt><dd>${online ? "Ligada" : "Desligada"}</dd></div></dl><div class="push-delivery-info"><div>${icon("bell")}<p><strong>Com a app fechada</strong><span>Os alertas são apresentados pelo sistema. Permite as notificações da app ou do navegador nas definições do dispositivo.</span></p></div><div>${icon("games")}<p><strong>Sem Internet</strong><span>O serviço push pode guardar entregas até 7 dias. Assim que houver ligação, volta a tentar entregá-las; o histórico da liga mantém as mensagens.</span></p></div>${ios() ? `<div>${icon("install")}<p><strong>iPhone e iPad</strong><span>Instala no ecrã inicial, abre a app instalada e permite as notificações. Requer iOS/iPadOS 16.4 ou posterior.</span></p></div>` : `<div>${icon("shield")}<p><strong>Permissões do sistema</strong><span>O modo Não incomodar, a poupança de bateria e o bloqueio do navegador podem atrasar ou silenciar alertas.</span></p></div>`}</div>`}`;
+  panel.querySelector("[data-push-retry]")?.addEventListener("click", async event => {
+    registrationPending = true;
+    pendingSync = true;
+    syncCursor = null;
+    await busy(event.currentTarget, () => recoverPushConnection());
+    toast(connectionError ? "Não foi possível verificar a ligação. Vamos tentar novamente." : "Ligação às notificações verificada.", connectionError ? "error" : "success");
+  });
   panel
     .querySelector("[data-push-enable]")
     ?.addEventListener("click", async (event) => {
       if (enabling) return;
+      if (navigator.onLine === false && !requiresInstall && !blocked) {
+        toast("Liga-te à Internet para ativar as notificações neste dispositivo.", "error");
+        return;
+      }
       if (requiresInstall) {
         window.dispatchEvent(new Event("peladinhas-install"));
         return;
@@ -129,6 +158,7 @@ function drawPanel(panel) {
       } catch {
       } finally {
         enabling = false;
+        updatePanels();
       }
     });
   panel
@@ -146,6 +176,7 @@ function drawPanel(panel) {
     ?.addEventListener("click", async (event) => {
       try {
         await busy(event.currentTarget, async () => {
+          if (navigator.onLine === false) throw Error("Liga-te à Internet para enviar uma notificação de teste.");
           const current = saved();
           if (
             !supported() ||
@@ -170,7 +201,7 @@ function drawPanel(panel) {
               "A ligação às notificações perdeu-se. Volta a ativá-las neste dispositivo.",
             );
           }
-          await DB.callAdmin("pushDeviceAction", {
+          await callDevice({
             action: "test",
             deviceId: current.deviceId,
           });
@@ -182,7 +213,7 @@ function drawPanel(panel) {
     });
 }
 export const pushSettingsPanel = () =>
-  '<section class="panel push-settings" data-push-settings aria-label="Notificações no telemóvel"></section>';
+  '<section class="panel push-settings" data-push-settings aria-label="Notificações neste dispositivo"></section>';
 export const homePushInvitation = () =>
   installed()
     ? '<section class="panel push-settings push-invitation" data-push-settings data-push-context="home" aria-label="Ativar notificações da liga"></section>'
@@ -201,7 +232,7 @@ async function enable(permission) {
     );
     return;
   }
-  const account = uid;
+  const account = uid, deviceGeneration = deviceEpoch;
   if (!account) throw Error("Inicia sessão para ativar as notificações.");
   const reg = await Promise.race([
     navigator.serviceWorker.ready,
@@ -230,13 +261,13 @@ async function enable(permission) {
       userVisibleOnly: true,
       applicationServerKey: expected,
     });
-  if (account !== uid) {
+  if (account !== uid || deviceGeneration !== deviceEpoch) {
     await subscription.unsubscribe();
     throw Error("A sessão mudou. Volta a ativar as notificações.");
   }
   let result;
   try {
-    result = await DB.callAdmin("pushDeviceAction", {
+    result = await callDevice({
       action: "register",
       subscription: subscription.toJSON(),
       scope: base.href,
@@ -251,9 +282,9 @@ async function enable(permission) {
     save(null);
     throw error;
   }
-  if (account !== uid) {
+  if (account !== uid || deviceGeneration !== deviceEpoch) {
     await subscription.unsubscribe();
-    await DB.callAdmin("pushDeviceAction", {
+    await callDevice({
       action: "unregister",
       deviceId: result.data.deviceId,
     }).catch(() => {});
@@ -262,7 +293,7 @@ async function enable(permission) {
   const owner = { uid: account, deviceId: result.data.deviceId };
   save(owner);
   if (!(await message({ type: "PUSH_OWNER", ...owner }))) {
-    await DB.callAdmin("pushDeviceAction", {
+    await callDevice({
       action: "unregister",
       deviceId: owner.deviceId,
     }).catch(() => {});
@@ -270,14 +301,24 @@ async function enable(permission) {
     save(null);
     throw Error("Não foi possível preparar as notificações. Tenta novamente.");
   }
-  if (account !== uid) return;
+  if (account !== uid || deviceGeneration !== deviceEpoch) return;
   enabled = true;
+  registrationPending = false;
+  pendingSync = true;
+  syncCursor = null;
+  connectionError = false;
   updatePanels();
   toast("Já podes receber as novidades da liga no telemóvel.");
+  await recoverPushConnection();
 }
 export async function detachPushForLogout() {
+  ++deviceEpoch;
   const owner = saved();
   enabled = false;
+  registrationPending = false;
+  pendingSync = false;
+  syncCursor = null;
+  connectionError = false;
   requestedUid = null;
   // Detach locally first, even if the network/backend is unavailable.
   await message({ type: "PUSH_DISABLE" }).catch(() => {});
@@ -287,7 +328,7 @@ export async function detachPushForLogout() {
   save(null);
   updatePanels();
   if (owner?.uid === uid && owner?.deviceId)
-    await DB.callAdmin("pushDeviceAction", {
+    await callDevice({
       action: "unregister",
       deviceId: owner.deviceId,
     }).catch(() => {});
@@ -310,6 +351,12 @@ export async function syncPushIdentity(account, onSnapshot) {
   unsubscribe = () => {};
   uid = account;
   enabled = false;
+  registrationPending = true;
+  pendingSync = true;
+  syncCursor = null;
+  connectionError = false;
+  clearInterval(monitor);
+  monitor = null;
   const previous = saved();
   if (previous && previous.uid !== account) await detachPushForLogout();
   if (generation !== epoch) return;
@@ -328,38 +375,67 @@ export async function syncPushIdentity(account, onSnapshot) {
       () => {},
     );
   }
-  const owner = saved();
-  if (
-    account &&
-    owner?.uid === account &&
-    supported() &&
-    Notification.permission === "granted"
-  ) {
-    const reg = await registration(),
-      subscription = await reg?.pushManager?.getSubscription();
-    if (subscription && generation === epoch) {
-      const result = await DB.callAdmin("pushDeviceAction", {
-        action: "register",
-        subscription: subscription.toJSON(),
-        scope: base.href,
-        platform: ios()
-          ? "ios"
-          : /Android/i.test(navigator.userAgent)
-            ? "android"
-            : "browser",
-      });
-      if (generation === epoch) {
-        const current = { uid: account, deviceId: result.data.deviceId };
-        save(current);
-        const prepared = await message({ type: "PUSH_OWNER", ...current });
-        if (generation !== epoch) return;
-        enabled = prepared;
-      }
-    } else save(null);
+  if (account) {
+    monitor = setInterval(() => {
+      if (document.visibilityState === "visible") recoverPushConnection().catch(() => {});
+    }, PUSH_RECHECK_MS);
+    await recoverPushConnection();
   }
   if (generation !== epoch) return;
   updatePanels();
   message({ type: "PUSH_FLUSH_READS" }).catch(() => {});
+}
+export async function recoverPushConnection() {
+  const account = uid, generation = epoch, deviceGeneration = deviceEpoch;
+  const currentGeneration = () => generation === epoch && deviceGeneration === deviceEpoch;
+  if (!account) return;
+  if (recoveryFlight?.generation === generation && recoveryFlight?.deviceGeneration === deviceGeneration) return recoveryFlight.promise;
+  const flight = { generation, deviceGeneration };
+  flight.promise = (async () => {
+    flushNotificationReads(account).catch(() => {});
+    if (!supported() || Notification.permission !== "granted") {
+      if (enabled) await detachPushForLogout();
+      return;
+    }
+    const owner = saved();
+    if (owner?.uid !== account) return;
+    try {
+      const reg = await registration();
+      const subscription = await reg?.pushManager?.getSubscription();
+      if (!currentGeneration()) return;
+      if (!subscription) { enabled = false; save(null); return; }
+      const prepared = await message({ type: "PUSH_OWNER", ...owner });
+      if (!currentGeneration()) return;
+      enabled = prepared;
+      if (!enabled) { connectionError = true; return; }
+      if (navigator.onLine === false) return;
+      if (registrationPending) {
+        const result = await callDevice({ action: "register", subscription: subscription.toJSON(), scope: base.href, platform: ios() ? "ios" : /Android/i.test(navigator.userAgent) ? "android" : "browser" });
+        if (!currentGeneration()) return;
+        const current = { uid: account, deviceId: result.data.deviceId };
+        save(current);
+        const restored = await message({ type: "PUSH_OWNER", ...current });
+        if (!currentGeneration()) return;
+        enabled = restored;
+        if (!enabled) throw Error("Service worker indisponível.");
+        registrationPending = false;
+        pendingSync = true;
+      }
+      if (pendingSync) {
+        const current = saved();
+        if (!currentGeneration() || current?.uid !== account) return;
+        const result = await callDevice({ action: "sync", deviceId: current.deviceId, ...(syncCursor ? { cursor: syncCursor } : {}) });
+        if (!currentGeneration()) return;
+        pendingSync = result.data?.synchronized === false;
+        syncCursor = result.data?.nextCursor || null;
+        connectionError = (result.data?.pending || 0) > 0;
+      } else connectionError = false;
+      message({ type: "PUSH_FLUSH_READS" }).catch(() => {});
+    } catch { if (currentGeneration()) connectionError = true; }
+    finally { if (currentGeneration()) updatePanels(); }
+  })();
+  recoveryFlight = flight;
+  try { return await flight.promise; } finally { if (recoveryFlight === flight) recoveryFlight = null; }
 }
 navigator.permissions
   ?.query({ name: "notifications" })
@@ -387,21 +463,17 @@ navigator.permissions
     });
   })
   .catch(() => {});
-window.addEventListener("online", () =>
-  message({ type: "PUSH_FLUSH_READS" }).catch(() => {}),
-);
+window.addEventListener("online", () => {
+  pendingSync = true;
+  syncCursor = null;
+  recoverPushConnection().catch(() => {});
+  message({ type: "PUSH_FLUSH_READS" }).catch(() => {});
+  updatePanels();
+});
+window.addEventListener("offline", updatePanels);
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible")
-    message({ type: "PUSH_FLUSH_READS" }).catch(() => {});
-});
-document.addEventListener("visibilitychange", () => {
-  if (
-    document.visibilityState === "visible" &&
-    enabled &&
-    supported() &&
-    Notification.permission !== "granted"
-  )
-    detachPushForLogout().catch(() => {});
+    recoverPushConnection().catch(() => {});
 });
 navigator.serviceWorker?.addEventListener("message", (event) => {
   if (
