@@ -112,14 +112,29 @@ try {
             return matches;
           });
         assert.ok(matchesTheme, `Consistent selected color: ${kind}, ${theme}`);
+        if (index === 0 && width >= 768) {
+          const rarityBox = await page
+            .locator(".event-rarity-control")
+            .boundingBox();
+          const imageBox = await page
+            .locator(".event-image-input")
+            .boundingBox();
+          assert.ok(
+            Math.abs(rarityBox.y - imageBox.y) <= 1,
+            "Aligned presentation controls",
+          );
+          assert.ok(
+            Math.abs(rarityBox.width - imageBox.width) <= 1,
+            "Equal presentation columns",
+          );
+          assert.equal(rarityBox.height, imageBox.height);
+        }
         if (theme === "club" && [320, 1440].includes(width))
-          await page
-            .locator("#event-editor")
-            .screenshot({
-              path: `${output}/${kind}-${index}-${width}.png`,
-              animations: "disabled",
-              style: "#header,.bottom-nav{visibility:hidden!important}",
-            });
+          await page.locator("#event-editor").screenshot({
+            path: `${output}/${kind}-${index}-${width}.png`,
+            animations: "disabled",
+            style: "#header,.bottom-nav{visibility:hidden!important}",
+          });
       }
     }
     await page.evaluate(() => {
@@ -132,6 +147,7 @@ try {
       .locator(kind === "event" ? "#new-event" : "#new-mission")
       .click();
     assert.equal(await page.locator("[data-editor-step]").count(), 5);
+    assert.equal(await page.locator("#event-editor details").count(), 0);
     await next();
     assert.equal(
       await page
@@ -142,9 +158,31 @@ try {
     assert.ok(await page.locator(".event-editor-error:visible").isVisible());
     await field("title").fill(`${kind} fluid creation`);
     assert.equal(await field("startsAt").isVisible(), false);
-    await page.locator(".event-optional-fields summary").first().click();
     await field("description").fill("Descrição preservada entre etapas.");
     await field("rarity").selectOption("ultimate");
+    for (const rarity of [
+      "bronze",
+      "silver",
+      "gold",
+      "special-gold",
+      "elite",
+      "icon",
+      "ultimate",
+    ]) {
+      await field("rarity").selectOption(rarity);
+      const preview = await page
+        .locator("#event-rarity-preview")
+        .evaluate((element) => ({
+          width: element.getBoundingClientRect().width,
+          height: element.getBoundingClientRect().height,
+          outline: getComputedStyle(element).outlineStyle,
+        }));
+      assert.ok(
+        preview.width < 180 && preview.height <= 46,
+        `Compact badge: ${rarity}`,
+      );
+      assert.equal(preview.outline, "none");
+    }
     await checkLayout(kind, 0);
     await next();
     if (kind === "event") {
@@ -169,9 +207,7 @@ try {
         await page.locator(".event-rating-config").isVisible(),
         true,
       );
-      await page.locator(".event-rating-examples summary").click();
       await page.locator('[data-rating-preset="ratingAverage"]').click();
-      await page.locator(".event-rating-examples summary").click();
       assert.equal(await field("scope").isDisabled(), true);
       await field("ratingThreshold").fill("4.2");
       await field("target").fill("4");

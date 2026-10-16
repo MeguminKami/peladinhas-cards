@@ -1449,5 +1449,46 @@ p {
   .event-builder .event-create-actions #event-preview { flex-basis:100%; }
 }
 .game-own-rating > small { display:block; }
+/* Open settings, balanced rows and compact rarity preview. */
+.event-builder .event-optional-fields { display:grid; gap:20px; }
+.event-builder .event-section-title { margin:0; padding:0; font-size:.85rem; font-weight:600; color:var(--text-primary); }
+.event-builder .event-section-title small { display:none; }
+.event-builder .event-question > .event-section-title { padding:20px; border-bottom:1px solid var(--border); }
+.event-builder .event-question-fields { padding-top:20px; }
+.event-builder .event-editor-step .form-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:stretch; }
+.event-builder .form-grid > label { display:flex; flex-direction:column; gap:8px; }
+.event-builder .form-grid > .check-label { flex-direction:row; align-items:center; justify-content:flex-start; min-height:46px; }
+.event-builder .form-grid > :nth-child(odd of :not([hidden])):nth-last-child(1 of :not([hidden])) { grid-column:1/-1; }
+.event-builder .form-grid :is(input,select):not([type="checkbox"]):not([multiple]) { height:46px; min-height:46px; box-sizing:border-box; }
+.event-builder .form-grid > label > :is(input,select) { margin-top:auto; }
+.event-builder .event-presentation-grid > .field-wide { grid-column:1/-1; }
+.event-builder .event-rarity-control { display:flex; align-items:center; gap:12px; min-width:0; height:46px; }
+.event-builder .event-rarity-control select { flex:1; width:0; min-width:0; }
+.event-builder #event-rarity-preview { display:inline-flex; flex:0 0 auto; width:max-content; max-width:45%; min-height:0; padding:0; margin:0; border:0; outline:0; box-shadow:none; background:none; }
+.event-builder #event-rarity-preview::before,.event-builder #event-rarity-preview::after { display:none; }
+.event-builder #event-rarity-preview .event-rarity-badge { display:inline-flex; width:max-content; max-width:100%; gap:6px; }
+.event-builder #event-rarity-preview svg { width:24px; height:24px; }
+.event-builder .event-image-input { display:flex; gap:8px; min-width:0; height:46px; }
+.event-builder .event-image-field { display:flex; flex-direction:column; gap:8px; }
+.event-builder .event-image-field > label { margin:0; }
+.event-builder .event-image-field > .event-image-input { margin-top:auto; }
+.event-builder .event-image-input input { flex:1; width:0; min-width:0; }
+.event-builder .event-image-input .btn { flex:none; height:46px; min-height:46px; padding:0 12px; }
+.event-builder :is(.event-choice-grid,.event-method-options,.event-rating-presets) { grid-auto-rows:1fr; align-items:stretch; }
+.event-builder :is(.event-choice-grid,.event-method-options) button { min-height:104px; }
+.event-builder .event-rating-presets { grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; }
+.event-builder .event-rating-presets .btn { height:100%; min-height:88px; }
+.event-builder .event-rating-attributes { grid-template-columns:repeat(3,minmax(0,1fr)); margin:0 0 20px; }
+.event-builder .event-rating-attributes > label:first-child { grid-column:1/-1; }
+.event-builder .event-rating-attributes > label { min-height:48px; margin:0; }
+.event-builder .event-written-rules { margin:0; padding:0; border:0; }
+.event-builder .event-review-card .btn { flex:none; }
+@media(max-width:660px) {
+  .event-builder .event-editor-step .form-grid { grid-template-columns:minmax(0,1fr); gap:16px; }
+  .event-builder .event-rating-attributes { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .event-builder .event-rating-presets { grid-template-columns:minmax(0,1fr); }
+  .event-builder .event-question > .event-section-title { padding:16px; }
+  .event-builder .event-question-fields { padding-top:16px; }
+}
 .game-own-rating .match-stars b { font-size:1.25rem; }
 @media(max-width:600px) { .game-row.has-own-rating { grid-template-columns:auto minmax(0,1fr) auto; } .game-row.has-own-rating .game-own-rating { grid-column:2; } }

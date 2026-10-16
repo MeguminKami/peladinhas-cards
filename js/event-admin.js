@@ -140,7 +140,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     root.querySelector(`#${id}`).oninput = drawList;
   selectArea(initialArea);
   const rewardFields = (reward = {}, index = 1) =>
-    `<details class="event-question" open><summary>${positionLabel(index)} lugar · recompensa</summary><div class="event-question-fields"><div class="form-grid"><label>Modalidade<select name="rewardMode">${options(
+    `<section class="event-question"><h4 class='event-section-title'>${positionLabel(index)} lugar · recompensa</h4><div class="event-question-fields"><div class="form-grid"><label>Modalidade<select name="rewardMode">${options(
       [
         ["stats", "Stats"],
         ["card", "Carta"],
@@ -176,7 +176,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
             reward.specialId,
           )}</optgroup>`
         : ""
-    }</select></label></div><div class="event-boost-grid">${ATTRIBUTES.map(([key, name]) => `<label>${name} +<input name="boost-${key}" type="number" min="0" max="10" value="${reward.boosts?.[key] || 0}"></label>`).join("")}</div><p class="muted small">Semanais e mensais: até 10 por atributo e 20 por prémio. A duração da carta é independente das stats; as cartas padrão seguem a sua regra. Permanentes: máximo acumulado de +10 por atributo e por jogador.</p></div></details>`;
+    }</select></label></div><div class="event-boost-grid">${ATTRIBUTES.map(([key, name]) => `<label>${name} +<input name="boost-${key}" type="number" min="0" max="10" value="${reward.boosts?.[key] || 0}"></label>`).join("")}</div><p class="muted small">Semanais e mensais: até 10 por atributo e 20 por prémio. A duração da carta é independente das stats; as cartas padrão seguem a sua regra. Permanentes: máximo acumulado de +10 por atributo e por jogador.</p></div></section>`;
   const readReward = (section) => ({
     mode: section.querySelector('[name="rewardMode"]').value,
     statDuration: section.querySelector('[name="statDuration"]').value,
@@ -260,6 +260,8 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     )}</select></label></div><div class="event-switches"><label class="check-label"><input name="allowSelfVote" type="checkbox" ${event.allowSelfVote ? "checked" : ""}>Permitir votar em si próprio</label><label class="check-label"><input name="liveResults" type="checkbox" ${event.liveResults ? "checked" : ""}>Mostrar contagens durante a votação</label><label class="check-label"><input name="needsConfirmation" type="checkbox" ${event.needsConfirmation !== false ? "checked" : ""}>ADMIN confirma antes da entrega</label></div></fieldset><fieldset class="event-form-section"><legend>${isMission ? "Recompensa por conclusão" : "Prémios da classificação"}</legend><div id="event-questions" class="content-stack"></div><p class="muted">A recompensa só é revelada depois da atribuição.</p></fieldset><div class="actions event-create-actions"><button class="btn btn-ghost" type="button" id="event-preview">Pré-visualizar</button><button class="btn btn-secondary" name="submitAction" value="draft">Guardar rascunho</button><button class="btn btn-primary" name="submitAction" value="open">${isMission ? "Publicar missão" : "Publicar evento"}</button></div></form>`;
     const form = editor.querySelector("form"),
       positions = editor.querySelector("#event-questions");
+    if (isMission)
+      form.elements.title.closest("label").classList.add("field-wide");
     editor.querySelector(".section-head .eyebrow").textContent =
       "DESAFIOS DA LIGA";
     const ratingFields = document.createElement("div");
@@ -290,22 +292,29 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       ],
       rating.combine || "all",
     )}</select></label><label>Avaliações mínimas por dimensão e jogo<input name="ratingMinRatings" type="number" min="1" max="100" step="1" value="${rating.minRatings ?? 3}"></label></div><p class="muted">Jogos por avaliar não são ignorados na janela dos últimos jogos e interrompem sequências. A janela começa no início do período ou no desbloqueio da missão. Para médias, o critério tem de estar cumprido quando se verifica o objetivo.</p></div><div id="rating-objective-preview" class="event-rating-preview" role="status" aria-live="polite"></div>`;
-    const presets = document.createElement("details");
+    const presets = document.createElement("section");
     presets.className = "event-optional-fields event-rating-examples";
     presets.innerHTML =
-      "<summary>Começar com um exemplo <small>Opcional</small></summary>";
+      "<h4 class='event-section-title'>Começar com um exemplo <small>Opcional</small></h4>";
     presets.append(ratingFields.querySelector(".event-rating-presets"));
     ratingFields.prepend(presets);
-    const ratingAdvanced = document.createElement("details");
+    const ratingAdvanced = document.createElement("section");
     ratingAdvanced.className = "event-optional-fields";
     ratingAdvanced.innerHTML =
-      "<summary>Critérios de avaliação</summary><div class='form-grid'></div>";
-    for (const key of ["ratingComparison", "ratingCombine", "ratingMinRatings"])
+      "<h4 class='event-section-title'>Critérios de avaliação</h4><div class='form-grid'></div>";
+    for (const key of [
+      "ratingThreshold",
+      "ratingComparison",
+      "ratingCombine",
+      "ratingMinRatings",
+    ])
       ratingAdvanced
         .querySelector(".form-grid")
         .append(ratingFields.querySelector(`[name="${key}"]`).closest("label"));
     const conditions = ratingFields.querySelector("#rating-conditions");
-    ratingAdvanced.append(conditions.querySelector(":scope > p:last-child"));
+    conditions
+      .querySelectorAll(":scope > p")
+      .forEach((element) => element.remove());
     conditions.append(ratingAdvanced);
     form.elements.metric.closest(".form-grid").after(ratingFields);
     for (const key of [
@@ -563,17 +572,46 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       },
       true,
     );
-    // Optional presentation fields stay out of the main setup path.
-    const presentation = document.createElement("details");
+    // Presentation stays fully visible alongside the main identity fields.
+    const presentation = document.createElement("section");
     presentation.className = "event-optional-fields";
     presentation.innerHTML =
-      "<summary>Personalizar apresentação <small>Opcional</small></summary><p class='muted'>Descrição, imagem e raridade visual para a página do desafio.</p>";
+      "<h4 class='event-section-title'>Personalizar apresentação <small>Opcional</small></h4><p class='muted'>Descrição, imagem e raridade visual para a página do desafio.</p>";
     for (const key of ["description", "image", "rarity"])
       presentation.append(
         form.elements[key].closest(key === "image" ? ".field-wide" : "label"),
       );
     sections[0].append(presentation);
-    presentation.append(form.querySelector("#event-rarity-preview"));
+    const presentationGrid = document.createElement("div");
+    presentationGrid.className = "form-grid event-presentation-grid";
+    presentation.append(presentationGrid);
+    for (const key of ["rarity", "image", "description"])
+      presentationGrid.append(
+        form.elements[key].closest(key === "image" ? ".field-wide" : "label"),
+      );
+    const rarityLabel = form.elements.rarity.closest("label");
+    const rarityControl = document.createElement("div");
+    rarityControl.className = "event-rarity-control";
+    rarityLabel.append(rarityControl);
+    const rarityPreview = form.querySelector("#event-rarity-preview");
+    rarityPreview.classList.remove("event-rarity-surface");
+    rarityControl.append(form.elements.rarity, rarityPreview);
+    rarityLabel.querySelector("small")?.remove();
+    presentation.querySelector(":scope > p")?.remove();
+    form.elements.image.closest(".field-wide").querySelector("small")?.remove();
+    form.elements.description.closest("label").classList.add("field-wide");
+    form.elements.image.closest(".field-wide").classList.remove("field-wide");
+    form.elements.image.parentElement.parentElement.classList.add(
+      "event-image-field",
+    );
+    editor.querySelector(".event-editor-intro").remove();
+    steps.forEach((step) =>
+      step.querySelector(".event-step-heading p").remove(),
+    );
+    presentation.querySelector(".event-section-title").textContent =
+      "Apresentação";
+    presets.querySelector(".event-section-title").textContent =
+      "Modelos de objetivo";
     sections[2].append(form.elements.rules.closest("label"));
     if (!isMission) {
       const methodCards = document.createElement("div");
@@ -621,10 +659,10 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         )}</select><small>Escolhe uma ou várias missões. Só contam jogos finalizados depois do desbloqueio. As recompensas anteriores podem ter expirado; as conclusões continuam válidas.</small></label>`;
       steps[2].append(gate);
     }
-    const votingSettings = document.createElement("details");
+    const votingSettings = document.createElement("section");
     votingSettings.className = "event-optional-fields";
     votingSettings.innerHTML =
-      "<summary>Regras e período de votação · opções avançadas</summary><div class='form-grid'></div>";
+      "<h4 class='event-section-title'>Regras e período de votação · opções avançadas</h4><div class='form-grid'></div>";
     for (const key of [
       "votesPerUser",
       "minVotes",
@@ -656,13 +694,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       "scope",
       "difficulty",
     ]);
-    const objectiveOptions = document.createElement("details");
-    objectiveOptions.className = "event-optional-fields";
-    objectiveOptions.innerHTML =
-      "<summary>Classificar dificuldade <small>Opcional</small></summary>";
-    objectiveOptions.append(form.elements.difficulty.closest("label"));
-    objectiveGroup.append(objectiveOptions);
-    objectiveGroup.append(ratingFields, objectiveOptions);
+    objectiveGroup.append(ratingFields);
     const objectiveFamilies = document.createElement("div");
     objectiveFamilies.className = "event-choice-grid";
     objectiveFamilies.innerHTML = `<button type="button" data-objective-family="results"><strong>Resultados dos jogos</strong><span>Jogos, golos, assistências e vitórias.</span></button><button type="button" data-objective-family="stars"><strong>Avaliações em estrelas</strong><span>Desempenho avaliado pelos jogadores.</span></button>`;
@@ -715,21 +747,22 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       "minVotes",
     ]);
     sections[2].insertBefore(voteLimits, votingSettings);
-    votingSettings.querySelector("summary").textContent =
-      "Desempate e visibilidade · opcional";
+    votingSettings.querySelector(".event-section-title").textContent =
+      "Desempate e visibilidade";
     groupFields(sections[1], "Quando acontece", [
       "startsAt",
-      "indefinite",
       "endsAt",
-      "month",
       "votingStartsAt",
       "votingEndsAt",
+      "month",
+      "indefinite",
     ]);
     const audienceGroup = groupFields(sections[1], "Quem participa", [
       "audience",
       "gameId",
       "memberIds",
     ]);
+    form.elements.audience.closest("label").classList.add("field-wide");
     groupFields(sections[1], "Repetição da missão", [
       "cadence",
       "maxRepeats",
@@ -738,17 +771,19 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       "winnerCount",
     ]);
     sections[3].prepend(prizeGroup);
-    sections[3].querySelector(":scope > p").textContent =
-      "As recompensas ficam visíveis na página do desafio. A entrega segue as regras escolhidas.";
+    sections[3].querySelector(":scope > p").remove();
     groupFields(sections[3], "Entrega das recompensas", [
       "needsConfirmation",
     ]).hidden = isMission;
     form.elements.rules.closest("label").classList.add("event-written-rules");
-    const writtenRules = document.createElement("details");
+    const writtenRules = document.createElement("section");
     writtenRules.className = "event-optional-fields";
     writtenRules.innerHTML =
-      "<summary>Acrescentar regras escritas <small>Opcional</small></summary>";
+      "<h4 class='event-section-title'>Acrescentar regras escritas <small>Opcional</small></h4>";
     writtenRules.append(form.elements.rules.closest("label"));
+    writtenRules.querySelector(".event-section-title").textContent =
+      "Regras escritas";
+    writtenRules.querySelector(".event-section-title").remove();
     sections[2].append(writtenRules);
     const updatePositions = () => {
       const count = Math.max(
@@ -935,11 +970,13 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       }
       audienceSummary.textContent = `${form.elements.memberIds.selectedOptions.length} participantes${mission ? " podem cumprir a missão." : competition ? " entram na competição." : form.elements.method.value === "admin" ? " podem ser escolhidos como vencedores." : " podem votar e receber votos."}`;
       updatePositions();
-      positions.querySelectorAll("summary").forEach((summary, i) => {
-        summary.textContent = mission
-          ? "Recompensa para cada jogador que concluir"
-          : `${positionLabel(i + 1)} lugar · prémio`;
-      });
+      positions
+        .querySelectorAll(".event-section-title")
+        .forEach((summary, i) => {
+          summary.textContent = mission
+            ? "Recompensa para cada jogador que concluir"
+            : `${positionLabel(i + 1)} lugar · prémio`;
+        });
       for (const section of positions.children) {
         const mode = section.querySelector('[name="rewardMode"]').value;
         section
@@ -952,6 +989,10 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
           );
         const stats = mode === "stats" || mode === "both",
           card = mode === "card" || mode === "both";
+        const rewardHint = section.querySelector(".muted.small");
+        rewardHint.hidden = !stats;
+        rewardHint.textContent =
+          "Limites: +10 por atributo; +20 por prémio temporário. Permanentes: +10 acumulados por atributo.";
         section.querySelector(".event-boost-grid").hidden = !stats;
         section.querySelector('[name="statDuration"]').closest("label").hidden =
           !stats;

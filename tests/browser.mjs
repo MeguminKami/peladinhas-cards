@@ -1213,7 +1213,7 @@ try {
   await page.locator('[data-editor-step="3"]').click();
   await page.locator('[name="winnerCount"]').fill("3");
   await page.locator('[name="winnerCount"]').dispatchEvent("change");
-  assert.equal(await page.locator("#event-questions > details").count(), 3);
+  assert.equal(await page.locator("#event-questions > section").count(), 3);
   await page.locator('[name="winnerCount"]').fill("1");
   await page.locator('[name="winnerCount"]').dispatchEvent("change");
   await page.locator('[data-editor-step="0"]').click();
@@ -1365,11 +1365,11 @@ try {
 
   await page.locator('[data-editor-step="3"]').click();
   assert.match(
-    await page.locator("#event-questions summary").textContent(),
+    await page.locator("#event-questions .event-section-title").textContent(),
     /cada jogador que concluir/,
   );
   assert.doesNotMatch(
-    await page.locator("#event-questions summary").textContent(),
+    await page.locator("#event-questions .event-section-title").textContent(),
     /🥇|lugar|posição/,
   );
   await page.locator('[data-reward-mode="card"]').click();

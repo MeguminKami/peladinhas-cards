@@ -121,7 +121,6 @@ try {
         .locator(kind === "event" ? "#new-event" : "#new-mission")
         .click();
       const rarity = page.locator('#event-editor [name="rarity"]');
-      await page.locator(".event-optional-fields summary").first().click();
       assert.equal(await rarity.locator("option").count(), 7);
       await rarity.selectOption("ultimate");
       assert.equal(await page.locator("#event-rarity-preview").getAttribute("data-rarity"), "ultimate");
