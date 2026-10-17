@@ -409,8 +409,14 @@ async function aggregateGame(gid) {
         ratingCounts: Object.fromEntries(
           FEEDBACK.map(([key]) => [
             key,
-            own.filter((vote) => Number.isFinite(vote.ratings?.[key])).length,
+            key === "goalkeeping" && a.goalkeeping === null
+              ? 0
+              : own.filter((vote) => Number.isFinite(vote.ratings?.[key]))
+                  .length,
           ]),
+        ),
+        goalkeepingEligible: !own.some(
+          (v) => v.raterId === uid && v.ratings?.goalkeeping === null,
         ),
       };
     }
@@ -729,53 +735,109 @@ export const onFeedback = onDocumentWritten(
 // Store only the rendering fields, once per participant and match week.
 async function captureGameCards(gid) {
   const ref = db.doc(`games/${gid}`);
-  await db.runTransaction(async tx => {
+  await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists || snap.data().deleting || snap.data().status !== "closed") return;
-    const game = snap.data(), weekId = cardWeek(game.scheduledAt.toDate()).weekId;
+    if (!snap.exists || snap.data().deleting || snap.data().status !== "closed")
+      return;
+    const game = snap.data(),
+      weekId = cardWeek(game.scheduledAt.toDate()).weekId;
     const ids = participants(game);
-    if (game.cardWeekId === weekId && ids.every(uid => Object.hasOwn(game.playerCards || {}, uid))) return;
+    if (
+      game.cardWeekId === weekId &&
+      ids.every((uid) => Object.hasOwn(game.playerCards || {}, uid))
+    )
+      return;
     const cards = {};
-    await Promise.all(ids.map(async uid => {
-      if (game.cardWeekId === weekId && Object.hasOwn(game.playerCards || {}, uid)) { cards[uid] = game.playerCards[uid]; return; }
-      const history = await tx.get(db.doc(`users/${uid}/cardHistory/${weekId}`));
-      const c = history.data();
-      // A missing historical card is explicit: never substitute today's card.
-      cards[uid] = c ? {
-        uid, ...c.appearance, hasCard:true, ovr:c.ovr, stats:c.stats || {},
-        primaryPosition:c.primaryPosition || game.positions?.[uid] || "ALA",
-        cardType:c.baseCard || "bronze-common", selectedCardId:c.selectedCardId || "base",
-        specials:c.specials || [], cardPhoto:c.cardPhoto || null,
-      } : {uid, hasCard:false, primaryPosition:game.positions?.[uid] || "ALA"};
-    }));
-    tx.update(ref, {cardWeekId:weekId, playerCards:cards});
+    await Promise.all(
+      ids.map(async (uid) => {
+        if (
+          game.cardWeekId === weekId &&
+          Object.hasOwn(game.playerCards || {}, uid)
+        ) {
+          cards[uid] = game.playerCards[uid];
+          return;
+        }
+        const history = await tx.get(
+          db.doc(`users/${uid}/cardHistory/${weekId}`),
+        );
+        const c = history.data();
+        // A missing historical card is explicit: never substitute today's card.
+        cards[uid] = c
+          ? {
+              uid,
+              ...c.appearance,
+              hasCard: true,
+              ovr: c.ovr,
+              stats: c.stats || {},
+              primaryPosition:
+                c.primaryPosition || game.positions?.[uid] || "ALA",
+              cardType: c.baseCard || "bronze-common",
+              selectedCardId: c.selectedCardId || "base",
+              specials: c.specials || [],
+              cardPhoto: c.cardPhoto || null,
+            }
+          : {
+              uid,
+              hasCard: false,
+              primaryPosition: game.positions?.[uid] || "ALA",
+            };
+      }),
+    );
+    tx.update(ref, { cardWeekId: weekId, playerCards: cards });
   });
 }
-export const ensureGameCards = onCall(async request => {
+export const ensureGameCards = onCall(async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const user = await db.doc(`users/${request.auth.uid}`).get();
-  if (!user.exists || user.data().disabled) throw new HttpsError("permission-denied", "Acesso reservado.");
+  if (!user.exists || user.data().disabled)
+    throw new HttpsError("permission-denied", "Acesso reservado.");
   const gid = request.data?.gameId;
-  if (typeof gid !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(gid)) throw new HttpsError("invalid-argument", "Jogo inválido.");
+  if (typeof gid !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(gid))
+    throw new HttpsError("invalid-argument", "Jogo inválido.");
   await captureGameCards(gid);
   const game = (await db.doc(`games/${gid}`).get()).data();
-  return {playerCards:game?.playerCards || {}, cardWeekId:game?.cardWeekId || null};
+  return {
+    playerCards: game?.playerCards || {},
+    cardWeekId: game?.cardWeekId || null,
+  };
 });
-export const renameGameTeam = onCall(async request => {
+export const renameGameTeam = onCall(async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
-  const {gameId, side, name} = request.data || {};
-  if (typeof gameId !== "string" || !/^[a-zA-Z0-9_-]{1,128}$/.test(gameId) || !["teamA","teamB"].includes(side) || typeof name !== "string" || !name.trim() || name.trim().length > 40)
-    throw new HttpsError("invalid-argument", "Escolhe um nome entre 1 e 40 caracteres.");
-  await db.runTransaction(async tx => {
-    const user = await tx.get(db.doc(`users/${request.auth.uid}`)), ref = db.doc(`games/${gameId}`), snap = await tx.get(ref);
+  const { gameId, side, name } = request.data || {};
+  if (
+    typeof gameId !== "string" ||
+    !/^[a-zA-Z0-9_-]{1,128}$/.test(gameId) ||
+    !["teamA", "teamB"].includes(side) ||
+    typeof name !== "string" ||
+    !name.trim() ||
+    name.trim().length > 40
+  )
+    throw new HttpsError(
+      "invalid-argument",
+      "Escolhe um nome entre 1 e 40 caracteres.",
+    );
+  await db.runTransaction(async (tx) => {
+    const user = await tx.get(db.doc(`users/${request.auth.uid}`)),
+      ref = db.doc(`games/${gameId}`),
+      snap = await tx.get(ref);
     const game = snap.data();
-    if (!user.exists || user.data().disabled || !game || game.deleting) throw new HttpsError("permission-denied", "Acesso reservado.");
+    if (!user.exists || user.data().disabled || !game || game.deleting)
+      throw new HttpsError("permission-denied", "Acesso reservado.");
     // Rosters are saved in descending OVR order; the first starter is the captain.
-    if (user.data().role !== "admin" && (game.status === "closed" || game[side].starters[0] !== request.auth.uid))
-      throw new HttpsError("permission-denied", "Só o capitão pode mudar este nome. Após o fecho, apenas o administrador.");
-    tx.update(ref, {[`teamNames.${side}`]:name.trim(), updatedAt:FieldValue.serverTimestamp()});
+    if (
+      user.data().role !== "admin" &&
+      (game.status === "closed" || game[side].starters[0] !== request.auth.uid)
+    )
+      throw new HttpsError(
+        "permission-denied",
+        "Só o capitão pode mudar este nome. Após o fecho, apenas o administrador.",
+      );
+    tx.update(ref, {
+      [`teamNames.${side}`]: name.trim(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
   });
-  return {ok:true};
+  return { ok: true };
 });
 export const onGame = onDocumentWritten("games/{gid}", async (event) => {
   const latestGame = await db.doc(`games/${event.params.gid}`).get();
@@ -791,9 +853,20 @@ export const onGame = onDocumentWritten("games/{gid}", async (event) => {
   }
   const g = latestGame.data();
   if (g.deleting) return;
-  const before = event.data.before.data(), after = event.data.after.data();
+  const before = event.data.before.data(),
+    after = event.data.after.data();
   if (before && after) {
-    const core = value => JSON.stringify(Object.fromEntries(Object.entries(value).filter(([key]) => !["teamNames","playerCards","cardWeekId","updatedAt"].includes(key))));
+    const core = (value) =>
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(value).filter(
+            ([key]) =>
+              !["teamNames", "playerCards", "cardWeekId", "updatedAt"].includes(
+                key,
+              ),
+          ),
+        ),
+      );
     if (core(before) === core(after)) return;
   }
   if (g.status === "closed") await captureGameCards(event.params.gid);
@@ -1120,6 +1193,17 @@ export const correctRating = onCall(async (request) => {
       keys =
         kind === "game" ? FEEDBACK.map(([k]) => k) : ATTRIBUTES.map(([k]) => k),
       max = kind === "game" ? 5 : 20;
+    if (kind === "game" && previous.raterId !== previous.targetId) {
+      const self = (
+        await tx.get(
+          db.doc(
+            `games/${gameId}/feedback/${previous.targetId}_${previous.targetId}`,
+          ),
+        )
+      ).data();
+      if (self?.submitted && self.ratings?.goalkeeping === null)
+        ratings.goalkeeping = null;
+    }
     if (!canEditRating(previous))
       throw new HttpsError(
         "failed-precondition",

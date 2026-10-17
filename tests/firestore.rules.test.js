@@ -1022,14 +1022,43 @@ test("rascunho completo não inicia o prazo da autoavaliação antes da submiss�
   );
 });
 
-
 test("match names and historical cards can only be written by the server", async () => {
-  await env.withSecurityRulesDisabled(async c => {
-    await updateDoc(doc(c.firestore(), "games/open"), {teamNames:{teamA:"Casa"},playerCards:{pedro:{ovr:81}},cardWeekId:"2026-W40"});
+  await env.withSecurityRulesDisabled(async (c) => {
+    await updateDoc(doc(c.firestore(), "games/open"), {
+      teamNames: { teamA: "Casa" },
+      playerCards: { pedro: { ovr: 81 } },
+      cardWeekId: "2026-W40",
+    });
   });
-  const ref=doc(signed("boss"),"games/open");
-  await assertSucceeds(updateDoc(ref,{title:"Novo titulo",updatedAt:serverTimestamp()}));
-  for (const change of [{teamNames:{teamA:"Outra"}},{playerCards:{pedro:{ovr:99}}},{cardWeekId:"2026-W41"}]) {
-    await assertFails(updateDoc(ref,{...change,updatedAt:serverTimestamp()}));
+  const ref = doc(signed("boss"), "games/open");
+  await assertSucceeds(
+    updateDoc(ref, { title: "Novo titulo", updatedAt: serverTimestamp() }),
+  );
+  for (const change of [
+    { teamNames: { teamA: "Outra" } },
+    { playerCards: { pedro: { ovr: 99 } } },
+    { cardWeekId: "2026-W41" },
+  ]) {
+    await assertFails(
+      updateDoc(ref, { ...change, updatedAt: serverTimestamp() }),
+    );
   }
+});
+
+test("self N/A prevents numeric goalkeeper ratings from peers while other dimensions remain writable", async () => {
+  await assertSucceeds(
+    setDoc(
+      doc(signed("joao"), "games/closed/feedback/joao_joao"),
+      vote("joao", "joao"),
+    ),
+  );
+  const peer = vote("pedro", "joao");
+  peer.ratings.goalkeeping = 5;
+  await assertFails(
+    setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), peer),
+  );
+  peer.ratings.goalkeeping = null;
+  await assertSucceeds(
+    setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), peer),
+  );
 });

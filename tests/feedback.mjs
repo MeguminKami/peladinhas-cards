@@ -65,10 +65,19 @@ try {
     }),
   );
   await context.route(/https:\/\//, (r) => r.abort());
+  await context.route("**/js/app.js", (r) =>
+    r.fulfill({
+      contentType: "text/javascript",
+      body:
+        readFileSync("js/app.js", "utf8") +
+        "\nwindow.__feedbackTestContext=ctx;",
+    }),
+  );
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
   const url = `http://127.0.0.1:${server.address().port}`;
+  await page.clock.install({ time: new Date("2026-10-23T12:00:00Z") });
   await page.goto(url);
   await page.locator(".dashboard-greeting").waitFor();
   await page.evaluate(seedDocumentation);
@@ -78,8 +87,10 @@ try {
     );
   });
   await page.locator("#player-grid").waitFor();
+  await page.clock.fastForward(31000);
   async function openFeedback() {
-    await page.evaluate(() => {
+    await page.evaluate(async () => {
+      await window.__feedbackTestContext.refresh();
       location.hash = "#/game/demo-game-0/feedback";
     });
     await page.locator(".feedback-review[open]").waitFor();
@@ -282,19 +293,44 @@ try {
     "na",
   );
   assert.ok(await page.locator("[data-edit-remaining]").isVisible());
-  assert.ok((await page.locator("[data-edit-remaining]").textContent()).startsWith("Restam"));
-  assert.ok(await page.locator(".feedback-team-shortcuts").evaluate(el => el.getBoundingClientRect().bottom) <= await page.locator(".feedback-edit-bar").evaluate(el => el.getBoundingClientRect().top));
+  assert.ok(
+    (await page.locator("[data-edit-remaining]").textContent()).startsWith(
+      "Restam",
+    ),
+  );
+  assert.ok(
+    (await page
+      .locator(".feedback-team-shortcuts")
+      .evaluate((el) => el.getBoundingClientRect().bottom)) <=
+      (await page
+        .locator(".feedback-edit-bar")
+        .evaluate((el) => el.getBoundingClientRect().top)),
+  );
   await page.locator(".feedback-info-button").focus();
   assert.ok(await page.locator(".feedback-info-tooltip").isVisible());
-  assert.ok((await page.locator(".feedback-info-tooltip").textContent()).includes("7 dias"));
+  assert.ok(
+    (await page.locator(".feedback-info-tooltip").textContent()).includes(
+      "7 dias",
+    ),
+  );
   for (const width of [320, 390, 844, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Editing toolbar overflow ${width}`);
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+      `Editing toolbar overflow ${width}`,
+    );
   }
   await page.locator(".feedback-self-review > summary").click();
   assert.ok(await page.locator(".feedback-self-notice").isVisible());
-  await page.locator(".feedback-self-review").screenshot({ path: `${output}/self-review.png` });
-  await page.locator(".feedback-overview").screenshot({ path: `${output}/edit-toolbar.png` });
+  await page
+    .locator(".feedback-self-review")
+    .screenshot({ path: `${output}/self-review.png` });
+  await page
+    .locator(".feedback-overview")
+    .screenshot({ path: `${output}/edit-toolbar.png` });
   const firstSubmission = await page.evaluate(() =>
     window.__testState.feedback
       .find(
@@ -308,7 +344,9 @@ try {
   await page
     .getByRole("button", { name: "Editar avaliações enviadas", exact: true })
     .click();
-  await page.locator('[data-target="ana"]').evaluate(form => form.closest("details").open = true);
+  await page
+    .locator('[data-target="ana"]')
+    .evaluate((form) => (form.closest("details").open = true));
   await page
     .locator(
       '[data-target="ana"] [data-dimension="attack"] .feedback-star[data-value="4"]',
@@ -339,7 +377,7 @@ try {
   );
   await page.getByRole("button", { name: "Submeter", exact: true }).click();
   await page.locator('[data-target="ana"][data-submitted="true"]').waitFor();
-  await context.clock.install({ time: new Date(Date.now() + 8 * 86400000) });
+  await page.clock.fastForward(8 * 86400000);
   await page.evaluate(() => {
     location.hash = "#/games";
   });
@@ -411,12 +449,14 @@ try {
     "Sem avalia" + String.fromCharCode(231, 227) + "o",
   );
   assert.equal(await page.locator(".feedback-form button").count(), 0);
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     window.__testState.users.find((user) => user.uid === "pedro").role =
       "admin";
-    location.hash = "#/game/demo-game-0";
+    await window.__feedbackTestContext.refresh();
+    location.hash = "#/game/demo-game-0/edit";
   });
   await page.locator("#game-form").waitFor();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [320, 360, 390, 430, 844]) {
     await page.setViewportSize({ width, height: width === 844 ? 390 : 844 });
     assert.equal(
@@ -430,13 +470,18 @@ try {
     await page
       .locator('[name="location"]')
       .fill(`Correção no telemóvel ${width}`);
-    await page.getByRole("button", { name: "Guardar jogo", exact: true }).tap();
+    await page
+      .getByRole("button", { name: "Guardar jogo", exact: true })
+      .click();
     await page.waitForFunction(
       (width) =>
         window.__testState.games.find((game) => game.id === "demo-game-0")
           .location === `Correção no telemóvel ${width}`,
       width,
     );
+    await page.evaluate(() => {
+      location.hash = "#/game/demo-game-0/edit";
+    });
     await page.locator("#game-form").waitFor();
     assert.equal(
       await page.evaluate(

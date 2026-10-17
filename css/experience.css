@@ -12,6 +12,38 @@
 .push-invitation[hidden] {
   display: none;
 }
+.modal.push-campaign {
+  width: min(440px, calc(100vw - 24px));
+  padding: 28px 24px 20px;
+  border-color: var(--border-strong);
+  background: radial-gradient(ellipse at 100% 0, var(--accent-tint), transparent 55%), var(--bg-panel);
+}
+.push-campaign > h2 { font-size: clamp(1.65rem, 7vw, 2.1rem); line-height: 1.05; letter-spacing: -.05em; max-width: min(14ch, calc(100% - 36px)); margin: 8px 0 24px; }
+.push-campaign-art { position:relative; height:136px; margin-bottom:24px; isolation:isolate; }
+.push-campaign-bell { position:absolute; inset:12px auto auto 8px; display:grid; place-items:center; width:78px; height:78px; color:var(--accent); border-radius:24px; background:var(--accent-tint); border:1px solid var(--border-strong); transform:rotate(-8deg); }
+.push-campaign-bell > svg { width:38px; height:38px; }
+.push-campaign-bell i { position:absolute; right:-6px; top:-6px; display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--accent); color:var(--on-accent,#08140c); font-size:.8rem; font-weight:800; font-style:normal; }
+.push-campaign-notice { position:absolute; inset:28px 0 auto 66px; display:grid; gap:7px; padding:16px; border:1px solid var(--border-strong); border-radius:14px; background:var(--bg-surface); box-shadow:0 12px 28px #0002; transform:rotate(3deg); }
+.push-campaign-notice small { font-size:.57rem; letter-spacing:.12em; color:var(--accent); font-weight:750; }
+.push-campaign-notice strong { font-size:1rem; letter-spacing:-.025em; }
+.push-campaign-notice > span { font-size:.65rem; color:var(--text-secondary); }
+.push-campaign-ticket { position:absolute; bottom:0; right:12px; display:flex; align-items:center; gap:8px; background:var(--accent); color:var(--on-accent,#08140c); padding:8px 12px; border-radius:8px; font-size:.6rem; font-weight:800; letter-spacing:.05em; transform:rotate(-4deg); }
+.push-campaign-ticket svg { width:18px; height:18px; }
+.push-campaign .push-campaign-settings { display:flex; flex-direction:column; align-items:stretch; gap:12px; padding:0; margin:0; border:0; background:none; }
+.push-campaign-settings .push-settings-symbol { display:none; }
+.push-campaign-settings .push-settings-copy h2 { font-size:1.05rem; letter-spacing:-.025em; margin-bottom:6px; }
+.push-campaign-settings .push-settings-copy p { line-height:1.6; }
+.push-campaign-settings .push-settings-actions { display:flex; }
+.push-campaign .push-settings-actions .btn { width:100%; min-height:48px; flex:auto; }
+.push-campaign-benefits { display:grid; gap:12px; padding:0; margin:20px 0; list-style:none; }
+.push-campaign-benefits li { display:flex; align-items:center; gap:10px; font-size:.78rem; line-height:1.5; }
+.push-campaign-benefits svg { flex:none; width:18px; height:18px; color:var(--accent); }
+.push-campaign-later { width:100%; min-height:44px; }
+.push-campaign-footnote { text-align:center; color:var(--text-muted); font-size:.65rem; line-height:1.5; margin:12px 0 0; }
+@media (prefers-reduced-motion:no-preference) {
+ .push-campaign-art { animation:push-campaign-arrive 320ms ease-out both; }
+ @keyframes push-campaign-arrive { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+}
 .push-invitation .push-settings-copy h2 {
   font-size: 1rem;
   margin-bottom: 4px;
@@ -1251,6 +1283,11 @@ p {
   #home-podium { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 8px 24px; align-items: center; }
   .weekly-section .podium-controls { margin: 0; }
   .weekly-section .podium-caption { min-height: 0; }
+  .weekly-section .podium-caption { position: relative; display: block; text-align: right; }
+  .weekly-section .podium-caption .podium-edition { position: absolute; right: 0; top: 0; }
+  .weekly-section .podium-caption h3 { padding-right: 68px; }
+  .weekly-section .podium-caption > div { min-width: 0; }
+  .weekly-section .podium-caption p { margin-left: auto; }
   .weekly-section .podium-caption h3 { font-size: 1.25rem; }
   .weekly-section .podium-stage { grid-column: 1 / -1; }
 }
@@ -1463,8 +1500,24 @@ p {
 }
 @media(max-width:600px) {
  .game-workspace .position-leaders { grid-template-columns:repeat(2,minmax(0,1fr)); }
- .game-workspace .match-performance-row { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+ .game-workspace .match-performance-row { grid-template-columns:minmax(0,1fr); gap:12px; }
  .game-workspace .match-performance-row > b { grid-column:1/-1; }
+ .game-workspace .match-performance-row label { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:0; }
+ .game-workspace .counter-label { flex:1 0 90px; white-space:nowrap; }
+ .game-workspace .performance-counter { flex:0 0 138px; margin-left:auto; }
+}
+@media(max-width:600px) {
+ .event-ranking-table, .event-ranking-table tbody { display:block; width:100%; min-width:0; }
+ .event-ranking-table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+ .event-ranking-table tbody { display:grid; gap:12px; }
+ .event-ranking-table tr { display:grid; grid-template-columns:72px minmax(0,1fr); gap:8px 12px; padding:16px; border:1px solid var(--border); border-radius:12px; }
+ .event-ranking-table td { display:block; padding:0; border:0; min-width:0; width:auto; overflow-wrap:break-word; word-break:normal; }
+ .event-ranking-table td:nth-child(1) { grid-column:1; grid-row:1/3; font-weight:750; }
+ .event-ranking-table td:nth-child(2) { grid-column:2; font-weight:700; }
+ .event-ranking-table td:nth-child(3) { grid-column:2; color:var(--text-muted); }
+ .event-ranking-table td:nth-child(3)::before { content:attr(data-label) " · "; }
+ .event-ranking-table td:nth-child(4) { grid-column:1/-1; padding-top:12px; margin-top:4px; border-top:1px solid var(--border); line-height:1.65; }
+ .event-ranking-table td:nth-child(4)::before { content:attr(data-label); display:block; font-size:.7rem; font-weight:700; color:var(--text-muted); margin-bottom:6px; }
 }
 @media(prefers-reduced-motion:no-preference) {
  .game-workspace > .panel { animation:match-reveal .35s ease-out both; }

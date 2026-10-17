@@ -782,3 +782,38 @@ test("post-match self rating has exactly the same weight as each peer rating", (
   });
   assert.equal(calculateGameAggregate(ratings).overall, 3);
 });
+
+test("self-declared non-keeper excludes every goalkeeper vote, including earlier peer votes", () => {
+  const self = {
+    submitted: true,
+    raterId: "player",
+    targetId: "player",
+    ratings: { overall: 4, goalkeeping: null },
+  };
+  const peer = {
+    submitted: true,
+    raterId: "peer",
+    targetId: "player",
+    ratings: { overall: 5, goalkeeping: 5 },
+  };
+  for (const rows of [
+    [self, peer],
+    [peer, self],
+  ]) {
+    assert.equal(calculateGameAggregate(rows).goalkeeping, null);
+    assert.equal(calculateGameAggregate(rows).overall, 4.5);
+  }
+  assert.equal(
+    calculateGameAggregate([{ ...self, submitted: false }, peer]).goalkeeping,
+    5,
+  );
+  assert.equal(
+    calculateGameAggregate([{ ...self, ratings: { goalkeeping: 0 } }, peer])
+      .goalkeeping,
+    2.5,
+  );
+  assert.equal(
+    calculateGameAggregate([{ ...self, raterId: "other" }, peer]).goalkeeping,
+    5,
+  );
+});

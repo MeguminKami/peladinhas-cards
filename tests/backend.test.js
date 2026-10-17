@@ -1835,3 +1835,74 @@ test("correção administrativa também respeita 7 dias desde a submissão", asy
   t.mock.timers.setTime(new Date("2026-10-24T12:00Z").getTime());
   await assert.rejects(correctRating.run(request), /7 dias/);
 });
+
+test("goalkeeper self N/A is authoritative in summaries and administrative corrections", async () => {
+  const gid = "keeper-policy";
+  for (const uid of ["keeper-target", "keeper-peer"]) {
+    await db
+      .doc("users/" + uid)
+      .set({
+        uid,
+        role: uid === "keeper-peer" ? "admin" : "member",
+        disabled: false,
+        primaryPosition: "ALA",
+      });
+    await db
+      .doc("initialRatings/" + uid)
+      .set({ uid, ratings20: all(10), completed: true, createdAt: now });
+  }
+  await db
+    .doc("games/" + gid)
+    .set({
+      status: "closed",
+      teamA: { starters: ["keeper-target"], bench: [] },
+      teamB: { starters: ["keeper-peer"], bench: [] },
+      scheduledAt: now,
+      closedAt: now,
+      score: { teamA: 1, teamB: 0 },
+    });
+  for (const [raterId, goalkeeping] of [
+    ["keeper-peer", 5],
+    ["keeper-target", null],
+  ]) {
+    const ref = db.doc(
+      "games/" + gid + "/feedback/" + raterId + "_keeper-target",
+    );
+    await ref.set({
+      gameId: gid,
+      raterId,
+      targetId: "keeper-target",
+      submitted: true,
+      ratings: {
+        ...Object.fromEntries(FEEDBACK.map(([key]) => [key, 4])),
+        goalkeeping,
+      },
+      createdAt: now,
+      submittedAt: now,
+      updatedAt: now,
+    });
+    await onFeedback.run({ ...event(await ref.get()), params: { gid } });
+  }
+  const summary = (await db.doc("gameSummaries/" + gid).get()).data().players[
+    "keeper-target"
+  ];
+  assert.equal(summary.goalkeeping, null);
+  assert.equal(summary.goalkeepingEligible, false);
+  assert.equal(summary.ratingCounts.goalkeeping, 0);
+  assert.equal(summary.count, 2);
+  await correctRating.run({
+    auth: { uid: "keeper-peer" },
+    data: {
+      kind: "game",
+      gameId: gid,
+      id: "keeper-peer_keeper-target",
+      ratings: Object.fromEntries(FEEDBACK.map(([key]) => [key, 5])),
+    },
+  });
+  assert.equal(
+    (
+      await db.doc("games/" + gid + "/feedback/keeper-peer_keeper-target").get()
+    ).data().ratings.goalkeeping,
+    null,
+  );
+});

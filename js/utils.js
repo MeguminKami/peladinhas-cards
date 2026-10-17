@@ -275,8 +275,16 @@ export function initialSelfWeight(communityCount, settings = CARD_SETTINGS) {
   return Math.min(0.2, settings.selfWeight ?? 0.2, 1 / (communityCount + 1));
 }
 export function calculateGameAggregate(feedback) {
+  const noGoalkeeping = feedback.some(
+    (f) =>
+      f.submitted &&
+      typeof f.targetId === "string" &&
+      f.raterId === f.targetId &&
+      f.ratings?.goalkeeping === null,
+  );
   return Object.fromEntries(
     FEEDBACK.map(([k]) => {
+      if (k === "goalkeeping" && noGoalkeeping) return [k, null];
       const a = feedback
         .filter((f) => f.submitted)
         .map((f) => f.ratings[k])

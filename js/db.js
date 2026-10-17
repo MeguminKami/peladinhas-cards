@@ -85,6 +85,12 @@ export async function saveInitial(uid, ratings20, submit = true) {
   const target = doc(db, "initialRatings", uid);
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
+    const summary =
+      raterId !== targetId
+        ? await tx.get(doc(db, `gameSummaries/${gid}`))
+        : null;
+    if (summary?.data()?.players?.[targetId]?.goalkeepingEligible === false)
+      ratings = { ...ratings, goalkeeping: null };
     if (!canEditRating(s.data(), new Date(), true))
       throw Error("O prazo de 7 dias para editar a autoavaliação terminou.");
     const completed = submit || s.data()?.completed === true;
@@ -146,6 +152,13 @@ export async function saveFeedback(
   const target = doc(db, `games/${gid}/feedback/${raterId}_${targetId}`);
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
+    const summary =
+      raterId !== targetId
+        ? await tx.get(doc(db, `gameSummaries/${gid}`))
+        : null;
+    if (summary?.data()?.players?.[targetId]?.goalkeepingEligible === false)
+      ratings = { ...ratings, goalkeeping: null };
+
     if (!canEditRating(s.data()))
       throw Error("O prazo de 7 dias para editar a avaliação terminou.");
     submit = submit || s.data()?.submitted === true;
