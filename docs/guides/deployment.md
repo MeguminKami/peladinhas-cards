@@ -2,50 +2,25 @@
 
 [← Documentação](../README.md) · [Testes](testing.md) · [PWA](pwa.md) · [Push](notifications.md)
 
-## O que queres publicar?
+## Escolher o menor âmbito
 
-| Alteração                 | Comando                       | Publica                          |
-| :------------------------ | :---------------------------- | :------------------------------- |
-| Só interface              | `npm.cmd run deploy:frontend` | Hosting e PWA.                   |
-| Servidor ou permissões    | `npm.cmd run deploy:backend`  | Functions, regras e índices.     |
-| Atualização completa      | `npm.cmd run deploy`          | Frontend, servidor e regras.     |
-| Apenas preparar ficheiros | `npm.cmd run build:hosting`   | **Nada:** gera `.firebase/site`. |
+Executar na raiz do projeto, com Node.js 22 e acesso ao Firebase **pedalinhas-cards**. Cliente e Functions usam `europe-west1`; a codebase das Functions chama-se `peladinhas`.
 
-**Projeto:** `pedalinhas-cards` · **Aplicação:** [pedalinhas-cards.web.app](https://pedalinhas-cards.web.app/)
+| Alteração                                       | Comando                                                                                                             |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Só HTML, CSS, JavaScript do navegador ou assets | `npm.cmd run deploy:frontend`                                                                                       |
+| Uma função                                      | `npx.cmd firebase deploy --project pedalinhas-cards --only functions:peladinhas:NOME`                               |
+| Várias funções                                  | `npx.cmd firebase deploy --project pedalinhas-cards --only "functions:peladinhas:NOME1,functions:peladinhas:NOME2"` |
+| Regras Firestore                                | `npx.cmd firebase deploy --project pedalinhas-cards --only firestore:rules`                                         |
+| Índices Firestore                               | `npx.cmd firebase deploy --project pedalinhas-cards --only firestore:indexes`                                       |
+| Regras Storage                                  | `npx.cmd firebase deploy --project pedalinhas-cards --only storage`                                                 |
+| Preparar o frontend sem publicar                | `npm.cmd run build:hosting`                                                                                         |
 
-```mermaid
-flowchart TB
-    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["Confirmar projeto"] --> B["Testar a alteração"]
-    B --> C["Preparar o frontend"]
-    C --> D["Publicar os serviços necessários"]
-    D --> E["Confirmar no browser e aparelhos"]
-```
+Combinar apenas os seletores necessários. Quando cliente e servidor mudam, executar ambos os passos. Alterar um módulo partilhado exige identificar também as funções que o consomem.
 
-## Conferência rápida
+`npm.cmd run deploy:backend` publica todas as Functions, Firestore e Storage. `npm.cmd run deploy` acrescenta Hosting. São opções amplas para uma instalação ou atualização que realmente exija todas essas áreas; não são o procedimento por defeito de uma correção.
 
-- [ ] Configuração Firebase e conta de publicação corretas.
-- [ ] Testes adequados à alteração concluídos.
-- [ ] Fluxos e layouts revistos no browser.
-- [ ] Após deploy: conta, dados, fotografias e ações principais.
-- [ ] Em mobile: instalação, atualização e recuperação sem rede.
-
-> **Push exige configuração própria.** Um deploy só do frontend não corrige a chave VAPID nem atualiza as Functions. Consultar [notificações](notifications.md).
-
----
-
-<details>
-<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
-
-## Projeto configurado
-
-O ID existente é **`pedalinhas-cards`**. Os scripts leem `js/config.js` e usam `--project` explicitamente; não dependem de um alias ativo. Confirmar a configuração antes de publicar uma instalação diferente.
-
-Organizar ficheiros, preparar o build ou exportar o repositório não publica a aplicação.
-
-## Preparar
-
-Com Node.js 22, na raiz:
+## Preparar e validar
 
 ```powershell
 npm.cmd ci
@@ -53,71 +28,55 @@ npx.cmd firebase login --reauth
 npm.cmd run check
 npm.cmd test
 npm.cmd run test:docs
-npm.cmd run test:pwa
 ```
 
-Alterações de servidor/regras pedem os respetivos testes com emulador. Alterações de interface pedem revisão dos fluxos no browser. Ver [testes e validação](testing.md).
+Acrescentar os testes adequados à alteração: emuladores para regras/servidor, browser para interface, PWA para cache/instalação e push para notificações. Os comandos estão no [guia de testes](testing.md). Deploys seletivos diretos pelo CLI não executam automaticamente todos os testes dos scripts npm.
 
-## Primeira publicação com push
+Os scripts `deploy:*` verificam sintaxe e um conjunto de testes de lógica antes de chamar o Firebase. O `predeploy` de Hosting em `firebase.json` executa `build:hosting`; não é preciso preparar manualmente um segundo build para esse fluxo.
 
-O frontend e as novas Functions têm de usar o mesmo par VAPID. Nesta pasta, o par já existe: pública em `js/push-config.js`, privada em `.secret.local`. Uma cópia exportada não contém a privada; recuperá-la de forma segura antes destes comandos.
+## Casos com código partilhado
+
+- **Card Lab:** novos campos ou opções em `js/card-design.js` precisam de frontend e de `saveTheme`, que valida o mesmo esquema no servidor. CSS e mudanças visuais de paletas não exigem publicar Functions.
+- **Avaliações e evolução:** `js/utils.js` e os módulos de cálculo/coleção são partilhados. A [publicação das correções de feedback](../deploy-feedback-fixes.md) enumera as funções de agregação, histórico e recompensas afetadas pela autoridade da autoavaliação de guarda-redes.
+- **Push:** atualizar a chave privada no Secret Manager exige republicar `pushDeviceAction` e `onNotificationPush`. Atualizar apenas o frontend não ativa a nova versão do segredo nas funções.
+
+Depois de publicar uma mudança de cálculo que afete dados existentes, usar **Administração → Manutenção → Recalcular liga**. A operação atualiza resumos e cartas em evolução; cartas de semanas fechadas conservam os snapshots.
+
+## Configuração e reparação de push
+
+Preservar o par VAPID: chave pública em `js/push-config.js`, privada em `.secret.local` e no Secret Manager. A privada não faz parte de um clone/exportação. Não gerar um par novo para corrigir uma chave cloud incompatível com subscrições existentes.
+
+```powershell
+npm.cmd run setup:push
+node scripts/setup-push.mjs --verify-cloud
+```
+
+O primeiro comando valida o par local existente. Num projeto ainda sem qualquer chave, pode criar o par; não deve ser usado como substituto de recuperar uma privada em falta. O segundo consulta e compara a chave cloud sem apresentar o segredo; exige acesso ao Firebase e não publica nada.
+
+Se for necessário corrigir o segredo, com autorização para essa alteração de produção:
 
 ```powershell
 npm.cmd run setup:push:cloud
-npm.cmd run deploy
+npx.cmd firebase deploy --project pedalinhas-cards --only "functions:peladinhas:pushDeviceAction,functions:peladinhas:onNotificationPush"
 ```
 
-`setup:push:cloud` verifica o par e guarda `WEB_PUSH_PRIVATE_KEY` no Firebase Secret Manager. Exige autenticação e permissões no projeto. Não regenerar chaves depois de haver dispositivos subscritos. O [guia de push](notifications.md) explica as Functions e a proteção dos recibos de leitura.
+Se também mudou o cliente, publicar `npm.cmd run deploy:frontend`. Instalações novas precisam das restantes funções/regras pertinentes; ver [push](notifications.md). Consultar erros reais de IAM antes de alterar permissões.
 
-O projeto precisa dos serviços e plano necessários à instalação de Cloud Functions/Storage. Confirmar na consola Firebase; um erro de IAM deve ser resolvido segundo o serviço e conta indicados, sem concessões gerais inventadas.
+## Pacote público e origens
 
-## Publicar e atualizar
+Hosting publica `.firebase/site`: entradas web, `js/`, `css/`, `assets/`, manifest, worker gerado e página offline. O build calcula o inventário e hash da PWA; documentação, originais, testes, servidor e segredos ficam de fora. O pacote de Functions usa a raiz para poder importar os módulos de cálculo partilhados; as exclusões estão em `firebase.json`.
 
-```powershell
-npm.cmd run deploy
-```
-
-Verifica sintaxe e lógica, e publica **Hosting, regras/índices Firestore, Storage e Functions**. Não é necessário executar `firebase init` numa cópia com estas configurações.
-
-Para mudanças exclusivamente de interface, com servidor/regras já atualizados:
-
-```powershell
-npm.cmd run deploy:frontend
-```
-
-Para servidor e regras:
-
-```powershell
-npm.cmd run deploy:backend
-```
-
-`deploy:frontend` sozinho não ativa push novo. Os scripts não substituem a validação nos aparelhos nem confirmam o estado do Firebase real.
-
-## Pacote Hosting
-
-`build:hosting` recria `.firebase/site` com entradas web, `js/`, `css/`, `assets/`, manifest, worker e página offline. Calcula o hash e inventário de cache da PWA. Documentação, fontes de trabalho, testes, ferramentas, servidor e segredos ficam de fora.
-
-O Hosting permite revalidação HTTP. A aplicação instalada oferece ativar a nova versão; não interrompe um formulário automaticamente. Ver [PWA](pwa.md).
-
-Depois de um deploy bem-sucedido, a URL configurada é `https://pedalinhas-cards.web.app`. Autorizar o domínio em Authentication → Settings → Authorized domains.
-
-## GitHub Pages
-
-Firebase Hosting e GitHub Pages são publicações independentes. Se mantiveres Pages, publicar o conteúdo de `.firebase/site` na raiz da demo e executar `deploy:backend` para atualizar Firebase. Publicar Hosting não altera a URL de Pages.
-
-Uma nova origem/subpasta exige rever Authentication e origens push. A [mudança de repositório](repository-migration.md) identifica esses pontos.
+A aplicação configurada é [pedalinhas-cards.web.app](https://pedalinhas-cards.web.app/). Autorizar as origens em Authentication. Firebase Hosting e GitHub Pages são distribuições independentes: Pages deve receber o conteúdo preparado de `.firebase/site`, mantendo o âmbito da demo. Publicar apenas as funções/regras Firebase que mudaram. Uma nova origem/subpasta exige rever autenticação, âmbito PWA e `allowedPushScope`; ver [migração](repository-migration.md).
 
 ## Confirmar depois de publicar
 
-Verificar conta, fotografias, avaliações, tickets, jogos, estatísticas, OVR e histórico. Num update do cálculo, decidir se é necessário executar **Recalcular liga**, respeitando os snapshots preservados.
+Confirmar login, permissões, fotografias, jogos, avaliações, eventos, cartas e histórico nos fluxos alterados. Rever mobile e desktop, teclado e redução de movimento. Na PWA, confirmar atualização adiada, reabertura e recuperação offline.
 
-Em iPhone/Android, confirmar instalação, abertura pelo ícone, navegação, teclado, reabertura offline e atualização. Ativar push, enviar teste, fechar a app, tocar no alerta e confirmar leitura/histórico. A entrega Apple/Google e IAM só são confirmados em produção.
+Para push, usar **Enviar teste** depois de ativar o dispositivo, verificar o alerta nativo com a aplicação aberta e fechada e confirmar leitura. Mocks, um build e uma chave VAPID válida não comprovam a entrega Apple/Google nem a apresentação no sistema operativo.
 
 ```powershell
 npx.cmd firebase functions:list --project pedalinhas-cards
 npx.cmd firebase hosting:sites:list --project pedalinhas-cards
 ```
 
-O estado da execução local está no [relatório da revisão](../reports/experience-review.md).
-
-</details>
+Preparar ficheiros ou escrever estes comandos não os executa. O [relatório de revisão](../reports/experience-review.md) regista as verificações realizadas sem as confundir com deploys.

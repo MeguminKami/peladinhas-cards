@@ -16,6 +16,10 @@ A carta normal está sempre disponível. As especiais são cosméticas: não acr
 
 Os prazos começam na conquista: considera-se também a data das avaliações que permitiram cumprir a condição. Recalcular os mesmos jogos ou receber mais votos no mesmo jogo não reinicia o prazo. Uma nova exibição elegível pode renovar uma carta temporária. Meses são de calendário, em Lisboa, com ajuste ao último dia do mês; sete dias são sete períodos de 24 horas. Atributos de eventos mantêm as suas regras próprias, independentes da validade da carta.
 
+## Guarda-redes e elegibilidade
+
+Se o próprio jogador submeter guarda-redes N/A no feedback do jogo, as notas desse critério enviadas por colegas não contam para médias, progressão ou conquistas de guarda-redes. A exclusão também vale para notas já existentes e para correções administrativas de respostas de colegas. Zero é uma nota válida; N/A não equivale a zero. Esta regra não muda os requisitos de participação, posição registada ou número mínimo de avaliações das outras dimensões.
+
 ## Condições
 
 Exigem-se pelo menos **três avaliações recebidas por jogo**. Para condições de uma dimensão, são necessárias três avaliações válidas dessa dimensão; N/A não conta como avaliação de guarda-redes.
@@ -59,4 +63,4 @@ As posições são registadas por DBS/admin no formulário do jogo. Não se dedu
 
 As conquistas são verificadas nos recálculos de cartas e por uma tarefa horária, que também fecha ciclos e prepara FUTTIES. O histórico existente é processado com as datas originais, sem renovar cartas temporárias antigas. As missões mostram pistas antes do desbloqueio; o seletor revela a condição depois da conquista. Apogeu, Legado, Titã e Carnaval nos designs originais ficam em reserva, sem atribuição automática; as identidades ativas usam TOTY, ICON, HEROES e BIRTHDAY quando aplicável.
 
-Testes: `npm test`, `npm run test:backend`, `npm run test:rules`, `npm run test:card-choice` e `npm run test:card-collection`.
+Testes: `npm.cmd test`, `npm.cmd run test:backend`, `npm.cmd run test:rules`, `npm.cmd run test:card-choice` e `npm.cmd run test:card-collection`.

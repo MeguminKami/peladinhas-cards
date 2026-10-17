@@ -1,114 +1,102 @@
-# Notificações do telemóvel
+# Notificações da liga e do dispositivo
 
 [← Documentação](../README.md) · [PWA](pwa.md) · [Publicação](deployment.md)
 
-## Da ativação à leitura
+## O mesmo registo, duas apresentações
 
-```mermaid
-flowchart TB
-    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["Utilizador toca em Ativar"] --> B["Autoriza no dispositivo"]
-    B --> C["Registar subscrição"]
-    C --> D["Nova notificação na conta"]
-    D --> E["Enviar Web Push"]
-    E --> F["Tocar no alerta"]
-    F --> G["Fechar e confirmar leitura"]
+A origem é `users/{uid}/notifications`. O sino e a página **Notificações** mostram as mensagens da conta; Web Push apresenta as elegíveis no sistema operativo dos dispositivos ativados. Não são duas caixas de mensagens independentes.
+
+| Na aplicação                              | No sistema operativo                                        |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| Listas **Por ler** e **Histórico**.       | Alerta nativo após ativação do dispositivo.                 |
+| Ler conserva o histórico da conta.        | Tocar fecha o alerta, abre o destino e confirma a leitura.  |
+| Funciona com a sessão e rede disponíveis. | O service worker recebe o push mesmo sem uma janela aberta. |
+
+O sistema operativo decide a apresentação final: banner, som, agrupamento e central de notificações. A existência de uma mensagem no sino não prova a entrega push.
+
+## Ativação e convite no início
+
+A página Notificações tem **Ativar no telemóvel** ou **Ativar neste dispositivo**, conforme a plataforma. A permissão nativa só é pedida após o toque no botão.
+
+No início, em larguras até 600 px e num ambiente compatível, quem ainda não ativou os alertas recebe o popup **A tua liga chama por ti.** O convite apresenta jogos, cartas e lembretes, e usa o mesmo processo de ativação do painel. **Agora não**, Escape ou fechar adiam o convite sete dias por conta e origem; a sessão também evita repeti-lo. O convite desaparece ao concluir a ativação e não substitui outro diálogo já aberto.
+
+No iPhone/iPad sem instalação, o botão orienta primeiro a instalação. Quando a permissão está bloqueada, apresenta instruções para a permitir. Não pede autorização automaticamente ao mostrar o popup nem ao receber uma mensagem do ADMIN. A aplicação instalada também tem um convite compacto no início quando pertinente.
+
+| Plataforma  | Requisito                                                                               |
+| ----------- | --------------------------------------------------------------------------------------- |
+| Android     | Browser compatível, permissão do site e alertas do navegador/app permitidos no sistema. |
+| iPhone/iPad | iOS/iPadOS 16.4 ou posterior; instalar no ecrã inicial e abrir a app instalada.         |
+| Computador  | Browser compatível e permissões do site e do sistema operativo.                         |
+| Servidor    | Par VAPID correspondente, funções/regras pertinentes publicadas e subscrição válida.    |
+
+Instalar a PWA e ativar notificações são ações diferentes. **Enviar teste** cria uma notificação só para o dispositivo atual, com intervalo mínimo de um minuto entre testes. **Desativar neste dispositivo** remove a subscrição e o registo; não altera a preferência de outros dispositivos.
+
+## Entrega, leitura e recuperação
+
+- `onNotificationPush` processa novos documentos ainda por ler. Registo e reconexão recuperam notificações elegíveis dos últimos sete dias; não repetem entregas concluídas.
+- O fornecedor pode conservar entregas até sete dias, segundo o TTL. Com a app fechada, navegador e sistema gerem a entrega; não há polling da aplicação em segundo plano.
+- Com a app visível, a recuperação é verificada a cada dez segundos, ao regressar à app e ao recuperar rede. Os pendentes são sincronizados em páginas de 100.
+- O worker usa tags estáveis, recibos persistentes e a revisão da mensagem para evitar duplicados. Ignora mensagens expiradas, já lidas ou pertencentes a outra conta.
+- Tocar abre apenas um destino permitido da aplicação e confirma a leitura. **Marcar como lida**, quando suportado, confirma sem abrir a página.
+- Sem rede, a intenção de leitura fica em IndexedDB por conta. O worker volta a tentar ao abrir a app, recuperar ligação ou através de Background Sync quando disponível. Uma leitura antiga não consome uma revisão posterior da mensagem.
+- Ler na app fecha os alertas locais. Outros dispositivos abertos reconciliam em tempo real; dispositivos fechados reconciliam ao reabrir. Não são enviados pushes silenciosos para remover alertas remotamente.
+- Terminar sessão ou desativar limpa os alertas e badges locais. O badge depende do suporte da plataforma.
+
+Poupança de bateria, modo Não incomodar, permissões do sistema e políticas do navegador podem atrasar ou silenciar alertas. O texto pode aparecer no ecrã bloqueado conforme as opções do utilizador.
+
+## Diagnosticar uma falha
+
+1. Confirmar que a mensagem aparece no sino da conta certa.
+2. Confirmar ativação, permissão do site e permissões de notificações do navegador/app no sistema operativo.
+3. Usar **Enviar teste**. Uma mensagem de configuração indisponível indica que o servidor rejeitou o par VAPID antes de criar o teste.
+4. Verificar a correspondência das chaves, sem imprimir a privada:
+
+```powershell
+npm.cmd run setup:push
+node scripts/setup-push.mjs --verify-cloud
 ```
 
-## Duas apresentações, o mesmo registo
+5. Se o segredo cloud foi alterado, confirmar que `pushDeviceAction` e `onNotificationPush` foram republicados para usar essa versão. Seguir o [procedimento seletivo](deployment.md).
+6. Se o servidor confirma o envio mas o alerta não aparece, verificar o fornecedor, estado da subscrição, definições do sistema e um aparelho real.
 
-| Na aplicação                 | No telemóvel                                     |
-| :--------------------------- | :----------------------------------------------- |
-| Sino e lista **Por ler**.    | Alerta nativo, se o dispositivo estiver ativado. |
-| Ler move para **Histórico**. | Tocar fecha o alerta e confirma a leitura.       |
-| A leitura pertence à conta.  | Sem rede, a confirmação fica em fila local.      |
-
-## O que é necessário
-
-| Requisito         | Confirmar                                           |
-| :---------------- | :-------------------------------------------------- |
-| **Android**       | Browser compatível e notificações autorizadas.      |
-| **iPhone / iPad** | Sistema 16.4+ e aplicação aberta pelo ecrã inicial. |
-| **Servidor**      | Par VAPID correto, Functions e regras publicadas.   |
-| **Teste**         | Enviar uma nova notificação depois da ativação.     |
-
-> **Configuração pendente identificada em 15 de outubro de 2026:** o diagnóstico encontrou a chave privada VAPID cloud com formato inválido. A correção foi preparada localmente; a substituição do segredo e a republicação das duas Functions de dispositivos/entrega não foram executadas nesta revisão. Os testes locais não confirmam entrega num aparelho real.
-
-<details>
-<summary><strong>Não recebi o alerta: o que verificar?</strong></summary>
-
-1. A notificação aparece no sino? Confirmar destinatário e conta.
-2. O dispositivo concluiu **Ativar no telemóvel**? Verificar permissão no browser e no sistema.
-3. Está por ler e foi enviada nos últimos sete dias? A ativação e a reconexão recuperam estas mensagens sem repetir entregas concluídas.
-4. **Enviar teste** apresenta erro? Consultar configuração VAPID e logs das Functions.
-5. O servidor confirmou envio? Verificar concentração, poupança de energia e definições de alertas do aparelho.
-
-</details>
-
-**Limite de sincronização:** outro dispositivo fechado reconcilia a leitura ao voltar a abrir. Não são enviados pushes silenciosos para remover o alerta à distância.
-
----
-
-<details>
-<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
-
-O projeto usa Web Push com subscrições nativas do browser, VAPID e mensagens encriptadas. As notificações continuam a ter origem nos documentos `users/{uid}/notifications`: não há uma segunda lista independente. As novas Functions enviam um alerta quando um desses documentos é criado e ainda está por ler.
-
-## Experiência
-
-- Na página **Notificações**, o utilizador escolhe **Ativar no telemóvel**. A permissão é pedida apenas ao tocar nesse botão. Não aparece um pedido automático ao entrar na aplicação.
-- Na aplicação instalada, o Início também apresenta um convite compacto para ativar alertas; desaparece depois de concluir a ativação. Uma mensagem enviada pelo ADMIN não pede permissão nos dispositivos: aparece no sino de todos os destinatários e só gera push nos que já ativaram as notificações. Depois de ativar, as mensagens por ler dos últimos sete dias são recuperadas; usar Enviar teste para confirmar o dispositivo.
-- O Chrome pode apresentar um pedido discreto ou permitir a alteração nas definições do site depois do pedido inicial. A interface acompanha alterações de permissão e conclui a subscrição após uma autorização tardia, apenas quando o utilizador já pediu a ativação nessa sessão/conta. Se a permissão estiver bloqueada, mostra instruções do browser/Android.
-- No iPhone/iPad, é necessário iOS/iPadOS 16.4 ou superior e abrir a aplicação instalada pelo ecrã inicial. A versão no Safari orienta primeiro a instalação. No Android, um browser compatível pode receber push; a instalação oferece a experiência da aplicação.
-- Depois de ativar, **Enviar teste** cria um alerta apenas para esse dispositivo. Há um intervalo mínimo de um minuto entre testes. **Desativar neste dispositivo** remove a subscrição local e o registo no servidor.
-- O alerta usa o ícone da liga, um símbolo monocromático na barra Android e uma identificação estável para evitar cartões duplicados da mesma notificação.
-- Tocar no alerta fecha-o imediatamente, abre a página relacionada e confirma a leitura no servidor. A ação **Marcar como lida**, quando o sistema a suporta, fecha e confirma sem abrir a aplicação.
-- Sem rede, a confirmação fica em IndexedDB. O worker tenta novamente ao recuperar ligação, ao abrir a aplicação e através de Background Sync quando disponível. O ecrã offline também aciona a sincronização ao voltar a estar online.
-- Ler na aplicação fecha também o alerta nativo desse dispositivo. A página apresenta **Por ler** e **Histórico**; as notificações lidas deixam a lista principal, preservando o histórico.
-- A leitura é comum à conta. Outros dispositivos com a aplicação aberta recebem a alteração em tempo real e fecham os respetivos alertas. Num segundo dispositivo com a aplicação fechada, a reconciliação ocorre ao voltar a abrir: não se enviam pushes silenciosos, que não são permitidos no iOS. Desativar ou terminar sessão limpa alertas e badges locais.
-
-Os sistemas operativos decidem a apresentação final, som, agrupamento e efeitos do modo de concentração. O badge é uma melhoria progressiva quando existe suporte. Os textos dos alertas podem aparecer no ecrã bloqueado segundo as preferências do utilizador.
-
-## Recuperação da ligação
-
-- O fornecedor push guarda entregas durante até sete dias (TTL). Com a app fechada, o navegador e o sistema gerem a entrega quando a rede volta. As permissões e a gestão de energia podem atrasar ou bloquear alertas.
-- Enquanto a app está visível, uma verificação a cada **10 segundos** recupera o registo e sincroniza pendentes em páginas de 100. Também corre ao voltar à app ou recuperar Internet. Não existe polling contínuo com a app fechada.
-- Marcar como lida funciona offline: a intenção fica guardada por conta no dispositivo, aparece de imediato no histórico e sincroniza ao recuperar ligação. Uma revisão posterior da mesma mensagem não é marcada por uma leitura antiga.
-- O worker guarda recibos de apresentação e leitura para impedir que uma entrega repetida volte a mostrar um alerta já apresentado ou lido neste dispositivo.
+A verificação local preserva o par existente. Se uma cópia do repositório tiver apenas a chave pública, recuperar a privada correspondente de forma segura; não rodar chaves para contornar a ausência do segredo. Numa instalação inteiramente nova, o script pode criar o par quando ambas estão ausentes.
 
 ## Servidor e proteção
 
-- `pushDeviceAction`: registar, remover e testar o próprio dispositivo. Exige autenticação e uma conta ativa; valida origens, endpoints de fornecedores conhecidos e chaves de encriptação. Limite de dez dispositivos por conta.
-- Antes de criar um teste, o servidor valida o formato da chave privada VAPID e a sua correspondência com a pública. Uma configuração inválida devolve um erro explícito e não cria um teste que pareça enviado. A função callable de dispositivos e o trigger de entrega recebem o segredo; devem ser republicados quando essa configuração for corrigida.
-- `onNotificationPush`: entrega por dispositivo, controlo de concorrência, repetição de falhas transitórias e remoção de endpoints expirados. Um recibo identifica a revisão concreta da notificação; repetir o mesmo evento não repete uma entrega concluída.
-- `ackPushNotification`: permite ao service worker confirmar leitura mesmo sem carregar o SDK ou renovar a sessão. Exige um recibo e uma capacidade aleatória de 256 bits enviados na mensagem encriptada. Só pode marcar aquela revisão de uma única notificação como lida; não permite consultar dados, escrever outras notificações nem agir sobre versões posteriores. Recibos expiram ao fim de 30 dias.
-- `cleanupPushDeliveries`: limpeza diária de recibos expirados, em lotes limitados.
+| Função                  | Responsabilidade                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| `pushDeviceAction`      | Registar, remover, testar e sincronizar o próprio dispositivo.                               |
+| `onNotificationPush`    | Entregar, controlar concorrência, repetir falhas transitórias e retirar endpoints expirados. |
+| `ackPushNotification`   | Confirmar uma revisão específica através do recibo e capacidade enviados no push encriptado. |
+| `cleanupPushDeliveries` | Limpar diariamente recibos expirados, em lotes limitados.                                    |
 
-`pushDevices` e `pushDeliveries` são inacessíveis ao frontend, incluindo administradores. A chave VAPID pública está em `js/push-config.js`. A privada está em `.secret.local`, ignorada pelo Git e pelos pacotes públicos/de Functions, e deve ser guardada no Firebase Secret Manager como `WEB_PUSH_PRIVATE_KEY`. Não publicar nem partilhar a chave privada. Não regenerar o par após haver subscrições: uma rotação exige nova ativação nos dispositivos.
+O registo exige conta ativa, origem permitida, endpoint de fornecedor conhecido e chaves válidas. Há um limite de dez dispositivos por conta. O teste e o envio validam a chave privada e a sua correspondência com a pública.
 
-Se os registos mostrarem falha de configuração, verificar o par preservado com `npm run setup:push`. O valor do segredo cloud é apenas a chave privada, sem o nome `WEB_PUSH_PRIVATE_KEY=`, aspas ou o conteúdo de outros ficheiros. `setup:push:cloud` faz essa transferência corretamente sem imprimir o segredo. Uma chave pública colada nesse campo não substitui a privada. Os registos de entrega classificam a falha sem guardar o segredo nem o corpo da mensagem.
+`pushDevices` e `pushDeliveries` não são acessíveis pelo frontend, incluindo ADMIN. A capacidade de leitura tem 256 bits, é limitada a uma revisão e expira ao fim de 30 dias. Não concede consulta de dados nem operações noutras notificações. Os logs classificam a falha sem guardar o segredo nem o corpo da mensagem.
 
-## Publicação
+A pública está em `js/push-config.js`; a privada pertence a `.secret.local` e ao Firebase Secret Manager como `WEB_PUSH_PRIVATE_KEY`. O valor do segredo é apenas a chave, sem prefixo `WEB_PUSH_PRIVATE_KEY=`, aspas ou outros conteúdos. Git, exportação, Hosting e pacote de Functions excluem o ficheiro local privado.
 
-O par de chaves deste update já foi gerado localmente. Para preparar uma cópia nova do projeto, recuperar primeiro a chave privada correspondente; o script recusa pares incompletos ou inconsistentes.
+## Publicar uma correção do segredo
+
+Com autorização e acesso ao projeto:
 
 ```powershell
-npm.cmd install
-npx.cmd firebase login --reauth
 npm.cmd run setup:push:cloud
-npm.cmd run deploy
+npx.cmd firebase deploy --project pedalinhas-cards --only "functions:peladinhas:pushDeviceAction,functions:peladinhas:onNotificationPush"
 ```
 
-O passo `setup:push:cloud` guarda a chave privada no Secret Manager do projeto `pedalinhas-cards`; exige permissões nesse projeto. `deploy` publica frontend, Functions e regras em conjunto. **`deploy:frontend` sozinho não ativa push.** O projeto precisa de suportar Cloud Functions e respetivos serviços cloud (plano Blaze). No primeiro deploy, as Functions Gen 2 podem exigir a configuração normal de permissões Eventarc/Pub/Sub; consultar um erro de IAM real antes de alterar permissões.
+Acrescentar `npm.cmd run deploy:frontend` quando mudou o cliente. Publicar regras ou restantes funções apenas quando também mudaram ou numa instalação nova. O [guia de publicação](deployment.md) descreve esses âmbitos.
 
-Se o frontend continuar no GitHub Pages, publicar também a versão pública pelo fluxo habitual e executar `deploy:backend` no Firebase. Ambos usam o mesmo par VAPID. Outras origens/custom domains devem ser explicitamente incluídos em `allowedPushScope` antes de registar dispositivos.
+Uma mudança de domínio/subpasta exige rever `allowedPushScope` em `functions/push.js` e o endpoint permitido em `js/push-worker.js`. Uma nova origem exige nova ativação dos dispositivos; mudar apenas o repositório Git não tem esse efeito.
 
-## Validação
+## Validação e estado registado
 
-`npm.cmd run test:push` verifica o worker com IndexedDB real e a interface de ativação no browser. `test:backend` inclui entrega, capacidades de leitura, expiração, revisões, repetição, remoção de subscrições e transferência de conta. `test:rules` confirma que as coleções privadas não podem ser consultadas nem escritas pelo cliente.
+```powershell
+npm.cmd run test:push
+node tests/push-home-prompt.mjs
+node --test tests/push-config.test.js
+```
 
-Após publicação, confirmar num iPhone real e num Android real: instalar, iniciar sessão, ativar, enviar teste, fechar a aplicação, receber/tocar no alerta, verificar leitura e histórico, testar sem rede e voltar a ligar, desativar e terminar sessão. A automação local não confirma a entrega através dos servidores Apple/Google, IAM em produção ou a aparência dos alertas num aparelho físico.
+Os testes do worker cobrem alertas com app aberta e sem clientes abertos. Os testes de interface cobrem permissão por gesto, subscrição, teste, leituras, desativação, troca de conta e orientação iOS. O teste do popup cobre adiamento, acessibilidade, larguras 320/390/768/1440 e ativação. Os emuladores verificam envio simulado e privacidade; não comprovam a entrega através de Apple/Google.
 
-O código local passa a enviar alertas em produção depois de configurar o par VAPID, publicar as Functions/regras/frontend e confirmar a ativação nos dispositivos. O estado da revisão está no [relatório da experiência](../reports/experience-review.md).
-
-</details>
+Na intervenção registada em **17 de outubro de 2026**, o segredo cloud incompatível foi substituído pela privada correspondente ao par local e a comparação posterior passou. Não foi registado nessa intervenção o deploy das duas funções nem um teste de entrega num aparelho físico. Este é um registo histórico, não uma consulta permanente do estado de produção; ver o [relatório](../reports/experience-review.md).

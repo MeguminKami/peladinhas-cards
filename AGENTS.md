@@ -37,12 +37,20 @@
 - Corrigir os problemas encontrados antes de declarar a interface concluída. Se não for possível validar visualmente, indicar essa limitação na resposta final, sem afirmar que o resultado foi verificado.
 - Implementar a solução nos componentes e regras existentes sempre que possível. Evitar acumular overrides contraditórios no fim das folhas de estilo; consolidar as regras afetadas e manter o âmbito da alteração claro.
 
+## Coerência da documentação
+
+- Manter README, guias, referências e relatórios alinhados com o código e os scripts atuais. Consultar `package.json`, `firebase.json` e os módulos responsáveis antes de documentar comandos ou regras.
+- Distinguir comportamento implementado, testes locais, configuração cloud verificada e publicação executada. Uma captura ou build não confirma deploy nem entrega push num aparelho real.
+- Documentar alterações de cálculos partilhados e os consumidores que precisam de publicação; indicar quando é necessário recalcular dados existentes, preservando semanas fechadas.
+- Registar resultados datados nos relatórios. Os guias devem conter procedimentos reutilizáveis, sem transformar um diagnóstico antigo no estado permanente do serviço.
+- Validar ligações com `npm.cmd run test:docs`. As capturas de demonstração não substituem a referência funcional.
+
 ## Indicação de deploy nas respostas
 
 - Terminar sempre cada resposta final com uma indicação curta, em português, de como fazer o deploy mais rápido adequado às alterações discutidas ou realizadas.
 - Se não houver alterações que precisem de publicação, terminar com: **Deploy:** não é necessário.
-- Para alterações apenas no frontend (HTML, CSS, JavaScript do navegador e assets), indicar `npm run deploy:frontend`.
-- Para alterações no servidor, identificar todas as funções afetadas, incluindo as que importam módulos partilhados alterados, e indicar um deploy seletivo: `npx firebase deploy --only functions:peladinhas:NOME`. Para várias funções, separar os seletores por vírgulas dentro de aspas.
+- Para alterações apenas no frontend (HTML, CSS, JavaScript do navegador e assets), indicar `npm.cmd run deploy:frontend`.
+- Para alterações no servidor, identificar todas as funções afetadas, incluindo as que importam módulos partilhados alterados, e indicar um deploy seletivo: `npx.cmd firebase deploy --only functions:peladinhas:NOME`. Para várias funções, separar os seletores por vírgulas dentro de aspas.
 - Para alterações às regras ou índices, indicar apenas os seletores necessários: `firestore:rules`, `firestore:indexes` ou `storage`. Combinar seletores quando necessário.
 - Quando frontend e backend mudarem, indicar ambos os passos necessários. Não recomendar apenas frontend se existirem alterações de backend ainda por publicar no âmbito do trabalho.
 - Consultar a configuração e os scripts atuais antes de indicar comandos. Não recomendar deploy completo por defeito; `deploy:backend` publica todas as funções e as regras, e `deploy` publica todas as áreas.

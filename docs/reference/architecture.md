@@ -113,6 +113,15 @@ O frontend Firebase usa SDK web por importação remota; o servidor usa as depen
 
 `css/styles.css` define a base, `cards.css` a linguagem das cartas e `responsive.css` os layouts específicos. `experience.css` reúne os refinamentos comuns, fontes e componentes da revisão. Usar as variáveis de tema existentes ao alterar cores.
 
+## Fontes de verdade e módulos recentes
+
+- `js/card-lab-interface.js` organiza títulos, ícones e expansões; `css/card-lab.css` define a bancada. `js/card-studio-elements.js` mantém os nomes e categorias dos elementos; `js/card-studio-catalog.js` contém paletas, fundos, fontes e acabamentos.
+- `js/card-symbol.js` normaliza a geometria dos símbolos; `js/weekly-comparison.js` reconstrói a comparação permanente entre semanas.
+- `calculateGameAggregate` em `js/utils.js` exclui guarda-redes quando encontra a autoavaliação submetida com N/A. `gameSummaries.players[uid].goalkeepingEligible` permite ao formulário refletir essa decisão sem revelar respostas de colegas. As regras verificam o documento de autoavaliação; a administração também não pode introduzir uma nota numérica incompatível numa resposta de colega.
+- `js/push.js` gere ativação, recuperação de ligação e convite móvel. `scripts/setup-push.mjs --verify-cloud` compara chaves em memória; o segredo não entra no frontend.
+
+As regras de publicação destas alterações estão no [procedimento seletivo](../deploy-feedback-fixes.md).
+
 ## Coleções
 
 | Dados               | Coleções principais                                          |

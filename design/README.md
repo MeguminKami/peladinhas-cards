@@ -101,10 +101,16 @@ Gera painel desktop, mobile, estatísticas, Card Lab e galeria. Usa a aplicaçã
 
 </details>
 
+## Interface e ilustração em código
+
+Os ícones específicos dos menus do Card Lab estão em `js/icons.js`; a estrutura e as animações das expansões estão em `js/card-lab-interface.js` e `css/card-lab.css`. O convite de notificações usa ilustração HTML/CSS em `js/push.js` e `css/experience.css`, sem novos bitmaps.
+
+DIN Pro Condensed Regular/Medium/Bold e Posterama 1927 Bold são referências locais do navegador, não fontes incluídas neste repositório. Sem instalação local são usadas as alternativas do catálogo. A interface geral continua a distribuir Manrope.
+
 ## Card Lab
 
 <img src="../docs/media/card-lab.png" width="100%" alt="Card Lab: composição visual e pré-visualização da carta." />
 
-**Modelos → camadas → cores → moldura → fotografia → pré-visualização**
+**Modelos · Composição · Cores · Materiais · Símbolos · Texto · Foto · Projetos**
 
-O Card Lab gere composições dentro da aplicação. Os scripts acima gerem os ficheiros estáticos do repositório.
+A carta mantém-se visível enquanto se usam os menus, com scroll dentro da ferramenta. A fotografia é sempre a do ADMIN autenticado. Há 50 paletas, iluminação configurável e traçado removível; consultar a [referência funcional](../docs/reference/card-lab.md). O Card Lab gere composições dentro da aplicação. Os scripts acima gerem os ficheiros estáticos do repositório.

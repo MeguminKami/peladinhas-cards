@@ -15,13 +15,13 @@ flowchart TB
     D --> G["OVR por posição"]
 ```
 
-| Momento                            | O que acontece                                        |
-| :--------------------------------- | :---------------------------------------------------- |
-| **Autoavaliação concluída**        | É criada a primeira carta.                            |
+| Momento                            | O que acontece                                  |
+| :--------------------------------- | :---------------------------------------------- |
+| **Autoavaliação concluída**        | É criada a primeira carta.                      |
 | **Primeiro voto externo completo** | A autoavaliação passa a ter peso máximo de 20%. |
-| **Três votos externos completos**  | A carta passa a oficial.                              |
-| **Jogos avaliados**                | Alimentam a progressão dos atributos.                 |
-| **Fecho semanal**                  | Guarda a carta dessa semana no histórico.             |
+| **Três votos externos completos**  | A carta passa a oficial.                        |
+| **Jogos avaliados**                | Alimentam a progressão dos atributos.           |
+| **Fecho semanal**                  | Guarda a carta dessa semana no histórico.       |
 
 ## Distinguir os indicadores
 
@@ -32,6 +32,12 @@ flowchart TB
 | **Forma recente** | Últimas cinco avaliações agregadas de jogo disponíveis.          |
 | **Forma semanal** | Desempenho no ciclo; exige pelo menos duas avaliações recebidas. |
 | **—**             | Não há dados suficientes; não significa zero.                    |
+
+## Guarda-redes no feedback de jogo
+
+Quando a autoavaliação **submetida** tem guarda-redes N/A, esse critério fica excluído para o jogador nesse jogo, mesmo que colegas tenham enviado números antes. A média é `null` e a contagem válida dessa dimensão é zero. O formulário dos colegas mostra N/A bloqueado e uma explicação; as restantes dimensões continuam editáveis dentro do respetivo prazo. As regras impedem novas notas numéricas incompatíveis; a correção administrativa de uma resposta de colega conserva N/A.
+
+Um rascunho não determina esta exclusão. Uma nota de zero é uma avaliação válida e distingue-se de N/A. A autoavaliação inicial de 12 atributos não é alterada por esta regra. Depois de publicar uma mudança do cálculo, **Recalcular liga** atualiza agregados existentes e cartas em evolução; não reescreve semanas fechadas.
 
 ## Ciclo semanal · hora de Lisboa
 
@@ -101,17 +107,24 @@ A bancada mantém a carta visível e limita o scroll à ferramenta ativa. **Mode
 
 Eventos e missões podem atribuir stats temporárias ou permanentes, cartas semanais, prestígio e conquistas. Elegibilidade, limites e privacidade estão na [referência de eventos e missões](events-and-missions.md).
 
+## Referência do editor
+
+Consultar [Card Lab](card-lab.md) para a organização atual, fotografia do ADMIN, paletas, fundos, acabamentos, luz, traçado e gravação. Os modelos originais e os projetos personalizados têm estados distintos; o desenho escolhido não herda silenciosamente a carta guardada do jogador usado na pré-visualização.
+
+## Prazos de edição
+
+As avaliações (autoavaliação, comunidade e pós-jogo) podem ser editadas durante 7 dias desde a primeira submissão. Editar não reinicia o prazo nem permite voltar a rascunho. A data de criação é usada como referência nos registos antigos sem data de submissão. Após o prazo, ficam apenas para consulta; a restrição é aplicada também pelas regras e pelo servidor.
+
+## Raridades base
+
+A carta base é Bronze comum para OVR inferior a 60 (incluindo 59) e Bronze rara de 60 a 64. Os restantes limites mantêm-se: Prata comum 65–69, Prata rara 70–74, Ouro comum 75–84 e Ouro rara a partir de 85.
+
+## Autoavaliação pós-jogo
+
+No pós-jogo, o jogador avalia também o seu próprio desempenho, no mesmo formulário da equipa, identificado como autoavaliação. Esta resposta tem o mesmo peso de cada resposta externa na média do jogo (a regra de 20%/4% pertence apenas à avaliação inicial). Após submeter, surge uma faixa de edição por baixo dos atalhos das equipas, com tempo restante e explicação acessível do prazo. Quando há submissões com prazos diferentes, o contador mostra o primeiro prazo ainda aberto; cada resposta bloqueia no seu próprio prazo.
+
 ## Implementação
 
 [`js/utils.js`](../../js/utils.js) contém o cálculo de atributos, OVR e estatísticas; [`js/card-week.js`](../../js/card-week.js) define o ciclo. [`js/data.js`](../../js/data.js) combina dados e snapshots para apresentação. A escrita dos agregados/histórico e a validação de operações protegidas pertencem às Functions e às regras Firestore.
 
 </details>
-
-
-As avaliações (autoavaliação, comunidade e pós-jogo) podem ser editadas durante 7 dias desde a primeira submissão. Editar não reinicia o prazo nem permite voltar a rascunho. A data de criação é usada como referência nos registos antigos sem data de submissão. Após o prazo, ficam apenas para consulta; a restrição é aplicada também pelas regras e pelo servidor.
-
-
-A carta base é Bronze comum para OVR inferior a 60 (incluindo 59) e Bronze rara de 60 a 64. Os restantes limites mantêm-se: Prata comum 65–69, Prata rara 70–74, Ouro comum 75–84 e Ouro rara a partir de 85.
-
-
-No pós-jogo, o jogador avalia também o seu próprio desempenho, no mesmo formulário da equipa, identificado como autoavaliação. Esta resposta tem o mesmo peso de cada resposta externa na média do jogo (a regra de 20%/4% pertence apenas à avaliação inicial). Após submeter, surge uma faixa de edição por baixo dos atalhos das equipas, com tempo restante e explicação acessível do prazo. Quando há submissões com prazos diferentes, o contador mostra o primeiro prazo ainda aberto; cada resposta bloqueia no seu próprio prazo.

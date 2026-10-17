@@ -48,6 +48,12 @@ npm.cmd run export:repo
 
 O script verifica os links da documentação e a ausência do valor da chave privada local. A exportação é uma fotografia dos ficheiros atuais, não um substituto de commit e push.
 
+## Depois de recuperar uma cópia
+
+Validar o par local com `npm.cmd run setup:push` e comparar com o segredo cloud através de `node scripts/setup-push.mjs --verify-cloud`, quando houver autorização e acesso ao projeto. Este último comando apenas consulta e compara; não publica funções nem mostra a chave privada. Guardar uma nova versão do segredo exige republicar `pushDeviceAction` e `onNotificationPush`.
+
+Os comandos de verificação e publicação estão no [guia de publicação](deployment.md). O [procedimento das correções de avaliações](../deploy-feedback-fixes.md) identifica os consumidores do cálculo partilhado e o recálculo administrativo necessário para dados anteriores.
+
 ## Se mudar apenas o repositório
 
 **Mantém-se:** URL do site · Firebase · contas · dados · instalações PWA · subscrições push.

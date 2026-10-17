@@ -143,9 +143,10 @@ export function notificationFunctions(notify) {
       (uid) =>
         missionUnlocked(event, uid, completions) &&
         (event.kind === "mission" ||
-          event.questions.some((q) =>
+          (event.schemaVersion === 2 && event.method !== "vote") ||
+          (event.schemaVersion === 2 ? [{}] : event.questions || []).some((q) =>
             candidatesFor(event, q, users, games).some(
-              (target) => target !== uid,
+              (target) => target !== uid || event.allowSelfVote,
             ),
           )),
     );
@@ -187,7 +188,9 @@ export function notificationFunctions(notify) {
       const recipients = new Set(
         [
           ...eligible,
-          ...event.questions.flatMap((question) => question.candidateIds || []),
+          ...(event.questions || []).flatMap(
+            (question) => question.candidateIds || [],
+          ),
           event.createdBy,
           ...users.filter((u) => u.role === "admin").map((u) => u.uid),
           ...winners.flatMap((w) => w.uids),

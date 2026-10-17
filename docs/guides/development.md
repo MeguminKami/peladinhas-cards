@@ -69,6 +69,14 @@ Para uma instalação independente:
 
 O login apresenta username e password. O username é convertido internamente num email técnico em `auth.weeklyfc.app`; manter esse domínio numa instalação com contas existentes. Cliente e Functions usam `europe-west1`.
 
+## Alterações que atravessam cliente e servidor
+
+O cálculo de avaliações em `js/utils.js` é importado pelas Functions; alterar esse módulo exige rever os consumidores backend, não apenas o frontend. O esquema do Card Lab em `js/card-design.js` também é validado por `saveTheme` no servidor.
+
+Depois de alterar a regra de guarda-redes, os resumos existentes precisam de **Administração → Manutenção → Recalcular liga** após a publicação. Novas autoavaliações submetidas são processadas por `onFeedback`; cartas de semanas fechadas mantêm os snapshots. Usar fixtures ou emuladores para testar, sem modificar dados de produção.
+
+Para o Card Lab, consultar a [referência dedicada](../reference/card-lab.md); para os scripts de regressão recentes, consultar [testes](testing.md).
+
 ## Ciclo de trabalho
 
 Editar o módulo ou estilo correspondente, verificar sintaxe e lógica, e rever o resultado no browser. Para alterações de UI, testar desktop, mobile, os quatro temas e os estados relevantes; compilar sem erros não confirma o layout.
@@ -82,7 +90,7 @@ O service worker pode continuar a servir uma versão anterior já instalada. Par
 
 ## Ficheiros locais
 
-`node_modules/`, `.firebase/`, `test-results/`, `.repository-export/` e logs são gerados localmente e ignorados pelo Git. `package-lock.json` deve acompanhar o repositório para que `npm ci` reproduza as dependências.
+`node_modules/`, `.firebase/`, `test-results/`, `.repository-export/` e logs são gerados localmente e ignorados pelo Git. `package-lock.json` deve acompanhar o repositório para que `npm.cmd ci` reproduza as dependências.
 
 `.secret.local` contém a chave privada VAPID. Não entra em Git, Hosting, no pacote de Functions nem na exportação do repositório. É necessária uma cópia segura dessa chave para conservar subscrições push existentes; não a substituir por uma nova por conveniência.
 

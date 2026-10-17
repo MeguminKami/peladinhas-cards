@@ -48,6 +48,12 @@ No layout desktop, o bloco fica no fim da página inicial. No layout mobile, apa
 
 No Android/Chromium, o botão usa o pedido nativo quando o browser disponibiliza `beforeinstallprompt`; caso contrário, mostra as instruções de instalação pelo menu. No iPhone, a ajuda orienta Safari → Partilhar → Adicionar ao ecrã principal, incluindo “Abrir como aplicação” quando aparece.
 
+## Convite de notificações no início
+
+Instalar a PWA e permitir notificações são passos diferentes. Em telemóvel, o início apresenta um popup a quem ainda não ativou os alertas num ambiente compatível. **Agora não** adia o convite sete dias, por conta e origem; a mesma sessão não o repete. O pedido nativo só começa após o toque no botão. No iPhone sem instalação, o botão orienta primeiro a instalação; se a permissão estiver bloqueada, mostra instruções.
+
+Os alertas usam o service worker com ou sem uma janela aberta. O sistema operativo controla a apresentação final. Consultar [push](notifications.md) para configuração, limites e testes de entrega.
+
 ## Identidade
 
 `manifest.webmanifest` define nome, idioma, âmbito relativo, arranque, cores, modo standalone e atalhos para jogos, missões e perfil. Os ícones PNG, maskable e Apple touch derivam do emblema da liga e ficam em `assets/pwa/`.
@@ -70,7 +76,7 @@ O worker deve ser publicado a partir do build em `.firebase/site`, com inventár
 
 ## Confirmar nos aparelhos
 
-`npm run test:pwa` verifica o worker real em raiz e subpasta, manifest, ícones, cache privado excluído, recuperação offline e atualização adiada/ativada. Os testes não substituem a instalação física.
+`npm.cmd run test:pwa` verifica o worker real em raiz e subpasta, manifest, ícones, cache privado excluído, recuperação offline e atualização adiada/ativada. Os testes não substituem a instalação física.
 
 Depois de publicar por HTTPS, testar em iPhone e Android: instalação, arranque pelo ícone, conta, navegação, safe areas, teclado, fotografias, reabertura offline, regresso da rede e atualização de uma versão já instalada.
 

@@ -4,104 +4,111 @@
 
 ## Escolher pelo tipo de alteração
 
-| Alterei…                                 | Verificar                                         |
-| :--------------------------------------- | :------------------------------------------------ |
-| Qualquer módulo                          | `check`                                           |
-| Cálculos ou regras do produto            | `test`                                            |
-| Textos, imagens ou links da documentação | `test:docs`                                       |
-| Interface e fluxos                       | `test:ui` + `test:review`                         |
-| Permissões                               | `test:rules`                                      |
-| Functions                                | `test:backend`                                    |
-| Instalação, cache ou atualização         | `test:pwa`                                        |
-| Notificações                             | `test:push` + backend/regras conforme a alteração |
-| Pacote público                           | `test:hosting`                                    |
+Os scripts npm existentes estão em `package.json`. Os ficheiros `.mjs` indicados abaixo são executados diretamente com Node e não pressupõem um alias npm adicional.
 
-Executar os scripts com `npm.cmd run NOME`; para os testes de lógica, usar `npm.cmd test`.
+| Alteração                       | Verificação inicial                                        |
+| ------------------------------- | ---------------------------------------------------------- |
+| Módulos JavaScript              | `npm.cmd run check`                                        |
+| Cálculos e regras do produto    | `npm.cmd test`                                             |
+| Markdown e referências locais   | `npm.cmd run test:docs`                                    |
+| Permissões Firestore            | `npm.cmd run test:rules`                                   |
+| Servidor                        | `npm.cmd run test:backend` ou cenário dirigido no emulador |
+| Navegação e interface geral     | `npm.cmd run test:ui`, `npm.cmd run test:review`           |
+| Instalação, cache e atualização | `npm.cmd run test:pwa`                                     |
+| Notificações                    | `npm.cmd run test:push`, testes backend/regras pertinentes |
+| Pacote público                  | `npm.cmd run test:hosting`                                 |
 
-```mermaid
-flowchart TB
-    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["Lógica"] --> B["Integração e permissões"]
-    B --> C["Browser e layout"]
-    C --> D["Aparelhos reais"]
+Testes adequados à mudança devem passar antes da publicação. Não interpretar a execução de um cenário dirigido como execução de toda a suite de backend ou de todas as rotas.
+
+## Regressões de cartas e Card Lab
+
+```powershell
+node tests/card-lab.mjs
+node tests/card-lab-elements.mjs
+node tests/card-lab-admin-photo.mjs
+node tests/card-lab-lighting.mjs
+node tests/card-lab-state.mjs
+node tests/card-symbols.mjs
+node tests/weekly-comparison.mjs
+npm.cmd run test:card-collection
 ```
 
-## Avaliação pós-jogo
+Cobrem catálogo e modelos nativos, 50 paletas, galerias de elementos, fotografia do ADMIN, iluminação/traçado, projetos e migração de fundos antigos, símbolos e comparação semanal permanente. Não há dependência de instalar DIN/Posterama para verificar o uso correto dos fallbacks.
+
+## Feedback e guarda-redes
 
 ```powershell
 npm.cmd run test:feedback
-node tests/feedback.mjs --webkit
+node tests/goalkeeper-ui.mjs
+node --test tests/logic.test.js
+npm.cmd run test:rules
 ```
 
-Verifica estrelas, teclado, toque, zero explícito, guarda-redes não aplicável, rascunhos, envio, avaliações antigas, separação por equipas e os quatro temas. O comando WebKit exige o motor Playwright instalado.
+O formulário cobre estrelas, zero, N/A, teclado/toque, rascunhos, submissão, prazo de edição, equipas e temas. O cenário de guarda-redes verifica N/A bloqueado nos colegas, explicação visível e restantes dimensões editáveis. As regras verificam que uma autoavaliação submetida com N/A impede novas notas numéricas de colegas.
 
-## Cobertura visual
+Para a integração específica do agregado e correção administrativa:
 
-**Desktop:** 1440 · 1024 px &nbsp; / &nbsp; **Tablet:** 768 px
+```powershell
+npx.cmd firebase emulators:exec --config firebase.backend.json --project demo-peladinhas-backend --only firestore "node --test --test-name-pattern=goalkeeper tests/backend.test.js"
+```
 
-**Mobile:** 430 · 390 · 360 · 320 px &nbsp; / &nbsp; **Horizontal:** três dimensões
+O cenário valida a média nula, contagem zero, indicador público `goalkeepingEligible: false` e normalização da correção administrativa. A lógica pura testa também votos anteriores, ordem das respostas, rascunhos e zero válido.
 
-| Automação local                          | Confirmar em produção / aparelho                       |
-| :--------------------------------------- | :----------------------------------------------------- |
-| Fixtures, emuladores, Chromium e WebKit. | Instalação física, teclado e apresentação dos alertas. |
-| Cache, offline e leitura sincronizada.   | Entrega Apple/Google e permissões cloud.               |
+## Resultados, jogos e início
 
-**WebKit no computador ajuda a detetar problemas de Safari; não substitui um iPhone.**
+```powershell
+node tests/mobile-event-results.mjs
+npm.cmd run test:game-layout
+npm.cmd run test:home-card
+node tests/home-podium-fit.mjs
+```
 
----
+Os resultados de eventos usam nomes e recompensas longas. O teste de jogos verifica layout e controlos em 1440/768/390/320 px e preservação do estilo das cartas dentro das equipas. O teste do início compara a altura dos painéis com diferentes quantidades de missões. O pódio verifica três lugares, diferença de altura das bases e enquadramento em janelas de PC, incluindo 1366×768 e 1280×720.
 
-<details>
-<summary><strong>Procedimentos completos e detalhes técnicos</strong></summary>
+## Notificações
 
-## Escolher a verificação
+```powershell
+npm.cmd run test:push
+node tests/push-home-prompt.mjs
+node --test tests/push-config.test.js
+```
 
-| Comando                | O que verifica                                                                      |
-| :--------------------- | :---------------------------------------------------------------------------------- |
-| `npm run check`        | Sintaxe dos módulos da aplicação, Functions e scripts.                              |
-| `npm test`             | Cartas, avaliações, progressão, eventos, semanas, equipas, horas de Lisboa e URLs.  |
-| `npm run test:docs`    | Ligações locais, imagens, âncoras e organização da documentação.                    |
-| `npm run test:rules`   | Acesso e escrita Firestore por papel, com emulador.                                 |
-| `npm run test:backend` | Callables, triggers, recompensas, snapshots e push em Firestore emulado.            |
-| `npm run test:ui`      | Fluxos da aplicação, formulários, jogos, cartas e estados, com fixtures.            |
-| `npm run test:review`  | 27 rotas em dez dimensões, overflow, navegação, modais e capturas.                  |
-| `npm run test:push`    | Worker, IndexedDB, leitura offline e interface de ativação, com serviços simulados. |
-| `npm run test:pwa`     | Frontend preparado, manifest, ícones, cache, offline, âmbito e atualizações.        |
-| `npm run test:hosting` | Ficheiros publicados e exclusão de recursos internos no emulador Hosting.           |
+O worker usa IndexedDB real no browser com transporte simulado. A cobertura inclui clientes abertos/fechados, deduplicação, expiração, leituras e destinos permitidos. O popup testa ausência de pedido nativo antes do clique, adiamento, contas separadas, teclado, redução de movimento e ativação.
 
-Os testes de browser não usam contas nem dados de produção. As fixtures substituem autenticação e acesso à base de dados. Os testes backend de push injetam um transportador simulado e não enviam mensagens reais.
+A correspondência de chaves cloud é uma verificação operacional distinta:
 
-## Browser
+```powershell
+node scripts/setup-push.mjs --verify-cloud
+```
 
-Os scripts Playwright usam Microsoft Edge no Windows e Chromium nos restantes sistemas. Instalar Chromium quando necessário:
+Exige autenticação/autorização no projeto real, apenas consulta e compara, e não deve ser confundida com um teste isolado. Não imprime a chave privada. Não executar escritas cloud como parte de testes locais.
+
+## Browsers, dispositivos e dimensões
+
+Os scripts usam Edge no Windows quando configurado e Chromium nos restantes ambientes. Para instalar os motores necessários:
 
 ```powershell
 npx.cmd playwright install chromium
-npm.cmd run test:ui
-npm.cmd run test:review
-```
-
-Para validar diferenças de Safari:
-
-```powershell
 npx.cmd playwright install webkit
 node tests/review.mjs --webkit
+node tests/feedback.mjs --webkit
 node tests/push-worker.mjs --webkit
 ```
 
-Se `PLAYWRIGHT_BROWSERS_PATH` estiver definido, instalar e executar com o mesmo valor. Não é necessário preservar os motores de browser na mudança de repositório: podem ser reinstalados.
+Instalar e executar com o mesmo `PLAYWRIGHT_BROWSERS_PATH`, caso esteja definido. Não depender de um caminho de cache específico de outro computador.
 
-O review cobre 1440×900, 1024×900, 768×900, 430×900, 390×844, 360×800, 320×568 e três vistas horizontais: 932×430, 844×390 e 780×360. Capturas e resultados ficam em `test-results/review/` e `test-results/review-webkit/`.
+Rever desktop, uma largura intermédia próxima de 768 px e mobile de 320/390 px. Acrescentar nomes/números longos, estados vazio/carregamento/erro, painéis abertos, foco por teclado e `prefers-reduced-motion`. Os cenários de review incluem também larguras e orientações adicionais definidas no próprio script. As capturas ficam em `test-results/`; alguns testes de push guardam evidências em `artifacts/push/`.
 
-## Emuladores
+WebKit no computador ajuda a detetar diferenças de Safari, mas não substitui um iPhone físico. Conferir também a interface renderizada: sintaxe ou build sem erros não validam contraste e espaçamento.
 
-`test:rules` usa o Firestore de `firebase.json`; `test:backend` usa a configuração dedicada `firebase.backend.json`. As portas e o projeto `demo-*` aparecem no comando de cada script. Se uma porta estiver ocupada, confirmar qual o processo antes de alterar a configuração; não encerrar um emulador de outro trabalho.
+## Emuladores e fixtures
 
-Para um teste específico, pode usar-se um emulador já iniciado, desde que se confirme o endereço e se defina `FIRESTORE_EMULATOR_HOST`. Usar sempre um projeto de demonstração. Os testes de regras apagam os dados do projeto emulado que usam.
+`test:rules` usa o Firestore de `firebase.json` com um projeto `demo-*`. `test:backend` usa `firebase.backend.json`, cuja porta Firestore é 8086. As regras usam a porta 8085 na configuração atual. São necessários Java 21 e as dependências do projeto. Confirmar o processo dono de uma porta ocupada antes de iniciar ou encerrar emuladores.
 
-## Limites da automação
+Os testes de regras apagam os dados do projeto emulado. Os testes de UI substituem Firebase/Auth por fixtures e não usam contas de produção; a navegação pode manter dados em cache, pelo que uma alteração das fixtures deve ser seguida de refresh do contexto antes da leitura. O teste de feedback faz isso explicitamente.
 
-Playwright/WebKit no computador não substitui um iPhone físico. A entrega Apple/Google, permissões IAM e faturação do Firebase também não são confirmadas pelos mocks. A validação depois do deploy inclui instalar, abrir pelo ícone, iniciar sessão, usar formulários/teclado, receber um alerta com a app fechada, tocar nele, voltar a abrir sem rede e verificar uma atualização da PWA.
+## Limites da evidência
 
-Os guias [PWA](pwa.md) e [push](notifications.md) detalham os cenários de cada plataforma.
+Os testes de backend injetam um transportador push simulado e não enviam alertas reais. Instalação nativa, permissões do sistema, entrega Apple/Google, IAM e faturação exigem confirmação nos ambientes correspondentes.
 
-</details>
+O [relatório de revisão](../reports/experience-review.md) distingue os conjuntos efetivamente executados. Para publicação, seguir os [seletores por área](deployment.md); testes ou comandos documentados não equivalem a um deploy.

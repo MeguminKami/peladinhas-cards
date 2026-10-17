@@ -2,7 +2,7 @@
 
 [← Cartas e avaliações](cards-and-ratings.md)
 
-Dezanove edições visuais disponíveis em **Administração → Cartas** e na secção **Modelos** do **Card Lab**. O catálogo permite ampliar cada edição e experimentar a fotografia de um jogador.
+Dezanove edições visuais disponíveis em **Administração → Cartas** e na secção **Modelos** do **Card Lab**. O catálogo permite ampliar cada edição e experimentar a fotografia de um jogador. Dentro do Card Lab, a fotografia usada é sempre a do ADMIN autenticado.
 
 | Edição        | ID estável      | Material e identidade                                           |
 | :------------ | :-------------- | :-------------------------------------------------------------- |
@@ -28,10 +28,16 @@ Dezanove edições visuais disponíveis em **Administração → Cartas** e na s
 
 Os desenhos são originais em SVG/CSS, inspirados na linguagem de cartas de coleção de [EA SPORTS FC 26 ICONS](https://www.ea.com/en/games/ea-sports-fc/fc-26/features/fc-26-icons) e nas campanhas do [Ultimate Team 26](https://www.ea.com/games/ea-sports-fc/fc-26/news/fc-26-icons-edition). Não dependem de imagens ou logótipos da EA. Conservam o espaço protegido para nome, OVR e oito atributos; a fotografia fica acima dos efeitos e dos ornamentos. Cada edição ajusta o fundo dos atributos ao contraste da sua paleta.
 
+## Elementos no Card Lab
+
+Modelos mantêm as identidades completas das cartas. Silhuetas, ornamentos e símbolos são escolhidos em galerias próprias, com nomes de elementos e pré-visualização; os ornamentos estão divididos em cinco categorias. A seleção de paleta não renomeia nem altera o ID de um modelo guardado. Há 50 combinações vibrantes, com cores de superfície, texto, traçado e luz.
+
+O traçado original pode ser retirado por **Materiais → Traçado junto ao perímetro → Sem moldura**. Esta escolha também oculta as linhas nativas internas; os restantes ornamentos continuam a ter o seu controlo independente. A [referência do Card Lab](card-lab.md) descreve os limites e a compatibilidade dos projetos.
+
 ## Estado da atribuição
 
 Quinze edições têm [condições de conquista e validade](card-unlocks.md). Apogeu (design original), Legado, Titã e Carnaval (design original) ficam em reserva para atribuição automática. O ADMIN pode usar as dezanove edições no Card Lab para criar e guardar composições personalizadas, incluindo as que estão em reserva. Apogeu usa o visual TOTY, Equipa da Época usa TOTS e Carnaval usa FUT BIRTHDAY, evitando prémios duplicados.
 
 `js/card-collection.js` mantém os IDs e metadados, incluindo os nove temas de `js/card-fut-themes.js`. `CATALOG_THEMES` inclui todas as edições para apresentação; `THEMES` inclui apenas as elegíveis para recompensas. `js/card-achievements.js` centraliza pistas e durações. Os critérios exatos ficam em `functions/card-unlock-rules.js`, fora dos recursos públicos, e `functions/card-collection.js` guarda as conquistas no servidor.
 
-Verificação: `npm run test:card-collection` testa nomes, materiais distintos, camadas abaixo do retrato, ecrãs de 320/390 px e a distinção entre cartas ativas e designs em reserva. Produz também duas folhas de comparação dos nove temas FUT: com jogador (`test-results/card-fut-themes.png`) e apenas molduras e materiais (`test-results/card-fut-frames.png`). `npm test` verifica condições de conquista, validades e os IDs elegíveis para recompensas.
+Verificação: `npm.cmd run test:card-collection` testa nomes, materiais distintos, camadas abaixo do retrato, ecrãs de 320/390 px e a distinção entre cartas ativas e designs em reserva. Produz também duas folhas de comparação dos nove temas FUT: com jogador (`test-results/card-fut-themes.png`) e apenas molduras e materiais (`test-results/card-fut-frames.png`). `npm.cmd test` verifica condições de conquista, validades e os IDs elegíveis para recompensas.

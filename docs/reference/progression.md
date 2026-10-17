@@ -48,7 +48,13 @@ Com 1 a 4 avaliações externas completas, o peso da autoavaliação é min(20%,
 
 Atributos atuais = base atual + variações dos jogos elegíveis + recompensas ativas. O OVR pondera esses atributos pela posição e aplica a penalização por inatividade. Jogos futuros, abertos ou em eliminação não entram. Recalcular começa sempre na base, sem somar novamente melhorias já aplicadas. Novos snapshots guardam baseStats e gameStats para distinguir a base das variações dos jogos.
 
-Alterar a autoavaliação ou a avaliação da comunidade altera a base, mesmo sem jogos novos. A autoavaliação pesa no máximo 20% até 4 avaliações externas e passa a 4% mais o resto dessa divisão a partir de 5; guardar os 12 valores a zero reduz a base. As comparações semanais incluem essas alterações, além dos jogos e das recompensas.
+Alterar a autoavaliação ou a avaliação da comunidade altera a base, mesmo sem jogos novos. A autoavaliação pesa no máximo 20% até 4 avaliações externas e passa a 4% mais o resto dessa divisão a partir de 5; guardar os 12 valores a zero reduz a base. As comparações semanais incluem essas alterações, os jogos e as recompensas permanentes; excluem as temporárias.
+
+## Autoridade da autoavaliação de guarda-redes
+
+A autoavaliação pós-jogo submetida com guarda-redes N/A exclui todas as notas desse critério no jogo, incluindo notas de colegas anteriores. Isto retira o jogo das médias e da progressão de guarda-redes, mas mantém as restantes dimensões. Rascunhos não impõem esta exclusão; zero continua a ser uma nota válida. A implementação é partilhada pelo cliente, histórico e coleção.
+
+A comparação entre semanas usa progressão e recompensas **permanentes**. A entrada, renovação ou expiração de bónus temporários não provoca setas de evolução, embora os números atuais da carta incluam os bónus ativos.
 
 ## Fórmula
 
@@ -77,7 +83,7 @@ Cartas semanais fechadas preservam os valores guardados. Cartas atuais e histór
 
 ## Simulação reproduzível
 
-`npm run simulate` usa a função de produção. Avançado com todos os atributos a 60, 4 estrelas em cada dimensão de campo, colegas/adversários com média 3,8, colegas com OVR fixo 70; 3 golos e 2 assistências por jogo; resultados 7–5/5–7, ciclo de 70% de vitórias. Guarda-redes não avaliado.
+`npm.cmd run simulate` usa a função de produção. Avançado com todos os atributos a 60, 4 estrelas em cada dimensão de campo, colegas/adversários com média 3,8, colegas com OVR fixo 70; 3 golos e 2 assistências por jogo; resultados 7–5/5–7, ciclo de 70% de vitórias. Guarda-redes não avaliado.
 
 | Jogos | OVR |
 | ----: | --: |

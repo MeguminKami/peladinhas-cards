@@ -86,9 +86,17 @@ Recompensas, votos e auditoria só podem ser escritos pelo backend. A identidade
 
 Antes da confirmação o ADMIN pode anular um boletim com motivo, conservando o original na auditoria. Depois da entrega pode anular os prémios com motivo: o registo fica preservado e deixa de produzir efeitos. Cancelar uma missão revoga entregas dessa missão. Cartas históricas fechadas preservam os snapshots originais; o estado atual recalcula após alterações.
 
+## Resultados no telemóvel
+
+A tabela de classificação transforma cada resultado num bloco por jogador até 600 px: posição, nome e votos/progresso ficam separados da recompensa, que ocupa a largura disponível. O mesmo formato é usado nos resultados iniciais e nas atualizações em direto, tanto em eventos como em missões. A ordem de classificação e os empates continuam a ser determinados pelas regras de apuramento; o layout não os recalcula.
+
+Os objetivos que usam notas de guarda-redes recebem os agregados válidos: uma autoavaliação submetida com N/A impede que números enviados por colegas tornem esse critério elegível. Stats temporárias recebidas em prémios não contam para setas de evolução semanal.
+
 ## Verificação
 
-`npm test`: regras puras e objetivos. `npm run test:backend`: integração de eventos antigos e novos, entrega, missão, agendamento e confirmação. `npm run test:rules`: privacidade e escrita protegida. `npm run test:ui`: criação, pré-visualização, voto, compatibilidade e layout desktop/mobile.
+Ao abrir um evento ou uma missão, os participantes elegíveis recebem uma notificação com acesso direto ao desafio. Inclui votações, competições por objetivo e competições controladas pelo ADMIN; não depende da existência de perguntas de votação. Rascunhos, utilizadores desativados e jogadores fora dos participantes não recebem o aviso. Missões com requisitos só notificam depois de desbloqueadas, através da verificação periódica. Cada desafio gera um único aviso de abertura por jogador, mesmo após edições ou novas verificações. O aviso segue também para os dispositivos com push ativo, usando o circuito descrito no [guia de notificações](../guides/notifications.md).
+
+`npm.cmd test`: regras puras e objetivos. `npm.cmd run test:backend`: integração de eventos antigos e novos, entrega, missão, agendamento e confirmação. `npm.cmd run test:rules`: privacidade e escrita protegida. `npm.cmd run test:ui`: criação, pré-visualização, voto, compatibilidade e layout desktop/mobile.
 
 ## Missões sem prazo e desbloqueio
 
@@ -96,7 +104,7 @@ Em Detalhes, a opção **Sem prazo de conclusão** mantém a missão disponível
 
 Em Objetivo, **Quando aparece ao jogador** permite escolher acesso imediato, conclusão de todas as missões selecionadas ou conclusão de pelo menos uma. O administrador continua a poder consultar e gerir todas as missões. Para os restantes jogadores, a lista e os detalhes só ficam disponíveis depois de cumprirem o requisito; o servidor também impede recolhas antecipadas.
 
-Só contam jogos realizados depois do desbloqueio e dentro do período da missão. A conclusão de uma missão anterior continua válida depois de expirar o seu prémio temporário. Uma entrega anulada deixa de contar como conclusão. Não são permitidas dependências circulares ou referências à própria missão.
+Só contam jogos cuja data de encerramento esteja depois do desbloqueio e dentro do período da missão; é essa data, e não apenas a data agendada, que determina a janela. A conclusão de uma missão anterior continua válida depois de expirar o seu prémio temporário. Uma entrega anulada deixa de contar como conclusão. Não são permitidas dependências circulares ou referências à própria missão.
 
 ## Editar missões
 
@@ -118,12 +126,12 @@ A ordem de chegada é verificada pelos jogos finalizados. Quem atingir a meta an
 
 Ao preencher as posições premiadas, a competição encerra automaticamente (ou fica em revisão se exigir confirmação). A verificação ocorre ao finalizar/atualizar jogos e também a cada cinco minutos. Com uma posição premiada, o primeiro jogador a atingir a meta vence; com várias, o pódio segue a ordem de conclusão. Missões continuam a recompensar cada participante que cumprir o objetivo.
 
-</details>
+## Apresentação das recompensas
 
-
-Os objetivos usam um icon distinto por métrica e por método de decisão. As páginas dos desafios apresentam as recompensas por posição, com indicadores de stats/cartas e pré-visualização da carta usando os valores atuais do jogador. O detalhe público disponibiliza `rewardPreview`; a configuração administrativa e os boletins continuam reservados ao admin.
-
+Os objetivos usam um ícone distinto por métrica e por método de decisão. As páginas dos desafios apresentam as recompensas por posição, com indicadores de stats/cartas e pré-visualização da carta usando os valores atuais do jogador. O detalhe público disponibiliza `rewardPreview`; a configuração administrativa e os boletins continuam reservados ao admin.
 
 ## Raridade visual
 
 A raridade é escolhida no ADMIN ao criar ou editar eventos e missões. Bronze, Prata, Ouro, Especial Dourada, Elite, Ícone e Ultimate definem apenas a identidade visual: cores, emblema, bordas e efeitos. Não alteram dificuldade, objetivos, classificação, cálculos, recompensas ou cartas atribuídas. Registos anteriores sem raridade aparecem como Bronze. O valor é validado no servidor, conservado nas edições que não o especificam e copiado ao duplicar.
+
+</details>

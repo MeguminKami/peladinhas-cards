@@ -1,114 +1,59 @@
-# Revisão da experiência e PWA
+# Revisão da experiência e validações
 
-[← Documentação](../README.md) · [Guia PWA](../guides/pwa.md) · [Push](../guides/notifications.md)
+[← Documentação](../README.md) · [Testes](../guides/testing.md) · [Publicação](../guides/deployment.md)
 
-## Resumo da revisão
+Este relatório regista desenvolvimento e verificações. Os guias descrevem os procedimentos atuais; um resultado local não comprova publicação nem entrega de notificações num dispositivo físico.
 
-| Área            | Trabalho registado                                       |
-| :-------------- | :------------------------------------------------------- |
-| **Interface**   | Tipografia, espaçamento, temas e estados.                |
-| **Mobile**      | Navegação, pódio, estatísticas e administração.          |
-| **Fluxos**      | Modais, pesquisa, notificações e navegação assíncrona.   |
-| **PWA**         | Instalação, cache, offline e atualização adiada.         |
-| **Push**        | Ativação, entrega, confirmação de leitura e diagnóstico. |
-| **Repositório** | README visual, guias e exportação sem segredos.          |
+## Estado registado em 17 de outubro de 2026
 
-```mermaid
-flowchart TB
-    classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
-    A["Rever o produto"] --> B["Implementar"]
-    B --> C["Testar lógica e fluxos"]
-    C --> D["Inspecionar capturas"]
-    D --> E["Corrigir e repetir"]
-```
+| Área               | Implementação revista                                                                                                                              |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Início             | Saudação por horário; pódio ajustado à janela, bases de alturas distintas e legenda à direita; sem os controlos retirados de classificação/pausa.  |
+| Painéis pessoais   | Carta e missões com a mesma altura quando lado a lado; sem o bloco de próximo jogo na carta pessoal.                                               |
+| Jogo               | Cartas das equipas maiores, sem redução por transform; títulos da equipa deixam de alterar a cor/tipografia do nome nas cartas.                    |
+| Mobile             | Resultados de eventos/missões em blocos por jogador e recompensa; contadores de golos/assistências alinhados sem dividir labels em letras.         |
+| Feedback           | Autoavaliação pós-jogo com o mesmo peso de cada colega; N/A submetido em guarda-redes tem autoridade sobre as notas desse critério.                |
+| Card Lab           | Oito ferramentas, galerias por elemento, 50 paletas vibrantes, foto do ADMIN, luz configurável, traçado removível e estados de projetos coerentes. |
+| Notificações       | Convite móvel com permissão por clique, adiamento de sete dias e processo de instalação/permissões quando necessário.                              |
+| Comparação semanal | Valores permanentes; bónus temporários não provocam setas.                                                                                         |
 
-**Este documento é um registo de trabalho.** Não prova que todas as alterações locais estejam publicadas. A entrega push real ficou dependente da correção do segredo cloud; ver o [estado das notificações](../guides/notifications.md).
+## Card Lab e cartas
 
----
+A bancada mantém a carta visível e o scroll na ferramenta. Ícones, cabeçalhos, labels e expansões têm linguagem consistente e operação por teclado; animações respeitam redução de movimento. Os modelos preservam o desenho nativo enquanto não são editados; **Do zero** começa sem decoração, efeito, luz ou moldura.
 
-<details>
-<summary><strong>Registo completo da revisão</strong></summary>
+A revisão corrigiu a reaplicação da carta premiada do jogador sobre o projeto, as texturas nativas que persistiam num fundo personalizado, a interpretação de fundos antigos e a gravação acidental sobre o projeto anterior ao escolher outro modelo. O traçado removido inclui as linhas internas nativas. Símbolos normalizados ficam centrados na zona inferior, sem nomes de edição sobrepostos. As legendas dos atributos alinham com o número e não com o conjunto número/seta.
 
-Este documento regista a revisão local. Os procedimentos atuais de instalação e publicação estão nos guias; não confirma que o código local esteja publicado.
+As 50 paletas usam nomes próprios e combinações de superfície, texto, traçado e luz. Trinta partem das referências cromáticas fornecidas; vinte foram criadas adicionalmente. Os IDs foram conservados. O Bicolor tem transição por degradê. DIN Pro/Posterama são referências locais com fallback, não assets distribuídos.
 
-As alterações foram feitas sobre o estado existente do projeto, preservando o trabalho anterior e a identidade das cartas, os quatro temas e os fluxos da liga.
+## Autoridade da autoavaliação de guarda-redes
 
-## Experiência
+`calculateGameAggregate` exclui a dimensão quando encontra a autoavaliação submetida com N/A. Resumos guardam média nula, contagem válida zero e o indicador público de elegibilidade. Os colegas veem N/A bloqueado e uma explicação, sem acesso às respostas individuais dos restantes jogadores. Regras impedem novas notas incompatíveis; correções administrativas de respostas de colegas conservam N/A.
 
-- Fonte Manrope alojada no projeto, com licença OFL e pesos fixos para renderização consistente em Chromium e WebKit. Hierarquia, textos de apoio e espaçamentos comuns revistos.
-- Ícones de playstyles entregues em WebP de 256 px, com os PNG originais preservados. Os oito recursos passaram de mais de 7 MB para cerca de 107 KB; o pacote público completo ficou abaixo de 1 MB. A fonte variável de origem também é excluída do alojamento, que entrega apenas os pesos WOFF utilizados.
-- Navegação mobile com Início, Jogadores, Jogos, Missões e Mais. O menu Mais reúne perfil, estatísticas, ranking, eventos, apoio, administração e instalação.
-- Administração mobile com um seletor de área; menu desktop completo sem cortar a última opção.
-- Pódio mobile com páginas por deslize e scroll snap; os três lugares continuam disponíveis sem uma longa pilha de cartas.
-- Nomes longos nas cartas apresentados completos. Pesquisa de jogadores aceita nomes sem acentos e conserva os filtros ao voltar de um perfil.
-- Estatísticas mobile com ordenação por seletor e cartões de jogador; indicadores da liga reorganizados para manter os rótulos legíveis.
-- Estados de apoio, mensagens, eventos e desafios integrados na mesma linguagem visual. Cores de seleção seguem o tema escolhido.
-- Modais bloqueiam o fundo, contêm o foco e restauram foco e scroll ao fechar. Confirmações canceladas por Escape, fecho, mudança de página ou clique no fundo terminam corretamente.
-- Notificações lidas conservadas no histórico; o sino continua a mostrar apenas novidades. Fecho por Escape e por clique fora, sem interferir com atualizações do próprio painel.
-- Respostas atrasadas de uma página não substituem a página para onde o utilizador navegou. Mensagens de carregamento e erros de ligação mais claras.
-- Jogos mostram data, hora e local; edição e gravação usam Lisboa em qualquer fuso do dispositivo. Horas inexistentes na mudança para o horário de verão são rejeitadas. Na hora repetida de outono, usa-se a primeira ocorrência.
-- Prazos de eventos e janelas de votação mostram também a hora. Os dados e regras de recompensas mantêm-se.
-- O painel “A minha carta” deixou de esticar até à altura das missões. Inclui golos/assistências e acesso às estatísticas, com seis indicadores em três ou duas colunas conforme a largura.
+Rascunhos não impõem a exclusão; zero continua a ser nota válida. Depois de publicar, **Recalcular liga** atualiza dados antigos e cartas em evolução. Semanas fechadas mantêm os snapshots. Os consumidores backend e comandos estão no [procedimento seletivo](../deploy-feedback-fixes.md).
 
-## PWA
+## Push: diagnóstico, correção e limite da confirmação
 
-`manifest.webmanifest` define nome, identidade, idioma, âmbito relativo, arranque, modo standalone, cores e atalhos para jogos, missões e perfil. Os caminhos relativos permitem alojar o frontend na raiz ou numa subpasta.
+O diagnóstico de 15 de outubro identificava uma configuração VAPID inválida. Na intervenção posterior, em **17 de outubro**, foi confirmado que a privada cloud não correspondia à pública da app. O par local foi validado; `setup:push:cloud` guardou a privada correspondente e `--verify-cloud` confirmou a correspondência depois da alteração, sem expor chaves privadas nem rodar a pública.
 
-Os ícones PNG de 192 e 512 px, o ícone maskable de 512 px e o apple-touch-icon de 180 px derivam do logótipo existente. `scripts/generate-pwa-icons.mjs` permite regenerá-los. Não é necessário gerar imagens por IA.
+Essa intervenção não registou a republicação de `pushDeviceAction`/`onNotificationPush` nem entrega num aparelho físico. Atualizar o segredo não demonstra que as revisões das funções já o usam. Confirmar a publicação e executar um teste nativo depois; ver [notificações](../guides/notifications.md).
 
-O service worker separa os caches por âmbito e versão. `build:hosting` gera uma versão a partir do conteúdo do frontend e injeta o inventário de recursos públicos. A instalação só termina quando os recursos da versão estão guardados. O documento e os módulos usam a mesma versão até à ativação da atualização; caches de outras aplicações no mesmo domínio são preservados.
+O popup móvel **A tua liga chama por ti.** foi testado sem pedir autorização antes do toque, com adiamento, mudança de conta e ativação. A ilustração é HTML/CSS e não introduz imagens de marketing externas. Os testes do worker confirmaram a chamada de apresentação nativa com e sem clientes abertos, em ambiente simulado.
 
-O cache guarda recursos estáticos do frontend. Pedidos Firebase, APIs, fotografias privadas e gravações não são guardados nem reproduzidos pelo service worker. A liga requer ligação para consultar dados e guardar alterações. Sem Internet, uma abertura apresenta um ecrã próprio, com recuperação que verifica o servidor e conserva o destino original.
+## Evidência local executada
 
-Uma atualização fica à espera. O utilizador recebe a opção de atualizar ou adiar, com indicação para guardar o trabalho. Não há recarregamento automático de formulários.
+- Suite de lógica: **90 testes passaram** na última execução registada antes desta revisão documental.
+- Regras Firestore: **31 testes passaram** no emulador, incluindo bloqueio de notas de guarda-redes incompatíveis.
+- Backend dirigido: passou o cenário `goalkeeper` de `tests/backend.test.js`, com agregação e correção administrativa. Isto não equivale à execução de toda a suite backend.
+- Passaram os cenários de feedback, formulário de guarda-redes bloqueado, resultados móveis, edição/layout de jogo, painéis pessoais e enquadramento do pódio.
+- Passaram os testes de ciclo push, interface de ativação e popup móvel, com transporte/serviços simulados.
+- Sintaxe, preparação de Hosting e referências da documentação foram verificadas. As capturas inspecionadas incluem desktop e mobile, com 320/390 px nos fluxos alterados.
 
-Android/Chromium usa o pedido nativo quando o browser disponibiliza `beforeinstallprompt`; há instruções de menu quando esse pedido não está disponível. No iPhone, a ajuda explica Safari → Partilhar → Adicionar ao ecrã principal, incluindo «Abrir como aplicação» quando aparece. As orientações seguem [Apple Support](https://support.apple.com/guide/iphone/iphea86e5236/ios) e [web.dev](https://web.dev/learn/pwa/installation).
+Os comandos reproduzíveis estão no [guia de testes](../guides/testing.md). Os números acima são evidência datada, não uma garantia de contagem fixa em futuras versões.
 
-O frontend tem metadados Apple e espaçamento para safe areas, alturas dinâmicas e modo standalone. O tema escolhido também atualiza a cor do browser.
+## Infraestrutura e recursos preservados
 
-## Validação e reprodução
+A interface mantém os temas existentes, Manrope local, ícones partilhados, navegação inferior mobile e modais com foco contido/restaurado. Originais ficam em `design/sources/`; recursos públicos em `assets/`; capturas de demonstração em `docs/media/`.
 
-```powershell
-npm.cmd test
-npm.cmd run check
-npm.cmd run test:ui
-npm.cmd run test:review
-npm.cmd run test:pwa
-npm.cmd run test:rules
-npm.cmd run test:backend
-npm.cmd run test:hosting
-```
+A PWA usa manifest e âmbito relativos, inventário/hash gerados no build, cache separado por versão e recuperação offline. Não faz cache de pedidos Firebase nem gravações privadas. Atualizações aguardam aceitação em vez de recarregar formulários automaticamente. Push mantém uma fila de leitura própria, independente do cache de recursos.
 
-`test:review` percorre 27 rotas em 320, 360, 390, 430, 768, 1024 e 1440 px, além de 780×360, 844×390 e 932×430 na horizontal, com dados de demonstração, nomes longos, verificações de viewport, pódio, modais, pesquisa, ordenação e navegação durante um pedido lento. Guarda capturas em `test-results/review/`.
-
-Para repetir em WebKit, instala o motor Playwright e executa `node tests/review.mjs --webkit`. Nesta revisão, o motor foi instalado em `test-results/browsers`; usa essa pasta em `PLAYWRIGHT_BROWSERS_PATH`. As capturas ficam em `test-results/review-webkit/`. WebKit no computador ajuda a detetar diferenças do Safari, mas não substitui um iPhone físico.
-
-`test:pwa` usa o service worker real sobre o frontend preparado. Verifica manifest, dimensões dos ícones, entrega dos playstyles otimizados, âmbito na raiz e numa subpasta, recursos em cache, exclusão de pedidos privados, abertura offline, recuperação e atualização com adiamento. Um perfil normal do browser confirma os requisitos técnicos de instalação; contextos isolados verificam cache e atualizações. A ajuda para iOS é verificada com identificação de iPhone. A interface nativa de instalação do sistema operativo continua a exigir validação num aparelho real.
-
-## Publicação e confirmação nos aparelhos
-
-Este update inclui também [notificações push do telemóvel](../guides/notifications.md), com ativação voluntária, teste por dispositivo e leitura sincronizada. A primeira publicação destas notificações exige configurar a chave VAPID privada e publicar também as Functions e regras; o deploy apenas do frontend não é suficiente.
-
-O frontend preparado está em `.firebase/site`. O fluxo Firebase existente (`npm.cmd run deploy:frontend`) inclui manifest, service worker, página offline, fontes e ícones. Não se publica código interno ou testes. O Hosting mantém revalidação HTTP, permitindo detetar novas versões do worker.
-
-No GitHub Pages, publica os mesmos ficheiros da pasta preparada, mantendo-os na raiz da demo. O `sw.js` original é uma alternativa de desenvolvimento com cache mínimo; para publicar uma versão com o inventário e hash corretos, usa o ficheiro produzido pelo build.
-
-Depois de publicar por HTTPS, confirma num iPhone e Android: instalação, lançamento pelo ícone, entrada na conta, navegação com safe areas, teclado nos formulários, fotografias, atualização e reabertura sem Internet. Esta revisão não publicou em produção nem verificou a instalação física ou credenciais do Firebase real.
-
-## Estado de publicação e organização
-
-O painel inicial das missões acompanha a altura natural de «A minha carta» no desktop. Apresenta até quatro entradas, com as competições primeiro, o total de pendentes e acesso à lista completa. Os cartões distribuem o espaço disponível sem scroll interno; no telemóvel, os painéis surgem em sequência e recuperam a altura natural. A página de Missões mantém todas as entradas e os seus grupos. O cenário de regressão verifica as alturas em 1440 e 1024 px, ausência de overflow em 390 e 320 px e acesso às cinco missões do exemplo.
-
-O envio da chave privada VAPID para o Firebase Secret Manager foi rejeitado pela revisão automática por faltar autorização explícita para guardar o segredo na cloud. A chave foi gerada e preservada localmente; não houve deploy. A implementação push passou os testes locais de servidor, regras, worker e interface.
-
-Na preparação para um repositório próprio, o README foi convertido numa apresentação visual, os guias separados da referência e deste relatório, e os originais de design movidos para `design/sources/`. Os módulos públicos mantiveram os caminhos. A exportação exclui segredos e ficheiros gerados; ver [mudança de repositório](../guides/repository-migration.md).
-
-### Diagnóstico de entrega · 15 de outubro de 2026
-
-Uma verificação posterior confirmou as funções push ativas em produção e o Android registado. Os registos de entrega mostraram erros 500 e ausência de envio concluído. A validação protegida da configuração identificou uma chave privada VAPID cloud com formato inválido: a construção do pedido falhava antes do contacto com o fornecedor push.
-
-O par local foi validado e a chave pública coincide com a publicada. A correção preparada conserva esse par e as subscrições. O servidor passa a validar a chave privada e a correspondência antes de criar um teste, e guarda uma classificação segura da falha. Os testes de servidor constroem agora o pedido Web Push real encriptado/assinado, com chaves fictícias e sem enviar pela rede, além dos cenários de configuração inválida.
-
-A substituição do segredo cloud e a republicação das funções dependem da autorização explícita necessária para essa operação de produção. Esta preparação local não confirma ainda a entrega num aparelho físico.
-
-</details>
+GitHub guarda o código; Hosting e serviços Firebase são publicações separadas. Exportar ou testar não publica. Não foi executado um deploy como parte desta atualização de Markdown.

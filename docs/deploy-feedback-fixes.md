@@ -2,6 +2,8 @@
 
 O cálculo partilhado exclui guarda-redes quando a autoavaliação submetida indica que o jogador não foi à baliza. A publicação inclui os consumidores desse cálculo: resumos de jogos, evolução de cartas, histórico, coleção e entregas de recompensas que recalculam jogadores. As regras impedem novas notas numéricas de colegas nesse critério.
 
+Este é um procedimento específico para as correções de avaliações, não o comando habitual de cada alteração. Para uma mudança apenas de interface usar o [deploy de frontend](guides/deployment.md). Alterar a lista abaixo exige rever os consumidores de `calculateGameAggregate` e dos recálculos de histórico/coleção.
+
 Executar na raiz do projeto:
 
 ```powershell

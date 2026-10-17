@@ -52,6 +52,15 @@ flowchart TB
 | [Notificações](guides/notifications.md)        | Ativação, envio, leitura e configuração VAPID.         |
 | [Repositório](guides/repository-migration.md)  | Localização atual, GitHub e cópias limpas.             |
 
+## Alterações e operação atuais
+
+- [Card Lab](reference/card-lab.md): ferramentas, paletas, luz, traçado e projetos.
+- [Avaliações](reference/cards-and-ratings.md): guarda-redes N/A determinado pela autoavaliação submetida e comparação semanal apenas com valores permanentes.
+- [Publicação das correções](deploy-feedback-fixes.md): funções afetadas, regras e recálculo de dados anteriores.
+- [Notificações](guides/notifications.md): convite móvel, permissão voluntária e diagnóstico VAPID sem expor segredos.
+
+As capturas usam dados fictícios. O [relatório de revisão](reports/experience-review.md) distingue testes, alterações cloud e publicação; consultar os guias para os procedimentos correntes.
+
 ## Design e imagens
 
 <a href="../design/README.md"><img src="media/card-rarities.png" width="100%" alt="Galeria dos estilos de carta; abrir documentação de design." /></a>
@@ -60,7 +69,7 @@ flowchart TB
 | :------------------------------------- | :---------------------------------------- |
 | Originais, fontes e otimização         | [Recursos de design](../design/README.md) |
 | Banner e capturas da aplicação         | [Imagens da documentação](media/)         |
-| Regenerar capturas com dados fictícios | `npm run docs:images`                     |
+| Regenerar capturas com dados fictícios | `npm.cmd run docs:images`                 |
 
 ## Registo de revisão
 

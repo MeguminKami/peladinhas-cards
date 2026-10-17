@@ -1906,3 +1906,51 @@ test("goalkeeper self N/A is authoritative in summaries and administrative corre
     null,
   );
 });
+
+test("New challenges notify eligible participants once for every method", async () => {
+  const active = "new-challenge-player",
+    excluded = "new-challenge-excluded",
+    disabled = "new-challenge-disabled";
+  for (const uid of [active, excluded, disabled])
+    await db
+      .doc(`users/${uid}`)
+      .set({ uid, role: "member", disabled: uid === disabled });
+  for (const [kind, method] of [
+    ["event", "objective"],
+    ["event", "admin"],
+    ["event", "vote"],
+    ["mission", "objective"],
+  ]) {
+    const id = `new-challenge-${kind}-${method}`;
+    const ref = db.doc(`events/${id}`);
+    await db.doc(`users/${active}/notifications/mission-event-${id}`).delete();
+    await ref.set({
+      schemaVersion: 2,
+      kind,
+      method,
+      title: "Novo desafio",
+      status: "draft",
+      indefinite: true,
+      participantIds: [active, disabled],
+      allowSelfVote: true,
+    });
+    await onEventNotifications.run({ params: { eid: id } });
+    const notice = db.doc(`users/${active}/notifications/mission-event-${id}`);
+    assert.equal((await notice.get()).exists, false);
+    await ref.update({ status: "open" });
+    await onEventNotifications.run({ params: { eid: id } });
+    assert.equal((await notice.get()).data().type, "EVENT_OPEN");
+    assert.equal((await notice.get()).data().href, `#/event/${id}`);
+    await notice.update({ read: true });
+    await onEventNotifications.run({ params: { eid: id } });
+    assert.equal((await notice.get()).data().read, true);
+    for (const uid of [excluded, disabled])
+      assert.equal(
+        (await db.doc(`users/${uid}/notifications/mission-event-${id}`).get())
+          .exists,
+        false,
+      );
+    await ref.update({ status: "cancelled" });
+    await onEventNotifications.run({ params: { eid: id } });
+  }
+});

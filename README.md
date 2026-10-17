@@ -68,7 +68,7 @@ Aceder pelo browser ou instalar a PWA, com navegação e layouts adaptados ao di
 | [03 · Cartas e histórico](#03--cartas-e-histórico)   | [06 · Estatísticas e ranking](#06--estatísticas-e-ranking)                | [11 · Apoio e mensagens](#11--apoio-e-mensagens) |
 | [12 · Mobile e instalação](#12--mobile-e-instalação) | [07 · Missões](#07--missões) · [08 · Eventos](#08--eventos-e-competições) | [Documentação técnica](#documentação-técnica)    |
 
-<sub>Todas as capturas apresentam a aplicação real com uma liga fictícia. Nomes, jogos, avaliações e mensagens são dados de demonstração. Alguns ecrãs mostram ferramentas reservadas à organização.</sub>
+<sub>As capturas são exemplos de desenvolvimento e não confirmam a versão publicada. A referência técnica descreve as regras atuais. Todas as capturas apresentam a aplicação real com uma liga fictícia. Nomes, jogos, avaliações e mensagens são dados de demonstração. Alguns ecrãs mostram ferramentas reservadas à organização.</sub>
 
 ## 01 · Início e navegação
 
@@ -95,6 +95,8 @@ Os seis indicadores pessoais resumem a participação e as contribuições. Ao l
 | **Admin**        | Aceder à gestão da liga, conforme as permissões da conta.        |
 
 O cabeçalho dá também acesso ao perfil, às notificações, aos temas e ao fim de sessão. No telemóvel, os destinos principais ficam na navegação inferior e os restantes no menu **Mais**.
+
+O pódio alterna OVR, Performance e Crescimento. No PC, as bases distinguem claramente 1.º, 2.º e 3.º lugares; o título e a descrição ficam orientados à direita. A escala adapta-se à altura da janela. Os painéis **A minha carta** e **As tuas missões** têm a mesma altura quando estão lado a lado; o bloco de próximo jogo foi retirado da carta pessoal.
 
 ## 02 · Jogadores e perfis
 
@@ -179,7 +181,7 @@ O resultado inclui o marcador das duas equipas e os golos e assistências de cad
 
 ## 05 · Avaliações pós-jogo
 
-Após um jogo encerrado, os participantes podem avaliar os restantes jogadores. Os jogadores estão separados por equipa, com molduras azuis e laranja. Cada dimensão ocupa uma linha com cinco estrelas clicáveis, preenchidas da esquerda até à escolhida. Os rascunhos são guardados automaticamente.
+Após um jogo encerrado, os participantes podem avaliar os colegas e o próprio desempenho. Os jogadores estão separados por equipa, com molduras azuis e laranja. Cada dimensão ocupa uma linha com cinco estrelas clicáveis, preenchidas da esquerda até à escolhida. Os rascunhos são guardados automaticamente.
 
 <img src="docs/media/match-feedback.png" width="100%" alt="Área de feedback pós-jogo com progresso das avaliações e dimensões de desempenho por jogador." />
 
@@ -189,6 +191,8 @@ Após um jogo encerrado, os participantes podem avaliar os restantes jogadores. 
 | Escolher «Não jogou à baliza» quando não aplicável.                  | Retomar as avaliações ainda por enviar.     | As avaliações submetidas ficam concluídas.  |
 
 Os restantes membros consultam os agregados permitidos. As respostas individuais não são mostradas aos outros jogadores; a administração tem acesso de revisão.
+
+A autoavaliação pós-jogo tem o mesmo peso de cada avaliação externa. Se o jogador submeter **Não jogou à baliza**, guarda-redes passa a não aplicável para esse jogo: os colegas não podem atribuir uma nota numérica e notas anteriores desse critério não entram no agregado. A restrição é aplicada pelo formulário, regras Firestore e servidor.
 
 ## 06 · Estatísticas e ranking
 
@@ -269,6 +273,8 @@ O Card Lab permite à administração trabalhar a apresentação das cartas com 
 
 A escolha do tema acompanha a interface e a cor do browser. Os estilos das cartas são geridos separadamente.
 
+A [referência do Card Lab](docs/reference/card-lab.md) descreve a bancada atual: oito ferramentas, galerias com nomes próprios, 50 paletas vibrantes, fotografia do ADMIN, iluminação dirigida, remoção integral do traçado, projetos e compatibilidade com composições antigas.
+
 ## 11 · Apoio e mensagens
 
 ### Pedidos de apoio
@@ -286,6 +292,8 @@ A caixa de notificações separa **Por ler** e **Histórico**. As mensagens pode
 A integração Web Push permite alertas do sistema após ativação no dispositivo. O toque no alerta fecha-o e confirma a leitura; sem rede, essa confirmação fica em fila local. A entrega depende do suporte, das permissões e da configuração do servidor.
 
 [Consultar ativação, funcionamento e estado de configuração do push →](docs/guides/notifications.md)
+
+No início em telemóvel, quem ainda não ativou alertas recebe o convite **A tua liga chama por ti.** O popup inicia a ativação apenas ao tocar no botão; **Agora não** adia o convite sete dias. Permissões bloqueadas e instalação necessária no iPhone têm orientação própria. O histórico interno e o alerta nativo continuam a usar o mesmo registo.
 
 ## 12 · Mobile e instalação
 
