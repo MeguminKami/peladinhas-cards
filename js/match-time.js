@@ -30,22 +30,20 @@ export function parseLisbonDateInput(value) {
     .find((time) => lisbonDateInput(new Date(time)) === value);
   if (candidate == null)
     throw Error(
-      "Esta hora não existe em Lisboa devido à mudança para o horário de verão. Escolhe outra hora.",
+      "Esta hora não existe devido à mudança para o horário de verão. Escolhe outra hora.",
     );
   return new Date(candidate);
 }
 export function formatMatchDate(value) {
   const date = asDate(value);
   if (!date || !Number.isFinite(date.getTime())) return "Data a definir";
-  return (
-    date.toLocaleString("pt-PT", {
-      timeZone: "Europe/Lisbon",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    }) + " · Lisboa"
-  );
+  return date.toLocaleString("pt-PT", {
+    timeZone: "Europe/Lisbon",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
 }

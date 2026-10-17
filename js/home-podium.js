@@ -17,8 +17,8 @@ export function podiumPlayers(players, mode, date = new Date()) {
 }
 
 export function mountHomePodium(root, players) {
-  let index = 0, paused = false, timer;
-  root.innerHTML = `<div class="podium-controls"><div class="podium-switches" role="group" aria-label="Classificação do pódio">${modes.map(m => `<button type="button" data-podium-mode="${m.id}" aria-pressed="false">${icon(m.icon)}<span>${m.label}</span></button>`).join("")}</div><button type="button" class="podium-pause" aria-label="Pausar rotação automática">Pausar ${icon("pause")}</button></div><div class="podium-caption"><span class="podium-edition" aria-hidden="true"></span><div><h3 id="podium-title"></h3><p id="podium-description"></p></div></div><div class="podium-stage"><svg class="podium-scenery" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><ellipse cx="500" cy="480" rx="430" ry="105"/><ellipse cx="500" cy="480" rx="310" ry="75"/><path d="M500 40v400M130 480l220-370M870 480 650 110"/></svg><div class="podium-results"></div></div>`;
+  let index = 0, timer;
+  root.innerHTML = `<div class="podium-controls"><div class="podium-switches" role="group" aria-label="Classificação do pódio">${modes.map(m => `<button type="button" data-podium-mode="${m.id}" aria-pressed="false">${icon(m.icon)}<span>${m.label}</span></button>`).join("")}</div></div><div class="podium-caption"><span class="podium-edition" aria-hidden="true"></span><div><h3 id="podium-title"></h3><p id="podium-description"></p></div></div><div class="podium-stage"><svg class="podium-scenery" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><ellipse cx="500" cy="480" rx="430" ry="105"/><ellipse cx="500" cy="480" rx="310" ry="75"/><path d="M500 40v400M130 480l220-370M870 480 650 110"/></svg><div class="podium-results"></div></div>`;
   const stage = root.querySelector(".podium-results");
   const draw = () => {
     const mode = modes[index], top = podiumPlayers(players, mode.id);
@@ -32,7 +32,7 @@ export function mountHomePodium(root, players) {
   };
   const schedule = () => {
     clearInterval(timer);
-    if (!paused) timer = setInterval(() => {
+    timer = setInterval(() => {
       if (document.hidden || (matchMedia("(hover: hover)").matches && root.matches(":hover")) || root.contains(document.activeElement)) return;
       index = (index + 1) % modes.length;
       draw();
@@ -42,13 +42,6 @@ export function mountHomePodium(root, players) {
     index = modes.findIndex(m => m.id === b.dataset.podiumMode);
     draw(); schedule();
   });
-  root.querySelector(".podium-pause").onclick = e => {
-    paused = !paused;
-    root.dataset.paused = String(paused);
-    e.currentTarget.innerHTML = `${paused ? "Retomar" : "Pausar"} ${icon(paused ? "play" : "pause")}`;
-    e.currentTarget.setAttribute("aria-label", `${paused ? "Retomar" : "Pausar"} rotação automática`);
-    schedule();
-  };
   draw(); schedule();
   return () => clearInterval(timer);
 }

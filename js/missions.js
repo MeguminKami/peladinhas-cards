@@ -1,3 +1,4 @@
+import { groupActivities } from "./activity-categories.js";
 import {
   eventRarityId,
   rarityBadge,
@@ -46,11 +47,16 @@ export async function refreshMissionsForCurrentUser(user, league) {
       href: "#/missions/self",
       icon: "ball",
     });
-  for (const g of league.games.filter(
+  const closedGames = league.games.filter(
     (g) => g.status === "closed" && participants(g).includes(user.uid),
-  )) {
+  );
+  const [feedback, my] = await Promise.all([
+    Promise.all(closedGames.map((g) => DB.myFeedback(g.id, user.uid))),
+    DB.myCommunity(user.uid),
+  ]);
+  for (const [index, g] of closedGames.entries()) {
     const targets = [...new Set(participants(g))],
-      ratings = await DB.myFeedback(g.id, user.uid);
+      ratings = feedback[index];
     const done = targets.filter((uid) =>
       ratings.some((r) => r.targetId === uid && r.submitted),
     ).length;
@@ -66,7 +72,6 @@ export async function refreshMissionsForCurrentUser(user, league) {
         icon: "games",
       });
   }
-  const my = await DB.myCommunity(user.uid);
   for (const target of league.players.filter((x) => x.uid !== user.uid)) {
     const rating = my.find((r) => r.targetId === target.uid);
     if (rating?.submitted) continue;
@@ -83,100 +88,108 @@ export async function refreshMissionsForCurrentUser(user, league) {
       icon: "players",
     });
   }
-  for (const event of league.events || []) {
-    if (event.schemaVersion === 2) {
-      if (
-        event.status === "open" &&
-        event.participantIds?.includes(user.uid) &&
-        +asDate(event.startsAt) <= Date.now() &&
-        eventEndMillis(event) > Date.now() &&
-        missionUnlocked(event, user.uid, league.eventRewards || [])
-      ) {
-        if (event.kind === "mission") {
-          const detail = await DB.eventDetails(event.id);
-          if (!detail) continue;
-          const progress =
-            detail.progress?.find((row) => row.uid === user.uid)?.progress || 0;
-          if (
-            detail.claimedPeriods?.includes(periodWindow(event).key) ||
-            (detail.claimedPeriods?.length || 0) >= event.maxRepeats
-          )
-            continue;
-          missions.push({
-            id: `event-${event.id}`,
-            type: "OBJECTIVE_MISSION",
-            title: event.title,
-            eventDescription: event.description || "",
-            rarity: eventRarityId(event),
-            description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
-            done: Math.min(progress, event.objective.target),
-            total: event.objective.target,
-            href: `#/event/${event.id}`,
-            icon: eventIcon(event),
-            rewards: detail.rewardPreview || [],
-          });
-        } else if (event.method === "objective") {
-          const detail = await DB.eventDetails(event.id);
-          if (!detail) continue;
-          const progress =
-            detail.progress?.find((row) => row.uid === user.uid)?.progress || 0;
-          missions.push({
-            id: `event-${event.id}`,
-            type: "COMPETITION_OBJECTIVE",
-            title: event.title,
-            eventDescription: event.description || "",
-            rarity: eventRarityId(event),
-            description: objectiveSummary(event),
-            done: Math.min(progress, event.objective.target),
-            total: event.objective.target,
-            href: `#/event/${event.id}`,
-            icon: eventIcon(event),
-            rewards: detail.rewardPreview || [],
-          });
-        } else if (event.method === "vote")
-          missions.push({
-            id: `event-${event.id}`,
-            type: "EVENT_VOTE",
-            title: event.title,
-            eventDescription: event.description || "",
-            rarity: eventRarityId(event),
-            description: "Consulta as regras e participa na votação.",
-            done: 0,
-            total: 1,
-            href: `#/event/${event.id}`,
-            icon: eventIcon(event),
-          });
+  const eventMissions = await Promise.all(
+    (league.events || []).map(async (event) => {
+      const missions = [];
+      if (event.schemaVersion === 2) {
+        if (
+          event.status === "open" &&
+          event.participantIds?.includes(user.uid) &&
+          +asDate(event.startsAt) <= Date.now() &&
+          eventEndMillis(event) > Date.now() &&
+          missionUnlocked(event, user.uid, league.eventRewards || [])
+        ) {
+          if (event.kind === "mission") {
+            const detail = await DB.eventDetails(event.id);
+            if (!detail) return missions;
+            const progress =
+              detail.progress?.find((row) => row.uid === user.uid)?.progress ||
+              0;
+            if (
+              detail.claimedPeriods?.includes(periodWindow(event).key) ||
+              (detail.claimedPeriods?.length || 0) >= event.maxRepeats
+            )
+              return missions;
+            missions.push({
+              id: `event-${event.id}`,
+              type: "OBJECTIVE_MISSION",
+              title: event.title,
+              eventDescription: event.description || "",
+              rarity: eventRarityId(event),
+              description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
+              done: Math.min(progress, event.objective.target),
+              total: event.objective.target,
+              href: `#/event/${event.id}`,
+              icon: eventIcon(event),
+              rewards: detail.rewardPreview || [],
+            });
+          } else if (event.method === "objective") {
+            const detail = await DB.eventDetails(event.id);
+            if (!detail) return missions;
+            const progress =
+              detail.progress?.find((row) => row.uid === user.uid)?.progress ||
+              0;
+            missions.push({
+              id: `event-${event.id}`,
+              type: "COMPETITION_OBJECTIVE",
+              title: event.title,
+              eventDescription: event.description || "",
+              rarity: eventRarityId(event),
+              description: objectiveSummary(event),
+              done: Math.min(progress, event.objective.target),
+              total: event.objective.target,
+              href: `#/event/${event.id}`,
+              icon: eventIcon(event),
+              rewards: detail.rewardPreview || [],
+            });
+          } else if (event.method === "vote")
+            missions.push({
+              id: `event-${event.id}`,
+              type: "EVENT_VOTE",
+              title: event.title,
+              eventDescription: event.description || "",
+              rarity: eventRarityId(event),
+              description: "Consulta as regras e participa na votação.",
+              done: 0,
+              total: 1,
+              href: `#/event/${event.id}`,
+              icon: eventIcon(event),
+            });
+        }
+        return missions;
       }
-      continue;
-    }
 
-    if (
-      event.status !== "open" ||
-      +asDate(event.endsAt) <= Date.now() ||
-      !votersFor(event, league.users, league.games).includes(user.uid) ||
-      !event.questions.some((q) =>
-        candidatesFor(event, q, league.users, league.games).some(
-          (uid) => uid !== user.uid,
-        ),
+      if (
+        event.status !== "open" ||
+        +asDate(event.endsAt) <= Date.now() ||
+        !votersFor(event, league.users, league.games).includes(user.uid) ||
+        !event.questions.some((q) =>
+          candidatesFor(event, q, league.users, league.games).some(
+            (uid) => uid !== user.uid,
+          ),
+        )
       )
-    )
-      continue;
-    const vote = await DB.read(`events/${event.id}/votes/${user.uid}`);
-    missions.push({
-      id: `event-${event.id}`,
-      type: "EVENT_VOTE",
-      title: event.title,
-      eventDescription: event.description || "",
-      rarity: eventRarityId(event),
-      description: vote
-        ? "Voto guardado. Podes atualizar até ao fecho."
-        : "Escolhe os colegas que merecem a recompensa.",
-      done: vote ? 1 : 0,
-      total: 1,
-      href: `#/event/${event.id}`,
-      icon: eventIcon(event),
-    });
-  }
+        return missions;
+      const vote = await DB.read(`events/${event.id}/votes/${user.uid}`);
+      missions.push({
+        id: `event-${event.id}`,
+        type: "EVENT_VOTE",
+        title: event.title,
+        eventDescription: event.description || "",
+        rarity: eventRarityId(event),
+        description: vote
+          ? "Voto guardado. Podes atualizar até ao fecho."
+          : "Escolhe os colegas que merecem a recompensa.",
+        done: vote ? 1 : 0,
+        total: 1,
+        href: `#/event/${event.id}`,
+        icon: eventIcon(event),
+      });
+      return missions;
+    }),
+  );
+  missions.push(...eventMissions.flat());
+
   return missions;
 }
 export function missionList(missions, { grouped = true } = {}) {
@@ -191,10 +204,6 @@ export function missionList(missions, { grouped = true } = {}) {
       "check",
     );
   const ordered = [...missions].sort(compareEventRarity);
-  const competitions = ordered.filter(
-    (m) => m.type === "COMPETITION_OBJECTIVE",
-  );
-  const remaining = ordered.filter((m) => m.type !== "COMPETITION_OBJECTIVE");
   const cards = (entries) =>
     `<div class="mission-list">${entries
       .map((m) => {
@@ -204,6 +213,10 @@ export function missionList(missions, { grouped = true } = {}) {
       })
       .join("")}</div>`;
   if (!grouped) return cards(ordered);
-  if (!competitions.length) return cards(remaining);
-  return `<div class="mission-groups"><section class="mission-competitions" aria-label="Competições em curso"><div class="mission-group-head"><h2>Competições em curso</h2><span class="pill">${competitions.length} ${competitions.length === 1 ? "ativa" : "ativas"}</span></div>${cards(competitions)}</section>${remaining.length ? `<section class="mission-group"><div class="mission-group-head"><h2>Missões</h2></div>${cards(remaining)}</section>` : ""}</div>`;
+  return `<div class="mission-groups activity-groups">${groupActivities(ordered)
+    .map(
+      (group) =>
+        `<section class="mission-group activity-group" data-activity-category="${group.id}" aria-label="${esc(group.title)}"><div class="mission-group-head activity-group-head"><div class="activity-group-identity"><span class="activity-group-symbol">${icon(group.icon)}</span><div><h2>${esc(group.title)}</h2><p>${esc(group.description)}</p></div></div><span class="pill" aria-label="${group.items.length} itens">${group.items.length}</span></div>${cards(group.items)}</section>`,
+    )
+    .join("")}</div>`;
 }

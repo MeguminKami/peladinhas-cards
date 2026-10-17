@@ -236,8 +236,8 @@ try {
   assert.equal(await podium.getAttribute("data-mode"), "growth");
   assert.equal(await podium.locator('.place-1 .football-card').getAttribute("href"), "#/player/growth");
   assert.equal(await podium.locator(".podium-place").count(), 2);
-  await podium.locator(".podium-pause").click();
-  await page.locator("#podium-title").evaluate(el => { el.tabIndex = -1; el.focus(); el.blur(); });
+  await podium.locator(".podium").focus();
+
   await page.clock.fastForward(20001);
   assert.equal(await podium.getAttribute("data-mode"), "growth");
   for (const mode of ["ovr", "performance", "growth"]) {

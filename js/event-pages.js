@@ -1,4 +1,9 @@
 import {
+  ACTIVITY_CATEGORIES,
+  activityCategory,
+  groupActivities,
+} from "./activity-categories.js";
+import {
   eventRarityId,
   rarityBadge,
   compareEventRarity,
@@ -55,8 +60,10 @@ const states = {
   cancelled: "Cancelado",
 };
 export async function eventsPage(ctx) {
-  const events =
-    (await DB.callAdmin("listEvents", { scope: "all" })).data || [];
+  const events = await ctx.cached(
+    "events:all",
+    async () => (await DB.callAdmin("listEvents", { scope: "all" })).data || [],
+  );
   ctx.render(
     `${pageHead("A liga em movimento", "Eventos e desafios", "Participa, acompanha o calendário e consulta o histórico.", linkButton("#/missions", "As tuas missões", "ghost"))}<section class="panel"><div class="event-toolbar"><label>Pesquisar<input id="public-event-search" type="search" placeholder="Nome ou descrição"></label><label>Estado<select id="public-event-state"><option value="">Todos</option>${Object.entries(
       states,
@@ -65,7 +72,7 @@ export async function eventsPage(ctx) {
       .map(([key, value]) => `<option value="${key}">${value}</option>`)
       .join(
         "",
-      )}</select></label><label>Tipo<select id="public-event-type"><option value="">Todos</option><option value="mission">Missões</option><option value="event">Eventos</option><option value="monthly">Mensais</option></select></label><label>A partir de<input type="date" id="public-event-date"></label></div><div id="public-event-list" class="event-grid"></div></section>`,
+      )}</select></label><label>Categoria<select id="public-event-type"><option value="">Todos</option>${ACTIVITY_CATEGORIES.map((group) => `<option value="${group.id}">${esc(group.title)}</option>`).join("")}</select></label><label>A partir de<input type="date" id="public-event-date"></label></div><div id="public-event-list" class="activity-groups"></div></section>`,
   );
   const draw = () => {
     const text = document
@@ -74,29 +81,30 @@ export async function eventsPage(ctx) {
       state = document.querySelector("#public-event-state").value,
       type = document.querySelector("#public-event-type").value,
       date = document.querySelector("#public-event-date").value;
+    const filtered = events
+      .filter(
+        (e) =>
+          `${e.title} ${e.description || ""}`.toLowerCase().includes(text) &&
+          (!state || e.status === state) &&
+          (!type || activityCategory(e) === type) &&
+          (!date || eventEndMillis(e) >= +new Date(date)),
+      )
+      .sort(
+        (a, b) =>
+          compareEventRarity(a, b) ||
+          eventEndMillis(b) - eventEndMillis(a) ||
+          a.title.localeCompare(b.title),
+      );
+    const eventCard = (event) =>
+      `<a class="event-management-card event-public-card event-rarity-surface" data-rarity="${eventRarityId(event)}" href="#/event/${esc(event.id)}">${event.image ? `<img class="event-cover" src="${esc(event.image)}" alt="" loading="lazy">` : ""}<div class="section-head"><span class="pill">${states[event.status]}</span><small>${event.kind === "mission" ? "Missão" : "Evento"}</small></div>${rarityBadge(event)}<h2 class="event-title-with-icon">${icon(eventIcon(event))}${esc(event.title)}</h2><p>${esc(event.description || "")}</p><small>${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small>${event.winners?.length ? `<p class="event-first-place">🥇 ${esc(name(ctx, event.winners[0].uid || event.winners[0].uids?.[0]))}</p>` : ""}<span class="event-card-cta">Consultar →</span></a>`;
     document.querySelector("#public-event-list").innerHTML =
-      events
-        .filter(
-          (e) =>
-            `${e.title} ${e.description || ""}`.toLowerCase().includes(text) &&
-            (!state || e.status === state) &&
-            (!type ||
-              e.kind === type ||
-              (type === "event" && e.kind === "vote")) &&
-            (!date || eventEndMillis(e) >= +new Date(date)),
-        )
-        .sort(
-          (a, b) =>
-            compareEventRarity(a, b) ||
-            eventEndMillis(b) - eventEndMillis(a) ||
-            a.title.localeCompare(b.title),
-        )
+      groupActivities(filtered)
         .map(
-          (event) =>
-            `<a class="event-management-card event-public-card event-rarity-surface" data-rarity="${eventRarityId(event)}" href="#/event/${esc(event.id)}">${event.image ? `<img class="event-cover" src="${esc(event.image)}" alt="" loading="lazy">` : ""}<div class="section-head"><span class="pill">${states[event.status]}</span><small>${event.kind === "mission" ? "Missão" : "Evento"}</small></div>${rarityBadge(event)}<h2 class="event-title-with-icon">${icon(eventIcon(event))}${esc(event.title)}</h2><p>${esc(event.description || "")}</p><small>${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small>${event.winners?.length ? `<p class="event-first-place">🥇 ${esc(name(ctx, event.winners[0].uid || event.winners[0].uids?.[0]))}</p>` : ""}<span class="event-card-cta">Consultar →</span></a>`,
+          (group) =>
+            `<section class="activity-group" data-activity-category="${group.id}" aria-label="${esc(group.title)}"><div class="mission-group-head activity-group-head"><div class="activity-group-identity"><span class="activity-group-symbol">${icon(group.icon)}</span><div><h2>${esc(group.title)}</h2><p>${esc(group.description)}</p></div></div><span class="pill" aria-label="${group.items.length} itens">${group.items.length}</span></div><div class="event-grid">${group.items.map(eventCard).join("")}</div></section>`,
         )
         .join("") ||
-      '<p class="muted">Ainda não há eventos com estes filtros.</p>';
+      '<p class="muted" role="status">Nenhum desafio encontrado. Experimenta outros filtros.</p>';
   };
   for (const id of [
     "public-event-search",
@@ -112,12 +120,16 @@ function challengeRules(event) {
   if (event.method === "objective") {
     paragraphs.push(objectiveSummary(event));
     if (isRatingObjective(event.objective)) {
-      paragraphs.push("Só contam jogos encerrados neste período, após o desbloqueio. Cada jogo tem o mesmo peso; dimensões sem avaliações suficientes não contam.");
-      paragraphs.push(event.objective.metric === "ratingAverage"
-        ? "A janela inclui os últimos jogos encerrados, mesmo quando ainda aguardam avaliações. O mínimo tem de estar cumprido no momento da verificação."
-        : event.objective.metric === "ratingStreak"
-          ? "Um jogo abaixo do mínimo ou por avaliar interrompe a sequência. Conta a melhor sequência alcançada."
-          : "Os jogos não precisam de ser consecutivos.");
+      paragraphs.push(
+        "Só contam jogos encerrados neste período, após o desbloqueio. Cada jogo tem o mesmo peso; dimensões sem avaliações suficientes não contam.",
+      );
+      paragraphs.push(
+        event.objective.metric === "ratingAverage"
+          ? "A janela inclui os últimos jogos encerrados, mesmo quando ainda aguardam avaliações. O mínimo tem de estar cumprido no momento da verificação."
+          : event.objective.metric === "ratingStreak"
+            ? "Um jogo abaixo do mínimo ou por avaliar interrompe a sequência. Conta a melhor sequência alcançada."
+            : "Os jogos não precisam de ser consecutivos.",
+      );
     }
     if (event.kind !== "mission") {
       paragraphs.push(

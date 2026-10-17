@@ -18,7 +18,8 @@ test("jogos usam a hora de Lisboa no inverno e verão, independentemente do disp
     lisbonDateInput(new Date("2026-07-15T19:00Z")),
     "2026-07-15T20:00",
   );
-  assert.match(formatMatchDate(new Date("2026-07-15T19:00Z")), /20:00.*Lisboa/);
+  assert.match(formatMatchDate(new Date("2026-07-15T19:00Z")), /20:00/);
+  assert.doesNotMatch(formatMatchDate(new Date("2026-07-15T19:00Z")), /Lisboa/);
 });
 test("horas inexistentes são rejeitadas; hora repetida escolhe a primeira ocorrência", () => {
   assert.throws(() => parseLisbonDateInput("2026-03-29T01:30"), /não existe/);

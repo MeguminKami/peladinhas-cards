@@ -1,3 +1,4 @@
+import { weeklyComparison } from "./weekly-comparison.js";
 import { calculatePlayerCard } from "./player-calculation.js";
 import { cardWeek } from "./card-week.js";
 import { balanceMatches } from "./team-balance.js";
@@ -16,6 +17,11 @@ import {
   matchPerformance,
 } from "./utils.js";
 export async function loadLeague() {
+  const cycle = cardWeek();
+  const usersTask = DB.users();
+  const previousTask = usersTask.then((users) =>
+    DB.previousCards(users, cycle),
+  );
   const [
     users,
     initials,
@@ -30,8 +36,9 @@ export async function loadLeague() {
     eventRewards,
     collections,
     selections,
+    previousCards,
   ] = await Promise.all([
-    DB.users(),
+    usersTask,
     DB.initials(),
     DB.communitySummaries(),
     DB.games(),
@@ -44,12 +51,8 @@ export async function loadLeague() {
     DB.list("eventRewards"),
     DB.list("cardCollections"),
     DB.list("cardSelections"),
+    previousTask,
   ]);
-  const cycle = cardWeek();
-  const previousCards = await DB.previousCards(users, cycle);
-  const previousOvrs = Object.fromEntries(
-    Object.entries(previousCards).map(([uid, card]) => [uid, card?.ovr]),
-  );
   const ovrWeights = normalizeOvrWeights(settings);
   const players = users
     .filter((u) => !u.disabled)
@@ -104,12 +107,13 @@ export async function loadLeague() {
         selectedCardId:
           weeklyCards.find((c) => c.uid === u.uid && c.weekId === cycle.weekId)
             ?.selectedCardId || null,
-        previousStats: previousCards[u.uid]?.stats || null,
+        ...weeklyComparison(
+          { ...calculation, ovrCalculation: calculation.ovrCalculation },
+          previousCards[u.uid],
+          { rewards: eventRewards, uid: u.uid, date: new Date() },
+        ),
         inactivity,
         ovr,
-        ovrDelta: Number.isFinite(previousOvrs[u.uid])
-          ? ovr - previousOvrs[u.uid]
-          : null,
         cardType: calculateBaseCard(ovr),
         specials: [],
         eventBoosts: calculation.eventBoosts,
@@ -132,9 +136,10 @@ export async function loadLeague() {
                     eventBoosts: snapshot.eventBoosts || {},
                     cardPhoto: snapshot.cardPhoto || null,
                     ovr: snapshot.ovr,
-                    ovrDelta: Number.isFinite(previousOvrs[u.uid])
-                      ? snapshot.ovr - previousOvrs[u.uid]
-                      : null,
+                    ...weeklyComparison(snapshot, previousCards[u.uid], {
+                      rewards: eventRewards,
+                      uid: u.uid,
+                    }),
                     inactivity: snapshot.inactivity || {
                       missed: 0,
                       penalty: 0,

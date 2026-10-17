@@ -1,3 +1,4 @@
+import { weeklyComparison } from "./weekly-comparison.js";
 import * as DB from "./db.js";
 import { historyForDisplay } from "./card-history.js";
 import {
@@ -20,8 +21,8 @@ export async function ovrAuditPage(ctx, uid, initialWeek) {
         linkButton(`#/player/${uid}`, "Ver perfil"),
       ),
     );
-  const history = historyForDisplay(player, await DB.history(uid)).sort((a, b) =>
-    b.weekId.localeCompare(a.weekId),
+  const history = historyForDisplay(player, await DB.history(uid)).sort(
+    (a, b) => b.weekId.localeCompare(a.weekId),
   );
   ctx.render(
     `${pageHead("Administração", `Cálculo OVR · ${player.displayName || player.username}`, "Consulta o contributo de cada atributo para o OVR. As cartas anteriores mantêm os pesos usados na respetiva semana.", linkButton(`#/player/${uid}`, "Ver perfil", "ghost"))}<section class="panel"><label>Carta a consultar<select id="ovr-card"><option value="current">Carta atual</option>${history.map((h) => `<option value="${esc(h.weekId)}">${esc(h.weekId)} · OVR ${h.ovr}</option>`).join("")}</select></label></section><div id="ovr-calculation" class="content-stack"></div>`,
@@ -54,11 +55,13 @@ export async function ovrAuditPage(ctx, uid, initialWeek) {
       cardPhoto: historical ? snapshot.cardPhoto || null : player.cardPhoto,
       stats,
       ovr: displayedOvr,
-      ovrDelta: historical
-        ? Number.isFinite(snapshot.previousOvr)
-          ? snapshot.ovr - snapshot.previousOvr
-          : null
-        : player.ovrDelta,
+      ...(historical
+        ? weeklyComparison(
+            snapshot,
+            history.find((h) => h.weekId < snapshot.weekId),
+            { rewards: ctx.league.eventRewards, uid: player.uid },
+          )
+        : {}),
       cardType: snapshot?.baseCard || player.cardType,
       specials: snapshot?.specials || player.specials,
       primaryPosition: position || player.primaryPosition,

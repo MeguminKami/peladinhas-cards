@@ -47,3 +47,4 @@
 - Quando frontend e backend mudarem, indicar ambos os passos necessários. Não recomendar apenas frontend se existirem alterações de backend ainda por publicar no âmbito do trabalho.
 - Consultar a configuração e os scripts atuais antes de indicar comandos. Não recomendar deploy completo por defeito; `deploy:backend` publica todas as funções e as regras, e `deploy` publica todas as áreas.
 - Esta indicação é uma instrução para o utilizador, não uma autorização para executar um deploy. Não afirmar que uma alteração foi publicada sem confirmação da execução.
+- Usa sempre npm.cmd e npx.cmd

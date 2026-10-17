@@ -2,7 +2,7 @@
 
 [← Cartas e avaliações](cards-and-ratings.md)
 
-Dezanove edições visuais disponíveis em **Administração → Cartas** e no seletor de estilo base do **Card Lab**. O catálogo permite ampliar cada edição e experimentar a fotografia de um jogador.
+Dezanove edições visuais disponíveis em **Administração → Cartas** e na secção **Modelos** do **Card Lab**. O catálogo permite ampliar cada edição e experimentar a fotografia de um jogador.
 
 | Edição        | ID estável      | Material e identidade                                           |
 | :------------ | :-------------- | :-------------------------------------------------------------- |

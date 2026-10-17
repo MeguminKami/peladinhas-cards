@@ -1,8 +1,20 @@
+import {
+  STUDIO_SHAPES,
+  STUDIO_ORNAMENTS,
+  STUDIO_ORNAMENT_GROUPS,
+  STUDIO_SYMBOLS,
+} from "./card-studio-elements.js";
+import { enhanceCardLabInterface } from "./card-lab-interface.js";
+import {
+  cardSymbol,
+  fitCardSymbols,
+  normalizeSymbolPosition,
+} from "./card-symbol.js";
+import { SPECIAL_CARD_DESIGNS } from "./card-specials.js";
 import * as DB from "./db.js";
 import {
   CATALOG_THEMES,
   informTheme,
-  COLLECTION_EDITIONS,
   ATTRIBUTES,
   themeName,
   clamp,
@@ -14,27 +26,20 @@ import {
   DESIGN_FIELDS,
   DESIGN_CHOICES,
   applyCardDesign,
+  cardTemplateDesign,
   validCardDesign,
 } from "./card-design.js";
 import {
   STUDIO_FONTS,
   STUDIO_BACKGROUNDS,
   STUDIO_PALETTES,
-  STUDIO_DECORATIONS,
   STUDIO_EFFECTS,
   STUDIO_WATERMARKS,
   STUDIO_BORDERS,
   STUDIO_LAYOUTS,
-  STUDIO_PRESETS,
   DECORATION_ART,
   WATERMARK_ART,
 } from "./card-studio-catalog.js";
-const optionNumbers = (value) =>
-  Array.from(
-    { length: 100 },
-    (_, i) =>
-      `<option value="${i}" ${i === Math.round(value) ? "selected" : ""}>${i}</option>`,
-  ).join("");
 const defaults = () => ({
   ...Object.fromEntries(DESIGN_FIELDS.map(([k, , , , v]) => [k, v])),
   ...Object.fromEntries(
@@ -62,24 +67,43 @@ export async function cardLab(ctx, uid) {
   }
   const players = ctx.league.players,
     experimental = await DB.list("cardThemes"),
-    selected = players.find((p) => p.uid === uid) || players[0];
+    selected = players.find((p) => p.uid === ctx.user.uid) || ctx.user,
+    adminPhoto = selected.photoURL || ctx.user.photoURL || "";
   const sample = {
     uid: "preview",
     displayName: "O teu craque",
     countryCode: "PT",
     primaryPosition: "ALA",
-    photoURL: "",
+    photoURL: adminPhoto,
     hasCard: true,
     ovr: 82,
     stats: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 82])),
   };
   const base = selected || sample,
     designDefaults = defaults();
+  const elementPreview = (key, value) => {
+    const element =
+      SPECIAL_CARD_DESIGNS[
+        key === "decoration" ? value.replace(/^edition-/, "") : value
+      ];
+    if (key === "symbol")
+      return value === "none"
+        ? "—"
+        : cardSymbol(element.motif, "studio-element-symbol");
+    if (!element) return "";
+    if (key === "shape")
+      return `<svg class="studio-shape-art" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="${element.outline}" fill="currentColor"/></svg>`;
+    if (key === "decoration" && !element.art)
+      return cardSymbol(element.motif, "studio-element-symbol");
+    if (key === "decoration")
+      return `<svg class="collection-art studio-ornament-art" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">${element.art || element.motif}</svg>`;
+    return "";
+  };
   const gallery = (key, catalog, kind = "") =>
     `<div class="studio-gallery ${kind}">${Object.entries(catalog)
       .map(
         ([value, entry]) =>
-          `<button type="button" class="studio-choice" data-studio-choice="${key}" data-value="${value}" aria-pressed="false"><span class="studio-sample sample-${key} sample-${value}" ${key === "background" ? `style="background:${STUDIO_BACKGROUNDS[value][1] === "none" ? "var(--studio-primary)" : STUDIO_BACKGROUNDS[value][1]};${["dots", "halftone"].includes(value) ? "background-size:10px 10px,100% 100%" : ""}"` : ""}>${key === "decoration" && DECORATION_ART[value] ? `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${DECORATION_ART[value]}</svg>` : key === "watermark" && WATERMARK_ART[value] ? `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">${WATERMARK_ART[value]}</svg>` : key === "watermark" ? "—" : ""}</span><small>${esc(Array.isArray(entry) ? entry[0] : entry)}</small></button>`,
+          `<button type="button" class="studio-choice" data-studio-choice="${key}" data-value="${value}" aria-pressed="false"><span class="studio-sample sample-${key} sample-${value}${(key === "shape" && SPECIAL_CARD_DESIGNS[value]) || (key === "decoration" && value.startsWith("edition-")) || key === "symbol" ? " studio-element-preview" : ""}" ${key === "background" ? `style="background:${STUDIO_BACKGROUNDS[value][1] === "none" ? "var(--studio-primary)" : STUDIO_BACKGROUNDS[value][1]};${["dots", "halftone"].includes(value) ? "background-size:10px 10px,100% 100%" : ""}"` : ""}>${elementPreview(key, value) || (key === "decoration" && DECORATION_ART[value] ? `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">${DECORATION_ART[value]}</svg>` : key === "watermark" && WATERMARK_ART[value] ? `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">${WATERMARK_ART[value]}</svg>` : key === "watermark" ? "—" : "")}</span><small>${esc(Array.isArray(entry) ? entry[0] : entry)}</small></button>`,
       )
       .join("")}</div>`;
   const picker = (key, label, values) =>
@@ -109,14 +133,16 @@ export async function cardLab(ctx, uid) {
         ]),
       ),
     );
-  ctx.render(`${pageHead("Card Lab", "Card Lab", "Combina modelos, materiais e detalhes para criar a tua carta.", linkButton("#/admin", "Administração", "ghost"))}
+  ctx.render(`${pageHead("Card Lab", "Card Lab", "A tua bancada de criação. Do primeiro traço ao último brilho.", linkButton("#/admin", "Administração", "ghost"))}
   <div class="studio-project-bar panel"><label>Projeto<input form="lab-controls" name="themeName" value="A minha carta" maxlength="40"></label><div class="actions"><button type="button" id="lab-undo" class="btn btn-ghost" aria-label="Desfazer">↶</button><button type="button" id="lab-redo" class="btn btn-ghost" aria-label="Refazer">↷</button><button type="button" id="lab-export" class="btn btn-secondary">${icon("arrow")}Exportar projeto</button><label class="btn btn-secondary studio-import">${icon("assets")}Importar<input type="file" id="lab-import" accept="application/json,.json" class="visually-hidden"></label><button type="button" id="save-theme" class="btn btn-primary">${icon("check")}Guardar composição</button></div></div>
   <div class="lab-layout studio-layout"><form id="lab-controls" class="studio-inspector panel"><nav class="studio-tabs" aria-label="Ferramentas de criação">${[
-    ["models", "Modelos", "assets"],
-    ["layers", "Camadas", "palette"],
+    ["models", "Modelos", "rewardCard"],
+    ["composition", "Composição", "assets"],
+    ["colors", "Cores", "palette"],
+    ["layers", "Materiais", "lab"],
+    ["symbols", "Símbolos", "shield"],
     ["text", "Texto", "edit"],
     ["photo", "Foto", "camera"],
-    ["data", "Dados", "profile"],
   ]
     .map(
       ([id, label, symbol]) =>
@@ -128,14 +154,13 @@ export async function cardLab(ctx, uid) {
       ([key, value]) => `<input type="hidden" name="${key}" value="${value}">`,
     )
     .join("")}<input type="hidden" name="texture" value="plain">
-  <section data-studio-panel="models"><h2>Começa por um modelo</h2><p class="studio-help">Escolhe um ponto de partida. Depois combina as peças.</p><div class="studio-preset-grid">${STUDIO_PRESETS.map(([id, name, theme, palette, , , effect, , shape]) => `<button type="button" class="studio-preset" data-studio-preset="${id}"><span class="studio-mini-card mini-${shape} mini-${effect}" style="--mini-a:${STUDIO_PALETTES[palette][1][0]};--mini-b:${STUDIO_PALETTES[palette][1][1]};--mini-text:${STUDIO_PALETTES[palette][1][2]}"><b>92</b><i></i><strong>${name.split(" ")[0]}</strong><em>VEL · FIN · PAS · DRI</em></span><small>${name}</small></button>`).join("")}</div><label>Estilo base<select name="theme">${[...CATALOG_THEMES, "custom-test"].map((t) => `<option value="${t}" ${t === "gold-rare" ? "selected" : ""}>${t === "custom-test" ? "Livre" : themeName(t)}</option>`).join("")}${experimental.map((t) => `<option value="saved:${esc(t.id)}">${esc(t.name)} · guardado</option>`).join("")}</select></label><h3>Composição</h3>${gallery("layout", Object.fromEntries(Object.entries(STUDIO_LAYOUTS).map(([k, v]) => [k, v[0]])))}<h3>Forma</h3>${gallery("shape", { original: "Original", shield: "Escudo", diamond: "Diamante", rounded: "Arredondada", ticket: "Bilhete", hexagon: "Hexágono", notched: "Recortada", crown: "Coroa", arch: "Arco" })}</section>
-  <section data-studio-panel="layers" hidden><h2>Materiais e camadas</h2><h3>Paletas</h3><div class="studio-palette-grid">${Object.entries(
+  <section data-studio-panel="models"><h2>Começa por um modelo</h2><p class="studio-help">Escolhe um ponto de partida. Depois combina as peças.</p><label>Estilo base<select name="theme">${[...CATALOG_THEMES, "custom-test"].map((t) => `<option value="${t}" ${t === "gold-rare" ? "selected" : ""}>${t === "custom-test" ? "Livre" : themeName(t)}</option>`).join("")}${experimental.map((t) => `<option value="saved:${esc(t.id)}">${esc(t.name)} · guardado</option>`).join("")}</select></label></section><section data-studio-panel="composition" hidden><h2>Forma e composição</h2><p class="studio-help">Define a silhueta e organiza os elementos da carta.</p><h3>Composição</h3>${gallery("layout", Object.fromEntries(Object.entries(STUDIO_LAYOUTS).map(([k, v]) => [k, v[0]])))}<h3>Forma</h3>${gallery("shape", STUDIO_SHAPES)}</section>
+  <section data-studio-panel="colors" hidden><h2>A cor da tua carta</h2><p class="studio-help">50 combinações de cores. Fundos em duas cores, com texto, moldura e luz a combinar.</p><div class="studio-palette-grid">${Object.entries(
     STUDIO_PALETTES,
   )
     .map(
       ([id, [name, colors]]) =>
-        `<button type="button" data-studio-palette="${id}" aria-label="Paleta ${name}"><span>${colors
-          .slice(0, 4)
+        `<button type="button" data-studio-palette="${id}" aria-label="Paleta ${esc(name)}"><span>${colors
           .map((c) => `<i style="background:${c}"></i>`)
           .join("")}</span><small>${name}</small></button>`,
     )
@@ -152,8 +177,8 @@ export async function cardLab(ctx, uid) {
     )
     .join(
       "",
-    )}</div><details open><summary>Fundos</summary>${gallery("background", STUDIO_BACKGROUNDS)}</details><details><summary>Detalhes</summary>${gallery("decoration", STUDIO_DECORATIONS)}</details><details><summary>Efeito da cor secundária</summary>${gallery("effect", STUDIO_EFFECTS)}</details><details><summary>Molduras</summary>${gallery("border", STUDIO_BORDERS)}</details><details><summary>Marcas de água</summary>${gallery("watermark", STUDIO_WATERMARKS)}<div class="studio-two-col">${picker("watermarkPosition", "Posição", { center: "Centro", top: "Superior", bottom: "Inferior", corner: "Canto" })}${picker("watermarkOpacity", "Intensidade", { 10: "Discreta", 20: "Suave", 35: "Visível", 50: "Forte", 65: "Muito forte" })}</div></details></section>
-  <section data-studio-panel="text" hidden><h2>Tipografia</h2><fieldset class="studio-type-group"><legend>Fundo do nome</legend><p class="studio-help">Escolhe a cor RGB da faixa. Com 100% de transparência, o fundo desaparece.</p><div class="studio-two-col">${[
+    )}</div></section><section data-studio-panel="layers" hidden><h2>Superfície e luz</h2><p class="studio-help">Combina a distribuição da cor com o acabamento.</p><details open><summary>Fundos</summary>${gallery("background", STUDIO_BACKGROUNDS)}</details><details><summary>Detalhes</summary>${STUDIO_ORNAMENT_GROUPS.map(([label, ids]) => `<section class="studio-element-category" aria-label="${esc(label)}"><h3>${esc(label)}</h3>${gallery("decoration", Object.fromEntries(ids.map((id) => [id, STUDIO_ORNAMENTS[id]])))}</section>`).join("")}</details><details><summary>Acabamento</summary>${gallery("effect", STUDIO_EFFECTS)}</details><details><summary>Molduras</summary>${gallery("border", STUDIO_BORDERS)}</details></section><section data-studio-panel="symbols" hidden><h2>Símbolos e assinaturas</h2><p class="studio-help">Combina símbolos, marcas de água e posições.</p><details open><summary>Marcas de água</summary>${gallery("watermark", STUDIO_WATERMARKS)}<div class="studio-two-col">${picker("watermarkPosition", "Posição", { center: "Centro", top: "Superior", bottom: "Inferior", corner: "Canto" })}${picker("watermarkOpacity", "Intensidade", { 10: "Discreta", 20: "Suave", 35: "Visível", 50: "Forte", 65: "Muito forte" })}</div></details></section>
+  <section data-studio-panel="text" hidden><h2>Tipografia</h2><p class="studio-help">Vê cada alteração diretamente na carta. DIN Pro e Posterama usam as fontes instaladas neste computador.</p><fieldset class="studio-type-group"><legend>Fundo do nome</legend><p class="studio-help">Escolhe a cor RGB da faixa. Com 100% de transparência, o fundo desaparece.</p><div class="studio-two-col">${[
     ["nameBackgroundRed", "Vermelho (R)"],
     ["nameBackgroundGreen", "Verde (G)"],
     ["nameBackgroundBlue", "Azul (B)"],
@@ -173,7 +198,7 @@ export async function cardLab(ctx, uid) {
   ]
     .map(
       ([font, size, label]) =>
-        `<fieldset class="studio-type-group"><legend>${label}</legend><div class="studio-two-col">${picker(font, "Fonte", Object.fromEntries(Object.entries(STUDIO_FONTS).map(([k, v]) => [k, v[0]])))}${fontSize(size, "Tamanho")}</div><span class="studio-font-preview" data-font-preview="${font}">Peladinhas 92</span></fieldset>`,
+        `<fieldset class="studio-type-group"><legend>${label}</legend><div class="studio-two-col">${picker(font, "Fonte", Object.fromEntries(Object.entries(STUDIO_FONTS).map(([k, v]) => [k, v[0]])))}${fontSize(size, "Tamanho")}</div></fieldset>`,
     )
     .join(
       "",
@@ -187,7 +212,7 @@ export async function cardLab(ctx, uid) {
       picker(key, label, { yes: "Mostrar", no: "Ocultar" }),
     )
     .join("")}</div></section>
-  <section data-studio-panel="photo" hidden><h2>Fotografia</h2><label>Imagem (URL)<input name="photoURL" type="url" value="${esc(base.photoURL || "")}"></label><div class="studio-photo-tools">${[
+  <section data-studio-panel="photo" hidden><h2>Fotografia</h2><p class="studio-help">A tua fotografia de perfil é usada automaticamente.</p><input name="photoURL" type="hidden" value="${esc(adminPhoto)}"><div class="studio-photo-tools">${[
     ["move", "Mover", "arrow"],
     ["size", "Tamanho", "assets"],
     ["zoom", "Ampliação", "plus"],
@@ -199,30 +224,8 @@ export async function cardLab(ctx, uid) {
     .join(
       "",
     )}</div><p class="studio-help" id="photo-tool-help">Arrasta a fotografia na carta para a mover.</p><label>Tamanho<input type="range" data-photo-range="size" min="35" max="130" value="65" aria-label="Tamanho da fotografia"></label><label>Ampliar<input type="range" data-photo-range="zoom" min="50" max="200" value="100" aria-label="Ampliação da fotografia"></label><label>Rotação<input type="range" data-photo-range="rotate" min="-45" max="45" value="0" aria-label="Rotação da fotografia"></label><div class="studio-two-col">${picker("fit", "Enquadramento", { cover: "Preencher", contain: "Imagem completa" })}${picker("fade", "Recorte", { soft: "Desvanecer", none: "Sem efeito" })}${picker("photoOpacity", "Opacidade", { 100: "Total", 75: "Suave", 50: "Transparente" })}${picker("saturation", "Cor", { 0: "Preto e branco", 65: "Suave", 100: "Original", 140: "Viva", 180: "Intensa" })}</div><div class="actions"><button type="button" id="lab-center-photo" class="btn btn-secondary">Centrar fotografia</button><button type="button" id="lab-reset" class="btn btn-ghost">Repor composição</button></div></section>
-  <section data-studio-panel="data" hidden><h2>Identidade</h2><label>Jogador<select name="player"><option value="">Jogador fictício</option>${players.map((p) => `<option value="${p.uid}" ${p.uid === selected?.uid ? "selected" : ""}>${esc(p.displayName || p.username)}</option>`).join("")}</select></label><label>Nome<input name="displayName" value="${esc(base.displayName || base.username)}" maxlength="30"></label><div class="studio-two-col"><label>OVR<select name="ovr">${optionNumbers(base.ovr)}</select></label><label>Posição<select name="primaryPosition">${["GR", "DEF", "ALA", "MED", "AV"].map((p) => `<option ${p === base.primaryPosition ? "selected" : ""}>${p}</option>`).join("")}</select></label></div><label>País<select name="countryCode">${[
-    ...new Set([
-      base.countryCode,
-      "PT",
-      "BR",
-      "ES",
-      "FR",
-      "GB",
-      "DE",
-      "IT",
-      "AR",
-      "AO",
-      "CV",
-    ]),
-  ]
-    .filter(Boolean)
-    .map(
-      (c) =>
-        `<option ${c === base.countryCode ? "selected" : ""}>${c}</option>`,
-    )
-    .join(
-      "",
-    )}</select></label><details id="lab-attributes"><summary>Stats</summary><div class="studio-two-col">${ATTRIBUTES.map(([key, label]) => `<label>${label}<select name="${key}">${optionNumbers(base.stats?.[key] ?? 82)}</select></label>`).join("")}</div></details></section></form>
-  <section class="lab-preview studio-stage"><div class="studio-stage-head"><span class="pill">Pré-visualização</span><span id="studio-selection-label">Modelo livre</span></div><div id="card-preview" class="studio-canvas"></div><div class="studio-stage-footer"><span>Combina livremente · Cartas reais preservadas</span><span id="studio-change-state" aria-live="polite"></span></div></section></div>`);
+  <div hidden><input name="player" value="${selected?.uid || ""}"><input name="displayName" value="${esc(base.displayName || base.username)}"><input name="ovr" value="${base.ovr || 82}"><input name="primaryPosition" value="${base.primaryPosition || "ALA"}"><input name="countryCode" value="${base.countryCode || "PT"}">${ATTRIBUTES.map(([key]) => `<input name="${key}" value="${base.stats?.[key] ?? 82}">`).join("")}</div></form>
+  <section class="lab-preview studio-stage"><div class="studio-stage-head"><span class="pill">Pré-visualização</span><span id="studio-selection-label">Modelo livre</span></div><div id="card-preview" class="studio-canvas"></div><div class="studio-stage-footer"><span>PELADINHAS / CARD STUDIO</span><span id="studio-change-state" aria-live="polite"></span></div></section></div>`);
   const form = document.querySelector("#lab-controls"),
     preview = document.querySelector("#card-preview"),
     history = [],
@@ -250,18 +253,162 @@ export async function cardLab(ctx, uid) {
         .join("");
   };
   refreshLibrary();
+  const workspace = document.createElement("div");
+  workspace.className = "studio-workspace";
+  const main = form.closest("main");
+  main.classList.add("card-lab-page");
+  const bar = document.querySelector(".studio-project-bar");
+  bar.before(workspace);
+  workspace.append(bar, document.querySelector(".studio-layout"));
+  const libraryPanel = document.querySelector(".studio-library");
+  libraryPanel.removeAttribute("class");
+  libraryPanel.className = "studio-library";
+  const projects = document.createElement("section");
+  projects.dataset.studioPanel = "projects";
+  projects.hidden = true;
+  projects.append(libraryPanel);
+  form.append(projects);
+  libraryPanel.insertAdjacentHTML(
+    "beforeend",
+    '<div class="actions"><button type="button" class="btn btn-secondary" id="lab-project-export">Exportar JSON</button><label class="btn btn-secondary studio-import">Importar JSON<input type="file" id="lab-project-import" accept="application/json,.json" class="visually-hidden"></label></div>',
+  );
+  form
+    .querySelector(".studio-tabs")
+    .insertAdjacentHTML(
+      "beforeend",
+      `<button type="button" data-studio-tab="projects" aria-pressed="false">${icon("assets")}<span>Projetos</span></button>`,
+    );
+  ctx.cleanup(() => main.classList.remove("card-lab-page"));
   const models = form.querySelector('[data-studio-panel="models"]');
   const editionCatalog = document.createElement("section");
   editionCatalog.className = "studio-edition-catalog";
-  editionCatalog.innerHTML = `<h3>Edições da coleção</h3><div class="studio-edition-grid">${Object.entries(
-    COLLECTION_EDITIONS,
-  )
+  editionCatalog.innerHTML = `<label>Procurar modelo<input type="search" id="studio-model-search" placeholder="Nome da carta…"></label><p id="studio-model-count" class="studio-help" role="status"></p><div class="studio-edition-grid">${[
+    ["custom-test", { name: "Do zero" }],
+    ...CATALOG_THEMES.map((id) => [id, { name: themeName(id) }]),
+  ]
     .map(
       ([id, edition]) =>
-        `<button type="button" class="studio-edition-choice" data-studio-edition="${id}" aria-pressed="false"><span class="studio-edition-preview" aria-hidden="true">${card(sample, { theme: id, preview: true, size: "sm" })}</span><strong>${esc(themeName(id))}</strong></button>`,
+        `<button type="button" class="studio-edition-choice" data-studio-edition="${id}" aria-pressed="false"><span class="studio-edition-preview" aria-hidden="true">${id === "custom-test" ? '<span class="studio-blank-model">+<small>Uma tela em branco</small></span>' : card(sample, { theme: id, preview: true, size: "sm" })}</span><strong>${esc(id === "custom-test" ? "Do zero" : themeName(id))}</strong></button>`,
     )
     .join("")}</div>`;
-  models.querySelector('[name="theme"]').closest("label").after(editionCatalog);
+  models.querySelector('[name="theme"]').closest("label").hidden = true;
+  models.append(editionCatalog);
+  fitCardSymbols(models);
+  const search = editionCatalog.querySelector("#studio-model-search");
+  search.oninput = (event) => {
+    event.stopPropagation();
+    const query = search.value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    let count = 0;
+    editionCatalog
+      .querySelectorAll("[data-studio-edition]")
+      .forEach((button) => {
+        button.hidden = !button.textContent
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .includes(query);
+        if (!button.hidden) count++;
+      });
+    editionCatalog.querySelector("#studio-model-count").textContent = count
+      ? count + " modelos"
+      : "Sem resultados. Experimenta outro nome.";
+  };
+  search.oninput({ stopPropagation() {} });
+  const sliders = (keys) =>
+    '<div class="studio-adjustments">' +
+    keys
+      .map((key) => {
+        const [, label, min, max, value] = DESIGN_FIELDS.find(
+          ([id]) => id === key,
+        );
+        return `<label><span class="studio-range-label">${label}<output data-studio-readout="${key}">${value}</output></span><input type="range" data-studio-property="${key}" min="${min}" max="${max}" value="${value}"></label>`;
+      })
+      .join("") +
+    "</div>";
+  form
+    .querySelector('[data-studio-panel="composition"]')
+    .insertAdjacentHTML(
+      "beforeend",
+      sliders(["nameY", "statsY", "ratingX", "ratingY", "ornamentOpacity"]),
+    );
+  form
+    .querySelector('[data-studio-panel="layers"]')
+    .insertAdjacentHTML(
+      "beforeend",
+      '<section data-studio-surface-adjustments hidden><h3>Distribuição e intensidade</h3><p class="studio-help">Ajusta as cores do fundo e a intensidade do acabamento selecionado.</p>' +
+        sliders([
+          "backgroundAngle",
+          "backgroundSpread",
+          "backgroundX",
+          "backgroundY",
+          "effectIntensity",
+        ]) +
+        "</section>",
+    );
+  form.querySelector('[data-studio-panel="composition"]').insertAdjacentHTML(
+    "beforeend",
+    picker("statsColumns", "Colunas dos atributos", {
+      4: "Quatro colunas",
+      2: "Duas colunas",
+    }) + sliders(["playstyleSize", "playstyleY"]),
+  );
+  form
+    .querySelector('[data-studio-panel="photo"]')
+    .insertAdjacentHTML(
+      "beforeend",
+      sliders([
+        "photoX",
+        "photoY",
+        "photoWidth",
+        "photoHeight",
+        "focusX",
+        "focusY",
+      ]),
+    );
+  form
+    .querySelector('[data-studio-panel="symbols"]')
+    .insertAdjacentHTML(
+      "beforeend",
+      "<h3>Símbolos</h3>" +
+        gallery("symbol", STUDIO_SYMBOLS) +
+        sliders([
+          "badgeX",
+          "badgeY",
+          "badgeSize",
+          "badgeRotate",
+          "badgeOpacity",
+          "watermarkX",
+          "watermarkY",
+          "watermarkSize",
+          "watermarkRotate",
+        ]),
+    );
+  const materials = form.querySelector('[data-studio-panel="layers"]');
+  const outline = materials.querySelectorAll("details")[3];
+  outline.querySelector("summary").textContent = "Traçado junto ao perímetro";
+  outline.insertAdjacentHTML(
+    "beforeend",
+    "<div data-studio-outline-adjustments>" +
+      sliders(["borderWidth", "borderInset", "borderOpacity"]) +
+      '</div><p class="studio-help">A cor do traçado está em Cores · Moldura.</p>',
+  );
+  materials.insertAdjacentHTML(
+    "afterbegin",
+    '<details open class="studio-light-controls"><summary>Iluminação</summary><p class="studio-help">Controla a luz sobre a carta e o brilho exterior. Escolhe a cor em Cores · Luz.</p>' +
+      gallery("lighting", {
+        original: "Luz original",
+        on: "Luz dirigida",
+        off: "Sem luz",
+      }) +
+      "<div data-studio-light-adjustments hidden>" +
+      sliders(["lightIntensity", "lightAngle", "lightSoftness"]) +
+      "</div></details>",
+  );
+  enhanceCardLabInterface(form, (fn) => ctx.cleanup(fn));
+  fitCardSymbols(form);
   let historyIndex = -1,
     timer,
     dragging;
@@ -275,6 +422,7 @@ export async function cardLab(ctx, uid) {
       ]),
     ]);
   const set = (key, value) => {
+    if (key === "photoURL") value = adminPhoto;
     if (key === "theme" && value === "in-form")
       value = informTheme(base.cardType, base.ovr);
     const input = form.elements.namedItem(key);
@@ -286,13 +434,59 @@ export async function cardLab(ctx, uid) {
       (key, i) => set(key, colors[i]),
     );
   };
+  const fitPreview = () => {
+    const canvas = preview.getBoundingClientRect();
+    preview.firstElementChild?.style.setProperty(
+      "--card-width",
+      Math.max(
+        50,
+        Math.min(320, canvas.width - 32, (canvas.height - 24) / 1.5),
+      ) + "px",
+    );
+  };
+  form
+    .querySelector('[data-studio-panel="colors"] .studio-palette-grid')
+    .before(form.querySelector(".studio-colors"));
+  const resize = new ResizeObserver(fitPreview);
+  resize.observe(preview);
+  ctx.cleanup(() => resize.disconnect());
   const draw = () => {
+    const normalized = normalizeSymbolPosition(readDesign());
+    set("badgeX", normalized.badgeX);
+    set("badgeY", normalized.badgeY);
     const f = fields(),
       saved = experimental.find((t) => `saved:${t.id}` === f.theme);
     document.querySelector("#name-background-transparency").value =
       `${f.nameBackgroundTransparency}%`;
+    document.querySelector("#studio-selection-label").textContent =
+      saved?.name ||
+      (f.theme === "custom-test" ? "Do zero" : themeName(f.theme));
+    const surfaceAdjustments = form.querySelector(
+      "[data-studio-surface-adjustments]",
+    );
+    const customSurface = f.preserveOriginal !== "yes";
+    const usable = {
+      backgroundAngle:
+        customSurface && ["diagonal", "split"].includes(f.background),
+      backgroundSpread:
+        customSurface && ["diagonal", "split", "radial"].includes(f.background),
+      backgroundX: customSurface && f.background === "radial",
+      backgroundY: customSurface && f.background === "radial",
+      effectIntensity:
+        customSurface && !["original", "none"].includes(f.effect),
+    };
+    for (const [key, visible] of Object.entries(usable))
+      surfaceAdjustments
+        .querySelector('[data-studio-property="' + key + '"]')
+        .closest("label").hidden = !visible;
+    surfaceAdjustments.hidden = !Object.values(usable).some(Boolean);
+    form.querySelector("[data-studio-light-adjustments]").hidden =
+      f.lighting !== "on";
+    form.querySelector("[data-studio-outline-adjustments]").hidden =
+      f.border === "none";
+
     const saveButton = document.querySelector("#save-theme");
-    saveButton.innerHTML = `${icon("check")}${f.projectId ? "Guardar alterações" : "Guardar composição"}`;
+    saveButton.innerHTML = `${icon("check")}${f.projectId ? "Guardar alterações" : "Guardar carta"}`;
     document.querySelector("#save-theme-copy").hidden = !f.projectId;
     document.querySelector("#studio-project-status").textContent = f.projectId
       ? `A editar: ${experimental.find((theme) => theme.id === f.projectId)?.name || f.themeName}`
@@ -313,8 +507,9 @@ export async function cardLab(ctx, uid) {
       displayName: f.displayName,
       primaryPosition: f.primaryPosition,
       countryCode: f.countryCode,
-      photoURL: f.photoURL,
+      photoURL: adminPhoto,
       cardPhoto: null,
+      specials: [],
       hasCard: true,
       ovr: Number(f.ovr),
       stats: Object.fromEntries(
@@ -329,23 +524,25 @@ export async function cardLab(ctx, uid) {
     form.style.setProperty("--studio-primary", f.color1);
     form.style.setProperty("--studio-secondary", f.color2);
     const el = preview.firstElementChild;
-    el.classList.add("lab-designed");
-    for (const [key, v] of [
-      ["color1", "--studio-primary"],
-      ["color2", "--studio-secondary"],
-      ["textColor", "--studio-text"],
-      ["borderColor", "--studio-edge"],
-      ["glowColor", "--studio-glow"],
-    ])
-      el.style.setProperty(v, f[key]);
-    for (const [key, v] of [
-      ["color1", "--card-a"],
-      ["color2", "--card-b"],
-      ["textColor", "--card-text"],
-      ["borderColor", "--card-edge"],
-      ["glowColor", "--card-glow"],
-    ])
-      el.style.setProperty(v, f[key]);
+    if (f.preserveOriginal !== "yes") {
+      el.classList.add("lab-designed");
+      for (const [key, v] of [
+        ["color1", "--studio-primary"],
+        ["color2", "--studio-secondary"],
+        ["textColor", "--studio-text"],
+        ["borderColor", "--studio-edge"],
+        ["glowColor", "--studio-glow"],
+      ])
+        el.style.setProperty(v, f[key]);
+      for (const [key, v] of [
+        ["color1", "--card-a"],
+        ["color2", "--card-b"],
+        ["textColor", "--card-text"],
+        ["borderColor", "--card-edge"],
+        ["glowColor", "--card-glow"],
+      ])
+        el.style.setProperty(v, f[key]);
+    }
     applyCardDesign(el, readDesign());
     el.querySelector(".card-surface").insertAdjacentHTML(
       "beforeend",
@@ -373,11 +570,22 @@ export async function cardLab(ctx, uid) {
       .querySelectorAll("[data-studio-property]")
       .forEach((input) => (input.value = f[input.dataset.studioProperty]));
     document
-      .querySelectorAll("[data-font-preview]")
+      .querySelectorAll("[data-studio-readout]")
       .forEach(
-        (el) =>
-          (el.style.fontFamily = STUDIO_FONTS[f[el.dataset.fontPreview]][1]),
+        (output) =>
+          (output.value = Math.round(Number(f[output.dataset.studioReadout]))),
       );
+    form.querySelectorAll("[data-studio-palette]").forEach((button) => {
+      const colors = STUDIO_PALETTES[button.dataset.studioPalette][1];
+      button.setAttribute(
+        "aria-pressed",
+        String(
+          ["color1", "color2", "textColor", "borderColor", "glowColor"].every(
+            (key, i) => f[key].toLowerCase() === colors[i].toLowerCase(),
+          ),
+        ),
+      );
+    });
     document
       .querySelectorAll("[data-photo-range]")
       .forEach(
@@ -390,6 +598,7 @@ export async function cardLab(ctx, uid) {
             ]),
       );
     bindImages(preview);
+    fitPreview();
   };
   const commit = () => {
     clearTimeout(timer);
@@ -408,12 +617,15 @@ export async function cardLab(ctx, uid) {
     for (const [key, value] of Object.entries(values)) set(key, value);
     draw();
   };
-  const changed = () => {
+  const changed = (preserve = false) => {
+    if (!preserve) set("preserveOriginal", "no");
     draw();
     commit();
   };
   form.onsubmit = (e) => e.preventDefault();
   form.oninput = (e) => {
+    if (e.target === library) return;
+    if (e.target.name !== "themeName") set("preserveOriginal", "no");
     if (e.target.matches("[data-photo-range]")) {
       const key = e.target.dataset.photoRange,
         value = Number(e.target.value);
@@ -423,7 +635,22 @@ export async function cardLab(ctx, uid) {
       } else set(key === "zoom" ? "photoScale" : "photoRotate", value);
     } else if (e.target.dataset.studioProperty) {
       const key = e.target.dataset.studioProperty;
+      if (key === "watermarkPosition") {
+        const [x, y] = {
+          center: [50, 45],
+          top: [50, 20],
+          bottom: [50, 78],
+          corner: [78, 20],
+        }[e.target.value];
+        set("watermarkX", x);
+        set("watermarkY", y);
+      }
       const field = DESIGN_FIELDS.find(([name]) => name === key);
+      if (
+        ["borderWidth", "borderInset", "borderOpacity"].includes(key) &&
+        form.elements.border.value === "original"
+      )
+        set("border", "single");
       set(
         key,
         field ? clamp(e.target.value, field[2], field[3]) : e.target.value,
@@ -450,36 +677,6 @@ export async function cardLab(ctx, uid) {
         draw();
       }),
   );
-  form.querySelectorAll("[data-studio-preset]").forEach(
-    (button) =>
-      (button.onclick = () => {
-        const [
-          ,
-          name,
-          theme,
-          colors,
-          background,
-          decoration,
-          effect,
-          watermark,
-          shape,
-        ] = STUDIO_PRESETS.find((p) => p[0] === button.dataset.studioPreset);
-        Object.entries(defaults()).forEach(([key, value]) => set(key, value));
-        set("theme", theme);
-        palette(colors);
-        for (const [key, value] of Object.entries({
-          background,
-          decoration,
-          effect,
-          watermark,
-          shape,
-          border: "double",
-        }))
-          set(key, value);
-        document.querySelector("#studio-selection-label").textContent = name;
-        changed();
-      }),
-  );
   form.querySelectorAll("[data-studio-choice]").forEach(
     (button) =>
       (button.onclick = () => {
@@ -497,6 +694,8 @@ export async function cardLab(ctx, uid) {
     (button) =>
       (button.onclick = () => {
         palette(button.dataset.studioPalette);
+        if (form.elements.background.value === "original")
+          set("background", "diagonal");
         changed();
       }),
   );
@@ -519,7 +718,12 @@ export async function cardLab(ctx, uid) {
     const saved = experimental.find(
       (t) => `saved:${t.id}` === form.theme.value,
     );
-    if (COLLECTION_EDITIONS[form.theme.value]) {
+    if (!saved) {
+      set("projectId", "");
+      Object.entries(defaults()).forEach(([key, value]) => set(key, value));
+      set("preserveOriginal", "yes");
+    }
+    if (CATALOG_THEMES.includes(form.theme.value)) {
       const probe = document.createElement("div");
       probe.hidden = true;
       probe.innerHTML = card(sample, {
@@ -555,7 +759,8 @@ export async function cardLab(ctx, uid) {
       set("projectId", saved.id);
       set("themeName", saved.name);
       Object.entries(defaults()).forEach(([key, value]) => set(key, value));
-      Object.entries(saved.design || {}).forEach(([key, value]) =>
+      set("preserveOriginal", "no");
+      Object.entries(cardTemplateDesign(saved)).forEach(([key, value]) =>
         set(key, value),
       );
       ["color1", "color2", "textColor", "borderColor", "glowColor"].forEach(
@@ -566,7 +771,21 @@ export async function cardLab(ctx, uid) {
           ),
       );
     }
-    changed();
+    document.querySelector("#studio-selection-label").textContent =
+      saved?.name ||
+      (form.theme.value === "custom-test"
+        ? "Do zero"
+        : themeName(form.theme.value));
+    if (form.theme.value === "custom-test") {
+      palette("monochrome");
+      set("preserveOriginal", "no");
+      set("background", "solid");
+      set("decoration", "none");
+      set("border", "none");
+      set("effect", "none");
+      set("lighting", "off");
+    }
+    changed(true);
   };
   library.onchange = () => {
     if (!library.value) return;
@@ -581,10 +800,15 @@ export async function cardLab(ctx, uid) {
   };
   document.querySelector("#lab-new-project").onclick = () => {
     set("projectId", "");
-    set("theme", "gold-rare");
+    set("theme", "custom-test");
     set("themeName", "A minha carta");
     Object.entries(defaults()).forEach(([key, value]) => set(key, value));
-    palette("gold");
+    palette("monochrome");
+    set("background", "solid");
+    set("effect", "none");
+    set("lighting", "off");
+    set("decoration", "none");
+    set("border", "none");
     history.length = 0;
     historyIndex = -1;
     changed();
@@ -798,7 +1022,7 @@ export async function cardLab(ctx, uid) {
         typeof project.fields !== "object"
       )
         throw Error("Projeto inválido.");
-      const design = { ...defaults() };
+      const design = { ...defaults(), preserveOriginal: "no" };
       for (const [key] of DESIGN_FIELDS)
         if (project.fields[key] !== undefined)
           design[key] = Number(project.fields[key]);
@@ -831,11 +1055,28 @@ export async function cardLab(ctx, uid) {
     }
     e.target.value = "";
   };
+  document.querySelector("#lab-project-export").onclick = () =>
+    document.querySelector("#lab-export").click();
+  document.querySelector("#lab-project-import").onchange =
+    document.querySelector("#lab-import").onchange;
+  preview.addEventListener("pointermove", (event) => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rect = preview.getBoundingClientRect();
+    preview.style.setProperty(
+      "--holo-x",
+      ((event.clientX - rect.left) / rect.width) * 100 + "%",
+    );
+    preview.style.setProperty(
+      "--holo-y",
+      ((event.clientY - rect.top) / rect.height) * 100 + "%",
+    );
+  });
   ctx.cleanup(() => clearTimeout(timer));
   if (uid && [...form.theme.options].some((option) => option.value === uid)) {
     set("theme", uid);
     form.theme.onchange();
   }
+  if (!uid) form.theme.onchange();
   draw();
   commit();
   document.querySelector("#studio-change-state").textContent =

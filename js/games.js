@@ -1,3 +1,6 @@
+import { closedGamePage } from "./closed-game.js";
+import { matchStars } from "./match-stars.js";
+export { matchStars } from "./match-stars.js";
 import { bindRowScroll } from "./row-scroll.js";
 import {
   lisbonDateInput,
@@ -12,13 +15,7 @@ import {
   BALANCE_SETTINGS,
 } from "./team-balance.js";
 import * as DB from "./db.js";
-import {
-  participants,
-  formatDate,
-  asDate,
-  matchPerformance,
-  FEEDBACK,
-} from "./utils.js";
+import { participants, formatDate, asDate, matchPerformance } from "./utils.js";
 import {
   esc,
   pageHead,
@@ -32,11 +29,6 @@ import {
 import { icon } from "./icons.js";
 import { card } from "./cards.js";
 import { youtubeVideoId, youtubePlayer } from "./youtube.js";
-export function matchStars(value) {
-  return Number.isFinite(value)
-    ? `<span class="match-stars" aria-label="${value.toFixed(1)} de 5 estrelas"><span aria-hidden="true">★★★★★<span style="width:${Math.max(0, Math.min(100, value * 20))}%">★★★★★</span></span><b>${value.toLocaleString("pt-PT", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b></span>`
-    : '<span class="muted">Por avaliar</span>';
-}
 export function matchPositions(game, players) {
   return Object.fromEntries(
     participants(game).flatMap((uid) => {
@@ -69,7 +61,7 @@ export function gamesPage(ctx) {
 function dateInput(timestamp) {
   return lisbonDateInput(timestamp);
 }
-export async function gamePage(ctx, id) {
+export async function gamePage(ctx, id, { edit = false } = {}) {
   const saved = id === "new" ? null : ctx.league.games.find((x) => x.id === id);
   if (id !== "new" && !saved)
     return ctx.render(
@@ -79,6 +71,8 @@ export async function gamePage(ctx, id) {
         linkButton("#/games", "Ver jogos", "secondary"),
       ),
     );
+  if (saved?.status === "closed" && (!edit || ctx.user.role !== "admin"))
+    return closedGamePage(ctx, saved);
   const g = saved
     ? structuredClone({
         ...saved,
@@ -113,7 +107,7 @@ export async function gamePage(ctx, id) {
       ),
     );
   ctx.render(
-    `${pageHead("Peladinha", saved?.title || "Criar jogo", editable ? "Escolhe as equipas e guarda o jogo." : "Equipas e resultado desta Peladinha.", "")}<form id="game-form" class="content-stack game-workspace"><div id="game-details" class="panel game-details-panel"><div class="form-grid"><label>Título<input name="title" required maxlength="80" value="${esc(g.title)}" ${editable ? "" : "disabled"}></label><label>Data e hora (Lisboa)<input type="datetime-local" name="scheduledAt" required value="${g.scheduledAt}" ${editable ? "" : "disabled"}></label><label>Local<input name="location" maxlength="120" value="${esc(g.location)}" ${editable ? "" : "disabled"}></label><input type="hidden" name="notes" value="${esc(g.notes)}"></div></div><div id="team-builder" class="content-stack"></div><div id="game-result" class="panel score-panel"><div class="score-heading"><h2>Resultado</h2></div><div class="score"><label>Equipa A<input type="number" min="0" max="999" name="scoreA" value="${g.score.teamA}" ${editable ? "" : "disabled"}></label><b>—</b><label>Equipa B<input type="number" min="0" max="999" name="scoreB" value="${g.score.teamB}" ${editable ? "" : "disabled"}></label></div><div id="game-ratings"></div><div id="match-performances"></div></div><div id="game-video"></div><div class="game-actionbar">${linkButton("#/games", "Todos os jogos", "ghost")}<button type="button" id="share-game" class="btn btn-ghost">Partilhar jogo</button>${editable ? `<div class="actions"><button class="btn btn-primary" name="action" value="save">Guardar jogo</button>${saved && g.status === "draft" ? '<button class="btn btn-secondary" name="action" value="open">Abrir jogo</button>' : saved && g.status === "open" ? '<button class="btn btn-secondary" name="action" value="draft">Tornar rascunho</button><button class="btn btn-success" name="action" value="close">Encerrar jogo</button>' : ""}</div>` : ""}${saved && (ctx.user.role === "admin" || (ctx.user.role === "dbs" && g.status !== "closed")) ? '<div class="actions"><button type="button" id="delete-game" class="btn btn-danger">Eliminar jogo</button></div>' : ""}${saved?.status === "closed" && participants(saved).includes(ctx.user.uid) ? linkButton(`#/game/${id}/feedback`, "Avaliar jogadores", "primary", "missions") : ""}</div></form>`,
+    `${pageHead("Peladinha", saved?.title || "Criar jogo", saved?.status === "closed" ? "Corrige os dados, as equipas e as estatísticas. O jogo continua encerrado." : editable ? "Escolhe as equipas e guarda o jogo." : "Equipas e resultado desta Peladinha.", "")}<form id="game-form" class="content-stack game-workspace"><div id="game-details" class="panel game-details-panel"><div class="form-grid"><label>Título<input name="title" required maxlength="80" value="${esc(g.title)}" ${editable ? "" : "disabled"}></label><label>Data e hora<input type="datetime-local" name="scheduledAt" required value="${g.scheduledAt}" ${editable ? "" : "disabled"}></label><label>Local<input name="location" maxlength="120" value="${esc(g.location)}" ${editable ? "" : "disabled"}></label><input type="hidden" name="notes" value="${esc(g.notes)}"></div></div><div id="team-builder" class="content-stack"></div><div id="game-result" class="panel score-panel"><div class="score-heading"><div><span class="eyebrow">MARCADOR</span><h2>O jogo em números</h2></div></div><div class="score"><label>Equipa A<input type="number" min="0" max="999" name="scoreA" value="${g.score.teamA}" ${editable ? "" : "disabled"}></label><b>—</b><label>Equipa B<input type="number" min="0" max="999" name="scoreB" value="${g.score.teamB}" ${editable ? "" : "disabled"}></label></div><div id="match-performances"></div></div><div id="game-video"></div><div class="game-actionbar">${saved?.status === "closed" ? linkButton(`#/game/${id}`, "Cancelar", "secondary") : linkButton("#/games", "Todos os jogos", "ghost")}<button type="button" id="share-game" class="btn btn-ghost">${icon("share")}Partilhar</button>${editable ? `<div class="actions"><button class="btn btn-primary" name="action" value="save">${icon("check")}Guardar jogo</button>${saved && g.status === "draft" ? '<button class="btn btn-secondary" name="action" value="open">Abrir jogo</button>' : saved && g.status === "open" ? '<button class="btn btn-secondary" name="action" value="draft">Tornar rascunho</button><button class="btn btn-success" name="action" value="close">Encerrar jogo</button>' : ""}</div>` : ""}${saved && (ctx.user.role === "admin" || (ctx.user.role === "dbs" && g.status !== "closed")) ? `<div class="actions"><button type="button" id="delete-game" class="btn btn-danger" aria-label="Eliminar jogo" title="Eliminar jogo">${icon("trash")}</button></div>` : ""}${saved?.status === "closed" && participants(saved).includes(ctx.user.uid) ? linkButton(`#/game/${id}/feedback`, "Avaliar jogadores", "primary", "missions") : ""}</div></form>`,
   );
   document.querySelector("#share-game").onclick = async () => {
     if (!saved) return toast("Guarda o jogo antes de partilhar.");
@@ -138,20 +132,6 @@ export async function gamePage(ctx, id) {
         );
     }
   };
-  if (saved?.status === "closed") {
-    const summary =
-      ctx.league.summaries?.find((row) => row.id === id)?.players || {};
-    document.querySelector("#game-ratings").innerHTML =
-      `<section class="panel match-ratings"><div class="section-head"><div><small>O jogo aos olhos da equipa</small><h2>Estrelas do jogo</h2></div><span class="pill">Médias da comunidade</span></div><p class="muted">As estrelas vão surgindo à medida que as avaliações são enviadas. Abre um jogador para ver cada dimensão.</p><div class="match-ratings-list">${
-        participants(saved)
-          .map((uid) => {
-            const player = ctx.league.players.find((row) => row.uid === uid);
-            const rating = summary[uid] || {};
-            return `<details class="match-rating-player ${uid === ctx.user.uid ? "is-self" : ""}"><summary><span>${esc(player?.displayName || player?.username || "Jogador inativo")}${uid === ctx.user.uid ? " <small>Tu</small>" : ""}</span>${matchStars(rating.overall)}</summary><div class="match-rating-dimensions">${FEEDBACK.map(([key, label]) => `<div><span>${label}</span>${matchStars(rating[key])}</div>`).join("")}</div></details>`;
-          })
-          .join("") || '<p class="muted">Este jogo não tem jogadores.</p>'
-      }</div></section>`;
-  }
   const builder = document.querySelector("#team-builder");
   document
     .querySelector("#delete-game")
@@ -274,7 +254,7 @@ export async function gamePage(ctx, id) {
         )
         .join("")}</div></details></div>`;
     }
-    return `<section class="balance-audit"><div class="section-head"><h2>Equilíbrio das equipas</h2><span class="pill">${g.status === "closed" ? (frozen ? "OVR de referência guardado" : "Sem referência guardada") : "Prévia com OVR atual"}</span></div><div class="metrics"><div><small>Média OVR · Equipa A</small><b>${number(balance.teamA.average)}</b><small>${balance.teamA.rated}/${balance.teamA.count} com carta</small></div><div><small>Média OVR · Equipa B</small><b>${number(balance.teamB.average)}</b><small>${balance.teamB.rated}/${balance.teamB.count} com carta</small></div><div><small>Diferença entre equipas</small><b>${number(balance.difference)}</b></div><div><small>Desvio médio entre equipas</small><b>${number(balance.meanDeviation)}</b></div></div><div class="table-wrap"><table><thead><tr><th>Equipa</th><th>Média dos titulares</th><th>Média de todos os jogadores</th></tr></thead><tbody>${[
+    return `<section class="balance-audit"><div class="section-head"><h2>Equilíbrio das equipas</h2><span class="pill">${g.status === "closed" ? (frozen ? "OVR de referência guardado" : "Sem referência guardada") : "Prévia com OVR atual"}</span></div><div class="metrics"><div><small>Média OVR · Equipa A</small><b>${number(balance.teamA.average)}</b><small>${balance.teamA.rated}/${balance.teamA.count} com carta</small></div><div><small>Média OVR · Equipa B</small><b>${number(balance.teamB.average)}</b><small>${balance.teamB.rated}/${balance.teamB.count} com carta</small></div><div><small>Diferença entre equipas</small><b>${number(balance.difference)}</b></div><div><small>Desvio médio entre equipas</small><b>${number(balance.meanDeviation)}</b></div></div><div class="table-wrap"><table><thead><tr><th>Equipa</th><th>Média dos cinco lugares base</th><th>Média de todos os jogadores</th></tr></thead><tbody>${[
       ["A", balance.teamA],
       ["B", balance.teamB],
     ]
@@ -284,7 +264,7 @@ export async function gamePage(ctx, id) {
       )
       .join(
         "",
-      )}</tbody></table></div><p class="muted">A média inclui titulares e suplentes. O desvio é metade da diferença entre as duas médias. Jogadores com OVR inferior à média dos colegas recebem até 25% de bónus nos ganhos quando são avaliados acima dessa média. A referência de OVR é guardada no fecho do jogo.</p>${!frozen && g.status === "closed" ? '<p class="warning">Sem referência guardada, não é aplicado o bónus por OVR inferior ao dos colegas.</p>' : ""}<p class="muted">Sorteio: até ${BALANCE_SETTINGS.attempts} combinações, escolhendo aleatoriamente entre as que ficam até ${number(BALANCE_SETTINGS.tolerance)} ponto da melhor diferença encontrada. Compara as médias de todos os jogadores e dos titulares. Máximo de 5 titulares por equipa.</p></section>`;
+      )}</tbody></table></div><p class="muted">A média inclui todos os jogadores. O desvio é metade da diferença entre as duas médias. Jogadores com OVR inferior à média dos colegas recebem até 25% de bónus nos ganhos quando são avaliados acima dessa média. A referência de OVR é guardada no fecho do jogo.</p>${!frozen && g.status === "closed" ? '<p class="warning">Sem referência guardada, não é aplicado o bónus por OVR inferior ao dos colegas.</p>' : ""}<p class="muted">Sorteio: até ${BALANCE_SETTINGS.attempts} combinações, escolhendo aleatoriamente entre as que ficam até ${number(BALANCE_SETTINGS.tolerance)} ponto da melhor diferença encontrada. Compara as médias de todos os jogadores e dos cinco lugares base.</p></section>`;
   };
   const autoPanel = () =>
     `<div class="auto-teams"><div class="section-head"><div><h2>Equipas</h2></div>${editable && g.status !== "closed" ? '<button type="button" id="auto-teams" class="btn btn-primary">Sortear equipas</button>' : `<span class="pill">${g.status === "closed" ? "Jogo encerrado" : g.status === "open" ? "Jogo aberto" : "Rascunho"}</span>`}</div></div>`;
@@ -293,7 +273,7 @@ export async function gamePage(ctx, id) {
     root.innerHTML = `<div class="match-performance-grid">${["teamA", "teamB"]
       .map(
         (side) =>
-          `<section><h3>Equipa ${side === "teamA" ? "A" : "B"} · Golos e assistências</h3>${
+          `<section><h3>${esc(g.teamNames?.[side] || `Equipa ${side === "teamA" ? "A" : "B"}`)}</h3>${
             [...g[side].starters, ...g[side].bench]
               .map((uid) => {
                 const player = ctx.league.players.find((p) => p.uid === uid),
@@ -305,7 +285,7 @@ export async function gamePage(ctx, id) {
                 ]
                   .map(
                     ([key, label]) =>
-                      `<label>${label}<span class="performance-counter">${editable ? `<button type="button" data-counter="-1" aria-label="Diminuir ${label} de ${esc(player?.displayName || uid)}">−</button>` : ""}<input type="number" min="0" max="999" step="1" value="${row[key]}" data-performance-uid="${esc(uid)}" data-performance-key="${key}" aria-label="${label} de ${esc(player?.displayName || uid)}" ${editable ? "" : "disabled"}>${editable ? `<button type="button" data-counter="1" aria-label="Aumentar ${label} de ${esc(player?.displayName || uid)}">+</button>` : ""}</span></label>`,
+                      `<label><span class="counter-label">${icon(key === "goals" ? "ball" : "assists")}${label}</span><span class="performance-counter">${editable ? `<button type="button" data-counter="-1" aria-label="Diminuir ${label} de ${esc(player?.displayName || uid)}">−</button>` : ""}<input type="number" min="0" max="999" step="1" value="${row[key]}" data-performance-uid="${esc(uid)}" data-performance-key="${key}" aria-label="${label} de ${esc(player?.displayName || uid)}" ${editable ? "" : "disabled"}>${editable ? `<button type="button" data-counter="1" aria-label="Aumentar ${label} de ${esc(player?.displayName || uid)}">+</button>` : ""}</span></label>`,
                   )
                   .join("")}</div>`;
               })
@@ -335,34 +315,39 @@ export async function gamePage(ctx, id) {
     for (const side of ["teamA", "teamB"]) {
       const ranked = teamPlayers(side),
         rank = new Map(ranked.map((p, i) => [p.uid, i]));
-      for (const kind of ["starters", "bench"])
-        g[side][kind].sort(
-          (a, b) => (rank.get(a) ?? 999) - (rank.get(b) ?? 999),
-        );
+      const ordered = [...g[side].starters, ...g[side].bench].sort((a,b) => (rank.get(a) ?? 999) - (rank.get(b) ?? 999));
+      g[side].starters = ordered.slice(0,5);
+      g[side].bench = ordered.slice(5);
     }
     drawPerformance();
-    builder.innerHTML = `<section class="panel game-teams-frame content-stack">${autoPanel()}${balancePanel()}<div class="team-builder ${editable && ctx.league.players.some((p) => !assigned(p.uid)) ? "has-available" : ""}"><section class="team-panel available"><div class="section-head"><h2>Disponíveis</h2><small>${ctx.league.players.filter((p) => !assigned(p.uid)).length}</small></div><div class="team-player-list">${
-      ctx.league.players
-        .filter((p) => !assigned(p.uid))
-        .map((p) => chip(p, "available"))
-        .join("") ||
-      '<p class="muted">Todos os jogadores estão nas equipas.</p>'
-    }</div></section>${["A", "B"]
-      .map((side) => {
-        const team = `team${side}`,
-          rank = teamPlayers(team),
-          ordered = [...participants({ teamA: g[team] })].sort(
-            (a, b) =>
-              (rank.findIndex((p) => p.uid === a) < 0
-                ? 999
-                : rank.findIndex((p) => p.uid === a)) -
-              (rank.findIndex((p) => p.uid === b) < 0
-                ? 999
-                : rank.findIndex((p) => p.uid === b)),
-          );
-        return `<section class="team-panel team-${side.toLowerCase()}"><div class="section-head"><h2>Equipa ${side}</h2><span class="team-letter">${side}</span></div>${editable ? `<div class="team-drop-targets">${["starters", "bench"].map((kind) => `<div class="drop-zone" data-team="${team}" data-kind="${kind}"><h3>${kind === "starters" ? `Titulares ${g[team].starters.length}/5` : `Suplentes ${g[team].bench.length}`}</h3><span class="drop-hint">Arrastar para aqui</span></div>`).join("")}</div>` : ""}<div class="team-player-list ordered-team-list">${ordered.map((uid) => chip(ctx.league.players.find((p) => p.uid === uid) || { uid, displayName: "Jogador inativo" }, `${side}-${g[team].starters.includes(uid) ? "starters" : "bench"}`)).join("") || '<p class="muted">Sem jogadores</p>'}</div></section>`;
-      })
-      .join("")}</div></section>`;
+    for (const [side, field] of [["teamA","scoreA"],["teamB","scoreB"]]) {
+      const label = document.querySelector(`[name="${field}"]`).parentElement;
+      label.firstChild.textContent = g.teamNames?.[side] || (side === "teamA" ? "Equipa A" : "Equipa B");
+    }
+    builder.innerHTML = `<section class="panel game-teams-frame content-stack">${autoPanel()}<div class="team-builder">${["A", "B"].map(side => {
+      const team = `team${side}`, ids = [...g[team].starters, ...g[team].bench];
+      const canName = saved && (ctx.user.role === "admin" || (g.status !== "closed" && saved[team].starters[0] === ctx.user.uid));
+      return `<section class="team-panel team-${side.toLowerCase()}"><div class="section-head"><div><span class="eyebrow">EQUIPA ${side} · ${ids.length} JOGADORES</span><h2>${esc(g.teamNames?.[team] || `Equipa ${side}`)}</h2></div>${canName ? `<button type="button" class="btn btn-icon btn-ghost" data-team-name="${team}" aria-label="Mudar nome da equipa ${side}">${icon("edit")}</button>` : `<span class="team-letter">${side}</span>`}</div><div class="team-player-list ordered-team-list">${ids.map(uid => chip(ctx.league.players.find(p => p.uid === uid) || {uid, displayName:"Jogador inativo"}, `${side}-starters`)).join("")}${editable ? Array.from({length:Math.max(0,5-ids.length)+1}, (_, i) => `<button type="button" class="team-slot" data-slot-team="${team}">${icon("plus")}<span>${ids.length+i < 5 ? `Lugar ${ids.length+i+1}` : "Adicionar jogador"}</span></button>`).join("") : !ids.length ? '<p class="muted">Sem jogadores</p>' : ""}</div></section>`;
+    }).join("")}</div>${balancePanel()}</section>`;
+    builder.querySelectorAll("[data-team-name]").forEach(button => button.onclick = () => {
+      const side = button.dataset.teamName;
+      const close = modal("Nome da equipa", `<form id="team-name-form" class="content-stack"><label>Nome<input name="teamName" maxlength="40" required value="${esc(g.teamNames?.[side] || (side === "teamA" ? "Equipa A" : "Equipa B"))}"></label><button class="btn btn-primary">Guardar nome</button></form>`);
+      document.querySelector("#team-name-form").onsubmit = async event => {
+        event.preventDefault();
+        try { await busy(event.submitter, () => DB.callAdmin("renameGameTeam", {gameId:id, side, name:new FormData(event.target).get("teamName").trim()}));
+          g.teamNames = {...g.teamNames, [side]:new FormData(event.target).get("teamName").trim()}; saved.teamNames = {...g.teamNames}; close(); draw(); toast("Nome da equipa guardado.");
+        } catch(error) { toast(error.message, "error"); }
+      };
+    });
+    builder.querySelectorAll("[data-slot-team]").forEach(button => button.onclick = () => {
+      const side = button.dataset.slotTeam;
+      const close = modal("Adicionar à equipa", `<div class="content-stack"><label>Procurar jogador<input id="slot-search" type="search" placeholder="Nome do jogador" autocomplete="off"></label><div class="slot-picker"></div></div>`);
+      const search = document.querySelector("#slot-search"), list = document.querySelector(".slot-picker");
+      const update = () => { list.innerHTML = ctx.league.players.filter(p => !assigned(p.uid) && (p.displayName || p.username || "").toLocaleLowerCase().includes(search.value.toLocaleLowerCase())).map(p => `<button type="button" class="slot-choice" data-pick="${esc(p.uid)}"><span class="chip-card">${card(p,{size:"sm",preview:true})}</span><span><b>${esc(p.displayName || p.username)}</b><small>${esc(p.primaryPosition || "Jogador")} · ${p.hasCard ? `${number(p.ovr)} OVR` : "Carta pendente"}</small></span>${icon("plus")}</button>`).join("") || '<p class="muted">Nenhum jogador disponível.</p>'; };
+      search.oninput = update;
+      list.onclick = event => { const pick = event.target.closest("[data-pick]"); if(pick) { close(); move(pick.dataset.pick,side,g[side].starters.length < 5 ? "starters" : "bench"); } };
+      update(); search.focus();
+    });
     builder.querySelector("#balance-details")?.addEventListener("click", () => {
       if (ctx.user.role === "admin")
         modal("Detalhes das equipas", balancePanel(true));
@@ -371,8 +356,8 @@ export async function gamePage(ctx, id) {
     builder.querySelector("#auto-teams")?.addEventListener("click", () => {
       const selection = new Set(chosen);
       const close = modal(
-        "Escolher jogadores",
-        `<form id="auto-selection"><p class="draw-help">Arrasta as cartas para o balde ou toca para adicionar e retirar.</p><div class="auto-selection-head"><button type="button" id="select-all-players" class="btn btn-ghost">Selecionar todos</button></div><div class="draw-pool-layout"><section class="draw-pool" data-draw-zone="available" aria-label="Jogadores disponíveis"><h3>Disponíveis</h3><div class="draw-card-list" id="draw-available"></div></section><section class="draw-pool draw-bucket" data-draw-zone="selected" aria-label="Balde do sorteio"><h3>${icon("players")} Balde do sorteio<span id="auto-selected-count" class="pill success" role="status" aria-live="polite" aria-atomic="true"></span></h3><div class="draw-card-list" id="draw-selected"></div></section></div><div class="actions"><button id="confirm-auto-teams" class="btn btn-primary">Sortear equipas</button></div></form>`,
+        "Sortear equipas",
+        `<form id="auto-selection"><div class="draw-intro"><span class="eyebrow">SORTEIO EQUILIBRADO</span><h3>Quem vai a jogo?</h3></div><div class="auto-selection-head"><button type="button" id="select-all-players" class="btn btn-ghost">Selecionar todos</button></div><div class="draw-pool-layout"><section class="draw-pool" data-draw-zone="available" aria-label="Jogadores disponíveis"><h3>Disponíveis</h3><div class="draw-card-list" id="draw-available"></div></section><section class="draw-pool draw-bucket" data-draw-zone="selected" aria-label="Selecionados"><h3>${icon("players")} Selecionados<span id="auto-selected-count" class="pill success" role="status" aria-live="polite" aria-atomic="true"></span></h3><div class="draw-card-list" id="draw-selected"></div></section></div><div class="actions"><button id="confirm-auto-teams" class="btn btn-primary">Sortear equipas</button></div></form>`,
       );
       const form = document.querySelector("#auto-selection");
       form.closest(".modal").classList.add("draw-selection-modal");
@@ -381,7 +366,7 @@ export async function gamePage(ctx, id) {
       const tile = (p) => {
         const selected = selection.has(p.uid),
           disabled = !eligible.has(p.uid);
-        return `<button type="button" class="draw-player-card" data-auto-player="${esc(p.uid)}" draggable="${!disabled}" ${disabled ? "disabled" : ""} aria-label="${selected ? "Retirar" : "Adicionar"} ${esc(p.displayName || p.username)} ${selected ? "do" : "ao"} balde">${card(p, { size: "sm", preview: true })}<span class="draw-card-action">${disabled ? "Carta pendente" : selected ? "− Retirar" : "+ Adicionar"}</span></button>`;
+        return `<button type="button" class="draw-player-card" data-auto-player="${esc(p.uid)}" ${disabled ? "disabled" : ""} aria-label="${selected ? "Retirar" : "Adicionar"} ${esc(p.displayName || p.username)} ${selected ? "do" : "ao"} balde">${card(p, { size: "sm", preview: true })}<span class="draw-card-action">${disabled ? "Carta pendente" : selected ? "− Retirar" : "+ Adicionar"}</span></button>`;
       };
       const update = () => {
         form.querySelector("#auto-selected-count").textContent = String(
@@ -404,7 +389,7 @@ export async function gamePage(ctx, id) {
           '<p class="draw-empty">Todas as cartas estão no balde.</p>';
         form.querySelector("#draw-selected").innerHTML =
           selected.map(tile).join("") ||
-          '<p class="draw-empty">Arrasta as cartas para aqui</p>';
+          '<p class="draw-empty">Toca nos jogadores para os selecionar</p>';
       };
       const moveSelection = (uid, selected) => {
         if (!eligible.has(uid)) return;
@@ -423,38 +408,6 @@ export async function gamePage(ctx, id) {
             !selection.has(tile.dataset.autoPlayer),
           );
       };
-      form.ondragstart = (event) => {
-        const tile = event.target.closest("[data-auto-player]");
-        if (!tile || tile.disabled) {
-          event.preventDefault();
-          return;
-        }
-        event.dataTransfer.setData("text/plain", tile.dataset.autoPlayer);
-        event.dataTransfer.effectAllowed = "move";
-      };
-      form.querySelectorAll("[data-draw-zone]").forEach((zone) => {
-        zone.ondragover = (event) => {
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "move";
-          zone.classList.add("drag-over");
-        };
-        zone.ondragleave = (event) => {
-          if (!zone.contains(event.relatedTarget))
-            zone.classList.remove("drag-over");
-        };
-        zone.ondrop = (event) => {
-          event.preventDefault();
-          zone.classList.remove("drag-over");
-          moveSelection(
-            event.dataTransfer.getData("text/plain"),
-            zone.dataset.drawZone === "selected",
-          );
-        };
-      });
-      form.ondragend = () =>
-        form
-          .querySelectorAll(".drag-over")
-          .forEach((zone) => zone.classList.remove("drag-over"));
       form.querySelector("#select-all-players").onclick = () => {
         const clear = selection.size === ratedPlayers.length;
         selection.clear();
@@ -491,28 +444,6 @@ export async function gamePage(ctx, id) {
     builder
       .querySelectorAll("[data-remove]")
       .forEach((b) => (b.onclick = () => move(b.dataset.remove)));
-    builder
-      .querySelectorAll("[draggable]")
-      .forEach(
-        (el) =>
-          (el.ondragstart = (e) =>
-            e.dataTransfer.setData("text/plain", el.dataset.uid)),
-      );
-    builder.querySelectorAll(".drop-zone").forEach((zone) => {
-      zone.ondragover = (e) => {
-        e.preventDefault();
-        zone.classList.add("drag-over");
-      };
-      zone.ondragleave = () => zone.classList.remove("drag-over");
-      zone.ondrop = (e) => {
-        e.preventDefault();
-        move(
-          e.dataTransfer.getData("text/plain"),
-          zone.dataset.team,
-          zone.dataset.kind,
-        );
-      };
-    });
   };
   function chip(p, place) {
     const side = place.startsWith("A-")
@@ -527,7 +458,7 @@ export async function gamePage(ctx, id) {
     const displayedOvr = side
       ? (teamPlayers(side).find((player) => player.uid === p.uid)?.ovr ?? p.ovr)
       : p.ovr;
-    return `<div class="team-chip ${captain ? "is-captain" : ""}" ${editable ? 'draggable="true"' : ""} data-uid="${esc(p.uid)}"><div class="chip-card">${card(p, { size: "sm", preview: true })}</div><div class="chip-info"><b>${esc(p.displayName || p.username)}</b><small>${hasDisplayCard ? "OVR " + displayedOvr : "Carta pendente"}${place !== "available" ? ` · ${place.endsWith("bench") ? "Suplente" : "Titular"}` : ""}${captain ? ' <span class="captain-badge" title="Maior OVR da equipa">C · Capitão</span>' : ""}</small>${editable ? `<div class="chip-controls">${place === "available" ? `<button type="button" data-uid="${p.uid}" data-assign="teamA" data-kind="starters" class="btn btn-ghost">→ A</button><button type="button" data-uid="${p.uid}" data-assign="teamB" data-kind="starters" class="btn btn-ghost">→ B</button>` : `<select data-move-select="${p.uid}" aria-label="Mover ${esc(p.displayName)}"><option value="">Mover para…</option><option value="teamA/starters">A · Titular</option><option value="teamA/bench">A · Suplente</option><option value="teamB/starters">B · Titular</option><option value="teamB/bench">B · Suplente</option></select><button type="button" data-remove="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Remover jogador">${icon("close")}</button>`}</div>` : ""}</div></div>`;
+    return `<div class="team-chip ${captain ? "is-captain" : ""}" data-uid="${esc(p.uid)}"><div class="chip-card">${card({...p, ...g.playerCards?.[p.uid]}, { size: "sm", preview: true })}</div><div class="chip-info"><b>${esc(p.displayName || p.username)}</b><small>${hasDisplayCard ? "OVR " + displayedOvr : "Carta pendente"}${captain ? ' <span class="captain-badge" title="Maior OVR da equipa">C · Capitão</span>' : ""}</small>${editable ? `<div class="chip-controls">${place === "available" ? `<button type="button" data-uid="${p.uid}" data-assign="teamA" data-kind="starters" class="btn btn-ghost">→ A</button><button type="button" data-uid="${p.uid}" data-assign="teamB" data-kind="starters" class="btn btn-ghost">→ B</button>` : `<select data-move-select="${p.uid}" aria-label="Mover ${esc(p.displayName)}"><option value="">Mover para…</option><option value="teamA">Equipa A</option><option value="teamB">Equipa B</option></select><button type="button" data-remove="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Remover jogador">${icon("trash")}</button>`}</div>` : ""}</div></div>`;
   }
   function move(uid, team, kind) {
     if (!ctx.league.players.some((p) => p.uid === uid)) return;
@@ -543,11 +474,12 @@ export async function gamePage(ctx, id) {
       ),
     );
     if (team) g[team][kind].push(uid);
+    for (const side of ["teamA", "teamB"]) { const ids = [...g[side].starters,...g[side].bench]; g[side].starters = ids.slice(0,5); g[side].bench = ids.slice(5); }
     draw();
   }
   builder.addEventListener("change", (e) => {
     if (e.target.matches("[data-move-select]") && e.target.value) {
-      const [team, kind] = e.target.value.split("/");
+      const team = e.target.value, kind = g[team].starters.filter(uid => uid !== e.target.dataset.moveSelect).length < 5 ? "starters" : "bench";
       move(e.target.dataset.moveSelect, team, kind);
     }
   });

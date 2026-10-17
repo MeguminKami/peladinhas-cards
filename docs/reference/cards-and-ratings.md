@@ -83,6 +83,8 @@ O ciclo abre à quinta-feira às 12:00 e fecha à quarta-feira às 12:00, em Lis
 
 As cartas na página principal e na lista de jogadores mostram apenas setas verdes ou vermelhas para a evolução de OVR e atributos face à semana anterior. Só no perfil são mostradas as diferenças numéricas: OVR, os 12 atributos e um resumo de quantos subiram ou desceram. Sem carta da semana anterior, não se inventa uma variação.
 
+Esta comparação usa apenas os atributos e o OVR **permanentes** das duas semanas: as recompensas permanentes contam; a entrada, renovação ou expiração de bónus temporários não conta. Os números apresentados na carta continuam a incluir os bónus ativos. O cálculo parte dos atributos anteriores aos bónus, respeitando o limite de 99, os pesos e a penalização por inatividade de cada semana. Quando uma carta antiga com bónus não tem dados suficientes para reconstruir os valores permanentes, a diferença fica indisponível em vez de estimada.
+
 Quando o jogador tem uma especial disponível, o próprio perfil mostra «Escolher carta», incluindo sempre a carta normal. A escolha pertence ao jogador e persiste entre semanas, podendo ser alterada também durante a pausa. Ao expirar uma carta, a aplicação regressa à normal. O histórico fechado mantém a escolha original; alterar a aparência atual nunca reescreve um snapshot fechado.
 
 Uma carta fechada preserva atributos, OVR, especiais, posição e aparência. O histórico semanal permite ampliar essas cartas e consultar a evolução. Alterações posteriores não devem reescrever a memória visual de uma semana fechada.
@@ -94,6 +96,8 @@ A carta **Em forma (In Form)** tem três versões visuais: bronze, prata e ouro.
 A [coleção especial](card-collection.md) acrescenta dezanove edições visuais ao catálogo e ao Card Lab, incluindo nove temas inspirados no Ultimate Team. Quinze têm [condições de conquista e validade](card-unlocks.md); quatro designs ficam em reserva.
 
 Há seis raridades base e cartas especiais reconhecidas por performances/recompensas. O Card Lab permite ao ADMIN compor estilos com todos os modelos do catálogo, paletas, camadas, molduras, fontes, efeitos e fotografia. A biblioteca permite reabrir e editar uma composição guardada, guardar alterações mantendo o seu ID ou criar uma cópia. Inclui desfazer/refazer e importação/exportação JSON; importar um projeto inicia uma nova composição. O catálogo dá acesso direto à edição dos modelos guardados e à criação a partir dos modelos padrão.
+
+A bancada mantém a carta visível e limita o scroll à ferramenta ativa. **Modelos** reúne apenas as cartas do catálogo e **Do zero**; **Composição**, **Cores** (50 paletas), **Materiais**, **Símbolos**, **Texto**, **Foto** e **Projetos** separam as restantes opções. Escolher uma carta preserva a sua aparência original, incluindo ao guardar. As silhuetas, ornamentos e símbolos das edições podem ser combinados, com posição, tamanho e intensidade ajustáveis. DIN Pro Condensed Regular/Medium/Bold e Posterama 1927 Bold usam fontes locais; sem essas fontes instaladas, o navegador usa as alternativas indicadas no catálogo.
 
 Eventos e missões podem atribuir stats temporárias ou permanentes, cartas semanais, prestígio e conquistas. Elegibilidade, limites e privacidade estão na [referência de eventos e missões](events-and-missions.md).
 

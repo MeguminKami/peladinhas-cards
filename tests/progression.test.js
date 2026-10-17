@@ -1,3 +1,9 @@
+import {
+  permanentCardValues,
+  weeklyComparison,
+} from "../js/weekly-comparison.js";
+import { applyEventRewards } from "../js/event-rules.js";
+import { calculateOverallDetails } from "../js/utils.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -372,4 +378,133 @@ test("cálculo da carta: recompensas somadas uma vez e expiração sem apagar me
     date: new Date("2026-10-30"),
   });
   assert.deepEqual(expired.stats, unboosted.stats);
+});
+
+const weeklyReward = (
+  statDuration,
+  boosts,
+  startsAt = "2026-10-20T12:00Z",
+) => ({
+  uid: "a",
+  schemaVersion: 2,
+  createdAt: startsAt,
+  startsAt,
+  expiresAt: "2026-10-27T12:00Z",
+  reward: { statDuration, boosts },
+});
+function comparisonSnapshot(value, date, rewards = [], position = "AV") {
+  const gameStats = all(value),
+    applied = applyEventRewards(gameStats, rewards, "a", new Date(date));
+  const ovrCalculation = calculateOverallDetails(
+    applied.stats,
+    undefined,
+    position,
+    { missed: 4, penalty: 2 },
+  );
+  return {
+    uid: "a",
+    gameStats,
+    stats: applied.stats,
+    eventBoosts: applied.boosts,
+    ovr: ovrCalculation.ovr,
+    ovrCalculation,
+    sourceCutoffDate: date,
+  };
+}
+test("comparação semanal ignora a entrada, expiração e renovação de bónus temporários", () => {
+  const rewards = [weeklyReward("weekly", all(5))];
+  const previous = comparisonSnapshot(80, "2026-10-22T12:00Z", rewards);
+  const current = comparisonSnapshot(82, "2026-10-29T12:00Z", rewards);
+  assert.equal(previous.stats.pace, 85);
+  assert.equal(current.stats.pace, 82);
+  const result = weeklyComparison(current, previous, {
+    rewards,
+    uid: "a",
+    date: new Date("2026-10-29T12:00Z"),
+  });
+  assert.equal(result.permanentStats.pace - result.previousStats.pace, 2);
+  assert.equal(result.ovrDelta, 2);
+  const unchanged = weeklyComparison(
+    comparisonSnapshot(80, "2026-10-29T12:00Z", rewards),
+    previous,
+    { rewards, uid: "a" },
+  );
+  assert.equal(unchanged.ovrDelta, 0);
+  assert.deepEqual(unchanged.permanentStats, unchanged.previousStats);
+  const renewal = [
+    ...rewards,
+    weeklyReward("weekly", all(3), "2026-10-28T12:00Z"),
+  ];
+  const renewed = weeklyComparison(
+    comparisonSnapshot(80, "2026-10-29T12:00Z", renewal),
+    previous,
+    { rewards: renewal, uid: "a" },
+  );
+  assert.equal(renewed.ovrDelta, 0);
+  const entry = weeklyComparison(
+    previous,
+    comparisonSnapshot(80, "2026-10-15T12:00Z"),
+    { rewards, uid: "a" },
+  );
+  assert.equal(entry.ovrDelta, 0);
+});
+test("comparação semanal mantém recompensas permanentes na data de cada carta e respeita o limite 99", () => {
+  const rewards = [
+    weeklyReward("weekly", all(5)),
+    weeklyReward("permanent", all(1), "2026-10-28T12:00Z"),
+  ];
+  const previous = comparisonSnapshot(97, "2026-10-22T12:00Z", rewards);
+  const current = comparisonSnapshot(98, "2026-10-29T12:00Z", rewards);
+  const result = weeklyComparison(current, previous, {
+    rewards,
+    uid: "a",
+    date: new Date("2026-10-29T12:00Z"),
+  });
+  assert.equal(previous.stats.pace, 99);
+  assert.equal(result.previousStats.pace, 97);
+  assert.equal(result.permanentStats.pace, 99);
+  assert.equal(result.ovrDelta, 2);
+  assert.equal(result.permanentOvr, 97, "Mantém a penalização por inatividade");
+});
+test("comparação antiga sem dados seguros não inventa diferenças nem compara semanas com intervalos", () => {
+  const boosted = { stats: all(99), eventBoosts: all(5), ovr: 99 };
+  assert.deepEqual(permanentCardValues(boosted), { stats: null, ovr: null });
+  const baseline = { stats: all(80), ovr: 80 };
+  assert.deepEqual(permanentCardValues(baseline), { stats: all(80), ovr: 80 });
+  const result = weeklyComparison(
+    { ...baseline, weekId: "2026-W43" },
+    { ...baseline, weekId: "2026-W41" },
+  );
+  assert.equal(result.previousStats, null);
+  assert.equal(result.ovrDelta, null);
+  const oldFormula = comparisonSnapshot(80, "2026-10-22T12:00Z", [
+    weeklyReward("weekly", all(5)),
+  ]);
+  delete oldFormula.ovrCalculation;
+  assert.equal(permanentCardValues(oldFormula).ovr, null);
+  assert.equal(permanentCardValues(oldFormula).stats.pace, 80);
+});
+
+test("cartas antigas distinguem recompensas permanentes de bónus temporários sem metadados", () => {
+  const permanent = weeklyReward("permanent", all(1));
+  const old = {
+    uid: "a",
+    stats: all(81),
+    ovr: 81,
+    eventBoosts: all(1),
+    sourceCutoffDate: "2026-10-22T12:00Z",
+  };
+  assert.equal(permanentCardValues(old, { rewards: [permanent] }).ovr, 81);
+  const undocumented = {
+    uid: "a",
+    stats: all(99),
+    ovr: 99,
+    sourceCutoffDate: "2026-10-22T12:00Z",
+  };
+  assert.equal(
+    permanentCardValues(undocumented, {
+      rewards: [weeklyReward("weekly", all(5))],
+    }).stats,
+    null,
+  );
 });

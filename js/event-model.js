@@ -284,9 +284,7 @@ export function validEventReward(reward, themes = []) {
 export const eventEndMillis = (event) =>
   event.indefinite === true ? Infinity : +asDate(event.endsAt);
 export const eventEndLabel = (event) =>
-  event.indefinite === true
-    ? "Sem prazo"
-    : `${formatDateTime(event.endsAt)} · Lisboa`;
+  event.indefinite === true ? "Sem prazo" : formatDateTime(event.endsAt);
 export function missionUnlockedAt(event, uid, completions = []) {
   const ids = event.prerequisites?.missionIds || [];
   if (event.kind !== "mission" || !ids.length)

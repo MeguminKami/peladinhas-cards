@@ -189,6 +189,9 @@ export async function saveGame(id, data, actor) {
     )
       throw Error("Transição de jogo inválida.");
     const value = { ...data, updatedAt: serverTimestamp() };
+    for (const key of ["teamNames", "playerCards", "cardWeekId"]) {
+      if (s.exists() && key in s.data()) value[key] = s.data()[key];
+    }
     if (!s.exists()) {
       value.creatorId = actor.uid;
       value.createdAt = serverTimestamp();
@@ -276,7 +279,7 @@ export async function syncNotifications(uid, missions) {
     );
     await batch.commit();
   }
-  return notifications(uid);
+  return missing.length ? notifications(uid) : existing;
 }
 export const callAdmin = (name, data, options) =>
   httpsCallable(getFunctions(undefined, "europe-west1"), name, options)(data);

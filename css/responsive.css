@@ -1196,24 +1196,6 @@ main.wide-layout {
 .statistics-table td {
   padding-block: 15px;
 }
-.studio-project-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 22px;
-  padding: 16px 20px;
-}
-.studio-project-bar > label {
-  margin: 0;
-  flex: 1;
-  max-width: 280px;
-}
-.studio-project-bar .actions {
-  margin: 0;
-  gap: 8px;
-  flex-wrap: wrap;
-}
 .studio-library { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,1fr); gap:20px 24px; align-items:center; padding:24px; margin-bottom:24px; border-left:3px solid var(--accent); }
 .studio-library h2 { margin:8px 0; font-size:1.2rem; }
 .studio-library p { margin:0; color:var(--text-secondary); font-size:.82rem; }
@@ -1229,43 +1211,12 @@ main.wide-layout {
 .studio-edition-choice > strong { font-size:.7rem; line-height:1.5; text-align:center; overflow-wrap:anywhere; }
 .studio-edition-preview { display:grid; place-items:center; width:100%; height:140px; pointer-events:none; }
 .studio-edition-preview .football-card { --card-width:86px; filter:none; }
-.studio-edition-preview :is(.card-rating,.card-caption,.card-stats,.card-photo,.collection-edition,.special-insignia,.card-playstyles) { display:none; }
+.studio-edition-preview :is(.card-rating,.card-caption,.card-stats,.card-photo,.card-playstyles) { display:none; }
 @media(prefers-reduced-motion:no-preference) { .studio-edition-choice { transition:border-color .16s,background .16s; } }
 @media(max-width:660px) { .studio-library { grid-template-columns:minmax(0,1fr); padding:20px; gap:20px; } .studio-library .actions .btn { flex:1 1 160px; } .studio-edition-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .studio-import {
   margin: 0;
   cursor: pointer;
-}
-.studio-layout {
-  grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
-  gap: 24px;
-}
-.studio-inspector {
-  --studio-primary: #26304e;
-  --studio-secondary: #866bcd;
-  padding: 18px;
-  min-width: 0;
-}
-.studio-tabs {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 4px;
-  padding-bottom: 14px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--border-strong);
-}
-.studio-tabs button {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  padding: 10px 2px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  background: transparent;
-  font-size: 0.65rem;
-  cursor: pointer;
-  min-height: 54px;
 }
 .studio-tabs button[aria-pressed="true"] {
   color: var(--accent);
@@ -1612,50 +1563,6 @@ main.wide-layout {
   color: var(--accent);
   background: var(--accent-tint);
 }
-.studio-stage {
-  position: sticky;
-  top: 100px;
-  min-height: 680px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  background: radial-gradient(
-    ellipse at center,
-    var(--bg-surface-hover),
-    var(--bg-panel)
-  );
-}
-.studio-stage-head,
-.studio-stage-footer {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-}
-.studio-stage-head {
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
-.studio-stage-footer {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
-  margin-top: auto;
-}
-.studio-canvas {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
-  padding: 38px 24px;
-  min-width: 0;
-}
-.studio-canvas .football-card {
-  --card-width: 320px;
-}
 .studio-canvas[data-photo-editing="true"] .card-photo {
   outline: 1px dashed var(--accent);
   cursor: move;
@@ -1732,6 +1639,13 @@ main.wide-layout {
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  opacity: var(--studio-intensity,.65);
+}
+.lab-designed[data-studio-background]:not([data-studio-background="original"]) .card-surface::before,
+.lab-designed[data-studio-background]:not([data-studio-background="original"]) .card-surface::after,
+.lab-designed[data-studio-effect]:not([data-studio-effect="original"]) .card-surface::before,
+.lab-designed[data-studio-effect]:not([data-studio-effect="original"]) .card-surface::after {
+  display: none;
 }
 [data-studio-effect="foil"] .studio-effect {
   background: linear-gradient(
@@ -1743,19 +1657,14 @@ main.wide-layout {
     #ffffff1a 78%,
     transparent
   );
-  opacity: 0.6;
+  opacity: var(--studio-intensity,.65);
 }
 [data-studio-effect="holographic"] .studio-effect {
-  background: repeating-linear-gradient(
-    115deg,
-    #98eaff44 0%,
-    #e39bff44 22%,
-    #ffe3a644 44%,
-    #a4ffe444 66%,
-    #98eaff44 88%
-  );
+  background: repeating-linear-gradient(112deg,#ff669955 0%,#ffdd6655 12%,#8dffce88 25%,#66bfff88 38%,#ba88ff88 50%,#ff669955 62%),repeating-linear-gradient(20deg,transparent 0 2px,#ffffff33 3px,transparent 4px 7px),linear-gradient(125deg,transparent 25%,#ffffffaa 46%,transparent 58%);
+  background-size: 240% 240%, 100% 100%, 200% 200%;
+  background-position: var(--holo-x,50%) var(--holo-y,50%);
   mix-blend-mode: screen;
-  opacity: 0.65;
+  opacity: var(--studio-intensity,.65);
 }
 [data-studio-effect="grain"] .studio-effect {
   background: repeating-radial-gradient(
@@ -1763,7 +1672,7 @@ main.wide-layout {
     #ffffff24 0 1px,
     transparent 1px 3px
   );
-  opacity: 0.25;
+  opacity: var(--studio-intensity,.65);
 }
 [data-studio-effect="glow"] .studio-effect {
   background: radial-gradient(
@@ -1772,7 +1681,7 @@ main.wide-layout {
     transparent 65%
   );
   mix-blend-mode: screen;
-  opacity: 0.5;
+  opacity: var(--studio-intensity,.65);
 }
 [data-studio-effect="glass"] .studio-effect {
   background: linear-gradient(
@@ -1787,30 +1696,31 @@ main.wide-layout {
 [data-studio-effect="duotone"] .studio-effect {
   background: linear-gradient(145deg, transparent 40%, var(--studio-secondary));
   mix-blend-mode: color;
-  opacity: 0.65;
+  opacity: var(--studio-intensity,.65);
 }
 [data-studio-effect="spotlight"] .studio-effect {
   background: radial-gradient(ellipse at 50% 12%, #ffffff55, transparent 60%);
 }
 .studio-border {
   position: absolute;
-  inset: 3%;
+  inset: var(--studio-border-inset,3%);
   border-radius: 8%;
   z-index: 5;
   pointer-events: none;
+  opacity: var(--studio-border-opacity,1);
 }
 [data-studio-border="single"] .studio-border {
-  border: 1px solid var(--studio-edge);
+  border: var(--studio-border-width,1px) solid var(--studio-edge);
 }
 [data-studio-border="double"] .studio-border {
-  border: 4px double var(--studio-edge);
+  border: max(3px,calc(var(--studio-border-width,1px) * 3)) double var(--studio-edge);
 }
 [data-studio-border="glow"] .studio-border {
-  border: 1px solid var(--studio-edge);
+  border: var(--studio-border-width,1px) solid var(--studio-edge);
   box-shadow: inset 0 0 15px var(--studio-glow);
 }
 [data-studio-border="dashed"] .studio-border {
-  border: 2px dashed var(--studio-edge);
+  border: var(--studio-border-width,2px) dashed var(--studio-edge);
 }
 [data-studio-border="corners"] .studio-border {
   background:
@@ -1824,61 +1734,8 @@ main.wide-layout {
       no-repeat;
 }
 .lab-designed[data-studio-border]:not([data-studio-border="original"])
-  :is(.card-frame, .ornament-outline, .special-outline, .special-inner) {
-  opacity: 0;
-}
-@media (max-width: 1100px) {
-  .studio-layout {
-    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-  }
-  .studio-project-bar {
-    align-items: flex-start;
-  }
-  .studio-canvas .football-card {
-    --card-width: 280px;
-  }
-  .studio-stage {
-    padding: 18px;
-    min-height: 580px;
-  }
-}
-@media (max-width: 800px) {
-  .studio-layout {
-    display: flex;
-    flex-direction: column;
-  }
-  .studio-inspector,
-  .studio-stage {
-    width: 100%;
-  }
-  .studio-stage {
-    order: -1;
-    position: static;
-    min-height: 0;
-  }
-  .studio-project-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .studio-project-bar > label {
-    max-width: none;
-  }
-  .studio-project-bar .btn {
-    font-size: 0.72rem;
-    padding-inline: 9px;
-  }
-  .studio-canvas {
-    padding: 28px 12px;
-  }
-  .studio-canvas .football-card {
-    --card-width: min(280px, calc(100vw - 104px));
-  }
-  .studio-stage-footer {
-    font-size: 0.63rem;
-  }
-  .studio-stage-head {
-    padding-bottom: 16px;
-  }
+  :is(.card-frame, .ornament-outline, .ornament-lines, .special-outline, .special-inner, .rare-rim-outline, .rare-rim-highlight, .common-edge-highlight, .theme-holo-frame) {
+  display: none;
 }
 
 .studio-sample svg {
@@ -2710,8 +2567,8 @@ main.wide-layout {
 .event-builder[data-creation-type=mission] .eyebrow{color:#89b9ff}.event-builder[data-creation-type=mission] .event-editor-steps [aria-current=step]{border-color:#89b9ff;background:rgba(137,185,255,.09)}.event-context-note{padding:16px;border-radius:12px;background:rgba(137,185,255,.07);line-height:1.7;margin-bottom:20px}.event-editor-step .event-switches:empty{display:none}
 
 /* Faceted movement marks are part of the card typography, without badges. */
-.football-card .card-stats b { display: flex; align-items: center; justify-content: center; gap: calc(var(--card-width) * .008); }
-.football-card .card-stat-trend { display: inline-flex; align-items: center; width: calc(var(--card-width) * .040); height: calc(var(--card-width) * .052); flex-shrink: 0; line-height: 1; }
+.football-card .card-stats b { position: relative; display: block; align-self: center; }
+.football-card .card-stat-trend { position: absolute; left: calc(100% + var(--card-width) * .008); top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; width: calc(var(--card-width) * .040); height: calc(var(--card-width) * .052); line-height: 1; }
 .football-card .card-ovr-trend { display: inline-flex; top: 28%; left: auto; right: calc(100% + var(--card-width) * .012); width: calc(var(--card-width) * .052); height: calc(var(--card-width) * .068); }
 .football-card :is(.card-stat-trend,.card-ovr-trend).positive { color: #00b84f; --trend-glow: #00d65b66; }
 .football-card :is(.card-stat-trend,.card-ovr-trend).negative { color: #f01f3d; --trend-glow: #ff244766; }

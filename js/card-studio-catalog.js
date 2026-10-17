@@ -1,4 +1,26 @@
 export const STUDIO_FONTS = {
+  dinRegular: [
+    "DIN Pro Condensed Regular",
+    '"DIN Pro Condensed Regular", "DIN Pro Condensed", "Arial Narrow", sans-serif',
+  ],
+  dinMedium: [
+    "DIN Pro Condensed Medium",
+    '"DIN Pro Condensed Medium", "DIN Pro Condensed", "Arial Narrow", sans-serif',
+  ],
+  dinBold: [
+    "DIN Pro Condensed Bold",
+    '"DIN Pro Condensed Bold", "DIN Pro Condensed", Impact, sans-serif',
+  ],
+  posterama: [
+    "Posterama 1927 Bold",
+    '"Posterama 1927 Bold", "Posterama 1927", "Arial Black", sans-serif',
+  ],
+  condensed: [
+    "Barlow Condensed",
+    '"Barlow Condensed", "Arial Narrow", sans-serif',
+  ],
+  geometric: ["Geométrica", '"Century Gothic", Futura, sans-serif'],
+  slab: ["Slab editorial", "Rockwell, Georgia, serif"],
   sport: [
     "Desportiva",
     'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif',
@@ -16,6 +38,19 @@ export const STUDIO_FONTS = {
 };
 export const STUDIO_BACKGROUNDS = {
   original: ["Original", "none"],
+  solid: ["Cor sólida", "var(--studio-primary)"],
+  diagonal: [
+    "Diagonal",
+    "linear-gradient(var(--studio-angle,135deg),var(--studio-primary) var(--studio-spread,35%),var(--studio-secondary))",
+  ],
+  radial: [
+    "Halo",
+    "radial-gradient(ellipse at var(--studio-x,50%) var(--studio-y,25%),var(--studio-secondary),var(--studio-primary) var(--studio-spread,65%))",
+  ],
+  split: [
+    "Bicolor",
+    "linear-gradient(var(--studio-angle,135deg),var(--studio-primary) max(0%,calc(var(--studio-spread,50%) - 25%)),var(--studio-secondary) min(100%,calc(var(--studio-spread,50%) + 25%)))",
+  ],
   aurora: [
     "Aurora",
     "radial-gradient(ellipse at 20% 15%,var(--studio-secondary),transparent 65%),linear-gradient(145deg,var(--studio-primary),#080c1b)",
@@ -65,31 +100,208 @@ export const STUDIO_BACKGROUNDS = {
     "linear-gradient(0deg,var(--studio-primary) 10%,var(--studio-secondary) 55%,var(--studio-primary) 100%)",
   ],
 };
+// Each palette combines two surface hues with contrasting text, frame and light.
 export const STUDIO_PALETTES = {
-  gold: ["Ouro", ["#9c6414", "#f4d891", "#211b13", "#fff0b4", "#f0c45b"]],
+  gold: [
+    "Coroa Solar",
+    ["#E8CF77", "#B99A44", "#10121C", "#F8E7A8", "#40331B"],
+  ],
   midnight: [
-    "Meia-noite",
-    ["#08152c", "#2364a6", "#eff8ff", "#7fcfff", "#217dcc"],
+    "Prata Lunar",
+    ["#DDE0E2", "#929CA6", "#10121C", "#F7F8FA", "#444C55"],
   ],
   amethyst: [
-    "Ametista",
-    ["#201035", "#9753d5", "#fcf2ff", "#d9a0ff", "#bd66f5"],
+    "Cobre Ancestral",
+    ["#C99570", "#86543B", "#10121C", "#E8B995", "#402A25"],
   ],
   emerald: [
-    "Esmeralda",
-    ["#06362b", "#24bd82", "#f2fff9", "#86ffd2", "#24c787"],
+    "Noite de Gala",
+    ["#111114", "#25272D", "#FFFFFF", "#CBA64D", "#F8E7A6"],
   ],
-  crimson: ["Rubi", ["#3b091a", "#e53662", "#fff2f6", "#ff9bab", "#f34d78"]],
-  ice: ["Gelo", ["#dae9f7", "#80b7d5", "#0e233d", "#f0fbff", "#54a6db"]],
-  copper: ["Cobre", ["#7a3b22", "#dfa478", "#21140b", "#ffcea5", "#e88e50"]],
+  crimson: [
+    "Trono Celeste",
+    ["#071B55", "#1238A0", "#FFFFFF", "#D9B85F", "#F5E1A0"],
+  ],
+  ice: [
+    "Maré de Glória",
+    ["#08235B", "#1159C7", "#FFFFFF", "#E8C95B", "#8AD9FF"],
+  ],
+  copper: [
+    "Festa Astral",
+    ["#482075", "#A535C5", "#FFFFFF", "#F34AA5", "#F4D3FF"],
+  ],
   monochrome: [
-    "Grafite",
-    ["#0c1017", "#606c80", "#f2f6fc", "#bdc9dd", "#7d8fae"],
+    "Pulso do Futuro",
+    ["#0D2757", "#13B4D5", "#FFFFFF", "#EE4EBA", "#B3F4FF"],
   ],
-  neon: ["Neon", ["#161333", "#4d327f", "#edff90", "#cfff56", "#b8fb35"]],
-  pearl: ["Pérola", ["#d9d3c7", "#f6efdc", "#29221c", "#ffffff", "#ead6a1"]],
-  ocean: ["Oceano", ["#06263b", "#16a6ba", "#efffff", "#73e8ef", "#28cddd"]],
-  fire: ["Fogo", ["#421a13", "#ed8e23", "#fff5e6", "#ffe28f", "#ff852d"]],
+  neon: [
+    "Prisma Mutante",
+    ["#28135C", "#6431A4", "#FFFFFF", "#20D6BF", "#F349C8"],
+  ],
+  pearl: [
+    "Rebelde Solar",
+    ["#32104F", "#DD3769", "#FFFFFF", "#F07328", "#18101F"],
+  ],
+  ocean: [
+    "Radar Laranja",
+    ["#151723", "#343C65", "#FFFFFF", "#E58B27", "#F7B45B"],
+  ],
+  fire: [
+    "Manchete Rubra",
+    ["#B91D3A", "#ED573B", "#FFFFFF", "#E5B96E", "#511A39"],
+  ],
+  palette0: [
+    "Solstício Polar",
+    ["#103C5C", "#34B4B2", "#FFFFFF", "#E6FBF8", "#B53C6B"],
+  ],
+  palette1: [
+    "Miragem Arcana",
+    ["#291C64", "#6845C0", "#FFFFFF", "#36D7C5", "#BBA8FF"],
+  ],
+  palette2: [
+    "Sonho Elétrico",
+    ["#25114D", "#7244B5", "#FFFFFF", "#E458D4", "#53E5D5"],
+  ],
+  palette3: [
+    "Comando Escarlate",
+    ["#162E50", "#CB363F", "#FFFFFF", "#E3C073", "#F7EBDB"],
+  ],
+  palette4: [
+    "Lenda de Âmbar",
+    ["#462622", "#A95137", "#FFFFFF", "#E4A65A", "#F8D3A0"],
+  ],
+  palette5: [
+    "Templo de Marfim",
+    ["#F4F0E5", "#DED5BF", "#10121C", "#B99C63", "#FFFFFF"],
+  ],
+  palette6: [
+    "Memória Imperial",
+    ["#172953", "#345A94", "#FFFFFF", "#DBBC78", "#DDEBFF"],
+  ],
+  palette7: [
+    "Rota da Conquista",
+    ["#091B48", "#164C9D", "#FFFFFF", "#F0A539", "#71C4FF"],
+  ],
+  palette8: [
+    "Passaporte Real",
+    ["#162A68", "#3964C5", "#FFFFFF", "#D59C3F", "#EDE1A5"],
+  ],
+  palette9: [
+    "Rosa Explosiva",
+    ["#E92A91", "#FA65BA", "#10121C", "#F9C7E6", "#772A9E"],
+  ],
+  palette10: [
+    "Relíquia Dourada",
+    ["#DCC49C", "#AA824D", "#10121C", "#F8F0D9", "#5C4733"],
+  ],
+  palette11: [
+    "Dinastia de Seda",
+    ["#30204A", "#8A346F", "#FFFFFF", "#CC9F62", "#F4D8AB"],
+  ],
+  palette12: [
+    "Trovão Imperial",
+    ["#151524", "#543DA5", "#FFFFFF", "#F2B54E", "#F5ECDE"],
+  ],
+  palette13: [
+    "Rasto de Cometa",
+    ["#271A31", "#BD3E6B", "#FFFFFF", "#EE8C41", "#FFDA93"],
+  ],
+  palette14: [
+    "Arena Nobre",
+    ["#263A56", "#C7A46A", "#FFFFFF", "#F5E8CC", "#A34C42"],
+  ],
+  palette15: [
+    "Fúria Vulcânica",
+    ["#541B28", "#D83C2F", "#FFFFFF", "#FA963F", "#FFDB8D"],
+  ],
+  palette16: [
+    "Coração Glacial",
+    ["#0C3E69", "#288DC5", "#FFFFFF", "#9BE8FA", "#EAFBFF"],
+  ],
+  palette17: [
+    "Feitiço da Meia-Noite",
+    ["#211337", "#713C9D", "#FFFFFF", "#E87529", "#BDE65B"],
+  ],
+  palette18: [
+    "Samba Neon",
+    ["#063E3C", "#087A62", "#FFFFFF", "#FFE34D", "#FF4FAD"],
+  ],
+  palette19: [
+    "Pitaya Cósmica",
+    ["#40146B", "#9B1978", "#FFFFFF", "#B6FF47", "#56F5E4"],
+  ],
+  palette20: [
+    "Coral Atómico",
+    ["#FF765B", "#FFB74D", "#10121C", "#0A6570", "#CFFFF4"],
+  ],
+  palette21: [
+    "Onda Ultravioleta",
+    ["#172378", "#512DB5", "#FFFFFF", "#39F6D2", "#FF74DF"],
+  ],
+  palette22: [
+    "Jade Soberano",
+    ["#073D34", "#11754F", "#FFFFFF", "#EBCD66", "#68FFB0"],
+  ],
+  palette23: [
+    "Lavanda Solar",
+    ["#DAC9FF", "#FFD293", "#10121C", "#553291", "#FFFFF0"],
+  ],
+  palette24: [
+    "Asfalto Laser",
+    ["#111A25", "#29374A", "#FFFFFF", "#C6FF36", "#16DFF8"],
+  ],
+  palette25: [
+    "Rubi Tropical",
+    ["#65124C", "#AF2259", "#FFFFFF", "#4FF5C0", "#FFE45E"],
+  ],
+  palette26: [
+    "Manga Galáctica",
+    ["#FFBF47", "#FF7E70", "#10121C", "#50349A", "#DCFDFF"],
+  ],
+  palette27: [
+    "Petróleo Elétrico",
+    ["#04344D", "#08667B", "#FFFFFF", "#FFDA38", "#FF58BE"],
+  ],
+  palette28: [
+    "Dragão Esmeralda",
+    ["#123F20", "#376728", "#FFFFFF", "#F8DE51", "#40F5CB"],
+  ],
+  palette29: [
+    "Orquídea Real",
+    ["#351C67", "#6E267D", "#FFFFFF", "#FFD064", "#FF8DDF"],
+  ],
+  palette30: [
+    "Atlântida Pop",
+    ["#064B62", "#177D8A", "#FFFFFF", "#FF91D4", "#F4ED65"],
+  ],
+  palette31: [
+    "Pêssego Turbo",
+    ["#FFD1AF", "#F6B9DE", "#10121C", "#80346B", "#73DCCE"],
+  ],
+  palette32: [
+    "Limão Magnético",
+    ["#D5ED6B", "#85D6B1", "#10121C", "#23365A", "#FF6B9D"],
+  ],
+  palette33: [
+    "Veludo de Fogo",
+    ["#4F133C", "#9C2D37", "#FFFFFF", "#FFBF56", "#67E7FF"],
+  ],
+  palette34: [
+    "Safira Rebelde",
+    ["#101F63", "#313AA5", "#FFFFFF", "#FF783D", "#5DF0F2"],
+  ],
+  palette35: [
+    "Gelo de Melancia",
+    ["#BDF4E9", "#FFD0D9", "#10121C", "#185A60", "#EF5680"],
+  ],
+  palette36: [
+    "Carnaval Profundo",
+    ["#18254B", "#512564", "#FFFFFF", "#F8CF49", "#3DE1D6"],
+  ],
+  palette37: [
+    "Ouro Aurora",
+    ["#ECD37B", "#F5B77C", "#10121C", "#743C82", "#57DFCE"],
+  ],
 };
 export const STUDIO_DECORATIONS = {
   original: "Original",
@@ -106,6 +318,7 @@ export const STUDIO_DECORATIONS = {
   orbit: "Órbitas",
 };
 export const STUDIO_EFFECTS = {
+  original: "Original",
   none: "Sem efeito",
   foil: "Folha metálica",
   holographic: "Holográfico",

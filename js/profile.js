@@ -1,3 +1,4 @@
+import { weeklyComparison } from "./weekly-comparison.js";
 import { trendArrow } from "./icons.js";
 import { cardWeek } from "./card-week.js";
 import { historyForDisplay } from "./card-history.js";
@@ -117,10 +118,14 @@ export async function playerPage(ctx, uid) {
         "players",
       ),
     );
-  const myRating =
+  const [myRating, savedHistory] = await Promise.all([
     uid !== ctx.user.uid
-      ? await DB.read(`communityRatings/${ctx.user.uid}_${uid}`)
-      : null;
+      ? ctx.cached(`rating:${uid}`, () =>
+          DB.read(`communityRatings/${ctx.user.uid}_${uid}`),
+        )
+      : null,
+    ctx.cached(`history:${uid}`, () => DB.history(uid)),
+  ]);
   const ratingAction =
     uid !== ctx.user.uid
       ? linkButton(
@@ -136,9 +141,15 @@ export async function playerPage(ctx, uid) {
           "edit",
         );
   const own = uid === ctx.user.uid,
-    history = historyForDisplay(p, await DB.history(uid)).sort((a, b) =>
-      b.weekId.localeCompare(a.weekId),
-    ),
+    history = historyForDisplay(p, savedHistory)
+      .map((snapshot) => ({
+        ...snapshot,
+        ...weeklyComparison(snapshot, null, {
+          rewards: ctx.league.eventRewards,
+          uid: p.uid,
+        }),
+      }))
+      .sort((a, b) => b.weekId.localeCompare(a.weekId)),
     s = p.matchStats,
     best = ATTRIBUTES.reduce((a, b) => (p.stats[b[0]] > p.stats[a[0]] ? b : a));
   const cardChoices = [
@@ -163,14 +174,21 @@ export async function playerPage(ctx, uid) {
   const previousWeek = cardWeek(new Date(+cardWeek().opensAt - 1)).weekId;
   const attributePrevious = history.find((h) => h.weekId === previousWeek);
   const previous = attributePrevious;
-  p.previousStats = attributePrevious?.stats || null;
-  p.ovrDelta = Number.isFinite(previous?.ovr) ? p.ovr - previous.ovr : null;
-  const growth = previous?.stats
-    ? ATTRIBUTES.map(([key, name]) => ({
-        name,
-        delta: p.stats[key] - (previous.stats[key] || 0),
-      })).sort((a, b) => b.delta - a.delta)[0]
-    : null;
+  Object.assign(
+    p,
+    weeklyComparison(p, previous, {
+      rewards: ctx.league.eventRewards,
+      uid: p.uid,
+      date: new Date(),
+    }),
+  );
+  const growth =
+    p.previousStats && p.permanentStats
+      ? ATTRIBUTES.map(([key, name]) => ({
+          name,
+          delta: p.permanentStats[key] - p.previousStats[key],
+        })).sort((a, b) => b.delta - a.delta)[0]
+      : null;
   ctx.render(
     `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}${weeklyEvolution(p)}${canChooseCard ? '<button type="button" id="choose-weekly-card" class="btn btn-secondary">Escolher carta</button>' : ""}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? "Semana fechada · Quinta às 12h" : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
       ["Idade", `${age(p.birthDate)} anos`],
@@ -203,16 +221,16 @@ export async function playerPage(ctx, uid) {
         growth?.delta > 0 ? `${growth.name} +${growth.delta}` : "Estável",
       ],
       [
-        "Evolução OVR",
-        previous
-          ? `${p.ovr - previous.ovr >= 0 ? "+" : ""}${p.ovr - previous.ovr} esta semana`
+        "Evolução OVR permanente",
+        Number.isFinite(p.ovrDelta)
+          ? `${p.ovrDelta >= 0 ? "+" : ""}${p.ovrDelta} esta semana`
           : "Primeira semana",
       ],
     ]
       .map(([k, v]) => `<div><small>${k}</small><b>${v}</b></div>`)
       .join(
         "",
-      )}</div></div></div><section class="panel"><div class="section-head"><h2>Os 12 atributos</h2><span class="muted">Escala 0–99 · Variação face à semana anterior</span></div><div class="attribute-grid">${ATTRIBUTES.map(([k, n]) => `<div><span>${n}</span><span class="attribute-value"><b>${p.stats[k]}</b>${attributeChange(p.stats[k], attributePrevious?.stats?.[k])}</span><div class="progress"><span style="--progress:${p.stats[k]}%"></span></div></div>`).join("")}</div></section><section><div class="section-head"><h2>Estatísticas</h2></div><div class="metrics stats-metrics">${[
+      )}</div></div></div><section class="panel"><div class="section-head"><h2>Os 12 atributos</h2><span class="muted">Escala 0–99 · Variação dos atributos permanentes</span></div><p class="muted weekly-comparison-note">As setas comparam os atributos e o OVR permanentes entre semanas. Bónus temporários não contam; recompensas permanentes contam. Os valores da carta incluem os bónus ativos.</p><div class="attribute-grid">${ATTRIBUTES.map(([k, n]) => `<div><span>${n}</span><span class="attribute-value"><b>${p.stats[k]}</b>${attributeChange(p.permanentStats?.[k], p.previousStats?.[k])}</span><div class="progress"><span style="--progress:${p.stats[k]}%"></span></div></div>`).join("")}</div></section><section><div class="section-head"><h2>Estatísticas</h2></div><div class="metrics stats-metrics">${[
       ["Jogos", s.played],
       ["Vitórias", s.wins],
       ["Empates", s.draws],
@@ -325,13 +343,10 @@ export function historicalPlayer(player, snapshot, previous) {
     ...snapshot.appearance,
     stats: snapshot.stats || {},
     selectedCardId: snapshot.selectedCardId || null,
-    previousStats: previous?.stats || null,
+    ...weeklyComparison(snapshot, previous, { uid: player.uid }),
     cardPhoto: snapshot.cardPhoto || null,
     primaryPosition: snapshot.primaryPosition ?? player.primaryPosition,
     ovr: snapshot.ovr,
-    ovrDelta: Number.isFinite(snapshot.previousOvr ?? previous?.ovr)
-      ? snapshot.ovr - (snapshot.previousOvr ?? previous.ovr)
-      : null,
     cardType: snapshot.baseCard,
     specials: snapshot.specials || [],
     official: snapshot.official,
@@ -341,7 +356,7 @@ export function historicalPlayer(player, snapshot, previous) {
 
 function attributeChange(current, previous) {
   if (!Number.isFinite(current) || !Number.isFinite(previous))
-    return '<small class="attribute-change is-neutral" title="Sem carta da semana anterior para comparar">—</small>';
+    return '<small class="attribute-change is-neutral" title="Sem valores permanentes da semana anterior para comparar">—</small>';
   const delta = Math.round((current - previous) * 100) / 100;
   const amount = Math.abs(delta).toLocaleString("pt-PT", {
     maximumFractionDigits: 2,
@@ -352,5 +367,5 @@ function attributeChange(current, previous) {
       : delta < 0
         ? `Desceu ${amount}`
         : "Sem alteração";
-  return `<small class="attribute-change ${delta > 0 ? "is-positive" : delta < 0 ? "is-negative" : "is-neutral"}" aria-label="${description} face à carta da semana anterior" title="${description} face à carta da semana anterior">${delta ? trendArrow(delta) : '<span aria-hidden="true">=</span>'} ${delta > 0 ? "+" : delta < 0 ? "−" : ""}${amount}</small>`;
+  return `<small class="attribute-change ${delta > 0 ? "is-positive" : delta < 0 ? "is-negative" : "is-neutral"}" aria-label="${description} nos atributos permanentes face à carta da semana anterior" title="${description} nos atributos permanentes face à carta da semana anterior">${delta ? trendArrow(delta) : '<span aria-hidden="true">=</span>'} ${delta > 0 ? "+" : delta < 0 ? "−" : ""}${amount}</small>`;
 }

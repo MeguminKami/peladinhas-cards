@@ -8,6 +8,7 @@ import {
   RESERVED_COLLECTION_IDS,
 } from "../js/card-collection.js";
 import { CARD_POLICY } from "../js/card-achievements.js";
+import { CATALOG_THEMES } from "../js/utils.js";
 const root = resolve(".");
 const server = createServer((req, res) => {
   try {
@@ -146,11 +147,7 @@ try {
         material: getComputedStyle(card.querySelector(".card-surface"))
           .backgroundImage,
         stats: style.backgroundImage,
-        portraitClear: [
-          ".collection-art",
-          ".special-ornament",
-          ".collection-edition",
-        ].every(
+        portraitClear: [".collection-art", ".special-ornament"].every(
           (s) =>
             Number(getComputedStyle(card.querySelector(s)).zIndex) < photoZ,
         ),
@@ -222,9 +219,7 @@ try {
     .screenshot({ path: "test-results/card-fut-themes.png" });
   await page.evaluate(() => {
     document
-      .querySelectorAll(
-        ".card-photo,.card-caption,.card-rating,.card-stats,.collection-edition",
-      )
+      .querySelectorAll(".card-photo,.card-caption,.card-rating,.card-stats")
       .forEach((el) => (el.style.visibility = "hidden"));
     document.querySelector("#collection-preview h1").textContent =
       "Molduras e materiais · sem jogadores";
@@ -233,20 +228,18 @@ try {
     .locator("#collection-preview")
     .screenshot({ path: "test-results/card-fut-frames.png" });
   await page.goto(`http://127.0.0.1:${server.address().port}/#/admin/cards`);
-  await page.locator('#lab-controls select[name="theme"]').waitFor();
+  await page.locator("[data-studio-edition]").first().waitFor();
   for (const id of Object.keys(COLLECTION_EDITIONS)) {
-    await page.locator('#lab-controls select[name="theme"]').selectOption(id);
+    await page.locator(`[data-studio-edition="${id}"]`).click();
     assert.equal(await page.locator("#save-theme").isDisabled(), false);
     assert.equal(await page.locator(`#card-preview .${id}`).count(), 1);
   }
-  await page
-    .locator('#lab-controls select[name="theme"]')
-    .selectOption("gold-rare");
+  await page.locator('[data-studio-edition="gold-rare"]').click();
   assert.equal(await page.locator("#save-theme").isEnabled(), true);
   // Every catalog edition can be used in an editable saved composition.
   assert.equal(
     await page.locator("[data-studio-edition]").count(),
-    Object.keys(COLLECTION_EDITIONS).length,
+    CATALOG_THEMES.length + 1,
   );
   await page.locator('[data-studio-edition="apogee"]').click();
   await page.locator('[name="themeName"]').fill("Edição do ADMIN");
@@ -273,6 +266,7 @@ try {
   assert.equal(updated.count, original.count);
   assert.equal(updated.theme.name, "Edição revista");
   assert.equal(updated.theme.baseTheme, "toty");
+  await page.locator('[data-studio-tab="projects"]').click();
   await page.locator("#save-theme-copy").click();
   assert.equal(
     await page.evaluate(() => window.__testState.cardThemes.length),
@@ -292,6 +286,7 @@ try {
   await page.locator("#card-type-gallery").waitFor();
   await page.locator(`[data-card-type="saved:${original.theme.id}"]`).click();
   await page.getByRole("link", { name: "Editar no Card Lab" }).click();
+  await page.locator('[data-studio-tab="projects"]').click();
   await page.locator("#studio-saved-project").waitFor();
   assert.equal(
     await page.locator('[name="projectId"]').inputValue(),
@@ -316,25 +311,24 @@ try {
       animations: "disabled",
       style: "#header,.bottom-nav,#toast-region{visibility:hidden!important}",
     });
-    if ([320, 1440].includes(width))
-      await page
-        .locator(".studio-edition-grid")
-        .screenshot({
-          path: `test-results/card-lab-editions-${width}.png`,
-          animations: "disabled",
-          style:
-            "#header,.bottom-nav,#toast-region{visibility:hidden!important}",
-        });
+    if ([320, 1440].includes(width)) {
+      await page.locator('[data-studio-tab="models"]').click();
+      await page.locator(".studio-edition-grid").screenshot({
+        path: `test-results/card-lab-editions-${width}.png`,
+        animations: "disabled",
+        style: "#header,.bottom-nav,#toast-region{visibility:hidden!important}",
+      });
+      await page.locator('[data-studio-tab="projects"]').click();
+    }
   }
   await page.locator("#lab-new-project").click();
+  await page.locator('[data-studio-tab="models"]').click();
   for (const [metal, edge] of [
     ["bronze", "#e8b58b"],
     ["silver", "#dceaf8"],
     ["gold", "#eac775"],
   ]) {
-    await page
-      .locator('#lab-controls select[name="theme"]')
-      .selectOption(`in-form-${metal}`);
+    await page.locator(`[data-studio-edition="in-form-${metal}"]`).click();
     assert.equal(
       await page.locator(`#card-preview .in-form-${metal}`).count(),
       1,

@@ -14,6 +14,8 @@ export function historyForDisplay(player, history, cycle = cardWeek()) {
     return {
       ...snapshot,
       stats: player.stats,
+      permanentStats: player.permanentStats,
+      permanentOvr: player.permanentOvr,
       ovr: player.ovr,
       baseCard: player.cardType,
       selectedCardId: player.selectedCardId || null,

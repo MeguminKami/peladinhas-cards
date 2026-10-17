@@ -38,7 +38,7 @@ function legacyAudit(ctx, event) {
   document.querySelector("#legacy-vote-search").oninput = draw;
 }
 export async function eventPage(ctx, id) {
-  const event = await DB.eventDetails(id);
+  const event = await ctx.cached(`event:${id}`, () => DB.eventDetails(id));
   if (event?.schemaVersion === 2) return managedEventPage(ctx, event);
   if (event && ["closed", "cancelled"].includes(event.status)) {
     ctx.render(

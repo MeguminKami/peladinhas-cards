@@ -251,6 +251,6 @@ export function eventDeadline(value) {
       +final.minute,
     ) !== wall
   )
-    throw Error("Esta hora não existe em Lisboa nesse dia.");
+    throw Error("Esta hora não existe nesse dia.");
   return new Date(utc).toISOString();
 }

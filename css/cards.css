@@ -80,6 +80,22 @@ a.football-card:hover {
   pointer-events: none;
   z-index: 5;
 }
+.studio-light {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(var(--studio-light-angle,135deg), var(--studio-glow), transparent var(--studio-light-softness,65%));
+  opacity: var(--studio-light-opacity,.5);
+  mix-blend-mode: screen;
+}
+.football-card[data-studio-border="original"] .card-frame {
+  inset: var(--studio-border-inset,3%);
+  border-width: var(--studio-border-width,1px);
+}
+.football-card[data-studio-lighting="off"] .studio-light {
+  display: none;
+}
 .football-card .card-surface:before {
   content: "";
   position: absolute;
@@ -719,21 +735,23 @@ a.football-card:hover {
   stroke-width: 0.25;
   opacity: 0.7;
 }
-.special-motif {
-  fill: none;
-  stroke: var(--card-edge);
-  stroke-width: 0.8;
-  opacity: 0.6;
-}
-.special-insignia {
+.card-symbol {
   position: absolute;
-  bottom: 6%;
-  width: 100%;
-  text-align: center;
+  left: 50%;
+  top: 94%;
+  width: 11%;
+  height: 5%;
+  transform: translate(-50%, -50%);
   z-index: 3;
+  pointer-events: none;
+  fill: none;
   color: var(--card-edge);
-  font-size: calc(var(--card-width) * 0.035);
-  letter-spacing: 0.2em;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  opacity: 0.9;
+}
+.card-symbol[hidden] {
+  display: none;
 }
 .card-special :is(.card-rating, .card-caption, .card-stats) {
   color: var(--card-text);
@@ -1210,14 +1228,6 @@ a.football-card:hover {
   stroke-width: 0.35;
   opacity: 0.65;
 }
-.card-special .special-motif {
-  stroke-width: 2;
-  opacity: 0.9;
-}
-.card-special .special-insignia {
-  bottom: 2.5%;
-  font-size: calc(var(--card-width) * 0.026);
-}
 .card-special .card-rating {
   color: #fff9ef;
   text-shadow: 0 2px 4px #000000aa;
@@ -1386,19 +1396,6 @@ a.football-card:hover {
 .collection-art .collection-fine {
   stroke-width: 0.25;
   opacity: 0.6;
-}
-.collection-edition {
-  position: absolute;
-  top: 5%;
-  left: 25%;
-  width: 50%;
-  z-index: 2;
-  text-align: center;
-  color: var(--card-edge);
-  font-size: calc(var(--card-width) * 0.025);
-  font-weight: 800;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
 }
 .football-card.card-collection {
   --card-text: #f7faff;

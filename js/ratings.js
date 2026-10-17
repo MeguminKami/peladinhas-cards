@@ -113,7 +113,7 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
   if (deadline)
     form.insertAdjacentHTML(
       "afterbegin",
-      `<p class="muted">${locked ? "Prazo de edição terminado em" : "Podes editar até"} ${deadline.toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })} (Lisboa).</p>`,
+      `<p class="muted">${locked ? "Prazo de edição terminado em" : "Podes editar até"} ${deadline.toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}.</p>`,
     );
   if (locked) {
     form.querySelectorAll("input, button").forEach((control) => {

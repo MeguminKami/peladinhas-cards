@@ -1,3 +1,9 @@
+﻿import {
+  cardSymbol,
+  fitCardSymbols,
+  positionCardSymbol,
+} from "./card-symbol.js";
+import { SPECIAL_CARD_DESIGNS } from "./card-specials.js";
 import { setSafeCardShape } from "./card-geometry.js";
 import {
   STUDIO_FONTS,
@@ -10,6 +16,24 @@ import {
   DECORATION_ART,
 } from "./card-studio-catalog.js";
 export const DESIGN_FIELDS = [
+  ["lightIntensity", "Intensidade da luz (%)", 0, 100, 50],
+  ["lightAngle", "Direção da luz (°)", 0, 360, 135],
+  ["lightSoftness", "Difusão da luz (%)", 10, 100, 65],
+  ["borderWidth", "Espessura do traçado (px)", 1, 8, 1],
+  ["borderInset", "Distância ao perímetro (%)", 0, 12, 3],
+  ["backgroundAngle", "Ângulo da cor (°)", 0, 360, 135],
+  ["backgroundSpread", "Distribuição da cor (%)", 0, 100, 50],
+  ["backgroundX", "Luz · horizontal (%)", 0, 100, 50],
+  ["backgroundY", "Luz · vertical (%)", 0, 100, 25],
+  ["effectIntensity", "Intensidade do acabamento (%)", 0, 100, 65],
+  ["watermarkX", "Símbolo · horizontal (%)", 0, 100, 50],
+  ["watermarkY", "Símbolo · vertical (%)", 0, 100, 45],
+  ["watermarkSize", "Tamanho do símbolo (%)", 5, 100, 45],
+  ["watermarkRotate", "Rotação do símbolo (°)", -180, 180, 0],
+  ["badgeRotate", "Rotação do emblema (°)", -180, 180, 0],
+  ["badgeOpacity", "Intensidade do emblema (%)", 0, 100, 100],
+  ["badgeX", "Emblema · horizontal (%)", 0, 100, 50],
+  ["badgeY", "Emblema · vertical (%)", 0, 100, 94],
   ["countrySize", "Tamanho da bandeira", 60, 160, 100],
   ["badgeSize", "Tamanho do emblema", 60, 160, 100],
   ["ratingSize", "Tamanho do OVR", 60, 160, 100],
@@ -48,8 +72,14 @@ export const DESIGN_FIELDS = [
   ["playstyleY", "Playstyles · vertical (%)", 10, 75, 30],
 ];
 export const DESIGN_CHOICES = {
+  lighting: ["original", "on", "off"],
+  symbol: ["none", ...Object.keys(SPECIAL_CARD_DESIGNS)],
+  preserveOriginal: ["yes", "no"],
   background: Object.keys(STUDIO_BACKGROUNDS),
-  decoration: Object.keys(STUDIO_DECORATIONS),
+  decoration: [
+    ...Object.keys(STUDIO_DECORATIONS),
+    ...Object.keys(SPECIAL_CARD_DESIGNS).map((id) => "edition-" + id),
+  ],
   effect: Object.keys(STUDIO_EFFECTS),
   watermark: Object.keys(STUDIO_WATERMARKS),
   border: Object.keys(STUDIO_BORDERS),
@@ -70,6 +100,7 @@ export const DESIGN_CHOICES = {
     "notched",
     "crown",
     "arch",
+    ...Object.keys(SPECIAL_CARD_DESIGNS),
   ],
   fade: ["soft", "none"],
   statsColumns: ["4", "2"],
@@ -91,8 +122,19 @@ export function validCardDesign(value) {
     })
   );
 }
+export function cardTemplateDesign(template) {
+  const design = { ...template.design };
+  if (
+    design.background === undefined &&
+    ["diagonal", "radial"].includes(template.texture)
+  )
+    design.background = template.texture;
+  return design;
+}
 export function applyCardTemplate(card, template) {
-  if (!validCardDesign(template.design || {})) return;
+  const design = cardTemplateDesign(template);
+  if (!validCardDesign(design)) return;
+  if (design.preserveOriginal === "yes") return;
   card.classList.add("lab-designed");
   for (const [key, studio, variable] of [
     ["primary", "--studio-primary", "--card-a"],
@@ -107,7 +149,7 @@ export function applyCardTemplate(card, template) {
       card.style.setProperty(variable, value);
     }
   }
-  applyCardDesign(card, template.design || {});
+  applyCardDesign(card, design);
   card
     .querySelector(".card-surface")
     .insertAdjacentHTML(
@@ -116,7 +158,7 @@ export function applyCardTemplate(card, template) {
     );
 }
 export function applyCardDesign(card, design = {}) {
-  if (!validCardDesign(design)) return;
+  if (!validCardDesign(design) || design.preserveOriginal === "yes") return;
   const defaults = Object.fromEntries(
     DESIGN_FIELDS.map(([key, , , , value]) => [key, value]),
   );
@@ -128,6 +170,14 @@ export function applyCardDesign(card, design = {}) {
     statsColumns: "4",
     ...design,
   };
+  if (design.watermarkX === undefined) {
+    [d.watermarkX, d.watermarkY] = {
+      center: [50, 45],
+      top: [50, 20],
+      bottom: [50, 78],
+      corner: [78, 20],
+    }[d.watermarkPosition || "center"];
+  }
   const photo = card.querySelector(".card-photo"),
     image = photo.querySelector("img");
   Object.assign(photo.style, {
@@ -151,25 +201,27 @@ export function applyCardDesign(card, design = {}) {
   const caption = card.querySelector(".card-caption"),
     stats = card.querySelector(".card-stats"),
     rating = card.querySelector(".card-rating");
-  caption.style.top = "57%";
+  caption.style.top = `${d.nameY}%`;
   card.style.setProperty(
     "--name-background",
     `rgba(${d.nameBackgroundRed}, ${d.nameBackgroundGreen}, ${d.nameBackgroundBlue}, ${1 - d.nameBackgroundTransparency / 100})`,
   );
   caption.querySelector("h3").style.fontSize =
     `calc(var(--card-width) * ${(0.078 * d.nameSize) / 100})`;
-  stats.style.top = "67%";
+  stats.style.top = `${d.statsY}%`;
   stats
     .querySelectorAll("b")
     .forEach(
       (el) =>
         (el.style.fontSize = `calc(var(--card-width) * ${(0.079 * d.statsSize) / 100})`),
     );
-  stats.style.gridTemplateColumns = "repeat(4,1fr)";
-  rating.style.left = "10%";
-  rating.style.top = "12%";
+  stats.style.gridTemplateColumns = `repeat(${d.statsColumns},minmax(0,1fr))`;
+  rating.style.left = `${d.ratingX}%`;
+  rating.style.top = `${d.ratingY}%`;
   card
-    .querySelectorAll(".card-ornament,.special-ornament,.rare-rim-detail")
+    .querySelectorAll(
+      ".card-ornament,.special-ornament,.rare-rim-detail,.collection-art",
+    )
     .forEach((el) => (el.style.opacity = d.ornamentOpacity / 100));
   card.querySelector(".card-frame").style.opacity = d.borderOpacity / 100;
   const playstyles = card.querySelector(".card-playstyles");
@@ -197,9 +249,13 @@ export function applyCardDesign(card, design = {}) {
     ["positionFont", ".card-rating > small"],
   ]) {
     if (STUDIO_FONTS[d[key]])
-      card
-        .querySelectorAll(selector)
-        .forEach((el) => (el.style.fontFamily = STUDIO_FONTS[d[key]][1]));
+      card.querySelectorAll(selector).forEach((el) => {
+        el.style.fontFamily = STUDIO_FONTS[d[key]][1];
+        if (
+          ["dinRegular", "dinMedium", "dinBold", "posterama"].includes(d[key])
+        )
+          el.style.fontWeight = "400";
+      });
   }
   card.querySelector(".card-rating strong").style.fontSize =
     `calc(var(--card-width) * ${(0.19 * d.ratingSize) / 100})`;
@@ -213,10 +269,46 @@ export function applyCardDesign(card, design = {}) {
     `calc(var(--card-width) * ${(0.065 * d.positionSize) / 100})`;
   card.querySelector(".card-rating > span:last-child").style.fontSize =
     `calc(var(--card-width) * ${(0.065 * d.countrySize) / 100})`;
-  const badge = card.querySelector(".special-insignia");
-  if (badge)
-    badge.style.fontSize = `calc(var(--card-width) * ${(0.035 * d.badgeSize) / 100})`;
+  const badge = card.querySelector(".special-motif");
+  if (badge) positionCardSymbol(badge, d);
   const surface = card.querySelector(".card-surface");
+  card.dataset.studioBackground = d.background || "original";
+  card.dataset.studioLighting = d.lighting || "original";
+  card.style.setProperty("--studio-light-opacity", d.lightIntensity / 100);
+  card.style.setProperty("--studio-light-angle", `${d.lightAngle}deg`);
+  card.style.setProperty("--studio-light-softness", `${d.lightSoftness}%`);
+  card.style.setProperty("--studio-border-width", `${d.borderWidth}px`);
+  card.style.setProperty("--studio-border-inset", `${d.borderInset}%`);
+  card.style.setProperty("--studio-border-opacity", d.borderOpacity / 100);
+  if (d.lighting === "off")
+    card.style.filter = "drop-shadow(0 12px 14px #0004)";
+  if (d.lighting === "on") {
+    const angle = (d.lightAngle * Math.PI) / 180;
+    const distance = d.lightIntensity * 0.12;
+    const color = `color-mix(in srgb, var(--studio-glow) ${d.lightIntensity}%, transparent)`;
+    card.style.filter = `drop-shadow(0 12px 14px #0004) drop-shadow(${Math.round(Math.sin(angle) * distance)}px ${Math.round(-Math.cos(angle) * distance)}px ${d.lightSoftness * 0.3}px ${color})`;
+    surface.insertAdjacentHTML(
+      "beforeend",
+      '<div class="studio-light" aria-hidden="true"></div>',
+    );
+  }
+  if (SPECIAL_CARD_DESIGNS[d.symbol]?.motif) {
+    if (badge) badge.setAttribute("hidden", "");
+    surface.insertAdjacentHTML(
+      "beforeend",
+      cardSymbol(SPECIAL_CARD_DESIGNS[d.symbol].motif, "studio-symbol"),
+    );
+    positionCardSymbol(surface.querySelector(".studio-symbol"), d);
+  }
+  fitCardSymbols(card);
+  for (const [key, value] of Object.entries({
+    angle: `${d.backgroundAngle}deg`,
+    spread: `${d.backgroundSpread}%`,
+    x: `${d.backgroundX}%`,
+    y: `${d.backgroundY}%`,
+    intensity: d.effectIntensity / 100,
+  }))
+    card.style.setProperty(`--studio-${key}`, value);
   if (d.background && d.background !== "original") {
     surface.style.background = STUDIO_BACKGROUNDS[d.background][1];
     if (["dots", "halftone"].includes(d.background))
@@ -225,9 +317,15 @@ export function applyCardDesign(card, design = {}) {
   if (d.decoration && d.decoration !== "original") {
     card
       .querySelectorAll(
-        ".card-ornament,.special-ornament,.special-insignia,.rare-rim-detail",
+        ".card-ornament,.special-ornament,.special-motif,.rare-rim-detail,.collection-art",
       )
-      .forEach((el) => (el.hidden = true));
+      .forEach((el) => el.setAttribute("hidden", ""));
+    const source = SPECIAL_CARD_DESIGNS[d.decoration.replace(/^edition-/, "")];
+    if (source)
+      surface.insertAdjacentHTML(
+        "beforeend",
+        `<svg class="collection-art studio-edition-art" viewBox="0 0 100 100" preserveAspectRatio="none" style="opacity:${d.ornamentOpacity / 100}" aria-hidden="true">${source.art || source.motif}</svg>`,
+      );
     if (DECORATION_ART[d.decoration])
       surface.insertAdjacentHTML(
         "beforeend",
@@ -237,9 +335,9 @@ export function applyCardDesign(card, design = {}) {
   if (WATERMARK_ART[d.watermark])
     surface.insertAdjacentHTML(
       "beforeend",
-      `<svg class="studio-watermark watermark-${d.watermarkPosition || "center"}" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" style="opacity:${d.watermarkOpacity / 100}" aria-hidden="true">${WATERMARK_ART[d.watermark]}</svg>`,
+      `<svg class="studio-watermark watermark-${d.watermarkPosition || "center"}" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" style="opacity:${d.watermarkOpacity / 100};left:${d.watermarkX}%;top:${d.watermarkY}%;width:${d.watermarkSize}%;height:auto;aspect-ratio:1;transform:translate(-50%,-50%) rotate(${d.watermarkRotate}deg)" aria-hidden="true">${WATERMARK_ART[d.watermark]}</svg>`,
     );
-  card.dataset.studioEffect = d.effect || "none";
+  card.dataset.studioEffect = d.effect || "original";
   card.dataset.studioBorder = d.border || "original";
   const shapes = {
     ticket:
@@ -255,5 +353,15 @@ export function applyCardDesign(card, design = {}) {
     diamond: "polygon(15% 0,85% 0,100% 15%,95% 85%,50% 100%,5% 85%,0 15%)",
     rounded: "inset(0 round 12%)",
   };
+  if (SPECIAL_CARD_DESIGNS[d.shape]?.outline)
+    shapes[d.shape] = `polygon(${SPECIAL_CARD_DESIGNS[d.shape].outline
+      .split(" ")
+      .map((point) =>
+        point
+          .split(",")
+          .map((n) => n + "%")
+          .join(" "),
+      )
+      .join(",")})`;
   if (shapes[d.shape]) setSafeCardShape(card, shapes[d.shape]);
 }

@@ -825,6 +825,65 @@ label > :is(input, select, textarea) + small {
   display: grid;
   gap: 28px;
 }
+.activity-groups {
+  display: grid;
+  gap: 32px;
+  min-width: 0;
+}
+.activity-group {
+  min-width: 0;
+}
+.activity-group-head {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.activity-group-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.activity-group-identity > div {
+  min-width: 0;
+}
+.activity-group-identity p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: .82rem;
+  overflow-wrap: anywhere;
+}
+.activity-group-symbol {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.activity-group-head .pill {
+  font-variant-numeric: tabular-nums;
+}
+.activity-group .event-public-card h2 {
+  font-size: 1.15rem;
+}
+.dashboard-missions .activity-groups {
+  gap: 20px;
+}
+.dashboard-missions .activity-group-identity p {
+  display: none;
+}
+.dashboard-missions .activity-group-head {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+}
+.dashboard-missions .activity-group-symbol {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
 .mission-group-head {
   display: flex;
   align-items: center;
@@ -1022,6 +1081,7 @@ label > :is(input, select, textarea) + small {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
+  column-gap: 8px;
   font-size: 0.83rem;
 }
 .attribute-grid b {
@@ -1029,6 +1089,17 @@ label > :is(input, select, textarea) + small {
 }
 .attribute-grid .progress {
   margin-top: 9px;
+}
+@media (max-width: 360px) {
+  .attribute-grid > div {
+    row-gap: 6px;
+  }
+  .attribute-grid > div > span:first-child {
+    flex-basis: 100%;
+  }
+  .attribute-grid .progress {
+    margin-top: 3px;
+  }
 }
 .stats-metrics {
   grid-template-columns: repeat(4, 1fr);
@@ -1479,7 +1550,7 @@ legend {
 .team-panel h2 {
   font-size: 1.1rem;
 }
-.team-panel h3 {
+.team-panel > h3 {
   font-size: 0.75rem;
   color: var(--text-secondary);
   margin: 12px 0;

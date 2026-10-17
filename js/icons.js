@@ -1,19 +1,34 @@
 const paths = {
+  studioModels: "M6 3h12v18H6Z M3 6v12 M21 6v12 M9 7h6 M9 11h6 M9 16h3",
+  studioComposition:
+    "M3 3h7v7H3Z M14 3h7v7h-7Z M3 14h7v7H3Z M14 14h7v7h-7Z M12 2v20 M2 12h20",
+  studioMaterials: "m12 3 10 5-10 5L2 8Z M2 12l10 5 10-5 M2 16l10 5 10-5",
+  studioSymbols: "m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z",
+  studioType: "M3 5h12 M9 5v16 M5 21h8 M15 12h7 M18.5 12v9 M16 21h5",
+  studioLight:
+    "M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2 M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  studioOutline: "M8 3H3v5 M16 3h5v5 M21 16v5h-5 M8 21H3v-5 M7 7h10v10H7Z",
+  studioChevron: "m8 10 4 4 4-4",
+  share: "M12 16V3 m-4 4 4-4 4 4 M5 11H3v10h18V11h-2",
   ratingGames: "m12 2 3 6 6 1-4.5 4.5L18 20l-6-3-6 3 1.5-6.5L3 9l6-1Z M3 22h18",
   ratingAverage: "M3 20h18 M5 16l4-5 4 2 6-8 M16 5h3v3 M4 4h5 M6.5 2v4",
   ratingStreak: "m13 2-3 7 5-1-5 14 1-9-5 1Z M18 10l2-2 2 2 M18 15l2-2 2 2",
-  ratingWins: "M8 3h8v7a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 14v7 M8 21h8 m-4-16 1 2 2 .5-1.5 1.5.5 2-2-1-2 1 .5-2L9 7.5l2-.5Z",
+  ratingWins:
+    "M8 3h8v7a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 14v7 M8 21h8 m-4-16 1 2 2 .5-1.5 1.5.5 2-2-1-2 1 .5-2L9 7.5l2-.5Z",
   pause: "M8 5v14 M16 5v14",
   play: "m8 4 12 8-12 8Z",
-  goals: "M4 20V6h16v14 M4 10h16 M8 6v14 M16 6v14 M4 15h9 M20 15h-2 M17 17h.01 M20 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
-  assists: "M3 17h6a5 5 0 0 0 5-5V5 m-4 4 4-4 4 4 M3 7h4 M3 11h2 M18 17h3 M19.5 15.5v3",
+  goals:
+    "M4 20V6h16v14 M4 10h16 M8 6v14 M16 6v14 M4 15h9 M20 15h-2 M17 17h.01 M20 17a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  assists:
+    "M3 14V5h6l1 6 5 3 6 1v5H3Z M3 17h18 M6 20v2 M11 20v2 M17 20v2 M10 10l3-2 M13 12l3-2",
   appearances: "m8 3-5 4 3 4 2-2v12h8V9l2 2 3-4-5-4 M9 3a3 3 0 0 0 6 0",
   wins: "M8 3h8v8a4 4 0 0 1-8 0Z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 15v6 M8 21h8 m2-13 1.5 1.5L14 7",
   streak: "m13 2-2 7 5-2-1 5 4-1-7 11 1-8-5 2 2-7-4 1 7-8Z",
   unbeatenWins: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z m-4 10 3 3 5-6 M12 5v2",
   unbeatenGames: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z m-4 10 3 3 5-6",
   cleanSheets: "M12 2 3 6v6c0 6 9 10 9 10s9-4 9-10V6Z M9 9h6v7H9Z",
-  goalContributions: "M3 20V6h11v5 M3 10h11 M7 6v14 M3 15h7 M13 19h3a5 5 0 0 0 5-5v-3 m-3 3 3-3 2 3",
+  goalContributions:
+    "M3 20V6h11v5 M3 10h11 M7 6v14 M3 15h7 M13 19h3a5 5 0 0 0 5-5v-3 m-3 3 3-3 2 3",
   vote: "m9 3 8 5-5 8-8-5Z M4 14H2v7h20v-7h-5 M9 17h6",
   decision: "m14 3 7 7-3 3-7-7Z m0 6-7 7 M3 21h12 M5 18h8v3",
   rewardCard: "m8 2 4 2 4-2 5 4v12l-9 4-9-4V6Z M8 9h8 M8 13h8 M10 17h4",
@@ -56,8 +71,28 @@ export const trendArrow = (delta) =>
   `<svg class="trend-arrow${delta < 0 ? " trend-arrow-down" : ""}" viewBox="0 0 16 20" fill="none" aria-hidden="true" focusable="false"><path class="trend-arrow-body" d="M8 1.5 14.5 8H10v9.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-facet" d="M8 1.5V17.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-edge" d="m2 7.5 6-6 6 6"/></svg>`;
 
 export function eventIcon(event = {}) {
-  if (["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(event.objective?.metric) && event.method !== "vote" && event.method !== "admin") return event.objective.metric;
-  if (event.method === "vote" || (!event.method && event.kind === "vote")) return "vote";
+  if (
+    ["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(
+      event.objective?.metric,
+    ) &&
+    event.method !== "vote" &&
+    event.method !== "admin"
+  )
+    return event.objective.metric;
+  if (event.method === "vote" || (!event.method && event.kind === "vote"))
+    return "vote";
   if (event.method === "admin") return "decision";
-  return ({ games: "appearances", goals: "goals", assists: "assists", wins: "wins", winStreak: "streak", unbeatenWins: "unbeatenWins", unbeatenGames: "unbeatenGames", goalsAndAssists: "goalContributions", cleanSheets: "cleanSheets" })[event.objective?.metric] || "trophy";
+  return (
+    {
+      games: "appearances",
+      goals: "goals",
+      assists: "assists",
+      wins: "wins",
+      winStreak: "streak",
+      unbeatenWins: "unbeatenWins",
+      unbeatenGames: "unbeatenGames",
+      goalsAndAssists: "goalContributions",
+      cleanSheets: "cleanSheets",
+    }[event.objective?.metric] || "trophy"
+  );
 }

@@ -1,3 +1,4 @@
+import { homeCardPanel } from "./home-card.js";
 import { compareEventRarity } from "./event-rarity.js";
 import { mountHomePodium } from "./home-podium.js";
 import { applyPendingReads } from "./notification-read-queue.js";
@@ -48,7 +49,6 @@ import {
   ATTRIBUTES,
   calculateWeeklyTopPlayers,
   isoWeek,
-  average,
   themeName,
   THEMES,
 } from "./utils.js";
@@ -128,36 +128,113 @@ const ctx = {
     if (location.hash === hash) route();
     else location.hash = hash;
   },
+  detailCache: new Map(),
+  cached(key, load) {
+    const entry = this.detailCache.get(key);
+    if (entry && Date.now() - entry.time < 30000) return entry.promise;
+    const promise = Promise.resolve().then(load);
+    const record = { time: Date.now(), promise };
+    this.detailCache.set(key, record);
+    promise.catch(() => {
+      if (this.detailCache.get(key) === record) this.detailCache.delete(key);
+    });
+    return promise;
+  },
   async refresh() {
-    this.realUser = await loadProfile();
-    this.user = perspectiveUser(this.realUser);
-    syncPushIdentity(
-      this.realUser && !this.realUser.disabled ? this.realUser.uid : null,
-      (items) => {
-        if (!ctx.realUser || ctx.realUser.disabled) return;
-        ctx.notifications = applyPendingReads(ctx.realUser.uid, items).sort(
-          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
-        );
-        header();
-        if (location.hash === "#/notifications") notificationsPage(ctx);
-      },
-    ).catch(() => {});
-    if (!this.user || this.user.disabled) return;
-    if (["#/profile", `#/player/${this.user.uid}`].includes(location.hash)) {
-      await DB.callAdmin("ensureHistory", {}).catch(() => {});
+    this.detailCache.clear();
+    // Explicit refreshes after writes must observe the write, even if a
+    // navigation refresh was already in flight.
+    if (this.refreshTask) {
+      await this.refreshTask.catch(() => {});
     }
-    this.league = await loadLeague();
-    this.missions = await refreshMissionsForCurrentUser(this.user, this.league);
-    await this.refreshNotifications();
+    this.detailCache.clear();
+    return this.updateData();
+  },
+  updateData() {
+    if (this.refreshTask) return this.refreshTask;
+    const owner = currentUser?.uid;
+    const session = authSession;
+    const task = (async () => {
+      const realUser = await loadProfile();
+      if (currentUser?.uid !== owner || authSession !== session) return;
+      this.realUser = realUser;
+      this.user = perspectiveUser(realUser);
+      syncPushIdentity(
+        realUser && !realUser.disabled ? owner : null,
+        (items) => {
+          if (
+            currentUser?.uid !== owner ||
+            authSession !== session ||
+            !ctx.realUser ||
+            ctx.realUser.disabled
+          )
+            return;
+          ctx.notifications = applyPendingReads(owner, items).sort(
+            (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+          );
+          header();
+          if (location.hash === "#/notifications") notificationsPage(ctx);
+        },
+      ).catch(() => {});
+      if (!this.user || this.user.disabled) {
+        this.league = null;
+        return;
+      }
+      const league = await loadLeague();
+      if (currentUser?.uid !== owner || authSession !== session) return;
+      const missions = await refreshMissionsForCurrentUser(this.user, league);
+      if (currentUser?.uid !== owner || authSession !== session) return;
+      this.league = league;
+      this.missions = missions;
+      this.loadedAt = Date.now();
+      header();
+      // Notifications are auxiliary: never hold up the destination page.
+      this.refreshNotifications().catch(() => {});
+    })();
+    this.refreshTask = task;
+    task
+      .finally(() => {
+        if (this.refreshTask === task) this.refreshTask = null;
+      })
+      .catch(() => {});
+    return task;
   },
   async refreshNotifications() {
-    this.notifications = await refreshNotifications(
-      this.user.uid,
-      this.missions,
-    );
+    const owner = this.user.uid;
+    const session = authSession;
+    const items = await refreshNotifications(owner, this.missions);
+    if (currentUser?.uid !== owner || authSession !== session) return;
+    this.notifications = items;
     header();
+    if (location.hash === "#/notifications") notificationsPage(ctx);
   },
 };
+let authSession = 0;
+let historyOwner = null;
+let historyUpdatedAt = 0;
+let historyTask = null;
+function ensureOwnHistory() {
+  const owner = currentUser?.uid;
+  if (
+    !owner ||
+    (historyOwner === owner &&
+      (historyTask || Date.now() - historyUpdatedAt < 300000))
+  )
+    return;
+  historyOwner = owner;
+  const task = DB.callAdmin("ensureHistory", {})
+    .then(() => {
+      if (historyOwner === owner && currentUser?.uid === owner) {
+        historyUpdatedAt = Date.now();
+        ctx.detailCache.delete(`history:${owner}`);
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      if (historyTask === task) historyTask = null;
+    });
+  historyTask = task;
+}
 let routeNumber = 0;
 const playerFilters = { search: "", sort: "ovr", direction: "desc" };
 const searchable = (value) =>
@@ -223,47 +300,7 @@ function home() {
     }).format(new Date()),
   );
   ctx.render(
-    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div>${linkButton("#/ranking", "Ver classificação completa", "ghost", "trophy")}</div><div id="home-podium"></div></section><div class="dashboard-columns"><section class="panel my-card-panel"><div class="section-head"><h2>A minha carta</h2>${linkButton("#/profile", "Ver perfil", "ghost")}</div>${me ? card(me, { size: "md" }) : empty("Perfil em preparação")}<div class="metrics compact-metrics">${[
-      ["OVR", me?.hasCard ? me.ovr : "—"],
-      [
-        "Forma",
-        me?.aggregates.length
-          ? average(me.aggregates.slice(-5).map((g) => g.overall)).toFixed(1)
-          : "—",
-      ],
-      ["Jogos", me?.matchStats.played || 0],
-      ["Vitórias", me?.matchStats.wins || 0],
-      ["Golos", me?.matchStats.goals || 0],
-      ["Assistências", me?.matchStats.assists || 0],
-      ["% vitórias", `${me?.matchStats.winRate || 0}%`, true],
-      [
-        "Golos / jogo",
-        me?.matchStats.played
-          ? (me.matchStats.goals / me.matchStats.played).toLocaleString(
-              "pt-PT",
-              { maximumFractionDigits: 1 },
-            )
-          : "0",
-        true,
-      ],
-      [
-        "Assist. / jogo",
-        me?.matchStats.played
-          ? (me.matchStats.assists / me.matchStats.played).toLocaleString(
-              "pt-PT",
-              { maximumFractionDigits: 1 },
-            )
-          : "0",
-        true,
-      ],
-    ]
-      .map(
-        ([k, v, extra]) =>
-          `<div${extra ? ' class="dashboard-extra-stat"' : ""}><small>${k}</small><b>${v}</b></div>`,
-      )
-      .join(
-        "",
-      )}</div><div class="my-card-actions">${linkButton("#/statistics", "Comparar na liga", "secondary", "chart")}</div></section><section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${ctx.missions.length} ${ctx.missions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions, { grouped: false })}${ctx.missions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
+    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div></div><div id="home-podium"></div></section><div class="dashboard-columns">${homeCardPanel(me, ctx.league)}<section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${ctx.missions.length} ${ctx.missions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions)}${ctx.missions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
   );
   const main = document.querySelector("#main");
   main
@@ -337,16 +374,20 @@ function rankingPage() {
     `${pageHead(isoWeek(), "Ranking semanal", "Média dos jogos da semana com pelo menos 2 avaliações válidas; desempate por OVR. Sem avaliações, o OVR serve de referência.")}<div class="ranking-list">${players.map((p, i) => `<a class="ranking-row panel" href="#/player/${p.uid}"><span class="ranking-number">${i + 1}</span><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><div><b>${esc(p.displayName || p.username)}</b><small>${themeName(p.cardType)}</small></div><div><small>OVR</small><b>${p.ovr}</b></div><div><small>Forma semanal</small><b>${p.weeklyPerformance?.toFixed(2) || "—"}</b></div>${icon("arrow")}</a>`).join("") || empty("A classificação começa contigo", "Conclui a autoavaliação para criares a tua carta.", linkButton("#/missions", "Missões"), "trophy")}</div>`,
   );
 }
-async function route() {
+async function route({ cachedOnly = false } = {}) {
   const turn = ++routeNumber;
   const routeHash = location.hash;
   const isCurrent = () => turn === routeNumber && location.hash === routeHash;
+  let rendered = false;
+  let loadingTimer;
   const pageCtx = Object.create(ctx);
   pageCtx.render = (html) => {
     if (!isCurrent())
       throw Object.assign(new Error("Navigation superseded"), {
         code: "navigation-cancelled",
       });
+    rendered = true;
+    clearTimeout(loadingTimer);
     ctx.render(html);
   };
   pageCtx.cleanup = (dispose) => {
@@ -383,13 +424,49 @@ async function route() {
     syncPushIdentity(null).catch(() => {});
     ctx.user = null;
     ctx.realUser = null;
+    ctx.league = null;
+    ctx.missions = [];
+    ctx.notifications = [];
+    ctx.loadedAt = 0;
     header();
     authPage(ctx);
     return;
   }
-  setMain(skeleton());
+  const cached = ctx.league && ctx.realUser?.uid === currentUser.uid;
+  if (!cached) setMain(skeleton());
   try {
-    await ctx.refresh();
+    if (!cached) await ctx.updateData();
+    else {
+      ctx.user = perspectiveUser(ctx.realUser);
+      if (!cachedOnly && Date.now() - ctx.loadedAt > 30000) {
+        ctx
+          .updateData()
+          .then(() => {
+            if (
+              isCurrent() &&
+              (!ctx.user ||
+                ctx.user.disabled ||
+                (location.hash.startsWith("#/admin") &&
+                  ctx.user.role !== "admin"))
+            ) {
+              return route({ cachedOnly: true });
+            }
+            // Refresh read-only destinations without replacing a form in use.
+            if (
+              isCurrent() &&
+              !document.activeElement?.closest(
+                "#main input, #main select, #main textarea",
+              ) &&
+              /^#\/(?:players|ranking|statistics|missions|notifications)?$/.test(
+                location.hash,
+              )
+            ) {
+              route({ cachedOnly: true });
+            }
+          })
+          .catch(() => {});
+      }
+    }
     if (turn !== routeNumber) return;
     if (!ctx.user) {
       ctx.render(
@@ -404,10 +481,16 @@ async function route() {
       return;
     }
     header();
+    if (!ctx.user.disabled) ensureOwnHistory();
     if (ctx.user.disabled)
       return ctx.render(
         empty("Conta desativada", "Contacta o apoio da liga.", "", "shield"),
       );
+    // Cached destinations paint in the same turn. Only show a placeholder
+    // when a destination really needs an uncached network request.
+    loadingTimer = setTimeout(() => {
+      if (isCurrent() && !rendered) setMain(skeleton());
+    }, 150);
     const parts = (location.hash || "#/").slice(2).split("/").filter(Boolean);
     if (parts[0] === "admin" && ctx.user.role !== "admin")
       return ctx.render(
@@ -420,12 +503,6 @@ async function route() {
       );
     if (!parts.length) {
       home();
-      DB.callAdmin("ensureHistory", {}).catch((error) =>
-        toast(
-          "O histórico está temporariamente indisponível. Tenta novamente mais tarde.",
-          "error",
-        ),
-      );
     } else if (parts[0] === "players") playersPage();
     else if (parts[0] === "player") await playerPage(pageCtx, parts[1]);
     else if (parts[0] === "profile")
@@ -436,7 +513,7 @@ async function route() {
     else if (parts[0] === "game")
       parts[2] === "feedback"
         ? await feedbackPage(pageCtx, parts[1])
-        : await gamePage(pageCtx, parts[1]);
+        : await gamePage(pageCtx, parts[1], { edit: parts[2] === "edit" });
     else if (parts[0] === "events") await eventsPage(pageCtx);
     else if (parts[0] === "event") await eventPage(pageCtx, parts[1]);
     else if (parts[0] === "missions") {
@@ -484,13 +561,17 @@ async function route() {
     document.querySelector("#main").focus({ preventScroll: true });
   } catch (error) {
     if (isCurrent()) errorPage(error, route);
+  } finally {
+    clearTimeout(loadingTimer);
   }
 }
 window.addEventListener("hashchange", route);
-window.addEventListener("peladinhas-notification-read", event => {
+window.addEventListener("peladinhas-notification-read", (event) => {
   if (ctx.user?.uid !== event.detail.uid) return;
   const ids = new Set(event.detail.ids);
-  ctx.notifications = ctx.notifications.map(notice => ids.has(notice.id) ? { ...notice, read: true } : notice);
+  ctx.notifications = ctx.notifications.map((notice) =>
+    ids.has(notice.id) ? { ...notice, read: true } : notice,
+  );
   header();
 });
 window.addEventListener("peladinhas-push-read", async (event) => {
@@ -519,7 +600,17 @@ document.querySelector(".skip-link").addEventListener("click", (event) => {
 // Refresh league data and missions only on navigation, manual reload or auth changes.
 if (configured)
   startAuth(
-    () => route(),
+    () => {
+      authSession++;
+      ctx.refreshTask = null;
+      ctx.detailCache.clear();
+      ctx.league = null;
+      ctx.realUser = null;
+      ctx.user = null;
+      ctx.missions = [];
+      ctx.notifications = [];
+      return route();
+    },
     (error) => errorPage(error, route),
   );
 else route();

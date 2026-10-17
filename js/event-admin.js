@@ -1,3 +1,4 @@
+import { groupActivities } from "./activity-categories.js";
 import { EVENT_RARITIES, eventRarityId, rarityBadge } from "./event-rarity.js";
 import { CARD_POLICY } from "./card-achievements.js";
 import { DIFFICULTY_LABELS } from "./labels.js";
@@ -145,34 +146,37 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
   ]);
   let editing = null,
     activeArea = "event";
-  root.innerHTML = `<div class="event-workspace content-stack"><section class="event-command panel"><div><span class="eyebrow">CENTRO DE COMPETIÇÕES</span><h2>Eventos e missões</h2><p>Cria eventos e missões e acompanha as recompensas.</p></div><div class="actions"><button class="btn btn-primary" id="new-event">Criar evento</button><button class="btn btn-secondary" id="new-mission">Criar missão</button><a class="btn btn-ghost" href="#/events">Histórico público</a></div></section><div class="event-metrics">${["open", "scheduled", "review", "closed"].map((state) => `<article class="panel"><small>${statusName[state]}</small><strong>${events.filter((e) => e.status === state).length}</strong></article>`).join("")}</div><section class="panel"><div class="event-area-tabs" role="tablist" aria-label="Área de gestão"><button type="button" role="tab" id="events-tab" aria-selected="true">Eventos <span>Classificação e vencedores</span></button><button type="button" role="tab" id="missions-tab" aria-selected="false">Missões <span>Objetivos e progresso</span></button></div><p id="event-area-description" class="muted"></p><div class="event-toolbar"><label>Pesquisar<input id="event-search" type="search" placeholder="Nome do evento ou missão"></label><label>Estado<select id="event-status"><option value="">Todos</option>${options(Object.entries(statusName))}</select></label></div><div id="event-admin-list" class="event-grid"></div></section><section id="event-editor" class="panel event-builder" hidden></section></div>`;
+  root.innerHTML = `<div class="event-workspace content-stack"><section class="event-command panel"><div><span class="eyebrow">CENTRO DE COMPETIÇÕES</span><h2>Eventos e missões</h2><p>Cria eventos e missões e acompanha as recompensas.</p></div><div class="actions"><button class="btn btn-primary" id="new-event">Criar evento</button><button class="btn btn-secondary" id="new-mission">Criar missão</button><a class="btn btn-ghost" href="#/events">Histórico público</a></div></section><div class="event-metrics">${["open", "scheduled", "review", "closed"].map((state) => `<article class="panel"><small>${statusName[state]}</small><strong>${events.filter((e) => e.status === state).length}</strong></article>`).join("")}</div><section class="panel"><div class="event-area-tabs" role="tablist" aria-label="Área de gestão"><button type="button" role="tab" id="events-tab" aria-selected="true">Eventos <span>Classificação e vencedores</span></button><button type="button" role="tab" id="missions-tab" aria-selected="false">Missões <span>Objetivos e progresso</span></button></div><p id="event-area-description" class="muted"></p><div class="event-toolbar"><label>Pesquisar<input id="event-search" type="search" placeholder="Nome do evento ou missão"></label><label>Estado<select id="event-status"><option value="">Todos</option>${options(Object.entries(statusName))}</select></label></div><div id="event-admin-list" class="activity-groups"></div></section><section id="event-editor" class="panel event-builder" hidden></section></div>`;
   const list = root.querySelector("#event-admin-list"),
     editor = root.querySelector("#event-editor");
   const drawList = () => {
     const search = root.querySelector("#event-search").value.toLowerCase(),
       state = root.querySelector("#event-status").value,
       kind = activeArea;
+    const filtered = events
+      .filter(
+        (e) =>
+          e.title.toLowerCase().includes(search) &&
+          (!state || e.status === state) &&
+          (!kind ||
+            e.kind === kind ||
+            (kind === "event" && e.kind !== "mission")),
+      )
+      .sort(
+        (a, b) =>
+          eventEndMillis(b) - eventEndMillis(a) ||
+          a.title.localeCompare(b.title),
+      );
+    const eventCard = (event) =>
+      `<article class="event-management-card event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<div class="section-head"><span class="pill">${statusName[event.status]}</span><small>${event.kind === "mission" ? "Missão" : "Evento"}</small></div><h3>${esc(event.title)}</h3><p>${esc(event.description || "")}</p><small>${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small><div class="actions"><a class="btn btn-ghost" href="#/event/${esc(event.id)}">Consultar / auditar</a>${event.schemaVersion === 2 ? `<button class="btn btn-secondary" data-edit="${esc(event.id)}">Editar</button>` : ""}${event.schemaVersion === 2 ? `<button class="btn btn-ghost" data-action="duplicate" data-id="${esc(event.id)}">Duplicar</button>` : ""}${event.schemaVersion === 2 && event.status === "cancelled" ? `<button class="btn btn-danger" data-action="delete" data-id="${esc(event.id)}">Apagar ${event.kind === "mission" ? "missão" : "evento"}</button>` : ""}${event.status === "draft" ? `<button class="btn btn-primary" data-action="open" data-id="${esc(event.id)}">Publicar</button>` : ""}${event.status === "open" && event.kind !== "mission" ? `<button class="btn btn-secondary" data-action="prepare" data-id="${esc(event.id)}">Preparar resultados</button>` : ""}${["draft", "scheduled", "open", "review"].includes(event.status) ? `<button class="btn btn-ghost" data-action="cancel" data-id="${esc(event.id)}">Cancelar</button>` : ""}</div></article>`;
     list.innerHTML =
-      events
-        .filter(
-          (e) =>
-            e.title.toLowerCase().includes(search) &&
-            (!state || e.status === state) &&
-            (!kind ||
-              e.kind === kind ||
-              (kind === "event" && e.kind !== "mission")),
-        )
-        .sort(
-          (a, b) =>
-            eventEndMillis(b) - eventEndMillis(a) ||
-            a.title.localeCompare(b.title),
-        )
+      groupActivities(filtered)
         .map(
-          (event) =>
-            `<article class="event-management-card event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<div class="section-head"><span class="pill">${statusName[event.status]}</span><small>${event.kind === "mission" ? "Missão" : "Evento"}</small></div><h3>${esc(event.title)}</h3><p>${esc(event.description || "")}</p><small>${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small><div class="actions"><a class="btn btn-ghost" href="#/event/${esc(event.id)}">Consultar / auditar</a>${event.schemaVersion === 2 ? `<button class="btn btn-secondary" data-edit="${esc(event.id)}">Editar</button>` : ""}${event.schemaVersion === 2 ? `<button class="btn btn-ghost" data-action="duplicate" data-id="${esc(event.id)}">Duplicar</button>` : ""}${event.schemaVersion === 2 && event.status === "cancelled" ? `<button class="btn btn-danger" data-action="delete" data-id="${esc(event.id)}">Apagar ${event.kind === "mission" ? "missão" : "evento"}</button>` : ""}${event.status === "draft" ? `<button class="btn btn-primary" data-action="open" data-id="${esc(event.id)}">Publicar</button>` : ""}${event.status === "open" && event.kind !== "mission" ? `<button class="btn btn-secondary" data-action="prepare" data-id="${esc(event.id)}">Preparar resultados</button>` : ""}${["draft", "scheduled", "open", "review"].includes(event.status) ? `<button class="btn btn-ghost" data-action="cancel" data-id="${esc(event.id)}">Cancelar</button>` : ""}</div></article>`,
+          (group) =>
+            `<section class="activity-group" data-activity-category="${group.id}" aria-label="${esc(group.title)}"><div class="mission-group-head activity-group-head"><div class="activity-group-identity"><span class="activity-group-symbol">${icon(group.icon)}</span><div><h2>${esc(group.title)}</h2><p>${esc(group.description)}</p></div></div><span class="pill">${group.items.length}</span></div><div class="event-grid">${group.items.map(eventCard).join("")}</div></section>`,
         )
         .join("") ||
-      `<p class="muted">Não há ${activeArea === "mission" ? "missões" : "eventos"} com estes filtros.</p>`;
+      '<p class="muted" role="status">Nenhum desafio encontrado. Experimenta outros filtros.</p>';
   };
   const selectArea = (area) => {
     activeArea = area;
@@ -295,7 +299,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     )}</select></label><label>Raridade visual<select name="rarity">${options(
       Object.entries(EVENT_RARITIES).map(([id, rarity]) => [id, rarity.name]),
       eventRarityId(event),
-    )}</select><small class="muted">Apenas visual. Sem efeito nas recompensas ou dificuldade.</small></label><div class="event-rarity-preview event-rarity-surface" id="event-rarity-preview" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}</div><label class="field-wide">Descrição<textarea name="description" maxlength="2000">${esc(event.description || "")}</textarea></label><div class="field-wide"><label for="event-image-url">Imagem HTTPS</label><div class="event-image-input"><input id="event-image-url" name="image" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="1000" placeholder="https://exemplo.pt/imagem.jpg" value="${esc(event.image || "")}"><button id="paste-event-image" type="button" class="btn btn-secondary">Colar link</button></div><small class="muted">Cola o endereço da imagem com Ctrl+V ou usa o botão.</small></div><label class="field-wide">Regras e condições<textarea name="rules" maxlength="2000">${esc(event.rules || "")}</textarea></label></div></fieldset><fieldset class="event-form-section"><legend>Datas e participantes</legend><div class="form-grid"><label>Início (Lisboa)<input name="startsAt" type="datetime-local" required value="${wallDate(start)}"></label><label class="check-label"><input name="indefinite" type="checkbox" ${event.indefinite ? "checked" : ""}>Sem prazo de conclusão</label><label>Fim (Lisboa)<input name="endsAt" type="datetime-local" required value="${wallDate(end)}"></label><label>Início da votação<input name="votingStartsAt" type="datetime-local" value="${event.votingStartsAt ? wallDate(event.votingStartsAt) : ""}"></label><label>Fim da votação<input name="votingEndsAt" type="datetime-local" value="${event.votingEndsAt ? wallDate(event.votingEndsAt) : ""}"></label><label>Participantes<select name="audience">${options(
+    )}</select><small class="muted">Apenas visual. Sem efeito nas recompensas ou dificuldade.</small></label><div class="event-rarity-preview event-rarity-surface" id="event-rarity-preview" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}</div><label class="field-wide">Descrição<textarea name="description" maxlength="2000">${esc(event.description || "")}</textarea></label><div class="field-wide"><label for="event-image-url">Imagem HTTPS</label><div class="event-image-input"><input id="event-image-url" name="image" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="1000" placeholder="https://exemplo.pt/imagem.jpg" value="${esc(event.image || "")}"><button id="paste-event-image" type="button" class="btn btn-secondary">Colar link</button></div><small class="muted">Cola o endereço da imagem com Ctrl+V ou usa o botão.</small></div><label class="field-wide">Regras e condições<textarea name="rules" maxlength="2000">${esc(event.rules || "")}</textarea></label></div></fieldset><fieldset class="event-form-section"><legend>Datas e participantes</legend><div class="form-grid"><label>Início<input name="startsAt" type="datetime-local" required value="${wallDate(start)}"></label><label class="check-label"><input name="indefinite" type="checkbox" ${event.indefinite ? "checked" : ""}>Sem prazo de conclusão</label><label>Fim<input name="endsAt" type="datetime-local" required value="${wallDate(end)}"></label><label>Início da votação<input name="votingStartsAt" type="datetime-local" value="${event.votingStartsAt ? wallDate(event.votingStartsAt) : ""}"></label><label>Fim da votação<input name="votingEndsAt" type="datetime-local" value="${event.votingEndsAt ? wallDate(event.votingEndsAt) : ""}"></label><label>Participantes<select name="audience">${options(
       [
         ["all", "Todos os membros"],
         ["game", "Participantes de um jogo"],

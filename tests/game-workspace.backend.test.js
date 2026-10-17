@@ -1,0 +1,37 @@
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import {getFirestore, Timestamp} from 'firebase-admin/firestore';
+import {renameGameTeam, ensureGameCards} from '../functions/index.js';
+import {cardWeek} from '../js/card-week.js';
+const db = getFirestore();
+test('team names persist, captains are scoped, closed games require admin', async () => {
+  const gameId = 'workspace-team-names';
+  for (const [uid, role] of [['slot-admin','admin'],['slot-captain','member'],['slot-other','member']]) await db.doc(`users/${uid}`).set({role});
+  const ref=db.doc(`games/${gameId}`);
+  await ref.set({status:'open',teamA:{starters:['slot-captain'],bench:[]},teamB:{starters:['slot-other'],bench:[]}});
+  const call=(uid,side,name) => renameGameTeam.run({auth:{uid},data:{gameId,side,name}});
+  await call('slot-captain','teamA','Os da casa');
+  assert.equal((await ref.get()).data().teamNames.teamA,'Os da casa');
+  await assert.rejects(call('slot-captain','teamB','Outra'));
+  await ref.update({status:'closed'});
+  await assert.rejects(call('slot-captain','teamA','Outra'));
+  await call('slot-admin','teamA','Campeoes');
+  await assert.rejects(call('slot-admin','teamA',' '.repeat(4)));
+  assert.equal((await ref.get()).data().teamNames.teamA,'Campeoes');
+});
+test('match cards use scheduled week and remain immutable across repeat visits', async () => {
+  const gameId='workspace-card-snapshot', uid='snapshot-player', date=new Date('2026-09-18T19:00:00Z'), week=cardWeek(date).weekId;
+  await db.doc('users/snapshot-viewer').set({role:'member'});
+  const history=db.doc(`users/${uid}/cardHistory/${week}`);
+  await history.set({ovr:81,stats:{PAC:80},baseCard:'gold-common',appearance:{displayName:'Nome historico',photoURL:'old.webp'},primaryPosition:'AV'});
+  const ref=db.doc(`games/${gameId}`);
+  await ref.set({status:'closed',scheduledAt:Timestamp.fromDate(date),teamA:{starters:[uid],bench:[]},teamB:{starters:['missing-card'],bench:[]}});
+  const read=() => ensureGameCards.run({auth:{uid:'snapshot-viewer'},data:{gameId}});
+  const first=await read();
+  assert.equal(first.cardWeekId,week);
+  assert.equal(first.playerCards[uid].ovr,81);
+  assert.equal(first.playerCards[uid].displayName,'Nome historico');
+  assert.equal(first.playerCards['missing-card'].hasCard,false);
+  await history.update({ovr:99});
+  assert.deepEqual(await read(),first);
+});
