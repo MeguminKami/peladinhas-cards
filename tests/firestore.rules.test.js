@@ -19,6 +19,20 @@ import {
   Timestamp,
 } from "firebase/firestore";
 let env;
+test("personal paths and attempts are private and progression is server-only", async () => {
+  await env.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), "pathStates/joao"), { uid: "joao", nodes: {}, active: null });
+    await setDoc(doc(c.firestore(), "pathStates/joao/attempts/test"), { status: "success" });
+    await setDoc(doc(c.firestore(), "pathStates/joao/audit/test"), { action: "accept" });
+  });
+  await assertSucceeds(getDoc(doc(signed("joao"), "pathStates/joao")));
+  await assertFails(getDoc(doc(signed("pedro"), "pathStates/joao")));
+  await assertSucceeds(getDoc(doc(signed("boss"), "pathStates/joao")));
+  await assertSucceeds(getDoc(doc(signed("joao"), "pathStates/joao/attempts/test")));
+  await assertFails(getDoc(doc(signed("joao"), "pathStates/joao/audit/test")));
+  await assertFails(setDoc(doc(signed("joao"), "pathStates/joao"), { nodes: { forged: { progress: 100 } } }));
+  await assertFails(setDoc(doc(signed("boss"), "pathStates/joao/attempts/forged"), { status: "success" }));
+});
 test("system policies are server-only; read-only and rating switches protect direct writes", async () => {
   const config=structuredClone(DEFAULT_POLICY);
   config.features.mode="readOnly";
@@ -29,7 +43,7 @@ test("system policies are server-only; read-only and rating switches protect dir
   await assertFails(setDoc(doc(signed("joao"),"initialRatings/joao"),{uid:"joao",ratings20:{pace:10},completed:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
   config.features.mode="normal";config.features.ratings=false;
   await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),"settings/system"),{revision:2,timeline:[{version:2,effectiveMillis:0,effectiveAt:"1970-01-01",config}]}));
-  await assertSucceeds(updateDoc(doc(signed("boss"),"games/open"),{title:"Disponível",updatedAt:serverTimestamp()}));
+  await assertFails(updateDoc(doc(signed("boss"),"games/open"),{title:"Disponível",updatedAt:serverTimestamp()}));
   await assertFails(setDoc(doc(signed("joao"),"initialRatings/joao"),{uid:"joao",ratings20:{pace:10},completed:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
 });
 test("restricted admins cannot write capabilities directly or read private drafts",async()=> {
@@ -162,7 +176,7 @@ test("coleções e escolhas são públicas na liga e só o servidor pode atribui
   }
 });
 
-test("posições no jogo aceitam apenas posições válidas de participantes", async () => {
+test("posições no jogo são escritas apenas pelas Functions", async () => {
   const value = {
     ...game("draft"),
     creatorId: "boss",
@@ -170,7 +184,7 @@ test("posições no jogo aceitam apenas posições válidas de participantes", a
     updatedAt: serverTimestamp(),
     positions: { pedro: "GR", joao: "AV" },
   };
-  await assertSucceeds(
+  await assertFails(
     setDoc(doc(signed("boss"), "games/positions-valid"), value),
   );
   await assertFails(
@@ -285,8 +299,8 @@ const vote = (raterId = "pedro", targetId = "joao", submitted = true) => ({
   updatedAt: serverTimestamp(),
   submittedAt: submitted ? serverTimestamp() : null,
 });
-test("feedback só de participantes, com autoavaliação, IDs únicos", async () => {
-  await assertSucceeds(
+test("feedback do jogo não pode ser submetido diretamente pelo navegador", async () => {
+  await assertFails(
     setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), vote()),
   );
   await assertFails(
@@ -295,7 +309,7 @@ test("feedback só de participantes, com autoavaliação, IDs únicos", async ()
       vote("outsider"),
     ),
   );
-  await assertSucceeds(
+  await assertFails(
     setDoc(
       doc(signed("pedro"), "games/closed/feedback/pedro_pedro"),
       vote("pedro", "pedro"),
@@ -305,13 +319,13 @@ test("feedback só de participantes, com autoavaliação, IDs únicos", async ()
     setDoc(doc(signed("pedro"), "games/closed/feedback/duplicado"), vote()),
   );
 });
-test("rascunhos parciais e impossibilidade de alterar submissão", async () => {
+test("rascunhos e submissões de feedback exigem a função e o histórico atómico", async () => {
   const v = vote("pedro", "joao", false);
   v.ratings = { overall: 4 };
-  await assertSucceeds(
+  await assertFails(
     setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), v),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), {
       ratings: vote().ratings,
       submitted: true,
@@ -319,7 +333,7 @@ test("rascunhos parciais e impossibilidade de alterar submissão", async () => {
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), {
       ratings: vote().ratings,
       updatedAt: serverTimestamp(),
@@ -327,9 +341,7 @@ test("rascunhos parciais e impossibilidade de alterar submissão", async () => {
   );
 });
 test("raw privados: query filtrada funciona, outra identidade não", async () => {
-  await assertSucceeds(
-    setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), vote()),
-  );
+  await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), "games/closed/feedback/pedro_joao"), vote()));
   await assertSucceeds(
     getDocs(
       query(
@@ -345,14 +357,14 @@ test("raw privados: query filtrada funciona, outra identidade não", async () =>
     getDocs(collection(signed("boss"), "games/closed/feedback")),
   );
 });
-test("jogo fechado é imutável para criador; limites e duplicados", async () => {
+test("jogos abertos e fechados rejeitam todas as alterações diretas", async () => {
   await assertFails(
     updateDoc(doc(signed("pedro"), "games/closed"), {
       title: "Outra",
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("boss"), "games/closed"), {
       title: "Correcção",
       updatedAt: serverTimestamp(),
@@ -529,7 +541,7 @@ test("equilíbrio de jogos: membros leem, ninguém altera a referência pelo bro
   );
 });
 
-test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", async () => {
+test("DBS usa Functions e não pode editar jogos diretamente", async () => {
   await assertFails(
     updateDoc(doc(signed("joao"), "users/joao"), {
       role: "dbs",
@@ -545,7 +557,7 @@ test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", 
   await env.withSecurityRulesDisabled(async context => {
     await updateDoc(doc(context.firestore(), "users/joao"), {role:"dbs"});
   });
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/open"), {
       title: "Editado pelo DBS",
       notes: "Equipas revistas",
@@ -567,7 +579,7 @@ test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", 
   await env.withSecurityRulesDisabled(async (c) => {
     await setDoc(doc(c.firestore(), "games/draft"), game("draft"));
   });
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/draft"), {
       title: "Não permitido",
       updatedAt: serverTimestamp(),
@@ -585,7 +597,7 @@ test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", 
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/open"), {
       status: "closed",
       closedAt: serverTimestamp(),
@@ -619,13 +631,13 @@ test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", 
   );
 });
 
-test("golos e assistências: só participantes da equipa e totais até ao resultado", async () => {
+test("golos e assistências exigem validação autoritativa na função", async () => {
   const ref = doc(signed("boss"), "games/open");
   const valid = {
     teamA: { goals: ["pedro", "pedro"], assists: ["pedro"] },
     teamB: { goals: [], assists: [] },
   };
-  await assertSucceeds(
+  await assertFails(
     updateDoc(ref, { performance: valid, updatedAt: serverTimestamp() }),
   );
   for (const performance of [
@@ -645,7 +657,7 @@ test("golos e assistências: só participantes da equipa e totais até ao result
     }),
   );
 });
-test("atitude obrigatória em novas avaliações e dentro de 0 a 5", async () => {
+test("avaliações com atitude também exigem submissão pela função", async () => {
   const ref = doc(signed("pedro"), "games/closed/feedback/pedro_joao");
   const missing = vote();
   delete missing.ratings.attitude;
@@ -657,7 +669,7 @@ test("atitude obrigatória em novas avaliações e dentro de 0 a 5", async () =>
   }
   const value = vote();
   value.ratings.attitude = 0;
-  await assertSucceeds(setDoc(ref, value));
+  await assertFails(setDoc(ref, value));
 });
 
 test("cartas semanais: leitura da liga, bloqueio e conteúdo só escritos pelo servidor", async () => {
@@ -774,7 +786,7 @@ test("eventos: rascunhos privados, votos privados e recompensas apenas por funç
   }
 });
 
-test("ciclo de jogos: só DBS/admin, rascunho aberto e fecho irreversível", async () => {
+test("ciclo de jogos não admite transições diretas nem por DBS", async () => {
   await assertFails(
     updateDoc(doc(signed("boss"), "users/joao"), {
       role: "dbs",
@@ -790,7 +802,7 @@ test("ciclo de jogos: só DBS/admin, rascunho aberto e fecho irreversível", asy
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
-  await assertSucceeds(setDoc(doc(signed("joao"), "games/cycle"), draft));
+  await assertFails(setDoc(doc(signed("joao"), "games/cycle"), draft));
   await assertFails(
     setDoc(doc(signed("pedro"), "games/member-draft"), {
       ...draft,
@@ -805,25 +817,25 @@ test("ciclo de jogos: só DBS/admin, rascunho aberto e fecho irreversível", asy
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/cycle"), {
       status: "open",
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/cycle"), {
       status: "draft",
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/cycle"), {
       status: "open",
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("joao"), "games/cycle"), {
       status: "closed",
       closedBy: "joao",
@@ -903,9 +915,9 @@ test("locked missions cannot be read directly by a member", async () => {
   await assertSucceeds(getDoc(doc(signed("boss"), "events/locked-mission")));
 });
 
-test("admin corrige jogo fechado preservando estado e metadados de fecho", async () => {
+test("admin corrige jogo fechado apenas pela função", async () => {
   const ref = doc(signed("boss"), "games/closed");
-  await assertSucceeds(
+  await assertFails(
     updateDoc(ref, {
       score: { teamA: 3, teamB: 1 },
       performance: {
@@ -978,7 +990,7 @@ test("avaliações: edição dentro de 7 dias, sem reiniciar o prazo", async () 
       ["games/closed/feedback/pedro_joao", { ratings: vote().ratings }],
     ]) {
       const ref = doc(signed("pedro"), path);
-      await (days < 7 ? assertSucceeds : assertFails)(
+      await (days < 7 && !path.startsWith("games/") ? assertSucceeds : assertFails)(
         updateDoc(ref, { ...change, updatedAt: serverTimestamp() }),
       );
       await assertFails(
@@ -1069,7 +1081,7 @@ test("match names and historical cards can only be written by the server", async
     });
   });
   const ref = doc(signed("boss"), "games/open");
-  await assertSucceeds(
+  await assertFails(
     updateDoc(ref, { title: "Novo titulo", updatedAt: serverTimestamp() }),
   );
   for (const change of [
@@ -1083,8 +1095,8 @@ test("match names and historical cards can only be written by the server", async
   }
 });
 
-test("self N/A prevents numeric goalkeeper ratings from peers while other dimensions remain writable", async () => {
-  await assertSucceeds(
+test("self and peer goalkeeper feedback both require the revision-writing function", async () => {
+  await assertFails(
     setDoc(
       doc(signed("joao"), "games/closed/feedback/joao_joao"),
       vote("joao", "joao"),
@@ -1096,7 +1108,22 @@ test("self N/A prevents numeric goalkeeper ratings from peers while other dimens
     setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), peer),
   );
   peer.ratings.goalkeeping = null;
-  await assertSucceeds(
+  await assertFails(
     setDoc(doc(signed("pedro"), "games/closed/feedback/pedro_joao"), peer),
   );
+});
+
+test("game singleton and immutable vote revisions are inaccessible to browser roles",async()=>{
+  await env.withSecurityRulesDisabled(async c=>{
+    await updateDoc(doc(c.firestore(),"users/joao"),{role:"dbs"});
+    await setDoc(doc(c.firestore(),"gameFlow/open"),{gameId:"open"});
+    await setDoc(doc(c.firestore(),"games/closed/pathVoteRevisions/private"),{vote:{raterId:"pedro",targetId:"joao",ratings:{attack:4}}});
+  });
+  for(const uid of ["joao","pedro","boss"]){
+    for(const path of ["gameFlow/open","games/closed/pathVoteRevisions/private"]){
+      await assertFails(getDoc(doc(signed(uid),path)));
+      await assertFails(setDoc(doc(signed(uid),path),{forged:true}));
+    }
+    await assertFails(setDoc(doc(signed(uid),`games/forged-${uid}`),game("draft")));
+  }
 });

@@ -23,6 +23,8 @@ run(process.execPath, [
   "tests/events.test.js",
   "tests/match-time.test.js",
   "tests/push-config.test.js",
+  "tests/paths.test.js",
+  "tests/path-window.test.js",
 ]);
 run(process.execPath, [
   "node_modules/firebase-tools/lib/bin/firebase.js",

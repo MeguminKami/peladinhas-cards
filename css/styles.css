@@ -447,13 +447,13 @@ button:disabled {
   border-bottom: 1px solid var(--border);
 }
 .navbar {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: auto;
   min-height: 80px;
   padding: 0 32px;
   display: flex;
   align-items: center;
-  gap: 36px;
+  gap: 24px;
 }
 .brand {
   display: flex;

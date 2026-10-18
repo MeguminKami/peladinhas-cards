@@ -1,6 +1,12 @@
 // Keep navigation and grouping consistent across missions and the event calendar.
 export const ACTIVITY_CATEGORIES = [
   {
+    id: "path",
+    title: "Escolhe o teu caminho!",
+    description: "Uma escolha. O próximo jogo. A tua evolução.",
+    icon: "path",
+  },
+  {
     id: "competition",
     title: "Competições",
     description: "Disputa os lugares e acompanha os teus adversários.",
@@ -33,6 +39,7 @@ export const ACTIVITY_CATEGORIES = [
 ];
 
 export function activityCategory(item) {
+  if (item.type === "PLAYER_PATH") return "path";
   if (
     ["GAME_FEEDBACK", "RATE_NEW_PLAYER", "SELF_INITIAL_RATING"].includes(
       item.type,

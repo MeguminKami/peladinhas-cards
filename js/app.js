@@ -45,6 +45,8 @@ import {
 } from "./notifications.js";
 import { authPage } from "./onboarding.js";
 import { playerPage, editProfile } from "./profile.js";
+import { pathsPage } from "./paths.js";
+import { pathAdminPage } from "./path-admin.js";
 import { gamesPage, gamePage, gameRows } from "./games.js";
 import { initialMission, feedbackPage } from "./ratings.js";
 import { adminPage, cardLab, adminEdit, rawRatings } from "./admin.js";
@@ -525,7 +527,8 @@ async function route({ cachedOnly = false } = {}) {
     else if (parts[0] === "events") await eventsPage(pageCtx);
     else if (parts[0] === "event") await eventPage(pageCtx, parts[1]);
     else if (parts[0] === "missions") {
-      if (parts[1] === "self") await initialMission(pageCtx);
+      if (parts[1] === "path") await pathsPage(pageCtx);
+      else if (parts[1] === "self") await initialMission(pageCtx);
       else if (parts[1] === "new") await initialMission(pageCtx, parts[2]);
       else
         ctx.render(
@@ -536,7 +539,8 @@ async function route({ cachedOnly = false } = {}) {
     else if (parts[0] === "ranking") rankingPage();
     else if (parts[0] === "statistics") statisticsPage(pageCtx);
     else if (parts[0] === "admin") {
-      if (parts[1] === "ovr") await ovrAuditPage(pageCtx, parts[2], parts[3]);
+      if (parts[1] === "paths") await pathAdminPage(pageCtx);
+      else if (parts[1] === "ovr") await ovrAuditPage(pageCtx, parts[2], parts[3]);
       else if (parts[1] === "card-types")
         await adminCardsPage(pageCtx, parts[2]);
       else if (parts[1] === "card-photo")

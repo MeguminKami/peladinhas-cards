@@ -1,4 +1,6 @@
+import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { maintenanceFunctions } from "./maintenance.js";
+import { pathFunctions } from "./paths.js";
 import { policyAt, budgetWindow, isQuietHour } from "../js/system-policy.js";
 import { policyCall, policySchedule, policyWritten, policyCreated } from "./policy-runtime.js";
 import { notificationFunctions } from "./notifications.js";
@@ -1247,10 +1249,8 @@ export const correctRating = policyCall("correctRating",async (request) => {
       adminId: request.auth.uid,
       createdAt: FieldValue.serverTimestamp(),
     });
-    tx.update(ref, {
-      [kind === "game" ? "ratings" : "ratings20"]: ratings,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    if (kind === "game") writeFeedbackRevision(tx,ref,previous,{...previous,ratings,updatedAt:FieldValue.serverTimestamp()});
+    else tx.update(ref,{ratings20:ratings,updatedAt:FieldValue.serverTimestamp()});
   });
   return { ok: true };
 });
@@ -1395,6 +1395,10 @@ export const {
   listEvents,
   claimMission,
 } = eventFunctions(buildHistory);
+
+const pathEndpoints = pathFunctions(buildHistory);
+export const { getPath, pathAction, onPathGame, onPathSummary, settlePaths } = pathEndpoints;
+export const { gameAction, feedbackAction } = gameFlowFunctions(pathEndpoints.syncGame);
 
 export const {
   onGameNotifications,

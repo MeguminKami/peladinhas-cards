@@ -79,7 +79,7 @@ try {
       score: { teamA: 2, teamB: 1 },
     };
     document.head.innerHTML +=
-      '<link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/cards.css"><link rel="stylesheet" href="/css/responsive.css"><link rel="stylesheet" href="/css/experience.css"><link rel="stylesheet" href="/css/postmatch.css">';
+      '<link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/cards.css"><link rel="stylesheet" href="/css/responsive.css"><link rel="stylesheet" href="/css/experience.css"><link rel="stylesheet" href="/css/postmatch.css"><link rel="stylesheet" href="/css/paths.css">';
     const players = [
       {
         uid: "one",
@@ -104,12 +104,17 @@ try {
         summaries: [
           {
             id: game.id,
-            players: { one: { overall: 4.25, attack: 4, goalkeeping: 2 }, two: { overall: 4 } },
+            players: {
+              one: { overall: 4.25, attack: 4, goalkeeping: 2 },
+              two: { overall: 4 },
+            },
           },
         ],
       },
       cleanup: () => {},
-      render: (html) => (document.body.innerHTML = html + '<div id="modal-root"></div><div id="toast-root"></div>'),
+      render: (html) =>
+        (document.body.innerHTML =
+          html + '<div id="modal-root"></div><div id="toast-root"></div>'),
     };
     window.__positionChecks = [
       matchPositions(game, players),
@@ -169,63 +174,125 @@ try {
   await page.evaluate(async () => {
     const ctx = window.__gameLayoutContext;
     ctx.league.games[0].status = "open";
-    for (let i=3;i<=13;i++) ctx.league.players.push({uid:`slot-${i}`,displayName:`Jogador com nome bastante longo ${i}`,primaryPosition:"MED",hasCard:true,ovr:70+i});
-    await (await import("/js/games.js")).gamePage(ctx,ctx.league.games[0].id);
+    for (let i = 3; i <= 13; i++)
+      ctx.league.players.push({
+        uid: `slot-${i}`,
+        displayName: `Jogador com nome bastante longo ${i}`,
+        primaryPosition: "MED",
+        hasCard: true,
+        ovr: 70 + i,
+      });
+    await (await import("/js/games.js")).gamePage(ctx, ctx.league.games[0].id);
   });
-  assert.equal(await page.locator(".available,[draggable],.drop-zone").count(),0);
-  assert.equal(await page.locator('.team-a .team-slot').count(),5);
-  await page.locator('.team-a .team-slot').last().click();
-  for (const width of [1440,768,390,320]) {
-    await page.setViewportSize({width,height:1000});
-    await page.locator('.slot-choice .football-card').first().waitFor({state:'visible'});
+  assert.equal(
+    await page.locator(".available,[draggable],.drop-zone").count(),
+    0,
+  );
+  assert.equal(await page.locator(".team-a .team-slot").count(), 5);
+  await page.locator(".team-a .team-slot").last().click();
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page
+      .locator(".slot-choice .football-card")
+      .first()
+      .waitFor({ state: "visible" });
     await page.waitForTimeout(300);
-    const size = await page.locator('.slot-choice .football-card').first().boundingBox();
-    assert.ok(size.width >= 63 && size.height >= 94, `Picker card too small at ${width}`);
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+1),false);
-    await page.screenshot({path:`test-results/game-picker-${width}.png`,fullPage:true});
+    const size = await page
+      .locator(".slot-choice .football-card")
+      .first()
+      .boundingBox();
+    assert.ok(
+      size.width >= 63 && size.height >= 94,
+      `Picker card too small at ${width}`,
+    );
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+    );
+    await page.screenshot({
+      path: `test-results/game-picker-${width}.png`,
+      fullPage: true,
+    });
   }
-  await page.keyboard.press('Escape');
-  for (let i=3;i<=8;i++) {
-    await page.locator('.team-a .team-slot').last().click();
-    await page.locator('#slot-search').fill(`longo ${i}`);
+  await page.keyboard.press("Escape");
+  for (let i = 3; i <= 8; i++) {
+    await page.locator(".team-a .team-slot").last().click();
+    await page.locator("#slot-search").fill(`longo ${i}`);
     await page.locator(`[data-pick="slot-${i}"]`).click();
   }
-  assert.equal(await page.locator('.team-a .team-chip').count(),7);
-  assert.equal(await page.locator('.team-a .team-slot').count(),1);
-  await page.locator('.team-a [data-remove]').first().click();
-  assert.equal(await page.locator('.team-a .team-chip').count(),6);
-  await page.locator('#auto-teams').click();
-  assert.equal(await page.locator('.draw-help,[draggable]').count(),0);
-  await page.locator('#select-all-players').click();
-  assert.ok(await page.locator('#confirm-auto-teams').isEnabled());
-  for (const width of [1440,768,390,320]) {
-    await page.setViewportSize({width,height:1000});
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+1),false,`Draw overflow at ${width}`);
-    await page.screenshot({path:`test-results/game-draw-${width}.png`,fullPage:true});
+  assert.equal(await page.locator(".team-a .team-chip").count(), 7);
+  assert.equal(await page.locator(".team-a .team-slot").count(), 1);
+  await page.locator(".team-a [data-remove]").first().click();
+  assert.equal(await page.locator(".team-a .team-chip").count(), 6);
+  await page.locator("#auto-teams").click();
+  assert.equal(await page.locator(".draw-help,[draggable]").count(), 0);
+  await page.locator("#select-all-players").click();
+  assert.ok(await page.locator("#confirm-auto-teams").isEnabled());
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+      `Draw overflow at ${width}`,
+    );
+    await page.screenshot({
+      path: `test-results/game-draw-${width}.png`,
+      fullPage: true,
+    });
   }
-  await page.locator('#confirm-auto-teams').click();
-  assert.equal(await page.locator('.team-chip').count(),13);
-  const cardColourIssues = await page.locator('.team-panel .football-card').evaluateAll(cards => cards.flatMap(card => {
-    const copy=card.cloneNode(true);
-    copy.style.setProperty("--card-width",getComputedStyle(card).getPropertyValue("--card-width"));
-    document.body.append(copy);
-    const actual=getComputedStyle(card.querySelector('.card-caption h3'));
-    const expected=getComputedStyle(copy.querySelector('.card-caption h3'));
-    const mismatch=actual.color!==expected.color || actual.fontSize!==expected.fontSize || actual.margin!==expected.margin;
-    const issue={actual:actual.color,expected:expected.color};
-    copy.remove();
-    return mismatch ? [issue] : [];
-  }));
+  await page.locator("#confirm-auto-teams").click();
+  assert.equal(await page.locator(".team-chip").count(), 13);
+  const cardColourIssues = await page
+    .locator(".team-panel .football-card")
+    .evaluateAll((cards) =>
+      cards.flatMap((card) => {
+        const copy = card.cloneNode(true);
+        copy.style.setProperty(
+          "--card-width",
+          getComputedStyle(card).getPropertyValue("--card-width"),
+        );
+        document.body.append(copy);
+        const actual = getComputedStyle(card.querySelector(".card-caption h3"));
+        const expected = getComputedStyle(
+          copy.querySelector(".card-caption h3"),
+        );
+        const mismatch =
+          actual.color !== expected.color ||
+          actual.fontSize !== expected.fontSize ||
+          actual.margin !== expected.margin;
+        const issue = { actual: actual.color, expected: expected.color };
+        copy.remove();
+        return mismatch ? [issue] : [];
+      }),
+    );
   assert.deepEqual(cardColourIssues, []);
 
-  await page.emulateMedia({reducedMotion:'reduce'});
-  for (const width of [1440,768,390,320]) {
-    await page.setViewportSize({width,height:1000});
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth+1),false,`Workspace overflow at ${width}`);
-    await page.screenshot({path:`test-results/game-slots-${width}.png`,fullPage:true});
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+      `Workspace overflow at ${width}`,
+    );
+    await page.screenshot({
+      path: `test-results/game-slots-${width}.png`,
+      fullPage: true,
+    });
   }
-  await page.locator('.team-a .team-slot').focus();
-  assert.equal(await page.locator('.team-a .team-slot').evaluate(el => el === document.activeElement),true);
+  await page.locator(".team-a .team-slot").focus();
+  assert.equal(
+    await page
+      .locator(".team-a .team-slot")
+      .evaluate((el) => el === document.activeElement),
+    true,
+  );
   await page.evaluate(async () => {
     const { gamesPage } = await import("/js/games.js");
     window.__gameLayoutContext.league.games[0].status = "closed";
@@ -235,7 +302,10 @@ try {
     await page.locator(".game-own-rating .match-stars b").textContent(),
     "4,1",
   );
-  assert.equal(await page.locator(".game-own-rating .match-rating-with-gk").textContent(),"(3,4 com GR)");
+  assert.equal(
+    await page.locator(".game-own-rating .match-rating-with-gk").textContent(),
+    "(3,4 com GR)",
+  );
   assert.ok(
     await page
       .locator(".game-own-rating .match-stars b")
@@ -254,6 +324,47 @@ try {
       path: `test-results/game-list-${width}.png`,
       fullPage: true,
     });
+  }
+  await page.evaluate(async () => {
+    const { gamePage } = await import("/js/games.js");
+    const ctx = window.__gameLayoutContext;
+    const draft = {
+      ...ctx.league.games[0],
+      id: "draft-preview",
+      title: "Próxima jornada",
+      status: "draft",
+    };
+    const open = {
+      ...draft,
+      id: "open-preview",
+      title: "Jogo aberto com nome comprido da próxima jornada",
+      status: "open",
+    };
+    ctx.league.games = [draft, open];
+    await gamePage(ctx, draft.id, { edit: true });
+  });
+  await page.locator(".game-open-notice").waitFor();
+  assert.equal(
+    await page.locator('[name="action"][value="open"]').isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page
+      .locator('.game-open-notice a[href="#/game/open-preview"]')
+      .count(),
+    1,
+  );
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth + 1,
+      ),
+      false,
+    );
+    await page
+      .locator(".game-open-notice")
+      .screenshot({ path: `test-results/game-open-notice-${width}.png` });
   }
   console.log(
     "Match editing and game list passed at 1440, 768, 390 and 320px.",

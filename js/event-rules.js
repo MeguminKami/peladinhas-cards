@@ -1,5 +1,6 @@
 import { EVENT_LIMITS, medal, rewardText } from "./event-model.js";
 import { CARD_POLICY, cardExpiry } from "./card-achievements.js";
+import { pathAttributeLimit } from "./path-model.js";
 import {
   ATTRIBUTES,
   THEMES,
@@ -120,12 +121,12 @@ export function applyEventRewards(stats, rewards, uid, date = new Date()) {
     (r) => +asDate(r.startsAt) <= +date && +asDate(r.expiresAt) > +date,
   );
   const permanent = delivered.filter(
-    (r) => r.reward.statDuration === "permanent",
+    (r) => r.reward.statDuration === "permanent" && r.source !== "path",
   );
   const boosts = Object.fromEntries(
     ATTRIBUTES.map(([key]) => {
       const legacy = active
-        .filter((r) => r.schemaVersion !== 2 && !Number.isInteger(r.policyVersion))
+        .filter((r) => r.schemaVersion !== 2 && !Number.isInteger(r.policyVersion) && r.source !== "path")
         .reduce((sum, r) => sum + (r.reward.boosts?.[key] || 0), 0);
       const weekly = active
         .filter(
@@ -138,7 +139,8 @@ export function applyEventRewards(stats, rewards, uid, date = new Date()) {
       );
       return [
         key,
-        legacy + Math.min(10, weekly) + lifetime + delivered.filter(r => Number.isInteger(r.policyVersion) && (r.reward.statDuration === "permanent" || active.includes(r))).reduce((sum,r)=>sum+(r.reward.boosts?.[key] || 0),0),
+        legacy + Math.min(10, weekly) + lifetime + delivered.filter(r => r.source !== "path" && Number.isInteger(r.policyVersion) && (r.reward.statDuration === "permanent" || active.includes(r))).reduce((sum,r)=>sum+(r.reward.boosts?.[key] || 0),0)
+          + Math.min(pathAttributeLimit(key), delivered.filter(r => r.source === "path" && r.reward.statDuration === "permanent").reduce((sum,r)=>sum+(r.reward.boosts?.[key] || 0),0)),
       ];
     }),
   );

@@ -5,7 +5,6 @@ service cloud.firestore {
   function freshTokens() { let path=/databases/$(database)/documents/users/$(request.auth.uid); return !exists(path) || request.auth.token.get('auth_time',0)>=get(path).data.get('tokensValidAfter',0); }
   function active() { return signedIn() && freshTokens() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false; }
   function owner(uid) { return signedIn() && freshTokens() && request.auth.uid == uid; }
-  function dbs() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dbs'; }
   function admin() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
   function systemConfig() {
     let path=/databases/$(database)/documents/settings/system;
@@ -20,14 +19,7 @@ service cloud.firestore {
   function attrs() { return ['pace','shooting','passing','dribbling','defending','physical','goalkeeping','stamina','vision','positioning','teamwork','composure']; }
   function optionalRating(r,k,max) { return !(k in r) || (r[k] is int && r[k]>=0 && r[k]<=max); }
   function validInitial(r) { return r is map && r.keys().hasOnly(attrs()) && optionalRating(r,'pace',20) && optionalRating(r,'shooting',20) && optionalRating(r,'passing',20) && optionalRating(r,'dribbling',20) && optionalRating(r,'defending',20) && optionalRating(r,'physical',20) && optionalRating(r,'goalkeeping',20) && optionalRating(r,'stamina',20) && optionalRating(r,'vision',20) && optionalRating(r,'positioning',20) && optionalRating(r,'teamwork',20) && optionalRating(r,'composure',20); }
-  function validFeedback(r) { return r is map && r.keys().hasOnly(['overall','attack','passing','defense','physical','goalkeeping','attitude']) && optionalRating(r,'overall',5) && optionalRating(r,'attack',5) && optionalRating(r,'passing',5) && optionalRating(r,'defense',5) && optionalRating(r,'physical',5) && optionalRating(r,'attitude',5) && (!('goalkeeping' in r) || r.goalkeeping==null || optionalRating(r,'goalkeeping',5)); }
-  function completeFeedback(r) { return r.keys().hasAll(['overall','attack','passing','defense','physical','goalkeeping','attitude']); }
   function validProfile(p) { return p.displayName is string && p.displayName.size()<=30 && p.countryCode is string && p.countryCode.matches('^[A-Z]{2}$') && p.country is string && p.photoURL is string && p.photoURL.size()<=2000 && (!('heightCm' in p) || (p.heightCm is int && p.heightCm>=120 && p.heightCm<=230)) && (!('weightKg' in p) || p.weightKg==null || (p.weightKg is number && p.weightKg>=30 && p.weightKg<=250)) && (!('birthDate' in p) || (p.birthDate is string && p.birthDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'))) && (!('preferredFoot' in p) || p.preferredFoot in ['right','left','both']) && (!('primaryPosition' in p) || p.primaryPosition in ['GR','DEF','ALA','MED','AV']) && (!('secondaryPositions' in p) || (p.secondaryPositions is list && p.secondaryPositions.toSet().hasOnly(['GR','DEF','ALA','MED','AV']))) && (!('shirtNumber' in p) || p.shirtNumber==null || (p.shirtNumber is int && p.shirtNumber>=0 && p.shirtNumber<=99)) && (!('city' in p) || (p.city is string && p.city.size()<=60)) && (!('playerStyle' in p) || (p.playerStyle is string && p.playerStyle.size()<=80)); }
-  function teamIds(g) { return g.teamA.starters.concat(g.teamA.bench).concat(g.teamB.starters).concat(g.teamB.bench); }
-  function validPerformanceSide(p,t,score) { return p is map && p.keys().hasAll(['goals','assists']) && p.keys().hasOnly(['goals','assists']) && p.goals is list && p.assists is list && p.goals.size()<=score && p.assists.size()<=score && p.goals.toSet().hasOnly(t.starters.concat(t.bench)) && p.assists.toSet().hasOnly(t.starters.concat(t.bench)); }
-  function validPerformance(g) { return !('performance' in g) || (g.performance is map && g.performance.keys().hasAll(['teamA','teamB']) && g.performance.keys().hasOnly(['teamA','teamB']) && validPerformanceSide(g.performance.teamA,g.teamA,g.score.teamA) && validPerformanceSide(g.performance.teamB,g.teamB,g.score.teamB)); }
-  function validPositions(g) { return !('positions' in g) || (g.positions is map && g.positions.keys().hasOnly(teamIds(g)) && g.positions.values().hasOnly(['GR','DEF','ALA','MED','AV'])); }
-  function validGame(g) { return validPositions(g) && validPerformance(g) && (!('youtubeVideoId' in g) || (g.youtubeVideoId is string && (g.youtubeVideoId=='' || g.youtubeVideoId.matches('^[A-Za-z0-9_-]{11}$')))) && g.keys().hasOnly(['teamNames','playerCards','cardWeekId','positions','performance','youtubeVideoId','title','location','notes','scheduledAt','teamA','teamB','score','status','creatorId','createdAt','updatedAt','closedAt','closedBy']) && g.title is string && g.title.size()>0 && g.title.size()<=80 && g.location is string && g.location.size()<=120 && g.notes is string && g.notes.size()<=1000 && g.scheduledAt is timestamp && g.status in ['draft','open','closed'] && g.teamA.keys().hasOnly(['starters','bench']) && g.teamB.keys().hasOnly(['starters','bench']) && g.teamA.starters is list && g.teamA.bench is list && g.teamB.starters is list && g.teamB.bench is list && g.teamA.starters.size()<=5 && g.teamB.starters.size()<=5 && teamIds(g).size()<=60 && teamIds(g).size()==teamIds(g).toSet().size() && g.score.keys().hasOnly(['teamA','teamB']) && g.score.teamA is int && g.score.teamB is int && g.score.teamA>=0 && g.score.teamB>=0 && g.score.teamA<=999 && g.score.teamB<=999 && (g.status!='closed' || (g.teamA.starters.size()>0 && g.teamB.starters.size()>0 && g.closedAt is timestamp)); }
   match /users/{uid} {
    allow read: if active() || owner(uid);
    allow create: if writable('registration') && !request.resource.data.keys().hasAny(['adminCapabilities','tokensValidAfter']) && owner(uid) && request.resource.data.uid==uid && request.resource.data.role=='member' && request.resource.data.disabled==false && request.resource.data.username.matches('^[a-z0-9_.-]{3,20}$') && request.auth.token.email==request.resource.data.username+'@auth.weeklyfc.app' && validProfile(request.resource.data) && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
@@ -60,21 +52,25 @@ service cloud.firestore {
   match /gameSummaries/{gid} { allow read: if active(); allow write: if false; }
   match /games/{gid} {
    allow read: if active();
-   allow create: if writable('games') && active() && (capable('games') || dbs()) && validGame(request.resource.data) && !request.resource.data.keys().hasAny(['teamNames','playerCards','cardWeekId']) && request.resource.data.status=='draft' && request.resource.data.creatorId==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
-   allow update: if writable('games') && active() && (capable('games') || dbs()) && !resource.data.get('deleting',false) && validGame(request.resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['teamNames','playerCards','cardWeekId']) && request.resource.data.creatorId==resource.data.creatorId && request.resource.data.createdAt==resource.data.createdAt && request.resource.data.updatedAt==request.time && ((resource.data.status=='closed' && admin() && request.resource.data.status=='closed' && request.resource.data.closedAt==resource.data.closedAt && request.resource.data.closedBy==resource.data.closedBy) || (resource.data.status!='closed' && (resource.data.status=='draft' && request.resource.data.status in ['draft','open'] || resource.data.status=='open' && request.resource.data.status in ['draft','open','closed']) && (request.resource.data.closedAt==resource.data.closedAt || request.resource.data.closedAt==request.time) && (request.resource.data.status!='closed' || request.resource.data.closedBy==request.auth.uid && request.resource.data.closedAt==request.time)));
+   // Lifecycle and path freezing are one trusted transaction.
+   allow create, update: if false;
    allow delete: if false;
    match /feedback/{id} {
     allow read: if capable('ratings') || (active() && resource.data.raterId==request.auth.uid);
     allow get: if active() && id.matches('^'+request.auth.uid+'_.*') && !exists(/databases/$(database)/documents/games/$(gid)/feedback/$(id));
-    function goalkeeperAllowed(d) { let selfPath=/databases/$(database)/documents/games/$(gid)/feedback/$(d.targetId+'_'+d.targetId); return d.raterId==d.targetId || !exists(selfPath) || !get(selfPath).data.get('submitted',false) || get(selfPath).data.ratings.get('goalkeeping',0)!=null || d.ratings.get('goalkeeping',null)==null; }
-    function validVote() { let d=request.resource.data; let g=get(/databases/$(database)/documents/games/$(gid)).data; return d.keys().hasOnly(['gameId','raterId','targetId','ratings','submitted','createdAt','updatedAt','submittedAt','editDays']) && g.status=='closed' && !g.get('deleting',false) && d.gameId==gid && d.raterId==request.auth.uid && d.raterId in teamIds(g) && d.targetId in teamIds(g) && id==d.raterId+'_'+d.targetId && validFeedback(d.ratings) && goalkeeperAllowed(d) && d.submitted is bool && (!d.submitted || completeFeedback(d.ratings)) && d.updatedAt==request.time && (!d.submitted || d.submittedAt is timestamp); }
-    allow create: if writable('ratings') && active() && validVote() && request.resource.data.createdAt==request.time && (!request.resource.data.submitted || request.resource.data.submittedAt==request.time && request.resource.data.get('editDays',7)==systemConfig().get('rules',{}).get('ratingEditDays',7));
-    allow update: if writable('ratings') && active() && validVote() && (!resource.data.submitted || request.resource.data.submitted) && request.resource.data.gameId==resource.data.gameId && request.resource.data.raterId==resource.data.raterId && request.resource.data.targetId==resource.data.targetId && request.resource.data.createdAt==resource.data.createdAt && ratingEditable(resource.data,'submitted') && keepsSubmission(resource.data,request.resource.data,'submitted');
+    // Every write must append its immutable vote revision atomically.
+    allow create, update: if false;
    }
   }
   match /weeklyCardPhotos/{id} { allow read: if active(); allow write: if false; }
   match /weeklyCards/{uid} { allow read: if active(); allow write: if false; }
   match /cardCollections/{uid} { allow read: if active(); allow write: if false; }
+  match /pathStates/{uid} {
+   allow read: if active() && (owner(uid) || capable('events'));
+   allow write: if false;
+   match /audit/{id} { allow read: if capable('events'); allow write: if false; }
+   match /attempts/{id} { allow read: if active() && (owner(uid) || capable('events')); allow write: if false; }
+  }
   match /cardSelections/{uid} { allow read: if active(); allow write: if false; }
   match /cardPeriodAwards/{id} { allow read: if active(); allow write: if false; }
   match /gameBalances/{id} { allow read: if active(); allow write: if false; }

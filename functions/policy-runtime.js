@@ -42,6 +42,7 @@ export const endpointCapability = (name) =>
                 ? "operations"
                 : null;
 const reads = new Set([
+  "getPath",
   "getEvent",
   "listEvents",
   "ensureHistory",
@@ -285,7 +286,7 @@ export function policySchedule(name, options, handler) {
       ? "system"
       : /Notification/.test(name)
         ? "reminders"
-        : /closeEvents/.test(name)
+        : /closeEvents|settlePaths/.test(name)
           ? "events"
           : /Collection/.test(name)
             ? "collection"

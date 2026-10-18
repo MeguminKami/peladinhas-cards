@@ -25,7 +25,7 @@ import {
   getFunctions,
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
-import { completeInitial, completeFeedback } from "./utils.js";
+import { completeInitial } from "./utils.js";
 const rows = (s) => s.docs.map((d) => ({ ...d.data(), id: d.id }));
 export const list = async (path, ...filters) =>
   rows(
@@ -78,10 +78,28 @@ export const watchNotifications = (uid, callback, error) =>
     error,
   );
 export const saveProfile = async (uid, changes) => {
-  const access = Object.fromEntries(Object.entries(changes).filter(([key])=>["role","disabled"].includes(key)));
-  const profile = Object.fromEntries(Object.entries(changes).filter(([key])=>!["role","disabled","adminCapabilities"].includes(key)));
-  if(Object.keys(access).length) await callAdmin("maintenanceAction", {action:"set-account",uid,...access,reason:"Alteração no painel de jogadores"});
-  if(Object.keys(profile).length) await updateDoc(doc(db,"users",uid),{...profile,updatedAt:serverTimestamp()});
+  const access = Object.fromEntries(
+    Object.entries(changes).filter(([key]) =>
+      ["role", "disabled"].includes(key),
+    ),
+  );
+  const profile = Object.fromEntries(
+    Object.entries(changes).filter(
+      ([key]) => !["role", "disabled", "adminCapabilities"].includes(key),
+    ),
+  );
+  if (Object.keys(access).length)
+    await callAdmin("maintenanceAction", {
+      action: "set-account",
+      uid,
+      ...access,
+      reason: "Alteração no painel de jogadores",
+    });
+  if (Object.keys(profile).length)
+    await updateDoc(doc(db, "users", uid), {
+      ...profile,
+      updatedAt: serverTimestamp(),
+    });
 };
 export async function saveInitial(uid, ratings20, submit = true) {
   const target = doc(db, "initialRatings", uid);
@@ -96,7 +114,9 @@ export async function saveInitial(uid, ratings20, submit = true) {
       uid,
       ratings20,
       completed,
-      editDays: s.data()?.completed ? s.data().editDays ?? 7 : policyAt().rules.ratingEditDays,
+      editDays: s.data()?.completed
+        ? (s.data().editDays ?? 7)
+        : policyAt().rules.ratingEditDays,
       submittedAt: s.data()?.completed
         ? s.data().submittedAt || s.data().createdAt
         : completed
@@ -127,7 +147,9 @@ export async function saveCommunity(
       targetId,
       ratings20,
       submitted: submit,
-      editDays: s.data()?.submitted ? s.data().editDays ?? 7 : policyAt().rules.ratingEditDays,
+      editDays: s.data()?.submitted
+        ? (s.data().editDays ?? 7)
+        : policyAt().rules.ratingEditDays,
       updatedAt: serverTimestamp(),
       submittedAt: s.data()?.submitted
         ? s.data().submittedAt || s.data().createdAt
@@ -147,80 +169,27 @@ export async function saveFeedback(
   ratings,
   submit = false,
 ) {
-  const target = doc(db, `games/${gid}/feedback/${raterId}_${targetId}`);
-  await runTransaction(db, async (tx) => {
-    const s = await tx.get(target);
-    const summary =
-      raterId !== targetId
-        ? await tx.get(doc(db, `gameSummaries/${gid}`))
-        : null;
-    if (summary?.data()?.players?.[targetId]?.goalkeepingEligible === false)
-      ratings = { ...ratings, goalkeeping: null };
-
-    if (!canEditRating(s.data()))
-      throw Error("O prazo para editar a avaliação terminou.");
-    submit = submit || s.data()?.submitted === true;
-    if (submit && !completeFeedback(ratings))
-      throw Error("Preenche as dimensões obrigatórias.");
-    tx.set(target, {
+  return (
+    await callAdmin("feedbackAction", {
       gameId: gid,
-      raterId,
       targetId,
       ratings,
-      submitted: submit,
-      editDays: s.data()?.submitted ? s.data().editDays ?? 7 : policyAt().rules.ratingEditDays,
-      createdAt: s.data()?.createdAt || serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      submittedAt: s.data()?.submitted
-        ? s.data().submittedAt || s.data().createdAt
-        : submit
-          ? serverTimestamp()
-          : null,
-    });
-  });
+      submit,
+    })
+  ).data;
 }
 export async function saveGame(id, data, actor) {
-  const target = id ? doc(db, "games", id) : doc(collection(db, "games"));
-  await runTransaction(db, async (tx) => {
-    const s = await tx.get(target);
-    if (!["admin", "dbs"].includes(actor.role))
-      throw Error("Só DBS e administradores podem gerir jogos.");
-    if (
-      s.exists() &&
-      ((s.data().status === "closed" && actor.role !== "admin") ||
-        s.data().deleting)
-    )
-      throw Error("O jogo está encerrado ou a ser eliminado.");
-    const prior = s.data()?.status;
-    if (
-      (!s.exists() && data.status !== "draft") ||
-      (prior === "draft" && !["draft", "open"].includes(data.status)) ||
-      (prior === "open" &&
-        !["draft", "open", "closed"].includes(data.status)) ||
-      (prior === "closed" && data.status !== "closed")
-    )
-      throw Error("Transição de jogo inválida.");
-    const value = { ...data, updatedAt: serverTimestamp() };
-    for (const key of ["teamNames", "playerCards", "cardWeekId"]) {
-      if (s.exists() && key in s.data()) value[key] = s.data()[key];
-    }
-    if (!s.exists()) {
-      value.creatorId = actor.uid;
-      value.createdAt = serverTimestamp();
-    } else {
-      value.creatorId = s.data().creatorId;
-      value.createdAt = s.data().createdAt;
-    }
-    if (data.status === "closed" && s.data()?.status !== "closed") {
-      value.closedAt = serverTimestamp();
-      value.closedBy = actor.uid;
-    } else {
-      value.closedAt = s.data()?.closedAt || null;
-      value.closedBy = s.data()?.closedBy || null;
-    }
-    tx.set(target, value);
+  const response = await callAdmin("gameAction", {
+    gameId: id || null,
+    game: {
+      ...data,
+      scheduledAt:
+        data.scheduledAt instanceof Date
+          ? data.scheduledAt.toISOString()
+          : data.scheduledAt,
+    },
   });
-  return target.id;
+  return response.data.id;
 }
 export async function uploadAvatar(uid, file) {
   if (
@@ -268,7 +237,7 @@ export async function markRead(uid, items) {
 }
 export async function syncNotifications(uid, missions) {
   const existing = await notifications(uid);
-  if(!policyAt().notifications.enabled) return existing;
+  if (!policyAt().notifications.enabled) return existing;
   const ids = new Set(existing.map((n) => n.id));
   const missing = missions.filter(
     (m) => !m.hiddenCard && !ids.has(`mission-${m.id}`),
@@ -304,6 +273,10 @@ export { prepareWeeklyCardPhoto } from "./photo-upload.js";
 export const openEvents = async () => (await callAdmin("listEvents", {})).data;
 export const eventDetails = async (eventId) =>
   (await callAdmin("getEvent", { eventId })).data;
+
+export const getPath = async () => (await callAdmin("getPath", {})).data;
+export const pathAction = async (action, values = {}) =>
+  (await callAdmin("pathAction", { action, ...values })).data;
 
 const previousOvrCache = new Map();
 export async function previousOvrs(users, cycle) {

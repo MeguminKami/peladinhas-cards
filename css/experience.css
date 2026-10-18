@@ -658,6 +658,11 @@ p {
 .my-card-panel .compact-metrics {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.my-card-panel .compact-metrics > div { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-width:0; text-align:center; }
+.my-card-panel .compact-metrics b { font-variant-numeric:tabular-nums; }
+.my-card-form { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.my-card-form-star { color:var(--accent); font-size:.85em; line-height:1; }
+.my-card-form-empty { font-size:.75rem; color:var(--text-muted); }
 .my-card-panel .compact-metrics small { font-size:.72rem; }
 .my-card-status { width:100%; grid-column:1/-1; display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:16px; font-size:.78rem; text-align:center; color:var(--text-secondary); }
 .my-card-status strong { color:var(--text-primary); font-variant-numeric:tabular-nums; }
@@ -903,7 +908,7 @@ p {
 .event-command .actions {
   gap: 12px;
 }
-@media (max-width: 1100px) and (min-width: 801px) {
+@media (max-width: 1360px) and (min-width: 801px) {
   .navbar {
     gap: 12px;
     padding-inline: 20px;
@@ -1251,6 +1256,8 @@ p {
 .weekly-section .place-3 .podium-pedestal { min-height: 72px; }
 .weekly-section .podium-score { position: relative; z-index: 1; display: flex; align-items: center; flex-direction: column; gap: 4px; margin: 0; min-height: 0; }
 .podium-score strong { font-size: 1.5rem; font-weight: 800; letter-spacing: -.045em; line-height: 1.1; color: var(--podium-metal); }
+.podium-score .podium-performance { display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.podium-rating-star { font-size: .85em; line-height: 1; }
 .podium-score strong small { font-size: .7rem; font-weight: 550; letter-spacing: 0; }
 .podium-score > span { color: var(--text-secondary); font-size: .65rem; line-height: 1.5; }
 .podium-step-number { position: absolute; right: 12px; bottom: -15px; font-size: 5rem; line-height: 1; font-weight: 800; letter-spacing: -.08em; color: var(--podium-metal); opacity: .07; pointer-events: none; }

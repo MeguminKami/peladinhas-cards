@@ -1375,7 +1375,7 @@ a.football-card:hover {
   --stats-material: linear-gradient(90deg, transparent 60%, #27133f24);
 }
 
-/* Collection editions are preview-only; all artwork is behind the portrait. */
+/* Collection artwork stays behind the portrait in previews and selected editions. */
 .card-collection .collection-art {
   position: absolute;
   inset: 0;
@@ -1436,6 +1436,44 @@ a.football-card:hover {
 .card-collection .special-outline {
   stroke-width: 1.5;
 }
+/* Permanent signatures earned through Escolhe o teu caminho. */
+.football-card[class*="path-"] {
+  --card-a:#326d66; --card-b:#071e26; --card-edge:#bce6cb;
+  --edition-light:#ddffee; --edition-flare:#55bda6;
+  --collection-material:linear-gradient(130deg,#b9eac033,transparent 35%),linear-gradient(165deg,var(--card-a),var(--card-b) 80%);
+  --collection-name:linear-gradient(90deg,transparent,#041719b8 25% 75%,transparent);
+}
+.football-card.path-pace { --card-a:#426f38; --card-b:#152919; --card-edge:#d4f5a2; --edition-light:#eeffda; --edition-flare:#a9db71; }
+.football-card.path-shooting { --card-a:#923f48; --card-b:#2a1023; --card-edge:#ffbd9d; --edition-light:#ffe4bb; --edition-flare:#ef7967; }
+.football-card.path-passing { --card-a:#225d9c; --card-b:#0c1535; --card-edge:#a4e4ff; --edition-light:#e1faff; --edition-flare:#76b4ff; }
+.football-card.path-dribbling { --card-a:#6b42a3; --card-b:#1e1639; --card-edge:#e7c5ff; --edition-light:#ffdfec; --edition-flare:#c196fa; }
+.football-card.path-defending { --card-a:#286a53; --card-b:#091e20; --card-edge:#96e2b6; --edition-light:#d1ffe5; --edition-flare:#49bc8d; }
+.football-card.path-physical { --card-a:#956130; --card-b:#301d18; --card-edge:#eec69e; --edition-light:#fff5ce; --edition-flare:#f3b86e; }
+.football-card.path-goalkeeping { --card-a:#9b6d26; --card-b:#302214; --card-edge:#ffe4a0; --edition-light:#fff5ce; --edition-flare:#f3b86e; }
+.football-card.path-stamina { --card-a:#467c6d; --card-b:#142e26; --card-edge:#bcdfce; --edition-light:#e7ffee; --edition-flare:#94d2ae; }
+.football-card.path-vision { --card-a:#444d92; --card-b:#181b38; --card-edge:#c8c9ff; --edition-light:#ecedff; --edition-flare:#999ae9; }
+.football-card.path-positioning { --card-a:#8b556f; --card-b:#291c35; --card-edge:#f4c3d4; --edition-light:#ffe6ed; --edition-flare:#cda4d9; }
+.football-card.path-teamwork { --card-a:#217f82; --card-b:#0d2831; --card-edge:#a0e7db; --edition-light:#dcfff8; --edition-flare:#79d7cb; }
+.football-card.path-composure { --card-a:#685f97; --card-b:#211d39; --card-edge:#d8d1ff; --edition-light:#eee8ff; --edition-flare:#afa3ef; }
+.football-card.path-fusion-attack { --card-a:#a04936; --card-b:#331523; --card-edge:#ffcc8f; --edition-light:#fff0cf; --edition-flare:#f28b62; }
+.football-card.path-fusion-wall { --card-a:#3e697b; --card-b:#0c2330; --card-edge:#dce8ce; --edition-light:#edfff1; --edition-flare:#82cac1; }
+.football-card.path-fusion-engine { --card-a:#765280; --card-b:#281d32; --card-edge:#ecd3ac; --edition-light:#ffe9cc; --edition-flare:#d4a0b8; }
+/* Authored materials accompany the fifteen different silhouettes and artworks. */
+.football-card.path-pace { --collection-material:repeating-linear-gradient(138deg,#d4f5a209 0 2px,transparent 2px 7px),linear-gradient(115deg,#102217,#426f38 38%,#0b2119); --path-reveal-from:translateX(-48px) rotate(-12deg) scale(.94); }
+.football-card.path-shooting { --collection-material:repeating-linear-gradient(90deg,#ffffff05 0 1px,transparent 1px 4px),linear-gradient(145deg,#2a1023,#923f48 42%,#260e15); --path-reveal-from:scale(1.18) rotate(-5deg); }
+.football-card.path-passing { --collection-material:repeating-linear-gradient(0deg,#a4e4ff0a 0 1px,transparent 1px 17px),repeating-linear-gradient(90deg,#a4e4ff0a 0 1px,transparent 1px 17px),radial-gradient(ellipse at 50% 20%,#225d9c,#0c1535); --path-reveal-from:translateY(38px) rotate(-5deg); }
+.football-card.path-dribbling { --collection-material:conic-gradient(from 35deg at 70% 30%,#251539,#6b42a3,#344570,#6b315f,#251539); --path-reveal-from:rotate(13deg) scale(.9); }
+.football-card.path-defending { --collection-material:repeating-linear-gradient(0deg,#081d1a66 0 2px,transparent 2px 33px),linear-gradient(110deg,#0b2622,#286a53 45%,#081c20); --path-reveal-from:translateY(-24px) rotate(-5deg); }
+.football-card.path-physical { --collection-material:conic-gradient(from 45deg at 50% 40%,#301d18,#956130,#543926,#b07c41,#301d18); --path-reveal-from:translateY(-14px) scale(1.08) rotate(-5deg); }
+.football-card.path-goalkeeping { --collection-material:radial-gradient(ellipse at 50% 10%,#dfb86455,transparent 50%),linear-gradient(90deg,#302214,#9b6d26 50%,#302214); --path-reveal-from:translateY(44px) rotate(-9deg); }
+.football-card.path-stamina { --collection-material:repeating-linear-gradient(165deg,#bcdfce09 0 2px,transparent 2px 19px),linear-gradient(0deg,#142e26,#467c6d); --path-reveal-from:translateX(-25px) rotate(-5deg); }
+.football-card.path-vision { --collection-material:radial-gradient(ellipse at 75% 15%,#999ae966,transparent 45%),radial-gradient(ellipse at 15% 65%,#503d8355,transparent 55%),linear-gradient(#181b38,#444d92); --path-reveal-from:scale(.96) rotate(-5deg); }
+.football-card.path-positioning { --collection-material:repeating-radial-gradient(ellipse at 60% 35%,#f4c3d40b 0 1px,transparent 1px 19px),linear-gradient(150deg,#8b556f,#291c35); --path-reveal-from:rotate(-22deg) scale(.93); }
+.football-card.path-teamwork { --collection-material:repeating-linear-gradient(45deg,#a0e7db09 0 1px,transparent 1px 5px),linear-gradient(90deg,#0d2831,#217f82 50%,#0d2831); --path-reveal-from:translateX(30px) rotate(3deg) scale(.95); }
+.football-card.path-composure { --collection-material:radial-gradient(ellipse at 50% 10%,#d8d1ff26,transparent 60%),linear-gradient(180deg,#685f97,#211d39); --path-reveal-from:rotate(-5deg); --path-reveal-duration:750ms; }
+.football-card.path-fusion-attack { --collection-material:linear-gradient(110deg,#923f48cc 0 47%,#ffcc8f44 48% 49%,#225d9c99 50% 100%),linear-gradient(#4e2330,#1b1023); --path-reveal-from:translate(-30px,24px) rotate(-14deg); }
+.football-card.path-fusion-wall { --collection-material:repeating-linear-gradient(0deg,#dce8ce0a 0 1px,transparent 1px 32px),linear-gradient(90deg,#0c2330,#3e697b 50%,#0c2330); --path-reveal-from:translateY(-26px) rotate(-5deg) scale(.97); }
+.football-card.path-fusion-engine { --collection-material:repeating-conic-gradient(from 20deg at 50% 35%,#ecd3ac09 0 5deg,transparent 5deg 30deg),radial-gradient(ellipse at 50% 35%,#765280,#281d32 70%); --path-reveal-from:rotate(16deg) scale(.88); }
 .football-card.apogee {
   --card-a: #123fc2;
   --card-b: #030b2d;

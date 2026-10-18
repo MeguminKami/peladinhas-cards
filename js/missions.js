@@ -1,4 +1,5 @@
 import { missionObjectivePreview } from "./mission-objective-preview.js";
+import { pathMissionEntry, pathMissionSpotlight } from "./paths.js";
 import { groupActivities } from "./activity-categories.js";
 import { policyAt } from "./system-policy.js";
 import {
@@ -198,6 +199,8 @@ export async function refreshMissionsForCurrentUser(user, league) {
   );
   missions.push(...eventMissions.flat());
 
+  missions.push(pathMissionEntry(await DB.read(`pathStates/${user.uid}`)));
+
   return missions;
 }
 export function missionList(missions, { grouped = true } = {}) {
@@ -215,6 +218,7 @@ export function missionList(missions, { grouped = true } = {}) {
   const cards = (entries) =>
     `<div class="mission-list">${entries
       .map((m) => {
+        if (m.type === "PLAYER_PATH") return pathMissionSpotlight(m);
         const competition = m.type === "COMPETITION_OBJECTIVE";
         const percentage = Math.round((m.done / m.total) * 100);
         return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div>${["OBJECTIVE_MISSION", "COMPETITION_OBJECTIVE"].includes(m.type) ? `<p class="mission-objective">${esc(m.objectivePreview?.text || "Consulta o objetivo e os critérios da missão.")}${m.objectivePreview?.criteria ? `<span class="mission-objective-criteria">${esc(m.objectivePreview.criteria)}</span>` : ""}</p>` : `<p>${esc(m.description)}</p>`}${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
@@ -224,6 +228,7 @@ export function missionList(missions, { grouped = true } = {}) {
   return `<div class="mission-groups activity-groups">${groupActivities(ordered)
     .map(
       (group) =>
+        group.id === "path" ? `<section class="mission-group activity-group" data-activity-category="path" aria-label="Escolhe o teu caminho!">${cards(group.items)}</section>` :
         `<section class="mission-group activity-group" data-activity-category="${group.id}" aria-label="${esc(group.title)}"><div class="mission-group-head activity-group-head"><div class="activity-group-identity"><span class="activity-group-symbol">${icon(group.icon)}</span><div><h2>${esc(group.title)}</h2><p>${esc(group.description)}</p></div></div><span class="pill" aria-label="${group.items.length} itens">${group.items.length}</span></div>${cards(group.items)}</section>`,
     )
     .join("")}</div>`;

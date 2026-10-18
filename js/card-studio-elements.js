@@ -45,6 +45,9 @@ const names = {
   mvp: ["Topo ondulado", "Taça gravada", "Taça com asas"],
   "legend-form": ["Coroa de vértices", "Coroa e losangos", "Coroa ornamentada"],
 };
+for (const [id, design] of Object.entries(SPECIAL_CARD_DESIGNS)) {
+  if (id.startsWith("path-")) names[id] = [`Recorte ${design.name}`, `Percurso ${design.name}`, `Símbolo ${design.name}`];
+}
 export const STUDIO_SHAPES = {
   original: "Original",
   shield: "Escudo",

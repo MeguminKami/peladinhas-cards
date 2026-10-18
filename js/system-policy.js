@@ -381,7 +381,8 @@ export function rewardBudget(
   const limits = policy.rewards;
   const permanent = configured.statDuration === "permanent";
   const boosts = {};
-  const accepted = prior.filter((row) => !row.revokedAt && !row.pending);
+  // Path progression has its own lifetime allowance and never spends another source's quota.
+  const accepted = prior.filter((row) => !row.revokedAt && !row.pending && (source === "path" ? row.source === "path" : row.source !== "path"));
   for (const [key, amount] of Object.entries(configured.boosts || {})) {
     const used = accepted
       .filter((row) =>

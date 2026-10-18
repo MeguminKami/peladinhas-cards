@@ -1,4 +1,5 @@
 import { asDate, average, participants } from "./utils.js";
+import { PATH_CARD_EDITIONS } from "./path-card-designs.js";
 import { policyAt } from "./system-policy.js";
 import { lisbonDateInput, parseLisbonDateInput } from "./match-time.js";
 
@@ -9,6 +10,7 @@ export const RESERVED_CARD_IDS = Object.freeze([
   "carnival",
 ]);
 export const CARD_POLICY = Object.freeze({
+  ...Object.fromEntries(Object.keys(PATH_CARD_EDITIONS).map(id => [id, { duration: "permanent", hint: "Conquista a prova final em Escolhe o teu caminho!" }])),
   "in-form": {
     duration: "weekly",
     hint: "Duas boas exibições podem mudar a tua carta.",

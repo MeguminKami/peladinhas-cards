@@ -82,6 +82,13 @@ export const ADMIN_AREAS = [
     icon: "shield",
     description: "Configurações globais, automatizações, diagnóstico e recuperação.",
   },
+  {
+    id: "paths",
+    href: "#/admin/paths",
+    label: "Percursos pessoais",
+    icon: "path",
+    description: "Rever resultados corrigidos em Escolhe o teu caminho!",
+  },
 ];
 export function adminDashboard() {
   return `<section><div class="section-head"><h2>Gerir a liga</h2></div><div class="admin-area-grid">${ADMIN_AREAS.filter(
@@ -93,7 +100,7 @@ export function adminDashboard() {
     )
     .join("")}</div></section>`;
 }
-export const adminAreaCapability = id => ({players:"access",player:"access",initial:"ratings",ratings:"ratings",games:"games",weights:"cards",cards:"cards","card-types":"cards","card-photo":"cards",ovr:"cards",events:"events",messages:"messages",support:"support"})[id] || null;
+export const adminAreaCapability = id => ({players:"access",player:"access",initial:"ratings",ratings:"ratings",games:"games",weights:"cards",cards:"cards","card-types":"cards","card-photo":"cards",ovr:"cards",events:"events",paths:"events",messages:"messages",support:"support"})[id] || null;
 export function mountAdminMenu(user) {
   const areas=ADMIN_AREAS.filter(area=>!user || !adminAreaCapability(area.id) || canManage(user,adminAreaCapability(area.id)));
   const main = document.querySelector("#main");

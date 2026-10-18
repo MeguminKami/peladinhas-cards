@@ -1,6 +1,8 @@
-// Visual catalog only. These editions have no reward or mission eligibility yet.
+// Shared visual catalog. Ownership and eligibility live in achievements and reward rules.
 import { FUT_INSPIRED_EDITIONS } from "./card-fut-themes.js";
+import { PATH_CARD_EDITIONS } from "./path-card-designs.js";
 export const COLLECTION_EDITIONS = Object.freeze({
+  ...PATH_CARD_EDITIONS,
   ...FUT_INSPIRED_EDITIONS,
   apogee: {
     name: "Apogeu",

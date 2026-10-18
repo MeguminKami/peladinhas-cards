@@ -239,6 +239,8 @@ As recompensas podem incluir Stats temporárias ou permanentes e cartas semanais
 
 [Consultar objetivos, limites e recompensas →](docs/reference/events-and-missions.md)
 
+**Escolhe o teu caminho!** tem uma divisão própria em Missões e acesso no teu perfil: escolhe entre três desafios para o próximo jogo, ativa uma especialização, descobre fusões com três focos e conquista cartas permanentes. Limites próprios de +15 por atributo e +25 em Guarda-redes, independentes das outras recompensas. [Ver funcionamento →](docs/reference/player-paths.md)
+
 ## 09 · Administração
 
 A área de administração concentra as ferramentas de gestão e uma visão geral do estado da liga. O menu próprio permite alternar entre jogadores, jogos, avaliações, eventos e configuração das cartas.

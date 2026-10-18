@@ -131,7 +131,7 @@ try {
     await renderPanel();
     assert.equal(await page.locator(".my-card-match").count(), 3);
     assert.equal(await page.locator(".compact-metrics .match-rating-number").textContent(),"3,1");
-    assert.equal(await page.locator(".compact-metrics .match-rating-with-gk").textContent(),"(2,1 com GR)");
+    assert.equal(await page.locator(".compact-metrics .match-rating-with-gk").count(), 0);
     assert.deepEqual(await page.locator(".my-card-outcome").allTextContents(), [
       "V",
       "E",

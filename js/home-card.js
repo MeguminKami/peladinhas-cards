@@ -1,4 +1,4 @@
-import { matchRatingSeries } from "./match-rating-summary.js";
+import { matchSeriesAverages } from "./match-rating-summary.js";
 import { policyAt } from "./system-policy.js";
 import { card } from "./cards.js";
 import { esc, linkButton } from "./ui.js";
@@ -28,12 +28,16 @@ export function homeCardPanel(player, league) {
   const delta = player.ovrDelta;
   const format = (value) =>
     Number(value || 0).toLocaleString("pt-PT", { maximumFractionDigits: 1 });
-  const rating = matchRatingSeries((player.aggregates || []).slice(-5));
+  const average = matchSeriesAverages((player.aggregates || []).slice(-5)).withoutGoalkeeping;
+  const ratingNumber = average?.toLocaleString("pt-PT", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const rating = average === null
+    ? '<span class="my-card-form-empty">Por avaliar</span>'
+    : `<span class="my-card-form" role="img" aria-label="${ratingNumber} de 5 estrelas"><span class="match-rating-number">${ratingNumber}</span><span class="my-card-form-star" aria-hidden="true">&#9733;</span></span>`;
   const qualification = player.official
     ? "Carta oficial"
     : `Carta provisória · ${Math.min(policyAt().rules.communityMinimum, player.communityCount || 0)}/${policyAt().rules.communityMinimum} avaliações`;
   return `<section class="panel my-card-panel"><div class="section-head"><h2>A minha carta</h2>${linkButton("#/profile", "Ver perfil", "ghost")}</div>${card(player, { size: "md" })}<div class="my-card-status"><span>${player.hasCard ? qualification : "Cria a tua primeira carta"}</span>${player.hasCard && Number.isFinite(delta) ? `<strong>${delta > 0 ? "+" : ""}${format(delta)} OVR <small>esta semana</small></strong>` : ""}</div><div class="metrics compact-metrics">${[
-    ["Forma / 5", rating],
+    ["Forma", rating],
     ["Jogos", stats.played || 0],
     ["Vitórias", stats.wins || 0],
     ["Golos", stats.goals || 0],

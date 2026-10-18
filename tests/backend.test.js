@@ -46,7 +46,9 @@ import {
 } from "../js/utils.js";
 const db = getFirestore(),
   now = Timestamp.now();
-test("Card Lab: ADMIN creates and edits every edition without duplicating or changing ownership", async () => {
+test("Card Lab: ADMIN creates and edits every edition without duplicating or changing ownership", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-18T08:00:00Z") });
+  t.after(() => t.mock.timers.reset());
   const { CATALOG_THEMES } = await import("../js/utils.js");
   for (const [uid, role, disabled] of [
     ["lab-admin", "admin", false],
@@ -78,6 +80,8 @@ test("Card Lab: ADMIN creates and edits every edition without duplicating or cha
   const original = (await ref.get()).data();
   const count = (await db.collection("cardThemes").get()).size;
   for (const baseTheme of CATALOG_THEMES) {
+    // A larger catalog must not turn this validation test into a rate-limit test.
+    t.mock.timers.tick(61000);
     assert.deepEqual(
       await call({ ...payload, id, name: "Revista", baseTheme }),
       { id },
