@@ -1,0 +1,143 @@
+.game-rating-modal {
+  max-width: 760px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+.game-rating-workspace {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  margin-top: 24px;
+}
+.game-rating-heading,
+.game-rating-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.game-rating-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.game-rating-heading h3 {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.game-rating-summary {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-block: 1px solid var(--border);
+}
+.game-rating-summary span {
+  color: var(--text-secondary);
+}
+.game-rating-summary b {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.game-rating-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.game-rating-workspace input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--accent);
+}
+.game-rating-result {
+  min-height: 24px;
+  margin: 0;
+  color: var(--accent);
+}
+.game-rating-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.game-rating-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 180px) 44px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.game-rating-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 44px;
+}
+.game-rating-person > span,
+.game-rating-state {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.game-rating-person small,
+.game-rating-state small,
+.game-rating-progress {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+.game-rating-progress {
+  font-variant-numeric: tabular-nums;
+}
+.game-rating-state .pill {
+  justify-self: start;
+}
+.game-rating-workspace :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.admin-game-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-game-row {
+  flex-wrap: wrap;
+}
+.admin-game-row > div:first-child {
+  flex: 1 1 240px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-game-row > .admin-game-actions {
+  flex: 0 1 auto;
+}
+@media (max-width: 600px) {
+  .game-rating-modal {
+    padding: 24px 16px;
+  }
+  .game-rating-summary {
+    gap: 16px;
+  }
+  .game-rating-row {
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 12px;
+  }
+  .game-rating-state {
+    grid-column: 1;
+    padding-left: 32px;
+  }
+  .game-rating-row > button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .game-rating-toolbar > button {
+    width: 100%;
+  }
+}

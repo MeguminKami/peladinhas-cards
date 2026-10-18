@@ -1,0 +1,149 @@
+.maintenance-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 0 20px;
+}
+.maintenance-heading h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 8px 0;
+}
+.maintenance-heading p {
+  color: var(--text-secondary);
+  max-width: 65ch;
+}
+.maintenance-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.maintenance-tabs .btn {
+  min-height: 44px;
+}
+.maintenance-tabs [aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.maintenance-body,
+.maintenance-body form {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.maintenance-sections {
+  display: grid;
+  gap: 12px;
+}
+.maintenance-sections > details.panel {
+  padding: 8px 20px;
+}
+.maintenance-sections > details.panel[open] {
+  padding: 20px;
+}
+.maintenance-sections summary {
+  cursor: pointer;
+  font-weight: 700;
+  min-height: 44px;
+  display: list-item;
+  align-content: center;
+}
+.maintenance-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.maintenance-fields label,
+.maintenance-body form > label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.maintenance-fields .maintenance-toggle,
+.maintenance-body .maintenance-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.maintenance-toggle input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.maintenance-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.maintenance-status p {
+  flex-basis: 100%;
+  color: var(--text-secondary);
+}
+.maintenance-result {
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 16px;
+  background: var(--bg-app);
+  border-radius: var(--radius-sm);
+}
+.maintenance-body td {
+  max-width: 360px;
+  overflow-wrap: anywhere;
+}
+.maintenance-body .panel {
+  min-width: 0;
+}
+.maintenance-body .panel h3 {
+  margin-bottom: 0;
+}
+.maintenance-body form > .btn {
+  justify-self: start;
+  min-height: 44px;
+}
+.maintenance-body :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.maintenance-body input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+.maintenance-body .table-wrap {
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .maintenance-heading {
+    padding-top: 0;
+  }
+  .maintenance-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-color: var(--accent) var(--bg-panel);
+  }
+  .maintenance-tabs .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .maintenance-body .panel {
+    padding: 20px;
+  }
+}
+
+.maintenance-public-notice {
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  color: var(--warning);
+  background: var(--bg-panel);
+}

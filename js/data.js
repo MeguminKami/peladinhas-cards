@@ -1,3 +1,5 @@
+import * as Firebase from "./firebase.js";
+import { setPolicyDocument, policyAt } from "./system-policy.js";
 import { weeklyComparison } from "./weekly-comparison.js";
 import { calculatePlayerCard } from "./player-calculation.js";
 import { cardWeek } from "./card-week.js";
@@ -17,6 +19,10 @@ import {
   matchPerformance,
 } from "./utils.js";
 export async function loadLeague() {
+  const systemDocument = await DB.read("settings/system");
+  setPolicyDocument(systemDocument);
+  await Firebase.configureAppCheck?.(policyAt());
+
   const cycle = cardWeek();
   const usersTask = DB.users();
   const previousTask = usersTask.then((users) =>
@@ -101,7 +107,7 @@ export async function loadLeague() {
         initial,
         communityCount: cs?.count || 0,
         community: cs,
-        official: (cs?.count || 0) >= 3,
+        official: (cs?.count || 0) >= policyAt().rules.communityMinimum,
         hasCard: completeInitial(initial),
         stats,
         selectedCardId:
@@ -176,6 +182,7 @@ export async function loadLeague() {
       };
     });
   return {
+    systemPolicy: policyAt(),
     cycle,
     events,
     eventRewards,

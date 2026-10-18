@@ -600,8 +600,9 @@ test("equilíbrio do jogo: referência fixa, impacto nas cartas e limpeza ao rea
   await ref.update({ status: "open" });
   await invoke(beforeReopen);
   assert.equal((await db.doc(`gameBalances/${gid}`).get()).exists, false);
+  const beforeReclose = await ref.get();
   await ref.update({ status: "closed", closedAt: Timestamp.now() });
-  await invoke(await ref.get());
+  await invoke(beforeReclose);
   assert.equal(
     (await db.doc(`gameBalances/${gid}`).get()).data().teamB.average,
     30,
@@ -1228,7 +1229,8 @@ test("eventos e presets: permissões, eleições, fecho idempotente, recompensa 
       });
     await call(admin, { action: "close", eventId: id });
     const history = await db.doc(`users/${ids[0]}/cardHistory/2026-W43`).get();
-    assert.equal(history.data().stats.vision, 99);
+    // New awards from legacy events also respect the global reward cap.
+    assert.equal(history.data().stats.vision, 60);
     assert.equal(history.data().stats.teamwork, 55);
     assert.ok(history.data().specials.some((special) => special.id === "mvp"));
     const rewardsBefore = (await db.collection("eventRewards").get()).size;

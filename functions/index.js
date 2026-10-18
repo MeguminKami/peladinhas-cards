@@ -1,3 +1,6 @@
+import { maintenanceFunctions } from "./maintenance.js";
+import { policyAt, budgetWindow, isQuietHour } from "../js/system-policy.js";
+import { policyCall, policySchedule, policyWritten, policyCreated } from "./policy-runtime.js";
 import { notificationFunctions } from "./notifications.js";
 import { pushFunctions } from "./push.js";
 import { defineSecret } from "firebase-functions/params";
@@ -22,7 +25,6 @@ import { validPhotoDesign } from "../js/card-photo.js";
 import { getStorage } from "firebase-admin/storage";
 import { randomUUID } from "node:crypto";
 import { cardWeek, cardWeekBounds } from "../js/card-week.js";
-import { onSchedule } from "firebase-functions/v2/scheduler";
 import {
   teamBalance,
   balanceMatches,
@@ -31,8 +33,7 @@ import {
 import { validCardDesign } from "../js/card-design.js";
 import { initializeApp, getApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { onDocumentWritten } from "firebase-functions/v2/firestore";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { HttpsError } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
 import {
   ATTRIBUTES,
@@ -70,7 +71,7 @@ export const {
   privateKey: () => pushPrivateKey.value(),
   secret: pushPrivateKey,
 });
-export const ticketAction = onCall(async (request) => {
+export const ticketAction = policyCall("ticketAction",async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const uid = request.auth.uid,
     input = request.data || {};
@@ -165,7 +166,7 @@ async function ticketNotifications(ticketId, eventId, authorId, title, body) {
     });
   }
 }
-export const onTicketMessage = onDocumentWritten(
+export const onTicketMessage = policyWritten(
   "tickets/{tid}/messages/{mid}",
   async (event) => {
     if (event.data.before.exists || !event.data.after.exists) return;
@@ -179,7 +180,7 @@ export const onTicketMessage = onDocumentWritten(
     );
   },
 );
-export const onTicketClosed = onDocumentWritten(
+export const onTicketClosed = policyWritten(
   "tickets/{tid}",
   async (event) => {
     const t = event.data.after.data();
@@ -196,21 +197,32 @@ export const onTicketClosed = onDocumentWritten(
 );
 const data = (s) => s.docs.map((d) => ({ ...d.data(), id: d.id }));
 async function notification(uid, id, value, guard) {
-  await db.runTransaction(async (tx) => {
+  if (!policyAt().notifications.enabled) return {sent:false,reason:"paused"};
+  const reminder = /REMINDER|RATING_REQUIRED/.test(value.type || "");
+  if (reminder && isQuietHour(policyAt().notifications)) return {sent:false,reason:"quiet"};
+  return db.runTransaction(async (tx) => {
+    const quotaRef=db.doc(`notificationQuotas/${uid}`);
+    const quota=reminder ? (await tx.get(quotaRef)).data() : null;
+    const day=budgetWindow("day");
+    if(reminder && (quota?.day===day && quota.count>=policyAt().notifications.maxDaily || quota?.lastSent?.toMillis()>Date.now()-policyAt().notifications.cooldownMinutes*60000)) return {sent:false,reason:"quota"};
     if (guard) {
-      if (!(await guard(tx))) return;
+      if (!(await guard(tx))) return {sent:false,reason:"changed"};
     } else {
       const user = (await tx.get(db.doc(`users/${uid}`))).data();
-      if (!user || user.disabled) return;
+      if (!user || user.disabled) return {sent:false,reason:"inactive"};
     }
     const ref = db.doc(`users/${uid}/notifications/${id}`),
       existing = await tx.get(ref);
-    if (!existing.exists)
+    if (existing.exists) return {sent:false,reason:"duplicate"};
+    if (!existing.exists) {
+      if(reminder)tx.set(quotaRef,{day,count:quota?.day===day?(quota.count||0)+1:1,lastSent:FieldValue.serverTimestamp()});
       tx.set(ref, {
         ...value,
         read: false,
         createdAt: FieldValue.serverTimestamp(),
       });
+      return {sent:true};
+    }
   });
 }
 async function aggregateCommunity(uid) {
@@ -617,7 +629,7 @@ async function buildHistory(uid) {
       ovrCalculation: calculation.ovrCalculation,
       baseCard: calculateBaseCard(ovr),
       specials,
-      official: cs.count >= 3,
+      official: cs.count >= policyAt().rules.communityMinimum,
       sourceCutoffDate: cutoff,
       locked: false,
       opensAt: cycle.opensAt,
@@ -669,7 +681,7 @@ async function buildHistory(uid) {
         specials: latest.specials.map((x) => x.id),
         updatedAt: FieldValue.serverTimestamp(),
       });
-      if (oldData && oldData.ovr !== latest.ovr)
+      if (policyAt().notifications.enabled && oldData && oldData.ovr !== latest.ovr)
         tx.set(
           db.doc(
             `users/${uid}/notifications/card-${latest.weekId}-${latest.ovr}`,
@@ -684,7 +696,7 @@ async function buildHistory(uid) {
           },
         );
       for (const s of latest.specials.filter(
-        (s) => !oldData?.specials?.includes(s.id),
+        (s) => policyAt().notifications.enabled && !oldData?.specials?.includes(s.id),
       ))
         tx.set(db.doc(`users/${uid}/notifications/special-${s.id}`), {
           type: "SPECIAL_CARD_UNLOCKED",
@@ -696,7 +708,7 @@ async function buildHistory(uid) {
         });
     });
 }
-export const onCommunityRating = onDocumentWritten(
+export const onCommunityRating = policyWritten(
   "communityRatings/{id}",
   async (event) => {
     const value = event.data.after.data() || event.data.before.data();
@@ -706,7 +718,7 @@ export const onCommunityRating = onDocumentWritten(
     await buildHistory(value.targetId);
   },
 );
-export const onPlayerPosition = onDocumentWritten("users/{uid}", (event) => {
+export const onPlayerPosition = policyWritten("users/{uid}", (event) => {
   if (
     event.data.after.exists &&
     event.data.after.data().primaryPosition !==
@@ -714,14 +726,14 @@ export const onPlayerPosition = onDocumentWritten("users/{uid}", (event) => {
   )
     return buildHistory(event.params.uid);
 });
-export const onInitialRating = onDocumentWritten(
+export const onInitialRating = policyWritten(
   "initialRatings/{uid}",
   (event) => {
     if (event.data.after.data()?.completed)
       return buildHistory(event.params.uid);
   },
 );
-export const onFeedback = onDocumentWritten(
+export const onFeedback = policyWritten(
   "games/{gid}/feedback/{id}",
   async (event) => {
     const value = event.data.after.data() || event.data.before.data();
@@ -786,7 +798,7 @@ async function captureGameCards(gid) {
     tx.update(ref, { cardWeekId: weekId, playerCards: cards });
   });
 }
-export const ensureGameCards = onCall(async (request) => {
+export const ensureGameCards = policyCall("ensureGameCards",async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const user = await db.doc(`users/${request.auth.uid}`).get();
   if (!user.exists || user.data().disabled)
@@ -801,7 +813,7 @@ export const ensureGameCards = onCall(async (request) => {
     cardWeekId: game?.cardWeekId || null,
   };
 });
-export const renameGameTeam = onCall(async (request) => {
+export const renameGameTeam = policyCall("renameGameTeam",async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const { gameId, side, name } = request.data || {};
   if (
@@ -839,7 +851,7 @@ export const renameGameTeam = onCall(async (request) => {
   });
   return { ok: true };
 });
-export const onGame = onDocumentWritten("games/{gid}", async (event) => {
+export const onGame = policyWritten("games/{gid}", async (event) => {
   const latestGame = await db.doc(`games/${event.params.gid}`).get();
   if (!latestGame.exists) {
     await db.doc(`gameSummaries/${event.params.gid}`).delete();
@@ -853,8 +865,8 @@ export const onGame = onDocumentWritten("games/{gid}", async (event) => {
   }
   const g = latestGame.data();
   if (g.deleting) return;
-  const before = event.data.before.data(),
-    after = event.data.after.data();
+  const before = event.data.before?.data?.(),
+    after = event.data.after?.data?.() || g;
   if (before && after) {
     const core = (value) =>
       JSON.stringify(
@@ -896,7 +908,7 @@ async function requireAdmin(request) {
   if (u.data()?.role !== "admin" || u.data()?.disabled)
     throw new HttpsError("permission-denied", "Acesso reservado.");
 }
-export const saveOvrWeights = onCall(
+export const saveOvrWeights = policyCall("saveOvrWeights",
   { timeoutSeconds: 540 },
   async (request) => {
     await requireAdmin(request);
@@ -918,7 +930,7 @@ export const saveOvrWeights = onCall(
     return { ok: true, weights, positions };
   },
 );
-export const rebuildHistory = onCall(async (request) => {
+export const rebuildHistory = policyCall("rebuildHistory",async (request) => {
   await requireAdmin(request);
   const uid = request.data.uid;
   if (typeof uid !== "string" || uid.includes("/"))
@@ -948,25 +960,27 @@ async function publishWeeklyCard(uid, snapshot, cycle) {
     });
   });
 }
-export const closeCardWeek = onSchedule(
-  { schedule: "0 12 * * 3", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+export const closeCardWeek = policySchedule("closeCardWeek",
+  { schedule: "every 15 minutes", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
+    if(cardWeek().phase!=="closed") return;
     const users = data(await db.collection("users").get()).filter(
       (u) => !u.disabled,
     );
     for (const user of users) await buildHistory(user.uid);
   },
 );
-export const openCardWeek = onSchedule(
-  { schedule: "0 12 * * 4", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+export const openCardWeek = policySchedule("openCardWeek",
+  { schedule: "every 15 minutes", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
+    if(cardWeek().phase!=="open") return;
     const users = data(await db.collection("users").get()).filter(
       (u) => !u.disabled,
     );
     for (const user of users) await buildHistory(user.uid);
   },
 );
-export const ensureHistory = onCall(async (request) => {
+export const ensureHistory = policyCall("ensureHistory",async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const uid = request.auth.uid,
     user = await db.doc(`users/${uid}`).get();
@@ -975,7 +989,7 @@ export const ensureHistory = onCall(async (request) => {
   await buildHistory(uid);
   return { ok: true };
 });
-export const refreshCardCollection = onSchedule(
+export const refreshCardCollection = policySchedule("refreshCardCollection",
   { schedule: "15 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
     const context = await collectionContext();
@@ -986,7 +1000,7 @@ export const refreshCardCollection = onSchedule(
     await closeEvents.run({});
   },
 );
-export const selectWeeklyCard = onCall(async (request) => {
+export const selectWeeklyCard = policyCall("selectWeeklyCard",async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const uid = request.auth.uid;
   const { weekId, cardId } = request.data || {};
@@ -1052,7 +1066,7 @@ export const selectWeeklyCard = onCall(async (request) => {
   });
   return { ok: true };
 });
-export const rebuildLeague = onCall(async (request) => {
+export const rebuildLeague = policyCall("rebuildLeague",async (request) => {
   await requireAdmin(request);
   const users = data(await db.collection("users").get()),
     games = data(await db.collection("games").get());
@@ -1063,7 +1077,7 @@ export const rebuildLeague = onCall(async (request) => {
   }
   return { ok: true };
 });
-export const deleteGame = onCall(async (request) => {
+export const deleteGame = policyCall("deleteGame",async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const actor = (await db.doc(`users/${request.auth.uid}`).get()).data();
   if (!actor || actor.disabled || !["admin", "dbs"].includes(actor.role))
@@ -1094,8 +1108,9 @@ export const deleteGame = onCall(async (request) => {
   await Promise.all(affected.map(buildHistory));
   return { ok: true };
 });
-export const adminMessage = onCall(async (request) => {
+export const adminMessage = policyCall("adminMessage",async (request) => {
   await requireAdmin(request);
+  if(!policyAt().notifications.enabled) throw new HttpsError("failed-precondition", "As notifica\u00e7\u00f5es est\u00e3o pausadas nas regras globais.");
   const { title, body } = request.data;
   if (
     typeof title !== "string" ||
@@ -1122,7 +1137,7 @@ export const adminMessage = onCall(async (request) => {
   );
   return { ok: true };
 });
-export const saveTheme = onCall(async (request) => {
+export const saveTheme = policyCall("saveTheme",async (request) => {
   await requireAdmin(request);
   const { id, name, colors, texture, design, baseTheme } = request.data;
   if (
@@ -1167,7 +1182,7 @@ export const saveTheme = onCall(async (request) => {
   });
   return { id: r.id };
 });
-export const correctRating = onCall(async (request) => {
+export const correctRating = policyCall("correctRating",async (request) => {
   await requireAdmin(request);
   const { kind, id, gameId, ratings } = request.data;
   const validId = (value) =>
@@ -1240,7 +1255,7 @@ export const correctRating = onCall(async (request) => {
   return { ok: true };
 });
 
-export const saveWeeklyCardPhoto = onCall(async (request) => {
+export const saveWeeklyCardPhoto = policyCall("saveWeeklyCardPhoto",async (request) => {
   await requireAdmin(request);
   const { uid, weekId, design, reset, imageBase64 } = request.data || {};
   let photoURL = request.data?.photoURL;
@@ -1340,7 +1355,7 @@ export const saveWeeklyCardPhoto = onCall(async (request) => {
   return { ok: true, photoURL: reset === true ? "" : photoURL };
 });
 
-export const initializeOvrPresets = onCall(async (request) => {
+export const initializeOvrPresets = policyCall("initializeOvrPresets",async (request) => {
   await requireAdmin(request);
   await db.runTransaction(async (tx) => {
     const flag = db.doc("settings/ovrPresetSeed"),
@@ -1353,7 +1368,7 @@ export const initializeOvrPresets = onCall(async (request) => {
   });
   return { ok: true };
 });
-export const saveOvrPreset = onCall(async (request) => {
+export const saveOvrPreset = policyCall("saveOvrPreset",async (request) => {
   await requireAdmin(request);
   const { name, settings } = request.data || {};
   if (
@@ -1385,4 +1400,12 @@ export const {
   onGameNotifications,
   onEventNotifications,
   scheduledNotifications,
+  ratingSubmissionStatus,
+  sendRatingReminders,
 } = notificationFunctions(notification);
+
+export const { maintenanceRead, maintenanceAction, systemHeartbeat, systemCleanup } = maintenanceFunctions({
+  rebuildPlayer: buildHistory,
+  rebuildGame: async id => { await aggregateGame(id); const game=(await db.doc(`games/${id}`).get()).data(); if(game)for(const uid of participants(game))await buildHistory(uid); },
+  rebuildAll: async () => { const users=data(await db.collection("users").get()), games=data(await db.collection("games").get()); for(const game of games)await aggregateGame(game.id); for(const user of users){await aggregateCommunity(user.uid);await buildHistory(user.uid);} return {ok:true}; },
+});

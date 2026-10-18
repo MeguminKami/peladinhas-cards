@@ -17,5 +17,18 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {"collectionGroup":"settings","fieldPath":"timeline","indexes":[]},
+    {"collectionGroup":"systemVersions","fieldPath":"config","indexes":[]},
+    {"collectionGroup":"systemDrafts","fieldPath":"config","indexes":[]},
+    {
+      "collectionGroup":"notifications",
+      "fieldPath":"read",
+      "indexes":[
+        {"order":"ASCENDING","queryScope":"COLLECTION"},
+        {"order":"DESCENDING","queryScope":"COLLECTION"},
+        {"order":"ASCENDING","queryScope":"COLLECTION_GROUP"}
+      ]
+    }
+  ]
 }

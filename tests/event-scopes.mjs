@@ -161,12 +161,14 @@ try {
       done: 1, total: 14, href: "#/event/example", icon: "trophy",
     }]);
   });
-  assert.ok((await page.locator(".mission-event-description").textContent()).includes("<teste>"));
+  assert.equal(await page.locator(".mission-event-description").count(), 0);
+  assert.equal(await page.locator(".mission-content > p").count(), 0);
+  assert.equal(await page.locator(".mission").getAttribute("href"), "#/event/example");
   assert.equal(await page.locator(".mission-event-description teste").count(), 0);
   for (const width of [320, 390, 640, 844, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `Event description overflow ${width}`);
-    assert.ok(await page.locator(".mission-event-description").isVisible());
+    assert.ok(await page.locator(".mission-heading h3").isVisible());
   }
   mkdirSync("test-results/event-scopes", { recursive: true });
   await page.locator(".mission-competition").screenshot({ path: `test-results/event-scopes/description-${isWebKit ? "webkit" : "chromium"}.png` });
@@ -174,7 +176,8 @@ try {
     const { missionList } = await import("./js/missions.js");
     document.querySelector("main").innerHTML = missionList(["COMPETITION_OBJECTIVE", "OBJECTIVE_MISSION", "EVENT_VOTE"].map(type => ({ type, title: type, eventDescription: "A description shared by every challenge type.", description: "Objective or voting instructions.", done: 1, total: 3, href: "#/event/example", icon: "trophy" })));
   });
-  assert.equal(await page.locator(".mission-event-description").count(), 3);
+  assert.equal(await page.locator(".mission-event-description").count(), 0);
+  assert.equal(await page.locator(".mission-content > p").count(), 1);
   for (const width of [320, 390, 844, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `All challenge descriptions overflow ${width}`);

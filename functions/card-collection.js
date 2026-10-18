@@ -1,3 +1,4 @@
+import { policyAt } from "../js/system-policy.js";
 import {
   evaluateCardAchievements,
   periodCardAwards,
@@ -222,7 +223,7 @@ export async function refreshPlayerCollection(uid, context = null) {
   const old = await ref.get();
   const community = context.communities.find((row) => row.id === uid);
   let officialSince = old.data()?.officialSince || null;
-  if (!officialSince && community?.count >= 3) {
+  if (!officialSince && community?.count >= policyAt().rules.communityMinimum) {
     const votes = rows(
       await db
         .collection("communityRatings")
@@ -276,7 +277,7 @@ export async function refreshPlayerCollection(uid, context = null) {
       updatedAt: FieldValue.serverTimestamp(),
     });
     for (const award of awards.filter(
-      (award) => !existing.some((prior) => prior.id === award.id),
+      (award) => policyAt().notifications.enabled && !existing.some((prior) => prior.id === award.id),
     )) {
       tx.set(
         db.doc(
@@ -353,7 +354,7 @@ export async function settleCollectionPeriods(context = null) {
             },
             { merge: true },
           );
-          tx.set(db.doc(`users/${uid}/notifications/collection-${period.id}`), {
+          if(policyAt().notifications.enabled) tx.set(db.doc(`users/${uid}/notifications/collection-${period.id}`), {
             type: "SPECIAL_CARD_UNLOCKED",
             title: "Prémio de ciclo",
             body: `Conquistaste ${record.name}.`,

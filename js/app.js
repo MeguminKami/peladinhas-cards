@@ -1,3 +1,5 @@
+import { policyAt, canManage, setPolicyDocument } from "./system-policy.js";
+import * as Firebase from "./firebase.js";
 import { homeCardPanel } from "./home-card.js";
 import { compareEventRarity } from "./event-rarity.js";
 import { mountHomePodium } from "./home-podium.js";
@@ -15,6 +17,7 @@ import {
 import {
   activeDestination,
   mobileNavigation,
+  missionRewardBadge,
   bindMobileNavigation,
 } from "./navigation.js";
 import { eventsPage } from "./event-pages.js";
@@ -25,7 +28,7 @@ import {
   perspectiveControl,
   bindPerspective,
 } from "./role-perspective.js";
-import { mountAdminMenu } from "./admin-menu.js";
+import { mountAdminMenu, adminAreaCapability } from "./admin-menu.js";
 import { configured } from "./firebase.js";
 import { ovrAuditPage } from "./ovr-audit.js";
 import { statisticsPage } from "./statistics.js";
@@ -75,7 +78,9 @@ const ctx = {
   notifications: [],
   disposers: [],
   render(html) {
-    setMain(html);
+    setMain(`${policyAt().features.mode === "readOnly" ? `<p class="maintenance-public-notice" role="status">${esc(policyAt().features.message)}</p>` : ""}${html}`);
+    if (/^#\/admin(?:\/|$)/.test(location.hash) && this.user?.role === "admin")
+      mountAdminMenu(this.user);
     clearTimeout(this.cardExpiryTimer);
     if (
       /^#\/(?:profile|players|ranking|statistics)?$/.test(location.hash) ||
@@ -249,7 +254,8 @@ function header() {
     document.querySelector("#header").dataset.route === location.hash;
   const p = ctx.user,
     hash = location.hash || "#/",
-    unread = ctx.notifications.filter((n) => !n.read).length;
+    unread = ctx.notifications.filter((n) => !n.read).length,
+    readyMissions = ctx.missions.filter((mission) => mission.claimable).length;
   const links = [
     ["#/", "home", "Início"],
     ["#/players", "players", "Jogadores"],
@@ -259,7 +265,7 @@ function header() {
     ["#/tickets", "tickets", "Tickets"],
   ];
   document.querySelector("#header").innerHTML =
-    `<nav class="navbar"><a class="brand" href="#/" aria-label="Peladinhas Cards — início"><img src="${ASSET_PATHS.logo}" alt=""><span>PELADINHAS<small>CARDS</small></span></a>${p ? `<div class="desktop-nav">${links.map(([h, i, n]) => `<a href="${h}" class="nav-link ${activeDestination(h, hash) ? "active" : ""}">${icon(i)}${n}${i === "missions" && ctx.missions.length ? `<span class="badge">${ctx.missions.length}</span>` : ""}</a>`).join("")}${p.role === "admin" ? `<a class="nav-link ${hash.startsWith("#/admin") ? "active" : ""}" href="#/admin">${icon("shield")}Admin</a>` : ""}</div><div class="header-actions">${p.role === "admin" ? `<a class="btn btn-icon btn-ghost mobile-admin" href="#/admin" aria-label="Administração">${icon("shield")}</a>` : ""}<button id="bell" class="btn btn-icon btn-ghost" aria-label="Notificações${unread ? `, ${unread} por ler` : ""}">${icon("bell")}${unread ? `<span class="badge notification-count">${unread}</span>` : ""}</button><div class="profile-perspective-menu"><a class="user-link" href="#/profile" aria-label="Ver o meu perfil"><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><span>${esc(p.displayName || p.username)}</span></a>${perspectiveControl(ctx.realUser, p.role, true)}</div><button id="logout" class="btn btn-icon btn-ghost" aria-label="Terminar sessão">${icon("logout")}</button></div>` : '<span class="club-label">A TUA LIGA. A TUA CARTA.</span>'}</nav>${p ? mobileNavigation(p, ctx.missions.length) : ""}`;
+    `<nav class="navbar"><a class="brand" href="#/" aria-label="Peladinhas Cards — início"><img src="${ASSET_PATHS.logo}" alt=""><span>PELADINHAS<small>CARDS</small></span></a>${p ? `<div class="desktop-nav">${links.map(([h, i, n]) => `<a href="${h}" class="nav-link ${activeDestination(h, hash) ? "active" : ""}">${icon(i)}${n}${i === "missions" && ctx.missions.length ? `<span class="badge">${ctx.missions.length}</span>` : ""}${i === "missions" ? missionRewardBadge(readyMissions) : ""}</a>`).join("")}${p.role === "admin" ? `<a class="nav-link ${hash.startsWith("#/admin") ? "active" : ""}" href="#/admin">${icon("shield")}Admin</a>` : ""}</div><div class="header-actions">${p.role === "admin" ? `<a class="btn btn-icon btn-ghost mobile-admin" href="#/admin" aria-label="Administração">${icon("shield")}</a>` : ""}<button id="bell" class="btn btn-icon btn-ghost" aria-label="Notificações${unread ? `, ${unread} por ler` : ""}">${icon("bell")}${unread ? `<span class="badge notification-count">${unread}</span>` : ""}</button><div class="profile-perspective-menu"><a class="user-link" href="#/profile" aria-label="Ver o meu perfil"><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><span>${esc(p.displayName || p.username)}</span></a>${perspectiveControl(ctx.realUser, p.role, true)}</div><button id="logout" class="btn btn-icon btn-ghost" aria-label="Terminar sessão">${icon("logout")}</button></div>` : '<span class="club-label">A TUA LIGA. A TUA CARTA.</span>'}</nav>${p ? mobileNavigation(p, ctx.missions.length, readyMissions) : ""}`;
   document
     .querySelector("#bell")
     ?.addEventListener("click", () => toggleNotifications(ctx));
@@ -421,6 +427,7 @@ async function route({ cachedOnly = false } = {}) {
     return;
   }
   if (!currentUser) {
+    try {setPolicyDocument(await DB.read("settings/system"));await Firebase.configureAppCheck?.(policyAt());}catch {}
     syncPushIdentity(null).catch(() => {});
     ctx.user = null;
     ctx.realUser = null;
@@ -492,7 +499,8 @@ async function route({ cachedOnly = false } = {}) {
       if (isCurrent() && !rendered) setMain(skeleton());
     }, 150);
     const parts = (location.hash || "#/").slice(2).split("/").filter(Boolean);
-    if (parts[0] === "admin" && ctx.user.role !== "admin")
+    const adminCapability = adminAreaCapability(parts[1]);
+    if (parts[0] === "admin" && (ctx.user.role !== "admin" || adminCapability && !canManage(ctx.user,adminCapability)))
       return ctx.render(
         empty(
           "Acesso reservado",
@@ -553,7 +561,6 @@ async function route({ cachedOnly = false } = {}) {
         ),
       );
     if (!isCurrent()) return;
-    if (parts[0] === "admin") mountAdminMenu();
     bindImages();
     const title = document.querySelector("#main h1, #main .empty-state h3");
     document.title = `${title?.textContent.trim() || "A tua liga"} · Peladinhas Cards`;

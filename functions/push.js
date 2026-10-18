@@ -1,3 +1,5 @@
+import { policyAt } from "../js/system-policy.js";
+import { policyCall, policySchedule, policyWritten, policyCreated } from "./policy-runtime.js";
 import webpush from "web-push";
 import {
   createHash,
@@ -8,9 +10,7 @@ import {
 } from "node:crypto";
 import * as logger from "firebase-functions/logger";
 import { getFirestore, FieldValue, FieldPath, Timestamp } from "firebase-admin/firestore";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
-import { onSchedule } from "firebase-functions/v2/scheduler";
+import { HttpsError } from "firebase-functions/v2/https";
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 export const PUSH_TTL_SECONDS = 7 * 24 * 60 * 60;
@@ -138,7 +138,7 @@ export function pushFunctions({
       throw new HttpsError("permission-denied", "Conta indisponível.");
     return user;
   };
-  const pushDeviceAction = onCall(
+  const pushDeviceAction = policyCall("pushDeviceAction",
     { secrets: secret ? [secret] : [] },
     async (request) => {
       if (!request.auth)
@@ -267,6 +267,7 @@ export function pushFunctions({
   );
 
   async function deliver(uid, nid, deviceId) {
+    if(!policyAt().notifications.enabled) return;
     const notificationRef = db().doc(`users/${uid}/notifications/${nid}`),
       deviceRef = db().doc(`pushDevices/${deviceId}`);
     const [notificationDoc, deviceDoc, userDoc] = await Promise.all([
@@ -421,7 +422,7 @@ export function pushFunctions({
       throw Error("Não foi possível entregar uma notificação push.");
     }
   }
-  const onNotificationPush = onDocumentCreated(
+  const onNotificationPush = policyCreated(
     {
       document: "users/{uid}/notifications/{nid}",
       secrets: secret ? [secret] : [],
@@ -445,7 +446,7 @@ export function pushFunctions({
         throw Error("Entrega push temporariamente indisponível.");
     },
   );
-  const ackPushNotification = onCall({ cors: true }, async (request) => {
+  const ackPushNotification = policyCall("ackPushNotification",{ cors: true }, async (request) => {
     const { receiptId, receiptToken } = request.data || {};
     if (
       !validId(receiptId) ||
@@ -476,7 +477,7 @@ export function pushFunctions({
       return { read: true };
     });
   });
-  const cleanupPushDeliveries = onSchedule(
+  const cleanupPushDeliveries = policySchedule("cleanupPushDeliveries",
     { schedule: "every 24 hours", timeZone: "Europe/Lisbon" },
     async () => {
       // Bound each run; expiry is enforced by the acknowledgement endpoint as well.

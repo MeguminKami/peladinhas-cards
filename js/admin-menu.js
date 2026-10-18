@@ -1,3 +1,4 @@
+import { canManage } from "./system-policy.js";
 import { icon } from "./icons.js";
 import { esc } from "./ui.js";
 
@@ -79,7 +80,7 @@ export const ADMIN_AREAS = [
     href: "#/admin/maintenance",
     label: "Manutenção",
     icon: "shield",
-    description: "Recalcular as cartas e o histórico da liga.",
+    description: "Configurações globais, automatizações, diagnóstico e recuperação.",
   },
 ];
 export function adminDashboard() {
@@ -92,18 +93,25 @@ export function adminDashboard() {
     )
     .join("")}</div></section>`;
 }
-export function mountAdminMenu() {
+export const adminAreaCapability = id => ({players:"access",player:"access",initial:"ratings",ratings:"ratings",games:"games",weights:"cards",cards:"cards","card-types":"cards","card-photo":"cards",ovr:"cards",events:"events",messages:"messages",support:"support"})[id] || null;
+export function mountAdminMenu(user) {
+  const areas=ADMIN_AREAS.filter(area=>!user || !adminAreaCapability(area.id) || canManage(user,adminAreaCapability(area.id)));
+  const main = document.querySelector("#main");
+  if (!main) return;
+  main
+    .querySelectorAll(".admin-area-nav, .admin-mobile-select")
+    .forEach((node) => node.remove());
   const section = location.hash.slice(2).split("/")[1] || "overview";
   const selected = ["player", "initial", "ovr", "card-photo"].includes(section)
     ? "players"
     : section;
-  const html = `<nav class="admin-area-nav" aria-label="Menu de administração">${ADMIN_AREAS.map((a) => `<a href="${a.href}" ${a.id === selected ? 'class="active" aria-current="page"' : ""}>${icon(a.icon)}<span>${esc(a.label)}</span></a>`).join("")}</nav>`;
-  document
-    .querySelector("#main .page-head")
-    ?.insertAdjacentHTML("afterend", html);
+  const html = `<nav class="admin-area-nav" aria-label="Menu de administração">${areas.map((a) => `<a href="${a.href}" ${a.id === selected ? 'class="active" aria-current="page"' : ""}>${icon(a.icon)}<span>${esc(a.label)}</span></a>`).join("")}</nav>`;
+  const heading = main.querySelector(".page-head");
+  if (heading) heading.insertAdjacentHTML("afterend", html);
+  else main.insertAdjacentHTML("afterbegin", html);
   const mobileSelect = document.createElement("label");
   mobileSelect.className = "admin-mobile-select";
-  mobileSelect.innerHTML = `Área da liga<select aria-label="Área de administração">${ADMIN_AREAS.map((a) => `<option value="${a.href}" ${a.id === selected ? "selected" : ""}>${esc(a.label)}</option>`).join("")}</select>`;
+  mobileSelect.innerHTML = `Área da liga<select aria-label="Área de administração">${areas.map((a) => `<option value="${a.href}" ${a.id === selected ? "selected" : ""}>${esc(a.label)}</option>`).join("")}</select>`;
   document.querySelector(".admin-area-nav")?.after(mobileSelect);
   mobileSelect.querySelector("select").onchange = (event) => {
     location.hash = event.target.value;

@@ -1,3 +1,4 @@
+import { policyAt } from "./system-policy.js";
 import { card } from "./cards.js";
 import { esc, linkButton } from "./ui.js";
 import {
@@ -32,7 +33,7 @@ export function homeCardPanel(player, league) {
     : "—";
   const qualification = player.official
     ? "Carta oficial"
-    : `Carta provisória · ${Math.min(3, player.communityCount || 0)}/3 avaliações`;
+    : `Carta provisória · ${Math.min(policyAt().rules.communityMinimum, player.communityCount || 0)}/${policyAt().rules.communityMinimum} avaliações`;
   return `<section class="panel my-card-panel"><div class="section-head"><h2>A minha carta</h2>${linkButton("#/profile", "Ver perfil", "ghost")}</div>${card(player, { size: "md" })}<div class="my-card-status"><span>${player.hasCard ? qualification : "Cria a tua primeira carta"}</span>${player.hasCard && Number.isFinite(delta) ? `<strong>${delta > 0 ? "+" : ""}${format(delta)} OVR <small>esta semana</small></strong>` : ""}</div><div class="metrics compact-metrics">${[
     ["Forma / 5", rating],
     ["Jogos", stats.played || 0],

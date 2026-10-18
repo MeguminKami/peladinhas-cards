@@ -10,7 +10,13 @@ export function activeDestination(href, hash = location.hash || "#/") {
   return hash === href || hash.startsWith(href + "/");
 }
 
-export function mobileNavigation(user, pending) {
+export function missionRewardBadge(count) {
+  if (!count) return "";
+  const label = `${count} ${count === 1 ? "miss\u00e3o pronta a receber" : "miss\u00f5es prontas a receber"}`;
+  return `<span class="mission-ready-badge" role="img" aria-label="${label}" title="${label}">${icon("gift")}<span aria-hidden="true">${count}</span></span>`;
+}
+
+export function mobileNavigation(user, pending, ready = 0) {
   return `<nav class="bottom-nav" aria-label="Navegação mobile">${[
     ["#/", "home", "Início"],
     ["#/players", "players", "Jogadores"],
@@ -19,7 +25,7 @@ export function mobileNavigation(user, pending) {
   ]
     .map(
       ([href, symbol, label]) =>
-        `<a href="${href}" ${activeDestination(href) ? 'class="active" aria-current="page"' : ""}>${icon(symbol)}<span>${label}</span>${symbol === "missions" && pending ? '<i class="nav-dot" aria-hidden="true"></i>' : ""}</a>`,
+        `<a href="${href}" ${activeDestination(href) ? 'class="active" aria-current="page"' : ""}>${icon(symbol)}<span>${label}</span>${symbol === "missions" ? ready ? missionRewardBadge(ready) : pending ? '<i class="nav-dot" aria-hidden="true"></i>' : "" : ""}</a>`,
     )
     .join(
       "",

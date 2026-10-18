@@ -1,5 +1,7 @@
 # Evolução por jogo
 
+Os valores descritos abaixo são os valores iniciais. As regras configuráveis e a preservação do histórico estão descritas em [Manutenção](maintenance.md).
+
 [← Documentação](../README.md) · [Cartas e OVR](cards-and-ratings.md)
 
 ## O que faz um jogador evoluir

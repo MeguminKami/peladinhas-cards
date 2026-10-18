@@ -14,6 +14,16 @@ A origem é `users/{uid}/notifications`. O sino e a página **Notificações** m
 
 O sistema operativo decide a apresentação final: banner, som, agrupamento e central de notificações. A existência de uma mensagem no sino não prova a entrega push.
 
+## Lembretes de avaliações no painel de administração
+
+Em **Administração → Jogos**, o botão **Avaliações** de cada jogo finalizado abre o estado das submissões por participante: concluído, parcial ou por iniciar. O total inclui a autoavaliação e todos os participantes, incluindo suplentes. Rascunhos não contam como submissões. Contas inativas ficam identificadas e não recebem lembretes.
+
+O sino de cada linha envia um lembrete individual. A seleção de jogadores e **Lembrar selecionados** permite enviar em grupo; **Selecionar disponíveis** marca quem pode receber nesse momento. **Atualizar avaliações** volta a consultar o servidor. O painel apresenta contagens, sem revelar respostas ou classificações individuais.
+
+Os endpoints `ratingSubmissionStatus` e `sendRatingReminders` exigem administrador ativo com capacidade de Jogos ou Avaliações. O envio reutiliza `users/{uid}/notifications`, o tipo `RATING_REQUIRED` e o push existente, com ligação direta ao formulário do jogo. O servidor volta a verificar participantes, estado do jogo, conta e submissões dentro da transação de entrega. Um participante que entretanto concluiu não recebe o lembrete.
+
+Envios manuais e automáticos partilham os limites diários e o intervalo configurados em Manutenção, bem como o horário de silêncio. As pausas globais de notificações/avaliações e o modo apenas consulta são respeitados. Pedidos repetidos têm uma referência idempotente e os envios administrativos ficam na auditoria. O número apresentado confirma a criação da notificação no sino, sem afirmar entrega push num aparelho.
+
 ## Ativação e convite no início
 
 A página Notificações tem **Ativar no telemóvel** ou **Ativar neste dispositivo**, conforme a plataforma. A permissão nativa só é pedida após o toque no botão.

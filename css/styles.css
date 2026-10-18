@@ -539,6 +539,35 @@ button:disabled {
   min-width: 17px;
   text-align: center;
 }
+.mission-ready-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: none;
+  min-width: 30px;
+  padding: 3px 5px;
+  border: 1px solid var(--warning);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  color: var(--warning);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mission-ready-badge > .ui-icon,
+.bottom-nav .mission-ready-badge > .ui-icon {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+.bottom-nav .mission-ready-badge {
+  position: absolute;
+  top: -5px;
+  left: calc(50% + 3px);
+  z-index: 1;
+}
 .notification-count {
   position: absolute;
   top: 2px;

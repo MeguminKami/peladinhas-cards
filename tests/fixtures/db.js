@@ -71,6 +71,7 @@ export const history = async () => {
 };
 export const notifications = async () => state.notifications;
 export const read = async (path) => {
+  if(path==="settings/system")return state.systemPolicy || null;
   const [type, id] = path.split("/");
   if (type === "events")
     return path.includes("/votes/")
@@ -163,6 +164,14 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if(name === "ratingSubmissionStatus" || name === "sendRatingReminders") {
+    const {gameRatingFixture} = await import("../tests/fixtures/game-ratings.js");
+    return {data:gameRatingFixture(state,name,data)};
+  }
+  if(name==="maintenanceRead" || name==="maintenanceAction") {
+    const {maintenanceFixture}=await import("../tests/fixtures/maintenance.js");
+    return {data:await maintenanceFixture(state,name,data)};
+  }
   if (name === "saveTheme") {
     state.cardThemes ||= [];
     const existing = state.cardThemes.find((theme) => theme.id === data.id);

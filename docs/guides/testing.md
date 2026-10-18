@@ -69,6 +69,7 @@ Os resultados de eventos usam nomes e recompensas longas. O teste de jogos verif
 
 ```powershell
 npm.cmd run test:push
+npm.cmd run test:game-ratings
 node tests/push-home-prompt.mjs
 node --test tests/push-config.test.js
 ```

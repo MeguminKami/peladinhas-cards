@@ -76,3 +76,7 @@ As capturas usam dados fictícios. O [relatório de revisão](reports/experience
 [Revisão da experiência e PWA →](reports/experience-review.md)
 
 Regista alterações e validações realizadas. O estado de publicação e as limitações devem ser confirmados nos guias; um teste local não comprova a entrega push num aparelho.
+
+## Manutenção do sistema
+
+[Configurações, operações, segurança e recuperação](reference/maintenance.md).

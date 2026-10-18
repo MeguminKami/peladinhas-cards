@@ -76,13 +76,13 @@ Modalidades: Stats, carta ou ambas. A duração da recompensa pode ser semanal, 
 - Recompensas semanais duram sete dias; as mensais duram um mês de calendário a partir do início, ajustando o dia ao último dia do mês quando necessário. Durante a pausa das cartas, o início temporário passa para a próxima abertura. Stats e cartas permanentes não expiram, mas podem ser anuladas pela administração.
 - Atributos respeitam o máximo 99. O registo conserva recompensa configurada e recompensa efetivamente atribuída, mesmo quando um limite reduz os pontos entregues.
 
-Os prémios ficam privados antes da atribuição; jogadores veem apenas o prémio entregue. Recompensas antigas mantêm limites e validade originais.
+Os jogadores podem consultar a pré-visualização dos prémios. O servidor distingue o prémio configurado do efetivamente entregue e aplica os limites globais de [Manutenção](maintenance.md). Efeitos de recompensas já entregues mantêm os montantes e validade registados.
 
 ## Histórico, privacidade e correções
 
 Histórico público com datas, regras, classificação, votos agregados, pódio e recompensas. ADMIN consulta boletins com identidade/data, filtros de votante/candidato, entregas, anulações e ações registadas. Sinais de votos recíprocos são indicadores de revisão, sem acusação automática.
 
-Recompensas, votos e auditoria só podem ser escritos pelo backend. A identidade dos outros votantes, configuração de prémios e auditoria são restritas ao ADMIN. A configuração fica numa subcoleção privada; notificações e resultados usam o mesmo registo de prémios efetivos. Medalhas distinguem as três primeiras posições; as seguintes usam numeração.
+Recompensas, votos e auditoria só podem ser escritos pelo backend. A identidade dos outros votantes, edição dos prémios e auditoria são restritas ao ADMIN. A configuração fica numa subcoleção privada; notificações e resultados usam o mesmo registo de prémios efetivos. Medalhas distinguem as três primeiras posições; as seguintes usam numeração.
 
 Antes da confirmação o ADMIN pode anular um boletim com motivo, conservando o original na auditoria. Depois da entrega pode anular os prémios com motivo: o registo fica preservado e deixa de produzir efeitos. Cancelar uma missão revoga entregas dessa missão. Cartas históricas fechadas preservam os snapshots originais; o estado atual recalcula após alterações.
 

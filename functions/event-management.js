@@ -1,3 +1,5 @@
+import { rewardBudget, policyAt, policyVersion } from "../js/system-policy.js";
+import { assertFeature, recordTaskFailure } from "./policy-runtime.js";
 import { EVENT_RARITIES } from "../js/event-rarity.js";
 import { CARD_POLICY } from "../js/card-achievements.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
@@ -347,7 +349,7 @@ export function publicManagedEvent(event, id) {
     value.ranking = [];
   return value;
 }
-function grant(
+export function grant(
   tx,
   ref,
   event,
@@ -360,36 +362,20 @@ function grant(
 ) {
   if (existing.some((r) => r.id === key))
     return existing.find((r) => r.id === key);
+  assertFeature("claims");
+  if(event.kind!=="mission")assertFeature("events");
   const now = new Date(),
     cycle = cardWeek(now),
     rewardCycle = cycle.phase === "open" ? cycle : cardWeek(cycle.nextOpensAt);
   const start = cycle.phase === "open" ? now : rewardCycle.opensAt;
   const permanent = configured.statDuration === "permanent";
   const prior = existing.filter((r) => r.uid === uid && !r.revokedAt);
-  const boosts = Object.fromEntries(
-    ATTRIBUTES.map(([attribute]) => {
-      const used = prior
-        .filter((r) =>
-          permanent
-            ? r.reward?.statDuration === "permanent"
-            : r.reward?.statDuration !== "permanent" &&
-              +asDate(r.expiresAt) > +start,
-        )
-        .reduce((sum, r) => sum + (r.reward?.boosts?.[attribute] || 0), 0);
-      return [
-        attribute,
-        Math.max(
-          0,
-          Math.min(
-            configured.boosts[attribute] || 0,
-            (permanent
-              ? EVENT_LIMITS.permanentLifetime
-              : EVENT_LIMITS.weeklyStat) - used,
-          ),
-        ),
-      ];
-    }),
-  );
+  const source = event.kind === "mission" ? "mission" : "event";
+  const allocation = rewardBudget(configured, prior, source, now);
+  if (allocation.reduced && allocation.overflow === "reject")
+    throw new HttpsError("failed-precondition", "O limite de recompensas foi atingido. A entrega não foi consumida.");
+  const pending = allocation.reduced && allocation.overflow === "defer";
+  const boosts = pending ? Object.fromEntries(ATTRIBUTES.map(([key])=>[key,0])) : allocation.boosts;
   const reward = {
     mode: configured.mode,
     statDuration: configured.statDuration,
@@ -406,11 +392,15 @@ function grant(
     questionId: "ranking",
     reward,
     configuredReward: configured,
+    source,
+    pending,
+    policyVersion: policyVersion(),
+    deliveryPolicy: policyAt().rewards,
     schemaVersion: 2,
     weekId: rewardCycle.weekId,
     startsAt: Timestamp.fromDate(permanent ? now : start),
     cardStartsAt: Timestamp.fromDate(now),
-    expiresAt: Timestamp.fromDate(rewardExpiry(start, configured.statDuration)),
+    expiresAt: Timestamp.fromDate(event.schemaVersion === 2 ? rewardExpiry(start, configured.statDuration) : rewardCycle.closesAt),
     createdAt: FieldValue.serverTimestamp(),
     awardedBy: actorId,
   };
@@ -844,6 +834,8 @@ export function managedEvents(rebuild) {
     )
       return null;
     const result = publicManagedEvent(event, id);
+    const features=policyAt().features;
+    result.votingAvailable=features.mode==="normal" && features.events;
     const previewRewards = await ref.collection("private").doc("rewards").get();
     result.rewardPreview = previewRewards.data()?.positions || [];
 
@@ -880,10 +872,21 @@ export function managedEvents(rebuild) {
       ).filter((r) => r.uid === request.auth.uid && !r.revokedAt);
       result.claimedPeriods = claims.map((r) => r.periodKey).filter(Boolean);
       result.myRewards = claims.map((r) => ({
+        pending: !!r.pending,
         reward: r.reward,
         expiresAt: asDate(r.expiresAt).toISOString(),
         periodKey: r.periodKey,
       }));
+      if(event.kind==="mission") {
+        const allocation=previewRewards.data()?.positions?.[0] ? rewardBudget(previewRewards.data().positions[0],completionLedger.filter(row=>row.uid===request.auth.uid),"mission") : null;
+        const eligible=!!result.progress.find(row=>row.uid===request.auth.uid)?.eligible;
+        const active=event.status==="open" && +asDate(event.startsAt)<=Date.now() && eventEndMillis(event)>Date.now();
+        const claimed=claims.some(row=>row.periodKey===periodWindow(event).key) || claims.length>=event.maxRepeats;
+        const available=features.mode==="normal" && features.claims && features.missions;
+        result.claimMode=!active || claimed || !available || !eligible || !allocation ? "blocked" : allocation.reduced && allocation.overflow==="defer" ? "deferred" : allocation.reduced && allocation.overflow==="reject" ? "blocked" : "ready";
+        result.claimable=result.claimMode==="ready";
+        result.claimNotice=!available ? "As recompensas estão temporariamente pausadas." : eligible && allocation?.reduced && allocation.overflow==="reject" ? "O limite de recompensas está atingido." : result.claimMode==="deferred" ? "Podes concluir a missão e aguardar orçamento para a entrega." : "";
+      }
     }
     if (user.role === "admin") {
       const [rewards, votes, auditRows, ledger] = await Promise.all([
@@ -914,6 +917,8 @@ export function managedEvents(rebuild) {
     return result;
   }
   async function claim(request) {
+    assertFeature("missions");
+    assertFeature("claims");
     const id = request.data?.eventId;
     if (!validEventId(id)) fail("Missão inválida.");
     let awarded;
@@ -980,9 +985,9 @@ export function managedEvents(rebuild) {
         progress: row.progress,
         period: window.key,
       });
-      tx.set(db().doc(`users/${uid}/notifications/mission-completed-${key}`), {
+      if(policyAt().notifications.enabled) tx.set(db().doc(`users/${uid}/notifications/mission-completed-${key}`), {
         type: "EVENT_REWARD",
-        title: "Missão concluída!",
+        title: awarded.pending ? "Missão concluída: recompensa adiada" : "Missão concluída!",
         body: `${event.title}: ${rewardText(awarded.reward)}.${hasTemporaryReward(awarded.reward) ? ` Componentes temporários até ${asDate(awarded.expiresAt).toISOString()}.` : ""}`,
         href: `#/event/${id}`,
         read: false,
@@ -992,6 +997,7 @@ export function managedEvents(rebuild) {
     await rebuild(request.auth.uid);
     return {
       ok: true,
+      pending: !!awarded.pending,
       reward: awarded.reward,
       expiresAt: asDate(awarded.expiresAt).toISOString(),
     };
@@ -1011,7 +1017,9 @@ export function managedEvents(rebuild) {
         .update({ expirationProcessed: true });
     const events = rows(await db().collection("events").get());
     const games = rows(await objectiveGames());
+    const issues=[];
     for (const event of events.filter((e) => e.schemaVersion === 2)) {
+      try {
       if (event.status === "scheduled" && +asDate(event.startsAt) <= Date.now())
         await db().runTransaction(async (tx) => {
           const ref = db().doc(`events/${event.id}`),
@@ -1041,7 +1049,9 @@ export function managedEvents(rebuild) {
           },
           { role: "admin" },
         );
+      } catch(error) {await recordTaskFailure(event.id,error,issues);}
     }
+    return {issues};
   }
   return { action, vote, details, claim, scheduled };
 }

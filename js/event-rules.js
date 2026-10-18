@@ -113,7 +113,7 @@ export function applyEventRewards(stats, rewards, uid, date = new Date()) {
   const delivered = rewards.filter(
     (r) =>
       r.uid === uid &&
-      !r.revokedAt &&
+      !r.revokedAt && !r.pending &&
       +asDate(r.createdAt || r.startsAt) <= +date,
   );
   const active = delivered.filter(
@@ -125,20 +125,20 @@ export function applyEventRewards(stats, rewards, uid, date = new Date()) {
   const boosts = Object.fromEntries(
     ATTRIBUTES.map(([key]) => {
       const legacy = active
-        .filter((r) => r.schemaVersion !== 2)
+        .filter((r) => r.schemaVersion !== 2 && !Number.isInteger(r.policyVersion))
         .reduce((sum, r) => sum + (r.reward.boosts?.[key] || 0), 0);
       const weekly = active
         .filter(
-          (r) => r.schemaVersion === 2 && r.reward.statDuration !== "permanent",
+          (r) => r.schemaVersion === 2 && !Number.isInteger(r.policyVersion) && r.reward.statDuration !== "permanent",
         )
         .reduce((sum, r) => sum + (r.reward.boosts?.[key] || 0), 0);
       const lifetime = Math.min(
-        EVENT_LIMITS.permanentLifetime,
-        permanent.reduce((sum, r) => sum + (r.reward.boosts?.[key] || 0), 0),
+        10,
+        permanent.filter(r => !Number.isInteger(r.policyVersion)).reduce((sum, r) => sum + (r.reward.boosts?.[key] || 0), 0),
       );
       return [
         key,
-        legacy + Math.min(EVENT_LIMITS.weeklyStat, weekly) + lifetime,
+        legacy + Math.min(10, weekly) + lifetime + delivered.filter(r => Number.isInteger(r.policyVersion) && (r.reward.statDuration === "permanent" || active.includes(r))).reduce((sum,r)=>sum+(r.reward.boosts?.[key] || 0),0),
       ];
     }),
   );

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { DEFAULT_POLICY } from "../js/system-policy.js";
 import { test, before, after, beforeEach } from "node:test";
 import {
   initializeTestEnvironment,
@@ -18,6 +19,34 @@ import {
   Timestamp,
 } from "firebase/firestore";
 let env;
+test("system policies are server-only; read-only and rating switches protect direct writes", async () => {
+  const config=structuredClone(DEFAULT_POLICY);
+  config.features.mode="readOnly";
+  await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),"settings/system"),{revision:1,timeline:[{version:1,effectiveMillis:0,effectiveAt:"1970-01-01",config}]}));
+  await assertFails(updateDoc(doc(signed("boss"),"settings/system"),{revision:99}));
+  await assertSucceeds(getDoc(doc(signed("joao"),"settings/system")));
+  await assertFails(updateDoc(doc(signed("boss"),"games/open"),{title:"Bloqueado",updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(signed("joao"),"initialRatings/joao"),{uid:"joao",ratings20:{pace:10},completed:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+  config.features.mode="normal";config.features.ratings=false;
+  await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),"settings/system"),{revision:2,timeline:[{version:2,effectiveMillis:0,effectiveAt:"1970-01-01",config}]}));
+  await assertSucceeds(updateDoc(doc(signed("boss"),"games/open"),{title:"Disponível",updatedAt:serverTimestamp()}));
+  await assertFails(setDoc(doc(signed("joao"),"initialRatings/joao"),{uid:"joao",ratings20:{pace:10},completed:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+});
+test("restricted admins cannot write capabilities directly or read private drafts",async()=> {
+  await env.withSecurityRulesDisabled(async c=>{
+    await updateDoc(doc(c.firestore(),"users/boss"),{adminCapabilities:["audit"]});
+    await setDoc(doc(c.firestore(),"systemDrafts/boss"),{private:true});
+  });
+  await assertFails(updateDoc(doc(signed("boss"),"users/boss"),{adminCapabilities:null,updatedAt:serverTimestamp()}));
+  await assertFails(getDoc(doc(signed("boss"),"systemDrafts/boss")));
+  await assertFails(getDoc(doc(signed("joao"),"systemDrafts/boss")));
+});
+test("revoked sessions cannot read profile or mutate data even before ID-token expiry",async()=> {
+  await env.withSecurityRulesDisabled(async c=>updateDoc(doc(c.firestore(),"users/joao"),{tokensValidAfter:Math.floor(Date.now()/1000)+3600}));
+  await assertFails(getDoc(doc(signed("joao"),"users/joao")));
+  await assertFails(getDocs(collection(signed("joao"),"games")));
+  await assertFails(updateDoc(doc(signed("boss"),"users/joao"),{tokensValidAfter:0,updatedAt:serverTimestamp()}));
+});
 test("push subscriptions and receipt capabilities are inaccessible to all frontend roles", async () => {
   await env.withSecurityRulesDisabled(async (c) => {
     await setDoc(doc(c.firestore(), "pushDevices/private-device"), {
@@ -224,8 +253,8 @@ test("membro não promove role nem edita outro perfil", async () => {
     }),
   );
 });
-test("admin gere roles mas não remove o próprio acesso", async () => {
-  await assertSucceeds(
+test("roles são alteradas apenas por Functions, incluindo para administradores", async () => {
+  await assertFails(
     updateDoc(doc(signed("boss"), "users/joao"), {
       role: "admin",
       updatedAt: serverTimestamp(),
@@ -507,12 +536,15 @@ test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", 
       updatedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("boss"), "users/joao"), {
       role: "dbs",
       updatedAt: serverTimestamp(),
     }),
   );
+  await env.withSecurityRulesDisabled(async context => {
+    await updateDoc(doc(context.firestore(), "users/joao"), {role:"dbs"});
+  });
   await assertSucceeds(
     updateDoc(doc(signed("joao"), "games/open"), {
       title: "Editado pelo DBS",
@@ -570,12 +602,15 @@ test("DBS: só admin atribui e pode editar jogos de outros em qualquer estado", 
   await env.withSecurityRulesDisabled(async (c) => {
     await setDoc(doc(c.firestore(), "games/open"), game("open"));
   });
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("boss"), "users/joao"), {
       role: "member",
       updatedAt: serverTimestamp(),
     }),
   );
+  await env.withSecurityRulesDisabled(async context => {
+    await updateDoc(doc(context.firestore(), "users/joao"), {role:"member"});
+  });
   await assertFails(
     updateDoc(doc(signed("joao"), "games/open"), {
       title: "DBS removido",
@@ -740,12 +775,15 @@ test("eventos: rascunhos privados, votos privados e recompensas apenas por funç
 });
 
 test("ciclo de jogos: só DBS/admin, rascunho aberto e fecho irreversível", async () => {
-  await assertSucceeds(
+  await assertFails(
     updateDoc(doc(signed("boss"), "users/joao"), {
       role: "dbs",
       updatedAt: serverTimestamp(),
     }),
   );
+  await env.withSecurityRulesDisabled(async context => {
+    await updateDoc(doc(context.firestore(), "users/joao"), {role:"dbs"});
+  });
   const draft = {
     ...game("draft"),
     creatorId: "joao",

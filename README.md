@@ -361,3 +361,7 @@ O frontend utiliza **HTML, CSS e JavaScript com ES Modules**. O Firebase suporta
 [Aplicação ↗](https://pedalinhas-cards.web.app/) &nbsp; · &nbsp; [Documentação](docs/README.md) &nbsp; · &nbsp; [Voltar ao início ↑](#o-projeto)
 
 </div>
+
+## Manutenção do sistema
+
+[Configurações, operações, segurança e recuperação](docs/reference/maintenance.md).

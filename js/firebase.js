@@ -21,3 +21,11 @@ if (configured) {
   );
 }
 export { configured };
+
+let systemAppCheck=null, systemAppCheckKey="";
+export async function configureAppCheck(policy) {
+  if(!app || !policy?.security?.appCheckSiteKey) return;
+  const {initializeAppCheck, ReCaptchaV3Provider}=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check.js");
+  if(systemAppCheck && systemAppCheckKey!==policy.security.appCheckSiteKey) {location.reload();return;}
+  if(!systemAppCheck) {systemAppCheck=initializeAppCheck(app,{provider:new ReCaptchaV3Provider(policy.security.appCheckSiteKey),isTokenAutoRefreshEnabled:true});systemAppCheckKey=policy.security.appCheckSiteKey;}
+}

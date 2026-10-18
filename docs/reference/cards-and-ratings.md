@@ -1,5 +1,7 @@
 # Cartas, avaliações e OVR
 
+Os valores descritos abaixo são os valores iniciais. As regras configuráveis e a preservação do histórico estão descritas em [Manutenção](maintenance.md).
+
 [← Documentação](../README.md) · [Progressão por jogo](progression.md) · [Eventos](events-and-missions.md)
 
 ## A carta em três passos

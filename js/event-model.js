@@ -1,3 +1,4 @@
+import { policyAt } from "./system-policy.js";
 import {
   ATTRIBUTES,
   FEEDBACK,
@@ -12,12 +13,12 @@ import {
 } from "./utils.js";
 import { CARD_POLICY, durationName, cardExpiry } from "./card-achievements.js";
 export const EVENT_LIMITS = Object.freeze({
-  winners: 20,
-  votes: 10,
-  weeklyStat: 10,
-  weeklyTotal: 20,
-  permanentLifetime: 10,
-  repeats: 12,
+  get winners() { return policyAt().rules.maxWinners; },
+  get votes() { return policyAt().rules.maxVotes; },
+  get weeklyStat() { return policyAt().rewards.temporaryAttribute; },
+  get weeklyTotal() { return policyAt().rewards.temporaryAward; },
+  get permanentLifetime() { return policyAt().rewards.permanentAttribute; },
+  get repeats() { return policyAt().rules.maxRepeats; },
 });
 export const OBJECTIVES = Object.freeze({
   games: "Jogar jogos",
@@ -248,6 +249,7 @@ export function validEventReward(reward, themes = []) {
     Array.isArray(reward.boosts)
   )
     return false;
+  if (reward.statDuration === "permanent" && !policyAt().rules.allowPermanent || reward.statDuration === "monthly" && !policyAt().rules.allowMonthly) return false;
   const values = Object.entries(reward.boosts),
     permanent = reward.statDuration === "permanent";
   if (

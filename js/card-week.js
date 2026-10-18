@@ -1,3 +1,4 @@
+import { policyAt } from "./system-policy.js";
 const DAY = 86400000;
 function localParts(date) {
   return Object.fromEntries(
@@ -48,10 +49,14 @@ export function cardWeek(date = new Date()) {
   const p = localParts(date),
     day = new Date(Date.UTC(+p.year, +p.month - 1, +p.day));
   let start = new Date(+day - ((day.getUTCDay() + 3) % 7) * DAY);
-  if (day.getUTCDay() === 4 && +p.hour < 12) start = new Date(+start - 7 * DAY);
-  const opensAt = lisbonTime(start, 12),
-    closesAt = lisbonTime(new Date(+start + 6 * DAY), 12),
-    nextOpensAt = lisbonTime(new Date(+start + 7 * DAY), 12);
+  // A published future opening already defines that boundary, even before its
+  // effective instant. Other settings still use policyAt(the actual time).
+  const opening=day=>policyAt(lisbonTime(day,23)).cycle.openHour;
+  if (+date < +lisbonTime(start,opening(start))) start = new Date(+start - 7 * DAY);
+  const {openHour,closeHour}=policyAt(lisbonTime(start,23)).cycle;
+  const opensAt = lisbonTime(start, openHour),
+    closesAt = lisbonTime(new Date(+start + 6 * DAY), closeHour),
+    nextOpensAt = lisbonTime(new Date(+start + 7 * DAY), opening(new Date(+start + 7 * DAY)));
   return {
     weekId: weekId(start),
     opensAt,
@@ -69,9 +74,10 @@ export function cardWeekBounds(id) {
       ((jan4.getUTCDay() + 6) % 7) * DAY +
       ((week - 1) * 7 + 3) * DAY,
   );
+  const {openHour,closeHour}=policyAt(lisbonTime(start,23)).cycle;
   return {
-    opensAt: lisbonTime(start, 12),
-    closesAt: lisbonTime(new Date(+start + 6 * DAY), 12),
-    nextOpensAt: lisbonTime(new Date(+start + 7 * DAY), 12),
+    opensAt: lisbonTime(start, openHour),
+    closesAt: lisbonTime(new Date(+start + 6 * DAY), closeHour),
+    nextOpensAt: lisbonTime(new Date(+start + 7 * DAY), policyAt(lisbonTime(new Date(+start + 7*DAY),23)).cycle.openHour),
   };
 }

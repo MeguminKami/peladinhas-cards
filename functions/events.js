@@ -1,3 +1,6 @@
+import { grant } from "./event-management.js";
+import { policyAt, canManage } from "../js/system-policy.js";
+import { policyCall, policySchedule, policyWritten, policyCreated, recordTaskFailure } from "./policy-runtime.js";
 import { missionUnlocked } from "../js/event-model.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
 import {
@@ -6,8 +9,7 @@ import {
   validEventId,
 } from "./event-management.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { onSchedule } from "firebase-functions/v2/scheduler";
+import { HttpsError } from "firebase-functions/v2/https";
 import { cardWeek } from "../js/card-week.js";
 import {
   votersFor,
@@ -44,7 +46,7 @@ async function actor(request, admin = false) {
   const user = (await db().doc(`users/${request.auth.uid}`).get()).data();
   if (!user || user.disabled || (admin && user.role !== "admin"))
     throw new HttpsError("permission-denied", "Acesso reservado.");
-  return user;
+  return !admin && user.role==="admin" && !canManage(user,"events") && !canManage(user,"audit") ? {...user,role:"member"} : user;
 }
 async function league() {
   const [users, games] = await Promise.all([
@@ -55,7 +57,7 @@ async function league() {
 }
 export function eventFunctions(rebuild) {
   const managed = managedEvents(rebuild);
-  const getEvent = onCall(async (request) => {
+  const getEvent = policyCall("getEvent",async (request) => {
     const user = await actor(request);
     const id = request.data?.eventId;
     if (typeof id !== "string" || !id || id.includes("/"))
@@ -77,7 +79,7 @@ export function eventFunctions(rebuild) {
     }
     return legacy;
   });
-  const listEvents = onCall(async (request) => {
+  const listEvents = policyCall("listEvents",async (request) => {
     const user = await actor(request);
     const all = rows(await db().collection("events").get());
     const scope = request.data?.scope || "active";
@@ -108,7 +110,7 @@ export function eventFunctions(rebuild) {
           : publicEvent(event),
       );
   });
-  const claimMission = onCall(async (request) => {
+  const claimMission = policyCall("claimMission",async (request) => {
     await actor(request);
     return managed.claim(request);
   });
@@ -122,6 +124,8 @@ export function eventFunctions(rebuild) {
         return [...new Set((event.winners || []).flatMap((w) => w.uids))];
       if (event.status !== "open" && event.status !== "draft") return [];
       const rewardRef = ref.collection("private").doc("rewards");
+      const ledgerSnapshot = await tx.get(db().collection("eventRewards"));
+      const ledger = rows(ledgerSnapshot);
       const [users, games, votes, rewardSnap] = await Promise.all([
         tx.get(db().collection("users")),
         tx.get(db().collection("games")),
@@ -178,17 +182,8 @@ export function eventFunctions(rebuild) {
           });
           for (const uid of leaders) {
             uids.add(uid);
-            tx.set(db().doc(`eventRewards/${id}_${question.id}_${uid}`), {
-              eventId: id,
-              questionId: question.id,
-              uid,
-              reward,
-              weekId: rewardCycle.weekId,
-              startsAt: Timestamp.fromDate(starts),
-              cardStartsAt: Timestamp.fromDate(new Date()),
-              expiresAt: Timestamp.fromDate(rewardCycle.closesAt),
-              createdAt: FieldValue.serverTimestamp(),
-            });
+            const normalized={...reward,boosts:reward.boosts || {},mode:reward.specialId ? Object.values(reward.boosts || {}).some(value=>value>0)?"both":"card":"stats",statDuration:reward.statDuration || "weekly"};
+            grant(tx, ref, event, uid, 1, normalized, ledger, `${id}_${question.id}_${uid}`, "system");
           }
         }
       tx.update(ref, {
@@ -206,7 +201,7 @@ export function eventFunctions(rebuild) {
     await db().doc(`events/${id}`).update({ rewardsApplied: true });
     return { ok: true };
   }
-  const eventAction = onCall(async (request) => {
+  const eventAction = policyCall("eventAction",async (request) => {
     const user = await actor(request, true),
       { action, eventId, ...draft } = request.data || {};
     if (eventId && !validEventId(eventId)) fail("Evento inválido.");
@@ -371,7 +366,7 @@ export function eventFunctions(rebuild) {
     });
     return { id: ref.id };
   });
-  const voteEvent = onCall(async (request) => {
+  const voteEvent = policyCall("voteEvent",async (request) => {
     await actor(request);
     const { eventId, answers } = request.data || {};
     if (
@@ -430,14 +425,15 @@ export function eventFunctions(rebuild) {
     });
     return { ok: true };
   });
-  const closeEvents = onSchedule(
+  const closeEvents = policySchedule("closeEvents",
     {
       schedule: "every 5 minutes",
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
     },
     async () => {
-      await managed.scheduled();
+      const {issues=[]}=await managed.scheduled();
+      const tryClose=async id=>{try{await close(id);}catch(error){await recordTaskFailure(id,error,issues);}};
       const expired = await db()
         .collection("events")
         .where("status", "==", "open")
@@ -447,7 +443,7 @@ export function eventFunctions(rebuild) {
           event.data().schemaVersion !== 2 &&
           event.data().endsAt.toMillis() <= Date.now()
         )
-          await close(event.id);
+          await tryClose(event.id);
       const pending = await db()
         .collection("events")
         .where("status", "==", "closed")
@@ -457,7 +453,8 @@ export function eventFunctions(rebuild) {
           event.data().schemaVersion !== 2 &&
           event.data().rewardsApplied === false
         )
-          await close(event.id);
+          await tryClose(event.id);
+      return {ok:!issues.length,issues};
     },
   );
   return {

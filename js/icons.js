@@ -1,4 +1,7 @@
 const paths = {
+  gift: "M3 8h18v4H3Z M5 12v9h14v-9 M12 8v13 M12 8H8a3 3 0 1 1 3-3l1 3Z M12 8h4a3 3 0 1 0-3-3l-1 3Z",
+  preview: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
+  refresh: "M20 4v6h-6 M4 20v-6h6 M5 9a7 7 0 0 1 12-4l3 5 M4 14l3 5a7 7 0 0 0 12-4",
   studioModels: "M6 3h12v18H6Z M3 6v12 M21 6v12 M9 7h6 M9 11h6 M9 16h3",
   studioComposition:
     "M3 3h7v7H3Z M14 3h7v7h-7Z M3 14h7v7H3Z M14 14h7v7h-7Z M12 2v20 M2 12h20",

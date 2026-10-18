@@ -1,3 +1,4 @@
+import { policyAt } from "./system-policy.js";
 import { cardWeek } from "./card-week.js";
 import { canEditRating } from "./rating-window.js";
 import { db, storage } from "./firebase.js";
@@ -76,23 +77,18 @@ export const watchNotifications = (uid, callback, error) =>
     (snapshot) => callback(rows(snapshot)),
     error,
   );
-export const saveProfile = (uid, changes) =>
-  updateDoc(doc(db, "users", uid), {
-    ...changes,
-    updatedAt: serverTimestamp(),
-  });
+export const saveProfile = async (uid, changes) => {
+  const access = Object.fromEntries(Object.entries(changes).filter(([key])=>["role","disabled"].includes(key)));
+  const profile = Object.fromEntries(Object.entries(changes).filter(([key])=>!["role","disabled","adminCapabilities"].includes(key)));
+  if(Object.keys(access).length) await callAdmin("maintenanceAction", {action:"set-account",uid,...access,reason:"Alteração no painel de jogadores"});
+  if(Object.keys(profile).length) await updateDoc(doc(db,"users",uid),{...profile,updatedAt:serverTimestamp()});
+};
 export async function saveInitial(uid, ratings20, submit = true) {
   const target = doc(db, "initialRatings", uid);
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
-    const summary =
-      raterId !== targetId
-        ? await tx.get(doc(db, `gameSummaries/${gid}`))
-        : null;
-    if (summary?.data()?.players?.[targetId]?.goalkeepingEligible === false)
-      ratings = { ...ratings, goalkeeping: null };
     if (!canEditRating(s.data(), new Date(), true))
-      throw Error("O prazo de 7 dias para editar a autoavaliação terminou.");
+      throw Error("O prazo para editar a autoavaliação terminou.");
     const completed = submit || s.data()?.completed === true;
     if (completed && !completeInitial(ratings20))
       throw Error("Preenche os 12 atributos.");
@@ -100,6 +96,7 @@ export async function saveInitial(uid, ratings20, submit = true) {
       uid,
       ratings20,
       completed,
+      editDays: s.data()?.completed ? s.data().editDays ?? 7 : policyAt().rules.ratingEditDays,
       submittedAt: s.data()?.completed
         ? s.data().submittedAt || s.data().createdAt
         : completed
@@ -121,7 +118,7 @@ export async function saveCommunity(
   await runTransaction(db, async (tx) => {
     const s = await tx.get(target);
     if (!canEditRating(s.data()))
-      throw Error("O prazo de 7 dias para editar a avaliação terminou.");
+      throw Error("O prazo para editar a avaliação terminou.");
     submit = submit || s.data()?.submitted === true;
     if (submit && !completeInitial(ratings20))
       throw Error("Preenche os 12 atributos.");
@@ -130,6 +127,7 @@ export async function saveCommunity(
       targetId,
       ratings20,
       submitted: submit,
+      editDays: s.data()?.submitted ? s.data().editDays ?? 7 : policyAt().rules.ratingEditDays,
       updatedAt: serverTimestamp(),
       submittedAt: s.data()?.submitted
         ? s.data().submittedAt || s.data().createdAt
@@ -160,7 +158,7 @@ export async function saveFeedback(
       ratings = { ...ratings, goalkeeping: null };
 
     if (!canEditRating(s.data()))
-      throw Error("O prazo de 7 dias para editar a avaliação terminou.");
+      throw Error("O prazo para editar a avaliação terminou.");
     submit = submit || s.data()?.submitted === true;
     if (submit && !completeFeedback(ratings))
       throw Error("Preenche as dimensões obrigatórias.");
@@ -170,6 +168,7 @@ export async function saveFeedback(
       targetId,
       ratings,
       submitted: submit,
+      editDays: s.data()?.submitted ? s.data().editDays ?? 7 : policyAt().rules.ratingEditDays,
       createdAt: s.data()?.createdAt || serverTimestamp(),
       updatedAt: serverTimestamp(),
       submittedAt: s.data()?.submitted
@@ -269,6 +268,7 @@ export async function markRead(uid, items) {
 }
 export async function syncNotifications(uid, missions) {
   const existing = await notifications(uid);
+  if(!policyAt().notifications.enabled) return existing;
   const ids = new Set(existing.map((n) => n.id));
   const missing = missions.filter(
     (m) => !m.hiddenCard && !ids.has(`mission-${m.id}`),

@@ -1,4 +1,5 @@
 import { asDate, average, participants } from "./utils.js";
+import { policyAt } from "./system-policy.js";
 import { lisbonDateInput, parseLisbonDateInput } from "./match-time.js";
 
 export const RESERVED_CARD_IDS = Object.freeze([
@@ -103,7 +104,7 @@ export function cardExpiry(start, duration) {
   if (duration === "permanent") return null;
   const value = asDate(start);
   if (duration === "weekly") return new Date(+value + 7 * 86400000);
-  const months = { monthly: 1, season: 2, year: 4 }[duration];
+  const months = { monthly: 1, season: policyAt(value).cycle.seasonMonths, year: policyAt(value).cycle.yearMonths }[duration];
   if (!months) throw Error("Duração de carta inválida.");
   const text = lisbonDateInput(value),
     day = Number(text.slice(8, 10));
@@ -128,6 +129,8 @@ export function cardExpiry(start, duration) {
   return expiry;
 }
 export function leaguePeriod(value, months = 2) {
+  const duration=months===4 ? "year" : "season",original=months;
+  months=policyAt(value).cycle[duration==="year" ? "yearMonths" : "seasonMonths"];
   const local = lisbonDateInput(value),
     year = Number(local.slice(0, 4));
   const month = Math.floor((Number(local.slice(5, 7)) - 1) / months) * months;
@@ -135,9 +138,9 @@ export function leaguePeriod(value, months = 2) {
     `${year}-${String(month + 1).padStart(2, "0")}-01T00:00`,
   );
   return {
-    id: `${year}-${months === 4 ? "A" : "E"}${month / months + 1}`,
+    id: `${year}-${duration === "year" ? "A" : "E"}${month / months + 1}${months!==original?`-M${months}`:""}`,
     startsAt: start,
-    endsAt: cardExpiry(start, months === 4 ? "year" : "season"),
+    endsAt: cardExpiry(start, duration),
   };
 }
 const time = (value) => (value == null ? NaN : +asDate(value));

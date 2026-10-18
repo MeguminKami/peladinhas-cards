@@ -1,3 +1,4 @@
+import { policyAt } from "./system-policy.js";
 import { cardWeek } from "./card-week.js";
 import {
   COLLECTION_EDITIONS,
@@ -29,8 +30,8 @@ export const FEEDBACK = [
   ["attitude", "Atitude"],
 ];
 export const CARD_SETTINGS = {
-  communityMinimum: 3,
-  selfWeight: 0.2,
+  get communityMinimum() { return policyAt().rules.communityMinimum; },
+  get selfWeight() { return policyAt().rules.selfWeight; },
 };
 export function matchOutcome(uid, game) {
   if (game.status !== "closed" || !participants(game).includes(uid)) return 0;
@@ -309,7 +310,7 @@ const ATTRIBUTE_FEEDBACK = Object.freeze({
 });
 export function calculateGameDeltas(stats, aggregate, options = {}) {
   const a = aggregate,
-    settings = PERFORMANCE_SETTINGS;
+    settings = {...PERFORMANCE_SETTINGS, ...policyAt(a.date || new Date()).progression};
   const rounded = Object.fromEntries(
     ATTRIBUTES.map(([key]) => [key, Math.round(stats[key])]),
   );
@@ -528,7 +529,7 @@ export function calculateInactivity(uid, games, joinedAt, cutoff = new Date()) {
   return {
     missed,
     penalty:
-      missed < 4 ? 0 : Math.min(10, Math.round(2 + ((missed - 4) * 8) / 3)),
+      !policyAt(cutoff).progression.inactivityEnabled || missed < policyAt(cutoff).progression.inactivityStart ? 0 : Math.min(policyAt(cutoff).progression.inactivityMaximum, Math.round(2 + ((missed - policyAt(cutoff).progression.inactivityStart) * 8) / 3)),
   };
 }
 export function calculateOverallDetails(stats, settings, position, inactivity) {

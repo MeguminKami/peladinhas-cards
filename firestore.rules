@@ -2,10 +2,21 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signedIn() { return request.auth != null; }
-  function active() { return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false; }
-  function owner(uid) { return signedIn() && request.auth.uid == uid; }
+  function freshTokens() { let path=/databases/$(database)/documents/users/$(request.auth.uid); return !exists(path) || request.auth.token.get('auth_time',0)>=get(path).data.get('tokensValidAfter',0); }
+  function active() { return signedIn() && freshTokens() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false; }
+  function owner(uid) { return signedIn() && freshTokens() && request.auth.uid == uid; }
   function dbs() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dbs'; }
   function admin() { return active() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; }
+  function systemConfig() {
+    let path=/databases/$(database)/documents/settings/system;
+    let existsConfig=exists(path);
+    let timeline=existsConfig ? get(path).data.get('timeline',[]) : [];
+    let size=timeline.size();
+    let latest=size>0 ? timeline[size-1] : {};
+    return size==0 ? {} : latest.get('effectiveMillis',0)<=request.time.toMillis() ? latest.config : size>1 ? timeline[size-2].config : {};
+  }
+  function writable(feature) { let config=systemConfig(); return config.get('features',{}).get('mode','normal')=='normal' && config.get('features',{}).get(feature,true)==true; }
+  function capable(cap) { return admin() && (!('adminCapabilities' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminCapabilities==null || cap in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminCapabilities); }
   function attrs() { return ['pace','shooting','passing','dribbling','defending','physical','goalkeeping','stamina','vision','positioning','teamwork','composure']; }
   function optionalRating(r,k,max) { return !(k in r) || (r[k] is int && r[k]>=0 && r[k]<=max); }
   function validInitial(r) { return r is map && r.keys().hasOnly(attrs()) && optionalRating(r,'pace',20) && optionalRating(r,'shooting',20) && optionalRating(r,'passing',20) && optionalRating(r,'dribbling',20) && optionalRating(r,'defending',20) && optionalRating(r,'physical',20) && optionalRating(r,'goalkeeping',20) && optionalRating(r,'stamina',20) && optionalRating(r,'vision',20) && optionalRating(r,'positioning',20) && optionalRating(r,'teamwork',20) && optionalRating(r,'composure',20); }
@@ -19,46 +30,46 @@ service cloud.firestore {
   function validGame(g) { return validPositions(g) && validPerformance(g) && (!('youtubeVideoId' in g) || (g.youtubeVideoId is string && (g.youtubeVideoId=='' || g.youtubeVideoId.matches('^[A-Za-z0-9_-]{11}$')))) && g.keys().hasOnly(['teamNames','playerCards','cardWeekId','positions','performance','youtubeVideoId','title','location','notes','scheduledAt','teamA','teamB','score','status','creatorId','createdAt','updatedAt','closedAt','closedBy']) && g.title is string && g.title.size()>0 && g.title.size()<=80 && g.location is string && g.location.size()<=120 && g.notes is string && g.notes.size()<=1000 && g.scheduledAt is timestamp && g.status in ['draft','open','closed'] && g.teamA.keys().hasOnly(['starters','bench']) && g.teamB.keys().hasOnly(['starters','bench']) && g.teamA.starters is list && g.teamA.bench is list && g.teamB.starters is list && g.teamB.bench is list && g.teamA.starters.size()<=5 && g.teamB.starters.size()<=5 && teamIds(g).size()<=60 && teamIds(g).size()==teamIds(g).toSet().size() && g.score.keys().hasOnly(['teamA','teamB']) && g.score.teamA is int && g.score.teamB is int && g.score.teamA>=0 && g.score.teamB>=0 && g.score.teamA<=999 && g.score.teamB<=999 && (g.status!='closed' || (g.teamA.starters.size()>0 && g.teamB.starters.size()>0 && g.closedAt is timestamp)); }
   match /users/{uid} {
    allow read: if active() || owner(uid);
-   allow create: if owner(uid) && request.resource.data.uid==uid && request.resource.data.role=='member' && request.resource.data.disabled==false && request.resource.data.username.matches('^[a-z0-9_.-]{3,20}$') && request.auth.token.email==request.resource.data.username+'@auth.weeklyfc.app' && validProfile(request.resource.data) && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
-   allow update: if validProfile(request.resource.data) && request.resource.data.uid==resource.data.uid && request.resource.data.username==resource.data.username && request.resource.data.createdAt==resource.data.createdAt && request.resource.data.updatedAt==request.time && ((admin() && request.resource.data.role in ['member','dbs','admin'] && (uid!=request.auth.uid || request.resource.data.role=='admin')) || (active() && owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','country','countryCode','photoURL','birthDate','heightCm','weightKg','preferredFoot','primaryPosition','secondaryPositions','shirtNumber','city','playerStyle','profileCompleted','updatedAt'])));
+   allow create: if writable('registration') && !request.resource.data.keys().hasAny(['adminCapabilities','tokensValidAfter']) && owner(uid) && request.resource.data.uid==uid && request.resource.data.role=='member' && request.resource.data.disabled==false && request.resource.data.username.matches('^[a-z0-9_.-]{3,20}$') && request.auth.token.email==request.resource.data.username+'@auth.weeklyfc.app' && validProfile(request.resource.data) && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
+   allow update: if writable('profile') && validProfile(request.resource.data) && request.resource.data.uid==resource.data.uid && request.resource.data.username==resource.data.username && request.resource.data.createdAt==resource.data.createdAt && request.resource.data.updatedAt==request.time && ((capable('access') && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role','disabled','adminCapabilities','tokensValidAfter'])) || (active() && owner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName','country','countryCode','photoURL','birthDate','heightCm','weightKg','preferredFoot','primaryPosition','secondaryPositions','shirtNumber','city','playerStyle','profileCompleted','updatedAt'])));
    allow delete: if false;
    match /cardHistory/{week} { allow read: if active(); allow write: if false; }
    match /notifications/{id} {
     allow read: if owner(uid) && active();
-    allow create: if owner(uid) && active() && id.matches('^mission-.*') && request.resource.data.keys().hasOnly(['type','title','body','href','read','createdAt']) && request.resource.data.type in ['NEW_MISSION','NEW_PLAYER_TO_RATE','RATING_REQUIRED'] && request.resource.data.title is string && request.resource.data.title.size()<=150 && request.resource.data.body is string && request.resource.data.body.size()<=500 && request.resource.data.href.matches('^#/.*') && request.resource.data.read==false && request.resource.data.createdAt==request.time;
+    allow create: if systemConfig().get('notifications',{}).get('enabled',true) && owner(uid) && active() && id.matches('^mission-.*') && request.resource.data.keys().hasOnly(['type','title','body','href','read','createdAt']) && request.resource.data.type in ['NEW_MISSION','NEW_PLAYER_TO_RATE','RATING_REQUIRED'] && request.resource.data.title is string && request.resource.data.title.size()<=150 && request.resource.data.body is string && request.resource.data.body.size()<=500 && request.resource.data.href.matches('^#/.*') && request.resource.data.read==false && request.resource.data.createdAt==request.time;
     allow update: if owner(uid) && active() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) && request.resource.data.read is bool;
    }
   }
   function submittedTime(d) { return d.get('submittedAt',null) is timestamp ? d.submittedAt : d.createdAt; }
-  function ratingEditable(d,key) { return !d.get(key,false) || request.time < submittedTime(d) + duration.value(7,'d'); }
-  function keepsSubmission(old,next,key) { return old.get(key,false) ? next[key] && next.get('submittedAt',null)==submittedTime(old) : (!next[key] || next.submittedAt==request.time); }
+  function ratingEditable(d,key) { return !d.get(key,false) || request.time < submittedTime(d) + duration.value(d.get('editDays',7),'d'); }
+  function keepsSubmission(old,next,key) { return old.get(key,false) ? next[key] && next.get('submittedAt',null)==submittedTime(old) && next.get('editDays',7)==old.get('editDays',7) : (!next[key] || next.submittedAt==request.time && next.get('editDays',7)==systemConfig().get('rules',{}).get('ratingEditDays',7)); }
   // A autoavaliação é pública; as avaliações externas permanecem privadas.
   match /initialRatings/{uid} {
    allow read: if active();
-   allow create: if (owner(uid)&&active() || admin()) && request.resource.data.keys().hasOnly(['uid','ratings20','completed','createdAt','updatedAt','submittedAt']) && request.resource.data.uid==uid && validInitial(request.resource.data.ratings20) && request.resource.data.completed is bool && (!request.resource.data.completed || request.resource.data.ratings20.keys().hasAll(attrs())) && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time && (!request.resource.data.completed || request.resource.data.submittedAt==request.time);
-   allow update: if (owner(uid)&&active() || admin()) && request.resource.data.uid==resource.data.uid && request.resource.data.createdAt==resource.data.createdAt && validInitial(request.resource.data.ratings20) && request.resource.data.completed is bool && (!request.resource.data.completed || request.resource.data.ratings20.keys().hasAll(attrs())) && request.resource.data.updatedAt==request.time && request.resource.data.keys().hasOnly(['uid','ratings20','completed','createdAt','updatedAt','submittedAt']) && ratingEditable(resource.data,'completed') && keepsSubmission(resource.data,request.resource.data,'completed');
+   allow create: if writable('ratings') && (owner(uid)&&active() || capable('ratings')) && request.resource.data.keys().hasOnly(['uid','ratings20','completed','createdAt','updatedAt','submittedAt','editDays']) && request.resource.data.uid==uid && validInitial(request.resource.data.ratings20) && request.resource.data.completed is bool && (!request.resource.data.completed || request.resource.data.ratings20.keys().hasAll(attrs())) && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time && (!request.resource.data.completed || request.resource.data.submittedAt==request.time && request.resource.data.get('editDays',7)==systemConfig().get('rules',{}).get('ratingEditDays',7));
+   allow update: if writable('ratings') && (owner(uid)&&active() || capable('ratings')) && request.resource.data.uid==resource.data.uid && request.resource.data.createdAt==resource.data.createdAt && validInitial(request.resource.data.ratings20) && request.resource.data.completed is bool && (!request.resource.data.completed || request.resource.data.ratings20.keys().hasAll(attrs())) && request.resource.data.updatedAt==request.time && request.resource.data.keys().hasOnly(['uid','ratings20','completed','createdAt','updatedAt','submittedAt','editDays']) && ratingEditable(resource.data,'completed') && keepsSubmission(resource.data,request.resource.data,'completed');
   }
   match /communityRatings/{id} {
-   allow read: if admin() || (active() && resource.data.raterId==request.auth.uid);
+   allow read: if capable('ratings') || (active() && resource.data.raterId==request.auth.uid);
    allow get: if active() && id.matches('^'+request.auth.uid+'_.*') && !exists(/databases/$(database)/documents/communityRatings/$(id));
-   function validVote() { let d=request.resource.data; return d.keys().hasOnly(['raterId','targetId','ratings20','submitted','createdAt','updatedAt','submittedAt']) && d.raterId==request.auth.uid && d.targetId!=request.auth.uid && exists(/databases/$(database)/documents/users/$(d.targetId)) && id==d.raterId+'_'+d.targetId && validInitial(d.ratings20) && d.submitted is bool && (!d.submitted || d.ratings20.keys().hasAll(attrs())) && d.updatedAt==request.time && (!d.submitted || d.submittedAt is timestamp); }
-   allow create: if active() && validVote() && request.resource.data.createdAt==request.time && (!request.resource.data.submitted || request.resource.data.submittedAt==request.time);
-   allow update: if active() && validVote() && (!resource.data.submitted || request.resource.data.submitted) && request.resource.data.raterId==resource.data.raterId && request.resource.data.targetId==resource.data.targetId && request.resource.data.createdAt==resource.data.createdAt && ratingEditable(resource.data,'submitted') && keepsSubmission(resource.data,request.resource.data,'submitted');
+   function validVote() { let d=request.resource.data; return d.keys().hasOnly(['raterId','targetId','ratings20','submitted','createdAt','updatedAt','submittedAt','editDays']) && d.raterId==request.auth.uid && d.targetId!=request.auth.uid && exists(/databases/$(database)/documents/users/$(d.targetId)) && id==d.raterId+'_'+d.targetId && validInitial(d.ratings20) && d.submitted is bool && (!d.submitted || d.ratings20.keys().hasAll(attrs())) && d.updatedAt==request.time && (!d.submitted || d.submittedAt is timestamp); }
+   allow create: if writable('ratings') && active() && validVote() && request.resource.data.createdAt==request.time && (!request.resource.data.submitted || request.resource.data.submittedAt==request.time && request.resource.data.get('editDays',7)==systemConfig().get('rules',{}).get('ratingEditDays',7));
+   allow update: if writable('ratings') && active() && validVote() && (!resource.data.submitted || request.resource.data.submitted) && request.resource.data.raterId==resource.data.raterId && request.resource.data.targetId==resource.data.targetId && request.resource.data.createdAt==resource.data.createdAt && ratingEditable(resource.data,'submitted') && keepsSubmission(resource.data,request.resource.data,'submitted');
   }
   match /communitySummaries/{uid} { allow read: if active(); allow write: if false; }
   match /gameSummaries/{gid} { allow read: if active(); allow write: if false; }
   match /games/{gid} {
    allow read: if active();
-   allow create: if active() && (admin() || dbs()) && validGame(request.resource.data) && !request.resource.data.keys().hasAny(['teamNames','playerCards','cardWeekId']) && request.resource.data.status=='draft' && request.resource.data.creatorId==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
-   allow update: if active() && (admin() || dbs()) && !resource.data.get('deleting',false) && validGame(request.resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['teamNames','playerCards','cardWeekId']) && request.resource.data.creatorId==resource.data.creatorId && request.resource.data.createdAt==resource.data.createdAt && request.resource.data.updatedAt==request.time && ((resource.data.status=='closed' && admin() && request.resource.data.status=='closed' && request.resource.data.closedAt==resource.data.closedAt && request.resource.data.closedBy==resource.data.closedBy) || (resource.data.status!='closed' && (resource.data.status=='draft' && request.resource.data.status in ['draft','open'] || resource.data.status=='open' && request.resource.data.status in ['draft','open','closed']) && (request.resource.data.closedAt==resource.data.closedAt || request.resource.data.closedAt==request.time) && (request.resource.data.status!='closed' || request.resource.data.closedBy==request.auth.uid && request.resource.data.closedAt==request.time)));
+   allow create: if writable('games') && active() && (capable('games') || dbs()) && validGame(request.resource.data) && !request.resource.data.keys().hasAny(['teamNames','playerCards','cardWeekId']) && request.resource.data.status=='draft' && request.resource.data.creatorId==request.auth.uid && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time;
+   allow update: if writable('games') && active() && (capable('games') || dbs()) && !resource.data.get('deleting',false) && validGame(request.resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['teamNames','playerCards','cardWeekId']) && request.resource.data.creatorId==resource.data.creatorId && request.resource.data.createdAt==resource.data.createdAt && request.resource.data.updatedAt==request.time && ((resource.data.status=='closed' && admin() && request.resource.data.status=='closed' && request.resource.data.closedAt==resource.data.closedAt && request.resource.data.closedBy==resource.data.closedBy) || (resource.data.status!='closed' && (resource.data.status=='draft' && request.resource.data.status in ['draft','open'] || resource.data.status=='open' && request.resource.data.status in ['draft','open','closed']) && (request.resource.data.closedAt==resource.data.closedAt || request.resource.data.closedAt==request.time) && (request.resource.data.status!='closed' || request.resource.data.closedBy==request.auth.uid && request.resource.data.closedAt==request.time)));
    allow delete: if false;
    match /feedback/{id} {
-    allow read: if admin() || (active() && resource.data.raterId==request.auth.uid);
+    allow read: if capable('ratings') || (active() && resource.data.raterId==request.auth.uid);
     allow get: if active() && id.matches('^'+request.auth.uid+'_.*') && !exists(/databases/$(database)/documents/games/$(gid)/feedback/$(id));
     function goalkeeperAllowed(d) { let selfPath=/databases/$(database)/documents/games/$(gid)/feedback/$(d.targetId+'_'+d.targetId); return d.raterId==d.targetId || !exists(selfPath) || !get(selfPath).data.get('submitted',false) || get(selfPath).data.ratings.get('goalkeeping',0)!=null || d.ratings.get('goalkeeping',null)==null; }
-    function validVote() { let d=request.resource.data; let g=get(/databases/$(database)/documents/games/$(gid)).data; return d.keys().hasOnly(['gameId','raterId','targetId','ratings','submitted','createdAt','updatedAt','submittedAt']) && g.status=='closed' && !g.get('deleting',false) && d.gameId==gid && d.raterId==request.auth.uid && d.raterId in teamIds(g) && d.targetId in teamIds(g) && id==d.raterId+'_'+d.targetId && validFeedback(d.ratings) && goalkeeperAllowed(d) && d.submitted is bool && (!d.submitted || completeFeedback(d.ratings)) && d.updatedAt==request.time && (!d.submitted || d.submittedAt is timestamp); }
-    allow create: if active() && validVote() && request.resource.data.createdAt==request.time && (!request.resource.data.submitted || request.resource.data.submittedAt==request.time);
-    allow update: if active() && validVote() && (!resource.data.submitted || request.resource.data.submitted) && request.resource.data.gameId==resource.data.gameId && request.resource.data.raterId==resource.data.raterId && request.resource.data.targetId==resource.data.targetId && request.resource.data.createdAt==resource.data.createdAt && ratingEditable(resource.data,'submitted') && keepsSubmission(resource.data,request.resource.data,'submitted');
+    function validVote() { let d=request.resource.data; let g=get(/databases/$(database)/documents/games/$(gid)).data; return d.keys().hasOnly(['gameId','raterId','targetId','ratings','submitted','createdAt','updatedAt','submittedAt','editDays']) && g.status=='closed' && !g.get('deleting',false) && d.gameId==gid && d.raterId==request.auth.uid && d.raterId in teamIds(g) && d.targetId in teamIds(g) && id==d.raterId+'_'+d.targetId && validFeedback(d.ratings) && goalkeeperAllowed(d) && d.submitted is bool && (!d.submitted || completeFeedback(d.ratings)) && d.updatedAt==request.time && (!d.submitted || d.submittedAt is timestamp); }
+    allow create: if writable('ratings') && active() && validVote() && request.resource.data.createdAt==request.time && (!request.resource.data.submitted || request.resource.data.submittedAt==request.time && request.resource.data.get('editDays',7)==systemConfig().get('rules',{}).get('ratingEditDays',7));
+    allow update: if writable('ratings') && active() && validVote() && (!resource.data.submitted || request.resource.data.submitted) && request.resource.data.gameId==resource.data.gameId && request.resource.data.raterId==resource.data.raterId && request.resource.data.targetId==resource.data.targetId && request.resource.data.createdAt==resource.data.createdAt && ratingEditable(resource.data,'submitted') && keepsSubmission(resource.data,request.resource.data,'submitted');
    }
   }
   match /weeklyCardPhotos/{id} { allow read: if active(); allow write: if false; }
@@ -67,24 +78,30 @@ service cloud.firestore {
   match /cardSelections/{uid} { allow read: if active(); allow write: if false; }
   match /cardPeriodAwards/{id} { allow read: if active(); allow write: if false; }
   match /gameBalances/{id} { allow read: if active(); allow write: if false; }
-  match /events/{id} { allow read: if admin() || active() && resource.data.status!='draft' && resource.data.get('rewardPrivacy',0)==1 && resource.data.get('prerequisites',{}).get('missionIds',[]).size()==0; allow write: if false;
+  match /events/{id} { allow read: if capable('events') || capable('audit') || active() && resource.data.status!='draft' && resource.data.get('rewardPrivacy',0)==1 && resource.data.get('prerequisites',{}).get('missionIds',[]).size()==0; allow write: if false;
     match /votes/{uid} { allow read: if active() && (owner(uid) || admin()); allow write: if false; }
-    match /audit/{document} { allow read: if admin(); allow write: if false; }
-    match /private/{document} { allow read: if admin(); allow write: if false; }
+    match /audit/{document} { allow read: if capable('events') || capable('audit'); allow write: if false; }
+    match /private/{document} { allow read: if capable('events'); allow write: if false; }
   }
   match /eventRewards/{id} { allow read: if active(); allow write: if false; }
-  match /ovrPresets/{id} { allow read: if admin(); allow write: if false; }
+  match /ovrPresets/{id} { allow read: if capable('cards'); allow write: if false; }
+  match /settings/system { allow read: if true; allow write: if false; }
+  match /systemAudit/{id} { allow read: if capable('audit'); allow write: if false; }
+  match /systemVersions/{id} { allow read: if capable('audit') || capable('settings'); allow write: if false; }
+  match /systemDrafts/{uid} { allow read: if owner(uid) && capable('settings'); allow write: if false; }
+  match /systemJobs/{id} { allow read: if capable('operations'); allow write: if false; }
+  match /systemStatus/{id} { allow read: if admin(); allow write: if false; }
   match /settings/ovr { allow read: if active(); allow write: if false; }
-  match /cardThemes/{id} { allow read: if admin(); allow write: if false; }
+  match /cardThemes/{id} { allow read: if capable('cards'); allow write: if false; }
   match /tickets/{id} {
-   allow read: if active() && (admin() || resource.data.ownerId==request.auth.uid);
+   allow read: if active() && (capable('support') || resource.data.ownerId==request.auth.uid);
    allow write: if false;
    match /messages/{mid} {
-    allow read: if active() && (admin() || get(/databases/$(database)/documents/tickets/$(id)).data.ownerId==request.auth.uid);
+    allow read: if active() && (capable('support') || get(/databases/$(database)/documents/tickets/$(id)).data.ownerId==request.auth.uid);
     allow write: if false;
    }
   }
-  match /ratingCorrections/{id} { allow read: if admin(); allow write: if false; }
+  match /ratingCorrections/{id} { allow read: if capable('ratings') || capable('audit'); allow write: if false; }
   // Push endpoints and read capabilities belong exclusively to trusted Functions.
   match /pushDevices/{id} { allow read, write: if false; }
   match /pushDeliveries/{id} { allow read, write: if false; }

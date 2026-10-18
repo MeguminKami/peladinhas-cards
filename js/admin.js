@@ -1,3 +1,6 @@
+import { openGameRatings } from "./admin-game-ratings.js";
+import { policyAt } from "./system-policy.js";
+import { mountMaintenance } from "./maintenance.js";
 import { roleLabel, gameStatusLabel } from "./labels.js";
 import { defaultOvrPresets } from "./ovr-presets.js";
 import { mountEventAdmin } from "./events.js";
@@ -26,10 +29,17 @@ import {
 import { icon } from "./icons.js";
 import { card, bindImages } from "./cards.js";
 import { editProfile } from "./profile.js";
+function actionCaption(label) {
+  return `<span class="admin-action-caption" aria-hidden="true">${esc(label)}</span>`;
+}
+function playerAction(href, label, symbol, variant = "ghost", caption = label) {
+  return `<a href="${href}" class="btn btn-icon btn-${variant}" aria-label="${label}">${icon(symbol)}${actionCaption(caption)}</a>`;
+}
+
 export async function adminPage(ctx, section = "overview") {
   const players = ctx.league.players,
     games = ctx.league.games,
-    newPlayers = players.filter((p) => p.communityCount < 3);
+    newPlayers = players.filter((p) => p.communityCount < policyAt().rules.communityMinimum);
   const pages = {
     overview: `<section class="admin-overview"><div class="section-head"><h2>Estado da liga</h2><span class="pill success">Administração</span></div><div class="admin-health-grid">${[
       [
@@ -47,7 +57,7 @@ export async function adminPage(ctx, section = "overview") {
       [
         "Avaliações pendentes",
         `${newPlayers.length} jogadores`,
-        "Ainda sem três votos externos",
+        `Ainda sem ${policyAt().rules.communityMinimum} votos externos`,
         "edit",
       ],
       [
@@ -77,11 +87,11 @@ export async function adminPage(ctx, section = "overview") {
         .join("") || '<p class="muted">Ainda sem jogos.</p>'
     }</section><section class="panel"><h3>Acompanhamento</h3><a class="overview-line" href="#/admin/support">${icon("tickets")}<b>Tickets abertos</b><span id="admin-open-tickets">…</span></a><a class="overview-line" href="#/admin/ratings">${icon("edit")}<b>Consultar avaliações</b>${icon("arrow")}</a><a class="overview-line" href="#/admin/weights">${icon("lab")}<b>Pesos por posição</b><span class="pill">100%</span></a><div id="admin-week-status"></div></section></div></section>`,
     weights: `<section class="panel"><h2>Pesos do OVR</h2><p>Define os pesos para cada posição. Cada posição deve somar 100%. A carta usa a posição principal do jogador. Guardar atualiza as cartas em evolução. Cartas de semanas fechadas mantêm os valores e pesos originais.</p><div id="ovr-presets"></div><form id="ovr-settings"><label>Posição<select id="ovr-position">${OVR_POSITIONS.map((p) => `<option ${p === "ALA" ? "selected" : ""}>${p}</option>`).join("")}</select></label><div class="form-grid">${ATTRIBUTES.map(([key, name]) => `<label>${esc(name)} (%)<input name="${key}" type="number" min="0" max="100" step="0.01" required value="${ctx.league.ovrWeights.positions.ALA[key]}"></label>`).join("")}</div><p id="ovr-total" aria-live="polite">Total: 100%</p><button class="btn btn-primary">Guardar pesos e recalcular</button></form></section>`,
-    players: `<section><h2>Jogadores</h2><div class="table-wrap"><table><thead><tr><th>Jogador</th><th>Perfil de acesso</th><th>OVR</th><th>Acções</th></tr></thead><tbody>${players.map((p) => `<tr><td><a href="#/player/${p.uid}">${esc(p.displayName || p.username)}<small>@${esc(p.username)}</small></a></td><td>${roleLabel(p.role)}</td><td>${p.ovr}</td><td><div class="actions compact admin-player-actions">${linkButton(`#/admin/player/${p.uid}/edit`, "Editar", "ghost", "edit")}${linkButton(`#/admin/initial/${p.uid}`, "Avaliação inicial", "ghost", "edit")}${linkButton(`#/admin/cards/${p.uid}`, "Pré-visualizar carta", "ghost", "lab")}${linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "ghost", "lab")}<button data-role="${p.uid}" class="btn btn-secondary" ${p.uid === ctx.user.uid ? 'disabled title="O teu próprio acesso está protegido"' : ""}>${icon("shield")}${p.role === "admin" ? "Remover admin" : "Promover admin"}</button>${p.role !== "admin" ? `<button data-role="${p.uid}" data-target-role="${p.role === "dbs" ? "member" : "dbs"}" class="btn btn-secondary">${icon("games")}${p.role === "dbs" ? "Remover DBS" : "Dar DBS"}</button>` : ""}<button data-rebuild="${p.uid}" class="btn btn-ghost">${icon("arrow")}Recalcular</button>${linkButton(`#/admin/ratings/${p.uid}`, "Avaliações detalhadas", "ghost", "shield")}</div></td></tr>`).join("")}</tbody></table></div>${!players.length ? empty("Sem jogadores", "As contas criadas aparecem aqui.") : ""}</section>`,
-    games: `<section><h2>Jogos</h2>${games.length ? `<div class="game-list">${games.map((g) => `<div class="game-row"><div><b>${esc(g.title)}</b><small>${gameStatusLabel(g.status)}</small></div>${linkButton(`#/game/${g.id}`, "Editar", "ghost", "edit")}<button data-delete="${g.id}" class="btn btn-danger">${icon("trash")}Eliminar</button></div>`).join("")}</div>` : empty("Sem jogos", "Cria a primeira Peladinha.", linkButton("#/game/new", "Criar jogo"), "games")}</section>`,
-    messages: `<section class="panel"><h2>Mensagem à liga</h2><p class="muted">A mensagem aparece no sino de todos os jogadores ativos. O alerta no telemóvel chega apenas a quem ativou as notificações nesse dispositivo.</p>${linkButton("#/notifications", "Ativar ou testar no meu dispositivo", "ghost", "bell")}<form id="admin-message"><label>Título<input name="title" maxlength="80" required></label><label>Mensagem<textarea name="body" maxlength="500" required></textarea></label><button class="btn btn-primary">Enviar mensagem</button></form></section>`,
+    players: `<section><h2>Jogadores</h2><div class="table-wrap"><table><thead><tr><th>Jogador</th><th>Perfil de acesso</th><th>OVR</th><th>Acções</th></tr></thead><tbody>${players.map((p) => `<tr><td><a href="#/player/${p.uid}">${esc(p.displayName || p.username)}<small>@${esc(p.username)}</small></a></td><td>${roleLabel(p.role)}</td><td>${p.ovr}</td><td><div class="actions compact admin-player-actions" role="group" aria-label="Acções do jogador">${playerAction(`#/admin/player/${p.uid}/edit`, "Editar jogador", "edit", "primary", "Editar")}${playerAction(`#/admin/initial/${p.uid}`, "Avaliação inicial", "missions", "secondary", "Inicial")}${playerAction(`#/admin/cards/${p.uid}`, "Pré-visualizar carta", "preview", "ghost", "Carta")}${playerAction(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "chart", "ghost", "OVR")}${playerAction(`#/admin/ratings/${p.uid}`, "Avaliações detalhadas", "ratingGames", "ghost", "Votos")}<button data-rebuild="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Recalcular">${icon("refresh")}${actionCaption("Recalcular")}</button>${p.role !== "admin" ? `<button data-role="${p.uid}" data-target-role="${p.role === "dbs" ? "member" : "dbs"}" class="btn btn-icon ${p.role === "dbs" ? "btn-danger" : "btn-secondary"}" aria-label="${p.role === "dbs" ? "Remover DBS" : "Dar DBS"}">${icon("games")}${actionCaption(p.role === "dbs" ? "Tirar DBS" : "Dar DBS")}</button>` : ""}<button data-role="${p.uid}" class="btn btn-icon ${p.role === "admin" ? "btn-danger" : "btn-admin-access"}" aria-label="${p.role === "admin" ? "Remover admin" : "Promover admin"}" ${p.uid === ctx.user.uid ? "disabled" : ""}>${icon("shield")}${actionCaption(p.role === "admin" ? "Tirar admin" : "Dar admin")}</button></div></td></tr>`).join("")}</tbody></table></div>${!players.length ? empty("Sem jogadores", "As contas criadas aparecem aqui.") : ""}</section>`,
+    games: `<section><h2>Jogos</h2>${games.length ? `<div class="game-list">${games.map((g) => `<div class="game-row admin-game-row"><div><b>${esc(g.title)}</b><small>${gameStatusLabel(g.status)}</small></div><div class="admin-game-actions">${g.status === "closed" ? `<button type="button" data-game-ratings="${esc(g.id)}" class="btn btn-secondary" aria-haspopup="dialog">${icon("ratingGames")}Avaliações</button>` : ""}${linkButton(`#/game/${g.id}`, "Editar", "ghost", "edit")}<button data-delete="${g.id}" class="btn btn-danger">${icon("trash")}Eliminar</button></div></div>`).join("")}</div>` : empty("Sem jogos", "Cria a primeira Peladinha.", linkButton("#/game/new", "Criar jogo"), "games")}</section>`,
+    messages: `<section class="panel"><h2>Mensagem à liga</h2><p class="muted">A mensagem aparece no sino de todos os jogadores ativos. O alerta no telemóvel chega apenas a quem ativou as notificações nesse dispositivo.</p><form id="admin-message"><label>Título<input name="title" maxlength="80" required></label><label>Mensagem<textarea name="body" maxlength="500" required></textarea></label><button class="btn btn-primary">Enviar mensagem</button></form><footer class="admin-device-settings"><div>${icon("bell")}<span>Notificações neste dispositivo</span></div>${linkButton("#/notifications", "Configurar", "secondary", "arrow")}</footer></section>`,
     events: `<div id="event-admin"></div>`,
-    maintenance: `<section class="panel"><h2>Recalcular liga</h2><p>Atualiza as cartas em evolução com os pesos e avaliações atuais. Semanas fechadas permanecem bloqueadas.</p><button id="rebuild-league" class="btn btn-secondary">Recalcular liga</button></section>`,
+    maintenance: `<div id="maintenance-workspace"></div>`,
   };
   if (!Object.hasOwn(pages, section)) section = "overview";
   const area = ADMIN_AREAS.find((a) => a.id === section);
@@ -91,7 +101,7 @@ export async function adminPage(ctx, section = "overview") {
   if (section === "overview") {
     const cycle = cardWeek();
     document.querySelector("#admin-week-status").innerHTML =
-      `<div class="overview-line"><b>Cartas · ${cycle.weekId}</b><span class="pill ${cycle.phase === "open" ? "success" : "warning"}">${cycle.phase === "open" ? "Em evolução" : "Fechadas"}</span></div><p class="muted small">Fecho: quarta às 12h · Abertura: quinta às 12h</p>`;
+      `<div class="overview-line"><b>Cartas · ${cycle.weekId}</b><span class="pill ${cycle.phase === "open" ? "success" : "warning"}">${cycle.phase === "open" ? "Em evolução" : "Fechadas"}</span></div>`;
     DB.tickets(ctx.user)
       .then((rows) => {
         const counter = document.querySelector("#admin-open-tickets");
@@ -103,6 +113,8 @@ export async function adminPage(ctx, section = "overview") {
         if (counter) counter.textContent = "—";
       });
   }
+  document.querySelectorAll("[data-game-ratings]").forEach(button => {button.onclick = () => openGameRatings(button.dataset.gameRatings);});
+  if (section === "maintenance") await mountMaintenance(ctx, document.querySelector("#maintenance-workspace"));
   const ovrForm = document.querySelector("#ovr-settings");
   if (section === "events")
     await mountEventAdmin(ctx, document.querySelector("#event-admin"));
