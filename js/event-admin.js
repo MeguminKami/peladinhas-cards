@@ -1,3 +1,4 @@
+import { rewardBreakdown } from "./reward-presentation.js";
 import { groupActivities } from "./activity-categories.js";
 import { EVENT_RARITIES, eventRarityId, rarityBadge } from "./event-rarity.js";
 import { CARD_POLICY } from "./card-achievements.js";
@@ -21,7 +22,6 @@ import {
   objectiveSummary,
   medal,
   positionLabel,
-  rewardText,
   validEventReward,
   eventEndLabel,
   eventEndMillis,
@@ -1205,7 +1205,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
           [...positions.children]
             .map(
               (section, i) =>
-                `<div class="event-review-prize"><strong>${isMission ? "Por conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(readReward(section)))}</p></div>`,
+                `<div class="event-review-prize"><strong>${isMission ? "Por conclusão" : `${positionLabel(i + 1)} lugar`}</strong>${rewardBreakdown(readReward(section))}</div>`,
             )
             .join(""),
         ),
@@ -1284,7 +1284,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         const p = payload();
         modal(
           "Pré-visualização",
-          `<div class="event-preview event-rarity-surface" data-rarity="${eventRarityId(p)}">${rarityBadge(p)}<span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p>${creationRules(p)}${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong><p>${esc(rewardText(reward))}</p></article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
+          `<div class="event-preview event-rarity-surface" data-rarity="${eventRarityId(p)}">${rarityBadge(p)}<span class="pill">${isMission ? "Missão" : "Evento"}</span><h3>${esc(p.title)}</h3><p>${esc(p.description)}</p><p>${formatDate(p.startsAt)} → ${eventEndLabel(p)}</p>${creationRules(p)}${isMission && p.prerequisites.missionIds.length ? `<p>Desbloqueio após concluir ${p.prerequisites.mode === "all" ? "todas" : "pelo menos uma"}: ${p.prerequisites.missionIds.map((id) => esc(events.find((mission) => mission.id === id)?.title || id)).join(" · ")}</p>` : ""}${p.positions.map((reward, i) => `<article><strong>${isMission ? "Por cada conclusão" : `${positionLabel(i + 1)} lugar`}</strong>${rewardBreakdown(reward)}</article>`).join("")}<p class="muted">Pré-visualização ADMIN: as recompensas ficam visíveis na página do desafio.</p></div>`,
         );
       } catch (error) {
         toast(error.message, "error");

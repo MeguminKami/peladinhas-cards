@@ -1309,7 +1309,7 @@ try {
   );
   assert.match(
     await page.locator(".event-revealed-reward").textContent(),
-    /Visão de jogo \+15/,
+    /Visão de jogo\s*\+15/,
   );
   assert.match(
     await page.locator(".event-revealed-reward").textContent(),
@@ -1669,7 +1669,7 @@ try {
   );
   await navigate("#/event/goal-race", "Corrida às assistências");
   assert.match(
-    await page.locator(".event-rules").innerText(),
+    await page.locator(".event-rules").textContent(),
     /Vence quem atingir a meta primeiro/,
   );
   assert.equal(await page.locator("#claim-mission").count(), 0);

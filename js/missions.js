@@ -1,3 +1,4 @@
+import { missionObjectivePreview } from "./mission-objective-preview.js";
 import { groupActivities } from "./activity-categories.js";
 import { policyAt } from "./system-policy.js";
 import {
@@ -119,6 +120,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
                 eventEndMillis(detail) > Date.now() &&
                 (detail.claimable ?? !!detail.progress?.find((row) => row.uid === user.uid)?.eligible),
               title: event.title,
+              objectivePreview: missionObjectivePreview(event),
               eventDescription: event.description || "",
               rarity: eventRarityId(event),
               description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
@@ -138,6 +140,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
               id: `event-${event.id}`,
               type: "COMPETITION_OBJECTIVE",
               title: event.title,
+              objectivePreview: missionObjectivePreview(event),
               eventDescription: event.description || "",
               rarity: eventRarityId(event),
               description: objectiveSummary(event),
@@ -214,7 +217,7 @@ export function missionList(missions, { grouped = true } = {}) {
       .map((m) => {
         const competition = m.type === "COMPETITION_OBJECTIVE";
         const percentage = Math.round((m.done / m.total) * 100);
-        return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div>${["OBJECTIVE_MISSION", "COMPETITION_OBJECTIVE"].includes(m.type) ? "" : `<p>${esc(m.description)}</p>`}${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
+        return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div>${["OBJECTIVE_MISSION", "COMPETITION_OBJECTIVE"].includes(m.type) ? `<p class="mission-objective">${esc(m.objectivePreview?.text || "Consulta o objetivo e os critérios da missão.")}${m.objectivePreview?.criteria ? `<span class="mission-objective-criteria">${esc(m.objectivePreview.criteria)}</span>` : ""}</p>` : `<p>${esc(m.description)}</p>`}${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
       })
       .join("")}</div>`;
   if (!grouped) return cards(ordered);

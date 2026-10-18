@@ -66,11 +66,23 @@ try {
     await navigate("#/missions");
     await page.evaluate(async()=>{
       const {missionList}=await import("./js/missions.js");
-      document.querySelector("#main").innerHTML=missionList([{type:"OBJECTIVE_MISSION",title:"Quatro estrelas",description:"LONG_RULES",eventDescription:"LONG_DESCRIPTION",rarity:"rare",done:0,total:1,href:"#/event/test-mission",icon:"ratingGames"}]);
+      const {missionObjectivePreview}=await import("./js/mission-objective-preview.js");
+      const base={type:"OBJECTIVE_MISSION",description:"LONG_RULES",eventDescription:"LONG_DESCRIPTION",rarity:"rare",done:0,total:1,href:"#/event/test-mission",icon:"ratingGames"};
+      const preview=objective=>missionObjectivePreview({objective});
+      const stars={metric:"ratingGames",target:1,threshold:4,comparison:"gte",combine:"all",attributes:["overall","attack","passing","defense","physical","attitude"]};
+      document.querySelector("#main").innerHTML=missionList([
+        {...base,title:"Quatro estrelas",objectivePreview:preview(stars)},
+        {...base,title:"Diabugoleador",type:"COMPETITION_OBJECTIVE",objectivePreview:preview({metric:"goals",target:14})},
+        {...base,title:"Regularidade",objectivePreview:preview({...stars,metric:"ratingAverage",combine:"mean",comparison:"gt",threshold:4.5,target:3})},
+      ]);
     });
     assert.equal(await page.getByText("LONG_RULES",{exact:false}).count(),0);
     assert.equal(await page.getByText("LONG_DESCRIPTION",{exact:false}).count(),0);
-    assert.equal(await page.locator(".mission").getAttribute("href"),"#/event/test-mission");
+    assert.equal(await page.locator(".mission").first().getAttribute("href"),"#/event/test-mission");
+    await page.getByText("Marca 14 golos.",{exact:true}).waitFor();
+    await page.getByText("6 critérios · mínimo em cada um",{exact:true}).waitFor();
+    await page.getByText("Média superior a 4,5 ★ nos últimos 3 jogos.",{exact:false}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
     await page.screenshot({path:`test-results/mission-simple-${width}.png`,fullPage:true});
   }
   await page.evaluate(async () => {

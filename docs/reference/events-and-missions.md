@@ -135,3 +135,9 @@ Os objetivos usam um ícone distinto por métrica e por método de decisão. As 
 A raridade é escolhida no ADMIN ao criar ou editar eventos e missões. Bronze, Prata, Ouro, Especial Dourada, Elite, Ícone e Ultimate definem apenas a identidade visual: cores, emblema, bordas e efeitos. Não alteram dificuldade, objetivos, classificação, cálculos, recompensas ou cartas atribuídas. Registos anteriores sem raridade aparecem como Bronze. O valor é validado no servidor, conservado nas edições que não o especificam e copiado ao duplicar.
 
 </details>
+
+## Resumo dos objetivos nas missões
+
+Cada cartão mostra uma frase curta com a ação e a meta. Os objetivos de estrelas distinguem média conjunta de mínimo por critério, comparações estritas e jogos consecutivos ou últimos jogos. Até dois critérios aparecem pelo nome; listas maiores indicam a quantidade. Mínimos de avaliações e regras completas continuam na página da missão. Esta apresentação não altera cálculos ou progresso.
+
+As páginas de detalhe separam meta, critérios, requisitos mínimos e condições expansíveis, sem repetir as mesmas regras em parágrafos. Recompensas distinguem bónus de atributos, carta e duração. Um bónus igual nos 12 atributos é resumido numa linha; valores diferentes são apresentados numa lista de pares atributo/valor. O mesmo componente serve a pré-visualização, Por conclusão, recompensas configuradas, revisão administrativa e resultados. Validar com npm.cmd run test:event-details.

@@ -2673,11 +2673,11 @@ td small {
 .event-reward-showcase { padding-top: 20px; border-top: 1px solid var(--border); }
 .event-reward-grid { display: grid; gap: 20px; margin-top: 16px; }
 .event-reward-prize { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; min-width: 0; }
-.event-reward-copy { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.event-reward-copy { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
 .event-reward-copy h3 { margin: 0 0 8px; }
 .event-reward-copy p { color: var(--text-secondary); font-size: .85rem; line-height: 1.6; }
 .event-reward-copy small { display: block; font-size: .75rem; line-height: 1.6; }
-.event-reward-card { display: flex; justify-content: center; padding: 12px; max-width: 100%; filter: drop-shadow(0 8px 22px #c6a24e22); }
+.event-reward-card { display: flex; justify-content: center; margin-inline: auto; padding: 12px; max-width: 100%; filter: drop-shadow(0 8px 22px #c6a24e22); }
 .event-reward-card .football-card { max-width: 100%; }
 @media(max-width: 640px) { .event-reward-card { flex-basis: 100%; } }
 

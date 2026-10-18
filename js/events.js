@@ -5,7 +5,7 @@ import { votersFor, candidatesFor, eventOutcome } from "./event-rules.js";
 import { esc, pageHead, empty, linkButton, busy, toast } from "./ui.js";
 export { mountEventAdmin } from "./event-admin.js";
 import { managedEventPage } from "./event-pages.js";
-import { rewardText as rewardSummary } from "./event-model.js";
+import { rewardBreakdown } from "./reward-presentation.js";
 function legacyAudit(ctx, event) {
   if (ctx.user.role !== "admin" || !event.ballots) return;
   const display = (uid) =>
@@ -42,7 +42,7 @@ export async function eventPage(ctx, id) {
   if (event?.schemaVersion === 2) return managedEventPage(ctx, event);
   if (event && ["closed", "cancelled"].includes(event.status)) {
     ctx.render(
-      `${pageHead("Resultado da votação", event.title, "", linkButton("#/missions", "Missões", "ghost"))}<section class="panel event-result event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<div class="section-intro"><h2>${event.status === "cancelled" ? "Evento cancelado" : "Votação encerrada"}</h2><p>${event.rewardsApplied === false ? "A atribuição das recompensas está a ser concluída." : esc(eventOutcome(event, ctx.league.users))}</p></div>${(event.winners || []).map((winner) => `<div class="event-result-question"><p>${esc(winner.label)} · ${winner.votes} ${winner.votes === 1 ? "voto" : "votos"}</p>${event.status === "closed" && winner.uids.length && winner.reward ? `<p class="event-revealed-reward"><strong>Recompensa atribuída</strong><br>${esc(rewardSummary(winner.reward))}</p>` : ""}</div>`).join("")}</section>`,
+      `${pageHead("Resultado da votação", event.title, "", linkButton("#/missions", "Missões", "ghost"))}<section class="panel event-result event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<div class="section-intro"><h2>${event.status === "cancelled" ? "Evento cancelado" : "Votação encerrada"}</h2><p>${event.rewardsApplied === false ? "A atribuição das recompensas está a ser concluída." : esc(eventOutcome(event, ctx.league.users))}</p></div>${(event.winners || []).map((winner) => `<div class="event-result-question"><p>${esc(winner.label)} · ${winner.votes} ${winner.votes === 1 ? "voto" : "votos"}</p>${event.status === "closed" && winner.uids.length && winner.reward ? `<div class="event-revealed-reward"><h3>Recompensa atribuída</h3>${rewardBreakdown(winner.reward)}</div>` : ""}</div>`).join("")}</section>`,
     );
     legacyAudit(ctx, event);
     return;

@@ -710,6 +710,7 @@ p {
   font-size: 0.84rem;
   line-height: 1.6;
 }
+.mission-objective-criteria { display:block; margin-top:4px; font-size:.78rem; color:var(--text-muted); }
 .ticket-chat {
   background: transparent;
 }

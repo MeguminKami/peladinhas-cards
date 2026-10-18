@@ -1,3 +1,7 @@
+import { ATTRIBUTES } from "../js/utils.js";
+import { challengeRules } from "../js/event-objective-view.js";
+import { rewardBreakdown } from "../js/reward-presentation.js";
+import { missionObjectivePreview } from "../js/mission-objective-preview.js";
 import {
   EVENT_RARITIES,
   eventRarityId,
@@ -649,4 +653,32 @@ test("player challenges sort by descending rarity and preserve ties", () => {
     [...rows].sort(compareEventRarity).map((r) => r.id),
     [2, 4, 3, 1, 5],
   );
+});
+
+test("mission previews preserve action, strict thresholds, individual criteria and recent windows", () => {
+  const describe = (changes={}) => missionObjectivePreview({objective:{metric:"ratingGames",target:2,threshold:4,comparison:"gte",combine:"mean",attributes:["overall","attack","passing","defense","physical","attitude"],...changes}});
+  assert.deepEqual(missionObjectivePreview({objective:{metric:"goals",target:14}}),{text:"Marca 14 golos.",criteria:""});
+  assert.equal(describe().text,"Conclui 2 jogos com média de pelo menos 4 ★.");
+  assert.equal(describe().criteria,"6 critérios · média conjunta");
+  assert.match(describe({combine:"all"}).text,/em cada critério/);
+  assert.equal(describe({metric:"ratingAverage",comparison:"gt",threshold:4.5,target:3}).text,"Média superior a 4,5 ★ nos últimos 3 jogos.");
+  assert.equal(describe({metric:"ratingStreak"}).text,"Conclui 2 jogos seguidos com média de pelo menos 4 ★.");
+  assert.equal(describe({metric:"ratingWins",target:1,attributes:["goalkeeping"]}).text,"Ganha 1 jogo com média de pelo menos 4 ★.");
+  assert.equal(describe({attributes:["goalkeeping"]}).criteria,"Baliza");
+});
+
+test("structured challenge instructions keep thresholds, required votes and conditions without duplicate paragraphs",()=> {
+  const html=challengeRules({kind:"mission",method:"objective",cadence:"once",maxRepeats:1,objective:{metric:"ratingGames",target:1,threshold:4.2,comparison:"gte",combine:"mean",attributes:["overall","attack","passing","defense","physical","attitude"],minRatings:9}});
+  assert.match(html,/4,2/);assert.match(html,/9 por critério, em cada jogo/);
+  assert.equal((html.match(/Só contam jogos/g)||[]).length,1);
+  assert.equal((html.match(/Não precisam de ser consecutivos/g)||[]).length,1);
+  assert.match(html,/Critérios de avaliação/);assert.match(html,/Média conjunta dos critérios/);
+});
+test("reward presentation compresses equal boosts but preserves mixed amounts, separate durations and escaped names",()=> {
+  const boosts=Object.fromEntries(ATTRIBUTES.map(([key])=>[key,1]));
+  const html=rewardBreakdown({boosts,statDuration:"permanent",specialId:"in-form",cardTheme:{name:'<script>unsafe</script>'}});
+  assert.match(html,/em todos os 12 atributos/);assert.match(html,/Permanente/);assert.match(html,/Semanal/);
+  assert.doesNotMatch(html,/<script>/);assert.match(html,/&lt;script&gt;/);
+  const mixed=rewardBreakdown({boosts:{pace:2,passing:1},statDuration:"monthly"});
+  assert.match(mixed,/Velocidade/);assert.match(mixed,/\+2/);assert.match(mixed,/Passe/);assert.match(mixed,/\+1/);assert.match(mixed,/Mensal/);
 });
