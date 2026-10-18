@@ -144,7 +144,7 @@ try {
         players: Object.fromEntries(
           ids
             .slice(0, 10)
-            .map((uid) => [uid, { overall: 4.2, attack: 4, defense: 3.8 }]),
+            .map((uid) => [uid, { overall: 4.2, attack: 4, defense: 3.8, goalkeeping: 2 }]),
         ),
       },
     ];
@@ -159,6 +159,8 @@ try {
     0,
   );
   assert.equal(await page.locator(".postmatch-player").count(), 12);
+  assert.equal(await page.locator(".postmatch-player").first().locator(".postmatch-player-rating .match-stars b").textContent(),"4,0");
+  assert.equal(await page.locator(".postmatch-player").first().locator(".match-rating-with-gk").textContent(),"(3,5 com GR)");
   assert.equal(
     await page
       .locator(".postmatch-player")

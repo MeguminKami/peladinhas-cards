@@ -39,6 +39,7 @@
     "test:card-choice": "node tests/card-choice.mjs",
     "test:card-collection": "node tests/card-collection.mjs",
     "test:event-scopes": "node tests/event-scopes.mjs",
+    "test:rating-consistency": "node tests/rating-consistency.mjs",
     "test:event-details": "node tests/event-details.mjs",
     "test:event-creation": "node tests/event-creation.mjs",
     "test:maintenance": "firebase emulators:exec --config firebase.maintenance.json --project demo-peladinhas-maintenance --only firestore,auth,storage \"node --test --test-concurrency=1 tests/maintenance.backend.test.js tests/maintenance.storage.test.js\"",

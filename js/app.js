@@ -1,3 +1,4 @@
+import { componentWeeklyTopPlayers, matchAverageSummary } from "./match-rating-summary.js";
 import { policyAt, canManage, setPolicyDocument } from "./system-policy.js";
 import * as Firebase from "./firebase.js";
 import { homeCardPanel } from "./home-card.js";
@@ -50,7 +51,6 @@ import { adminPage, cardLab, adminEdit, rawRatings } from "./admin.js";
 import { card, bindImages } from "./cards.js";
 import {
   ATTRIBUTES,
-  calculateWeeklyTopPlayers,
   isoWeek,
   themeName,
   THEMES,
@@ -373,11 +373,11 @@ function playersPage() {
   draw();
 }
 function rankingPage() {
-  const players = calculateWeeklyTopPlayers(
+  const players = componentWeeklyTopPlayers(
     ctx.league.players.filter((p) => p.hasCard),
   );
   ctx.render(
-    `${pageHead(isoWeek(), "Ranking semanal", "Média dos jogos da semana com pelo menos 2 avaliações válidas; desempate por OVR. Sem avaliações, o OVR serve de referência.")}<div class="ranking-list">${players.map((p, i) => `<a class="ranking-row panel" href="#/player/${p.uid}"><span class="ranking-number">${i + 1}</span><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><div><b>${esc(p.displayName || p.username)}</b><small>${themeName(p.cardType)}</small></div><div><small>OVR</small><b>${p.ovr}</b></div><div><small>Forma semanal</small><b>${p.weeklyPerformance?.toFixed(2) || "—"}</b></div>${icon("arrow")}</a>`).join("") || empty("A classificação começa contigo", "Conclui a autoavaliação para criares a tua carta.", linkButton("#/missions", "Missões"), "trophy")}</div>`,
+    `${pageHead(isoWeek(), "Ranking semanal", "Média dos jogos da semana com pelo menos 2 avaliações válidas; desempate por OVR. Sem avaliações, o OVR serve de referência.")}<div class="ranking-list">${players.map((p, i) => `<a class="ranking-row panel" href="#/player/${p.uid}"><span class="ranking-number">${i + 1}</span><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><div><b>${esc(p.displayName || p.username)}</b><small>${themeName(p.cardType)}</small></div><div><small>OVR</small><b>${p.ovr}</b></div><div><small>Forma semanal</small><b>${matchAverageSummary(p.weeklyComponentAverages,{digits:2})}</b></div>${icon("arrow")}</a>`).join("") || empty("A classificação começa contigo", "Conclui a autoavaliação para criares a tua carta.", linkButton("#/missions", "Missões"), "trophy")}</div>`,
   );
 }
 async function route({ cachedOnly = false } = {}) {

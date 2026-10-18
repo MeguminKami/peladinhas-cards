@@ -1,5 +1,5 @@
 import { pageHead, esc, empty } from "./ui.js";
-import { average } from "./utils.js";
+import { matchSeriesAverages, matchAverageSummary } from "./match-rating-summary.js";
 export function statisticsPage(ctx) {
   const closed = ctx.league.games.filter((g) => g.status === "closed"),
     goals = closed.reduce((n, g) => n + g.score.teamA + g.score.teamB, 0);
@@ -53,9 +53,8 @@ export function statisticsPage(ctx) {
       name: p.displayName || p.username,
       position: p.primaryPosition || "—",
       ovr: p.hasCard ? p.ovr : null,
-      form: p.aggregates.length
-        ? average(p.aggregates.map((a) => a.overall))
-        : null,
+      form: matchSeriesAverages(p.aggregates).withoutGoalkeeping,
+      formAverages: matchSeriesAverages(p.aggregates),
     }));
     players.sort((a, b) => {
       if (a[key] == null) return b[key] == null ? 0 : 1;
@@ -70,7 +69,7 @@ export function statisticsPage(ctx) {
       );
     });
     root.innerHTML = players.length
-      ? `<table class="statistics-table"><thead><tr>${columns.map(([id, label]) => `<th scope="col" class="stat-${id}" aria-sort="${id === key ? (direction === "asc" ? "ascending" : "descending") : "none"}"><button type="button" data-stat-sort="${id}">${label}<span aria-hidden="true">${id === key ? (direction === "asc" ? "↑" : "↓") : "↕"}</span></button></th>`).join("")}</tr></thead><tbody>${players.map((p) => `<tr>${columns.map(([id, label]) => `<td class="stat-${id}" data-label="${label}">${id === "name" ? `<a href="#/player/${esc(p.uid)}">${esc(p.name)}</a>` : id === "form" ? (p.form?.toFixed(2) ?? "—") : id === "winRate" ? `${p.winRate}%` : esc(p[id] ?? "—")}</td>`).join("")}</tr>`).join("")}</tbody></table>`
+      ? `<table class="statistics-table"><thead><tr>${columns.map(([id, label]) => `<th scope="col" class="stat-${id}" aria-sort="${id === key ? (direction === "asc" ? "ascending" : "descending") : "none"}"><button type="button" data-stat-sort="${id}">${label}<span aria-hidden="true">${id === key ? (direction === "asc" ? "↑" : "↓") : "↕"}</span></button></th>`).join("")}</tr></thead><tbody>${players.map((p) => `<tr>${columns.map(([id, label]) => `<td class="stat-${id}" data-label="${label}">${id === "name" ? `<a href="#/player/${esc(p.uid)}">${esc(p.name)}</a>` : id === "form" ? matchAverageSummary(p.formAverages,{digits:2}) : id === "winRate" ? `${p.winRate}%` : esc(p[id] ?? "—")}</td>`).join("")}</tr>`).join("")}</tbody></table>`
       : empty("Ainda sem jogadores");
   };
   controls.onchange = (event) => {

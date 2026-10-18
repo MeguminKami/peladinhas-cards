@@ -1,4 +1,4 @@
-import { calculateWeeklyTopPlayers } from "./utils.js";
+import { componentWeeklyTopPlayers, matchAverageSummary } from "./match-rating-summary.js";
 import { card, bindImages } from "./cards.js";
 import { icon } from "./icons.js";
 import { empty } from "./ui.js";
@@ -11,7 +11,7 @@ const modes = [
 
 export function podiumPlayers(players, mode, date = new Date()) {
   const tie = (a, b) => b.ovr - a.ovr || (a.username || a.uid || "").localeCompare(b.username || b.uid || "");
-  if (mode === "performance") return calculateWeeklyTopPlayers(players, date).filter(p => p.hasCard && Number.isFinite(p.weeklyPerformance)).slice(0, 3);
+  if (mode === "performance") return componentWeeklyTopPlayers(players, date).filter(p => p.hasCard && Number.isFinite(p.weeklyPerformance)).slice(0, 3);
   return players.filter(p => p.hasCard && (mode !== "growth" || Number.isFinite(p.ovrDelta) && p.ovrDelta > 0))
     .sort((a, b) => (mode === "growth" ? b.ovrDelta - a.ovrDelta : 0) || tie(a, b)).slice(0, 3);
 }
@@ -27,7 +27,7 @@ export function mountHomePodium(root, players) {
     root.querySelector("#podium-description").textContent = mode.description;
     root.querySelector(".podium-edition").textContent = `0${index + 1} / 03`;
     root.querySelectorAll("[data-podium-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.podiumMode === mode.id)));
-    stage.innerHTML = top.length ? `<div class="podium" tabindex="0" role="region" aria-label="${mode.label}: pódio da liga">${top.map((p, i) => `<div class="podium-place place-${i + 1}"><div class="podium-rank">${i === 0 ? icon("trophy") : ""}<b>${i + 1}.º</b><span>${i === 0 ? "Líder" : "No pódio"}</span></div>${card(p)}<div class="podium-pedestal"><p class="podium-score">${mode.id === "ovr" ? `<strong>${p.ovr}</strong><span>OVR atual</span>` : mode.id === "performance" ? `<strong>${p.weeklyPerformance.toLocaleString("pt-PT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<small> / 5</small></strong><span>Performance semanal</span>` : `<strong>+${p.ovrDelta.toLocaleString("pt-PT", { maximumFractionDigits: 2 })}<small> OVR</small></strong><span>Face à semana passada</span>`}</p><span class="podium-step-number" aria-hidden="true">${["I", "II", "III"][i]}</span></div></div>`).join("")}</div>${top.length > 1 ? `<p class="podium-hint">${icon("arrow")} Desliza para conhecer os três destaques</p>` : ""}` : empty(mode.id === "growth" ? "Ainda sem subidas esta semana" : mode.id === "performance" ? "A semana ainda está a começar" : "O pódio está à tua espera", mode.id === "performance" ? "O pódio aparece quando houver jogos avaliados esta semana." : mode.id === "growth" ? "As subidas aparecem ao comparar com a carta da semana anterior." : "As primeiras cartas aparecem após a autoavaliação.");
+    stage.innerHTML = top.length ? `<div class="podium" tabindex="0" role="region" aria-label="${mode.label}: pódio da liga">${top.map((p, i) => `<div class="podium-place place-${i + 1}"><div class="podium-rank">${i === 0 ? icon("trophy") : ""}<b>${i + 1}.º</b><span>${i === 0 ? "Líder" : "No pódio"}</span></div>${card(p)}<div class="podium-pedestal"><p class="podium-score">${mode.id === "ovr" ? `<strong>${p.ovr}</strong><span>OVR atual</span>` : mode.id === "performance" ? `<strong>${matchAverageSummary(p.weeklyComponentAverages,{digits:2})}<small> / 5</small></strong><span>Performance semanal</span>` : `<strong>+${p.ovrDelta.toLocaleString("pt-PT", { maximumFractionDigits: 2 })}<small> OVR</small></strong><span>Face à semana passada</span>`}</p><span class="podium-step-number" aria-hidden="true">${["I", "II", "III"][i]}</span></div></div>`).join("")}</div>${top.length > 1 ? `<p class="podium-hint">${icon("arrow")} Desliza para conhecer os três destaques</p>` : ""}` : empty(mode.id === "growth" ? "Ainda sem subidas esta semana" : mode.id === "performance" ? "A semana ainda está a começar" : "O pódio está à tua espera", mode.id === "performance" ? "O pódio aparece quando houver jogos avaliados esta semana." : mode.id === "growth" ? "As subidas aparecem ao comparar com a carta da semana anterior." : "As primeiras cartas aparecem após a autoavaliação.");
     bindImages(stage);
   };
   const schedule = () => {

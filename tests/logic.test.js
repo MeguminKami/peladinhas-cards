@@ -1,3 +1,4 @@
+import { matchComponentAverages, matchRatingSummary } from "../js/match-rating-summary.js";
 import { defaultOvrPresets } from "../js/ovr-presets.js";
 import { canEditRating, ratingEditDeadline } from "../js/rating-window.js";
 import {
@@ -816,4 +817,39 @@ test("self-declared non-keeper excludes every goalkeeper vote, including earlier
     calculateGameAggregate([{ ...self, raterId: "other" }, peer]).goalkeeping,
     5,
   );
+});
+
+test("match component means exclude goalkeeper in the main value and include only rated components",()=> {
+  const summary={overall:4,attack:5,passing:3,defense:4,physical:5,attitude:3,goalkeeping:2};
+  assert.deepEqual(matchComponentAverages(summary),{withoutGoalkeeping:4,withGoalkeeping:26/7,count:6});
+  assert.match(matchRatingSummary(summary),/\(3,7 com GR\)/);
+  assert.equal(matchComponentAverages({...summary,goalkeeping:null}).withGoalkeeping,null);
+  assert.equal(matchComponentAverages({...summary,goalkeepingEligible:false}).withGoalkeeping,null);
+  assert.equal(matchComponentAverages({overall:0,attack:4,goalkeeping:0}).withoutGoalkeeping,2);
+  assert.equal(matchComponentAverages({overall:0,attack:4,goalkeeping:0}).withGoalkeeping,4/3);
+  assert.equal(matchComponentAverages({goalkeeping:5}).withoutGoalkeeping,null);
+  assert.match(matchRatingSummary({}),/Por avaliar/);
+  assert.equal(matchComponentAverages({overall:4.8,attack:2,goalkeeping:5}).withoutGoalkeeping,3.4);
+});
+
+test("rating series use equal game weights and preserve GR omission without turning it into zero",async()=> {
+  const {matchSeriesAverages,matchRatingSeries}=await import("../js/match-rating-summary.js");
+  const result=matchSeriesAverages([{overall:4,attack:2,goalkeeping:0},{overall:5,goalkeeping:null},{}]);
+  assert.equal(result.withoutGoalkeeping,4);
+  assert.equal(result.withGoalkeeping,3.5);
+  assert.equal(result.count,2);
+  assert.match(matchRatingSeries([{overall:4,goalkeeping:2}]),/3,0 com GR/);
+  assert.equal(matchSeriesAverages([]).withoutGoalkeeping,null);
+});
+test("weekly display ranks by component averages while preserving original aggregates",async()=> {
+  const {componentWeeklyTopPlayers}=await import("../js/match-rating-summary.js");
+  const {cardWeek}=await import("../js/card-week.js");
+  const now=new Date("2026-10-16T12:00:00Z"),date=new Date(+cardWeek(now).opensAt+60000);
+  const players=[{uid:"a",username:"a",ovr:90,aggregates:[{date,count:2,overall:5,attack:1,goalkeeping:5}]},{uid:"b",username:"b",ovr:70,aggregates:[{date,count:2,overall:4,attack:4,goalkeeping:0}]}];
+  const result=componentWeeklyTopPlayers(players,now);
+  assert.deepEqual(result.map(row=>row.uid),["b","a"]);
+  assert.equal(result[0].weeklyPerformance,4);
+  assert.equal(result[0].weeklyComponentAverages.withGoalkeeping,8/3);
+  assert.equal(players[0].aggregates[0].overall,5);
+  assert.equal(result[1].aggregates,players[0].aggregates);
 });

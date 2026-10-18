@@ -1,3 +1,4 @@
+import { matchAverageSummary, matchComponentAverages } from "./match-rating-summary.js";
 import { openGameRatings } from "./admin-game-ratings.js";
 import { policyAt } from "./system-policy.js";
 import { mountMaintenance } from "./maintenance.js";
@@ -325,7 +326,7 @@ export async function rawRatings(ctx, uid) {
             const values = Object.values(r.ratings || r.ratings20 || {}).filter(
                 Number.isFinite,
               ),
-              mean = values.length
+              mean = r.kind === "Pós-jogo" ? matchAverageSummary(matchComponentAverages(r.ratings)) : values.length
                 ? (values.reduce((s, v) => s + v, 0) / values.length).toFixed(1)
                 : "—";
             return `<tr><td>${esc(r.kind)}<small>${esc(ctx.league.games.find((g) => g.id === r.gameId)?.title || "0–20")}</small></td><td>@${esc(name(r.raterId))}</td><td>@${esc(name(r.targetId))}</td><td><span class="rating-average">${mean}<small> / ${r.kind === "Pós-jogo" ? 5 : 20}</small></span></td><td><span class="pill ${r.submitted ? "success" : "warning"}">${r.submitted ? "Enviada" : "Rascunho"}</span></td><td><div class="actions compact"><button type="button" class="btn btn-ghost" data-view="${rows.indexOf(r)}">${icon("plus")}Ver</button><button type="button" class="btn btn-secondary" data-correct="${rows.indexOf(r)}" ${canEditRating(r) ? "" : 'disabled title="Prazo de edição de 7 dias terminado"'}>${icon("edit")}Corrigir</button></div></td></tr>`;

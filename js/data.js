@@ -1,3 +1,4 @@
+import { matchComponentAverages } from "./match-rating-summary.js";
 import * as Firebase from "./firebase.js";
 import { setPolicyDocument, policyAt } from "./system-policy.js";
 import { weeklyComparison } from "./weekly-comparison.js";
@@ -126,7 +127,7 @@ export async function loadLeague() {
         progression: calculation.progression,
         cardCalculation: calculation.ovrCalculation,
         cardAggregates: aggregates,
-        aggregates: aggregates.filter((a) => Number.isFinite(a.overall)),
+        aggregates: aggregates.filter((a) => matchComponentAverages(a).withoutGoalkeeping !== null),
         matches,
         matchStats: calculateMatchStats(u.uid, games),
         ...(cycle.phase === "closed"

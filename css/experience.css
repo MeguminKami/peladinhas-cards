@@ -1484,6 +1484,8 @@ p {
 .match-stars > span { position:relative; display:inline-block; color:#7775; letter-spacing:2px; }
 .match-stars > span > span { position:absolute; inset:0 auto 0 0; overflow:hidden; color:#f5cb69; }
 .match-stars b { font-size:.8rem; min-width:3ch; text-align:right; font-variant-numeric:tabular-nums; }
+.match-rating-average { display:inline-flex; align-items:center; flex-wrap:wrap; gap:4px 8px; min-width:0; max-width:100%; }
+.match-rating-average .match-rating-with-gk { font-size:.78rem; color:var(--text-secondary); white-space:nowrap; font-variant-numeric:tabular-nums; }
 .match-rating-dimensions { position:absolute; inset:calc(100% + 8px) auto auto 0; width:min(100%,360px); box-sizing:border-box; padding:16px; max-height: min(60vh, 440px); overflow-y:auto; border:1px solid var(--border-strong); border-radius:14px; background:var(--bg-panel); box-shadow:0 16px 40px #0005; }
 .match-rating-player::after { content:""; position:absolute; inset:100% 0 auto; height:10px; }
 .match-rating-player.opens-above .match-rating-dimensions { inset:auto auto calc(100% + 8px) 0; }

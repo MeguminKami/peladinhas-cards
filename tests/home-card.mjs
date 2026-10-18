@@ -113,7 +113,7 @@ try {
         ovrDelta: empty ? null : 2,
         stats: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 83])),
         communityCount: 2,
-        aggregates: empty ? [] : [{ overall: 4.2 }],
+        aggregates: empty ? [] : [{ overall: 4.2, attack: 2, goalkeeping: 0 }],
         matchStats: {
           played: empty ? 0 : 3,
           wins: 1,
@@ -130,6 +130,8 @@ try {
     await page.setViewportSize({ width, height: 1000 });
     await renderPanel();
     assert.equal(await page.locator(".my-card-match").count(), 3);
+    assert.equal(await page.locator(".compact-metrics .match-rating-number").textContent(),"3,1");
+    assert.equal(await page.locator(".compact-metrics .match-rating-with-gk").textContent(),"(2,1 com GR)");
     assert.deepEqual(await page.locator(".my-card-outcome").allTextContents(), [
       "V",
       "E",

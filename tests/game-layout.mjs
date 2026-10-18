@@ -104,7 +104,7 @@ try {
         summaries: [
           {
             id: game.id,
-            players: { one: { overall: 4.25, attack: 4 }, two: { overall: 4 } },
+            players: { one: { overall: 4.25, attack: 4, goalkeeping: 2 }, two: { overall: 4 } },
           },
         ],
       },
@@ -233,8 +233,9 @@ try {
   });
   assert.equal(
     await page.locator(".game-own-rating .match-stars b").textContent(),
-    "4,3",
+    "4,1",
   );
+  assert.equal(await page.locator(".game-own-rating .match-rating-with-gk").textContent(),"(3,4 com GR)");
   assert.ok(
     await page
       .locator(".game-own-rating .match-stars b")

@@ -130,3 +130,9 @@ No pós-jogo, o jogador avalia também o seu próprio desempenho, no mesmo formu
 [`js/utils.js`](../../js/utils.js) contém o cálculo de atributos, OVR e estatísticas; [`js/card-week.js`](../../js/card-week.js) define o ciclo. [`js/data.js`](../../js/data.js) combina dados e snapshots para apresentação. A escrita dos agregados/histórico e a validação de operações protegidas pertencem às Functions e às regras Firestore.
 
 </details>
+
+## Média apresentada nos jogos
+
+Na lista de jogos e na linha de cada jogador num jogo encerrado, as estrelas mostram a média das seis componentes de campo, incluindo Desempenho geral e excluindo Guarda-redes. Cada componente disponível tem o mesmo peso; campos por avaliar não contam como zero. Quando Guarda-redes tem avaliação aplicável, a média incluindo essa componente aparece entre parênteses, identificada por «com GR». A ajuda indica quantas componentes estão disponíveis. As avaliações de cada dimensão, os cálculos de progressão e os dados guardados mantêm-se independentes desta média de apresentação.
+
+A mesma média é usada no início, forma recente e últimos cinco jogos do perfil, estatísticas, ranking/pódio semanal e médias de avaliações pós-jogo no ADMIN. Os resumos de vários jogos fazem primeiro a média das componentes de cada jogo e depois a média dos jogos, com peso igual. A média «com GR» inclui essa componente nos jogos em que é aplicável, preservando os restantes jogos. A ordenação por forma/performance segue a média principal sem GR. Os critérios individuais e os cálculos de progressão/missões não são reescritos.

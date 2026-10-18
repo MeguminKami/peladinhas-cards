@@ -1,5 +1,5 @@
+import { matchRatingSummary } from "./match-rating-summary.js";
 import { closedGamePage } from "./closed-game.js";
-import { matchStars } from "./match-stars.js";
 export { matchStars } from "./match-stars.js";
 import { bindRowScroll } from "./row-scroll.js";
 import {
@@ -47,7 +47,7 @@ export function gameRows(games, { uid, summaries = [] } = {}) {
     .map((g) => {
       const ownRating =
         g.status === "closed" && uid && participants(g).includes(uid)
-          ? `<div class="game-own-rating"><small>A tua avaliação</small>${matchStars(summaries.find((row) => row.id === g.id)?.players?.[uid]?.overall)}</div>`
+          ? `<div class="game-own-rating"><small>A tua média</small>${matchRatingSummary(summaries.find((row) => row.id === g.id)?.players?.[uid])}</div>`
           : "";
       return `<a class="game-row ${ownRating ? "has-own-rating" : ""}" href="#/game/${g.id}"><span class="game-symbol">${icon("games")}</span><div class="game-row-info"><b>${esc(g.title)}</b><small>${formatMatchDate(g.scheduledAt)} · ${esc(g.location || "Local a definir")}</small></div>${ownRating}<span class="pill ${g.status === "closed" ? "" : "success"}">${{ draft: "Rascunho", open: "Aberto", closed: "Encerrado" }[g.status]}</span><strong>${g.status === "closed" ? `${g.score.teamA} — ${g.score.teamB}` : "VS"}</strong>${icon("arrow")}</a>`;
     })

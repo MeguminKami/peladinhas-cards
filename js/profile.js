@@ -1,3 +1,4 @@
+import { matchRatingSeries, matchAverageSummary, matchComponentAverages } from "./match-rating-summary.js";
 import { weeklyComparison } from "./weekly-comparison.js";
 import { trendArrow } from "./icons.js";
 import { cardWeek } from "./card-week.js";
@@ -9,7 +10,6 @@ import {
   flag,
   ATTRIBUTES,
   formatDate,
-  average,
   isoWeek,
 } from "./utils.js";
 import { ASSET_PATHS, safeImage } from "./assets.js";
@@ -210,9 +210,7 @@ export async function playerPage(ctx, uid) {
       ["OVR", p.ovr],
       [
         "Últimos 5",
-        p.aggregates.length
-          ? average(p.aggregates.slice(-5).map((x) => x.overall)).toFixed(1)
-          : "—",
+        matchRatingSeries(p.aggregates.slice(-5)),
       ],
       ["Melhor atributo", best[1]],
       ["Avaliações recebidas · 0–20", p.communityCount],
@@ -250,7 +248,7 @@ export async function playerPage(ctx, uid) {
         .slice(-5)
         .map(
           (g) =>
-            `<a href="#/game/${g.gameId}" class="form-score"><b>${g.overall.toFixed(1)}</b><small>${formatDate(g.date)}</small></a>`,
+            `<a href="#/game/${g.gameId}" class="form-score"><b>${matchAverageSummary(matchComponentAverages(g))}</b><small>${formatDate(g.date)}</small></a>`,
         )
         .join("") ||
       empty(

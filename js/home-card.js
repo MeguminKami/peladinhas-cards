@@ -1,9 +1,9 @@
+import { matchRatingSeries } from "./match-rating-summary.js";
 import { policyAt } from "./system-policy.js";
 import { card } from "./cards.js";
 import { esc, linkButton } from "./ui.js";
 import {
   asDate,
-  average,
   participants,
   matchOutcome,
   matchPerformance,
@@ -28,9 +28,7 @@ export function homeCardPanel(player, league) {
   const delta = player.ovrDelta;
   const format = (value) =>
     Number(value || 0).toLocaleString("pt-PT", { maximumFractionDigits: 1 });
-  const rating = player.aggregates?.length
-    ? format(average(player.aggregates.slice(-5).map((row) => row.overall)))
-    : "—";
+  const rating = matchRatingSeries((player.aggregates || []).slice(-5));
   const qualification = player.official
     ? "Carta oficial"
     : `Carta provisória · ${Math.min(policyAt().rules.communityMinimum, player.communityCount || 0)}/${policyAt().rules.communityMinimum} avaliações`;
