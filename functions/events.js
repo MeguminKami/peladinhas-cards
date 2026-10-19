@@ -1,7 +1,8 @@
 import { grant } from "./event-management.js";
+import { createReadContext } from "./read-context.js";
 import { policyAt, canManage } from "../js/system-policy.js";
 import { policyCall, policySchedule, policyWritten, policyCreated, recordTaskFailure } from "./policy-runtime.js";
-import { missionUnlocked } from "../js/event-model.js";
+import { missionUnlocked, usesRatingObjective } from "../js/event-model.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
 import {
   managedEvents,
@@ -43,7 +44,7 @@ function publicEvent(event) {
 }
 async function actor(request, admin = false) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
-  const user = (await db().doc(`users/${request.auth.uid}`).get()).data();
+  const user = request.systemActor || (await db().doc(`users/${request.auth.uid}`).get()).data();
   if (!user || user.disabled || (admin && user.role !== "admin"))
     throw new HttpsError("permission-denied", "Acesso reservado.");
   return !admin && user.role==="admin" && !canManage(user,"events") && !canManage(user,"audit") ? {...user,role:"member"} : user;
@@ -81,8 +82,11 @@ export function eventFunctions(rebuild) {
   });
   const listEvents = policyCall("listEvents",async (request) => {
     const user = await actor(request);
-    const all = rows(await db().collection("events").get());
     const scope = request.data?.scope || "active";
+    const collection = db().collection("events");
+    const query = scope === "all" ? collection : collection.where("status", "in", scope === "history" ? ["closed", "cancelled"] : ["open", "scheduled", "review"]);
+    const snapshots = await query.get();
+    const all = rows(snapshots);
     const completions =
       user.role === "admin"
         ? []
@@ -92,7 +96,7 @@ export function eventFunctions(rebuild) {
               .where("uid", "==", request.auth.uid)
               .get(),
           );
-    return all
+    const visible = all
       .filter(
         (event) =>
           (user.role === "admin" ||
@@ -109,6 +113,17 @@ export function eventFunctions(rebuild) {
           ? publicManagedEvent(event, event.id)
           : publicEvent(event),
       );
+    if (request.data?.summaries === true) {
+      const context = { ...createReadContext(), summaryOnly: true, includeRatings: visible.some(event => usesRatingObjective(event.objective)), events: new Map(snapshots.docs.map(doc => [doc.id, doc])) };
+      await Promise.all(visible.map(async event => {
+        if (event.schemaVersion !== 2 || event.method !== "objective" || event.status !== "open" || !event.participantIds?.includes(request.auth.uid)) return;
+        const detail = await managed.details({ ...request, data: { eventId: event.id } }, user, context);
+        event.missionSummary = detail ? Object.fromEntries([
+          "status", "startsAt", "endsAt", "indefinite", "progress", "rewardPreview", "claimedPeriods", "claimable", "claimMode", "claimNotice",
+        ].filter(key => detail[key] !== undefined).map(key => [key, key === "progress" ? detail.progress.filter(row => row.uid === request.auth.uid) : detail[key]])) : null;
+      }));
+    }
+    return visible;
   });
   const claimMission = policyCall("claimMission",async (request) => {
     await actor(request);
@@ -446,11 +461,12 @@ export function eventFunctions(rebuild) {
           await tryClose(event.id);
       const pending = await db()
         .collection("events")
-        .where("status", "==", "closed")
+        .where("rewardsApplied", "==", false)
         .get();
       for (const event of pending.docs)
         if (
           event.data().schemaVersion !== 2 &&
+          event.data().status === "closed" &&
           event.data().rewardsApplied === false
         )
           await tryClose(event.id);

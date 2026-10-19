@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync, mkdirSync } from "node:fs";
-import { chromium } from "playwright";
+import { chromium } from "./browser-sandbox.mjs";
 const browser = await chromium.launch({
   headless: true,
   ...(process.platform === "win32" ? { channel: "msedge" } : {}),

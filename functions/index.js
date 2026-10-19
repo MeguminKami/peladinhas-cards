@@ -35,6 +35,9 @@ import {
 } from "../js/team-balance.js";
 import { validCardDesign } from "../js/card-design.js";
 import { initializeApp, getApp } from "firebase-admin/app";
+import { assertTestEmulator, emulatorAppOptions } from "./test-environment.js";
+import { sameData } from "./equal-data.js";
+import { coalesceWork } from "./coalesce-work.js";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
@@ -59,7 +62,8 @@ import {
   matchEvolutionContext,
   matchPerformance,
 } from "../js/utils.js";
-initializeApp();
+assertTestEmulator();
+initializeApp(emulatorAppOptions());
 setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
@@ -442,7 +446,9 @@ async function aggregateGame(gid) {
         ps[uid].count >= 3 &&
         ps[uid].overall >= 4.8 &&
         ps[uid].overall === best;
-    tx.set(db.doc(`gameSummaries/${gid}`), {
+    const ref = db.doc(`gameSummaries/${gid}`);
+    const previous = await tx.get(ref);
+    const next = {
       status: g.status,
       scheduledAt: g.scheduledAt,
       closedAt: g.closedAt,
@@ -450,11 +456,21 @@ async function aggregateGame(gid) {
       teamB: g.teamB,
       players: ps,
       updatedAt: FieldValue.serverTimestamp(),
-    });
+    };
+    if (!sameData(previous.data(), next)) tx.set(ref, next);
   });
 }
-async function buildHistory(uid) {
-  const earnedCards = await refreshPlayerCollection(uid);
+async function buildHistories(uids) {
+  const unique = [...new Set(uids)];
+  if (!unique.length) return;
+  const context = await collectionContext();
+  // Bound concurrent transactions while sharing immutable inputs for this batch.
+  for (let i = 0; i < unique.length; i += 3)
+    await Promise.all(unique.slice(i, i + 3).map(uid => buildHistory(uid, context)));
+}
+async function buildHistory(uid, shared = null) {
+  const context = shared?.snapshots ? shared : await collectionContext();
+  const earnedCards = await refreshPlayerCollection(uid, context);
   const now = new Date();
   const [
     user,
@@ -466,14 +482,14 @@ async function buildHistory(uid) {
     photoSnap,
     rewardSnap,
   ] = await Promise.all([
-    db.doc(`users/${uid}`).get(),
-    db.doc(`initialRatings/${uid}`).get(),
+    context.snapshots.users.docs.find(doc => doc.id === uid) || { exists: false },
+    context.snapshots.initials.docs.find(doc => doc.id === uid) || { exists: false },
     db.collection("communityRatings").where("targetId", "==", uid).get(),
-    db.collection("games").get(),
-    db.doc("settings/ovr").get(),
-    db.collection("gameBalances").get(),
+    context.snapshots.games,
+    context.snapshots.weights,
+    context.snapshots.balances,
     db.doc(`weeklyCardPhotos/${uid}_${cardWeek(now).weekId}`).get(),
-    db.collection("eventRewards").where("uid", "==", uid).get(),
+    { docs: context.snapshots.rewards.docs.filter(doc => doc.data().uid === uid) },
   ]);
   if (
     !user.exists ||
@@ -492,7 +508,7 @@ async function buildHistory(uid) {
       g.status === "closed" && !g.deleting && participants(g).includes(uid),
   );
   const feedback = await Promise.all(
-    games.map((g) => db.collection(`games/${g.id}/feedback`).get()),
+    games.map((g) => context.reads.read(`feedback:${g.id}`, () => db.collection(`games/${g.id}/feedback`).get())),
   );
   const cycle = cardWeek(now),
     cutoff = cycle.phase === "closed" ? cycle.closesAt : now;
@@ -660,7 +676,7 @@ async function buildHistory(uid) {
       if (snapshot.data()?.locked) return;
       const photo = await tx.get(db.doc(`weeklyCardPhotos/${uid}_${r.weekId}`));
       const selection = await tx.get(db.doc(`cardSelections/${uid}`));
-      tx.set(ref, {
+      const next = {
         ...r,
         selectedCardId: validCardSelection(
           selection.data()?.selectedCardId || snapshot.data()?.selectedCardId,
@@ -669,7 +685,8 @@ async function buildHistory(uid) {
         cardPhoto: photo.exists
           ? { photoURL: photo.data().photoURL, design: photo.data().design }
           : null,
-      });
+      };
+      if (!sameData(snapshot.data(), next)) tx.set(ref, next);
     });
   }
   const latest = results.at(-1);
@@ -680,11 +697,12 @@ async function buildHistory(uid) {
       const ref = db.doc(`users/${uid}/cardState/current`),
         old = await tx.get(ref);
       const oldData = old.data();
-      tx.set(ref, {
+      const next = {
         ovr: latest.ovr,
         specials: latest.specials.map((x) => x.id),
         updatedAt: FieldValue.serverTimestamp(),
-      });
+      };
+      if (!sameData(oldData, next)) tx.set(ref, next);
       if (policyAt().notifications.enabled && oldData && oldData.ovr !== latest.ovr)
         tx.set(
           db.doc(
@@ -718,8 +736,10 @@ export const onCommunityRating = policyWritten(
     const value = event.data.after.data() || event.data.before.data();
     if (!value || (!value.submitted && !event.data.before.data()?.submitted))
       return;
-    await aggregateCommunity(value.targetId);
-    await buildHistory(value.targetId);
+    await coalesceWork(`community:${value.targetId}`, async () => {
+      await aggregateCommunity(value.targetId);
+      await buildHistory(value.targetId);
+    });
   },
 );
 export const onPlayerPosition = policyWritten("users/{uid}", (event) => {
@@ -743,9 +763,11 @@ export const onFeedback = policyWritten(
     const value = event.data.after.data() || event.data.before.data();
     if (!value || (!value.submitted && !event.data.before.data()?.submitted))
       return;
-    await aggregateGame(event.params.gid);
-    const g = (await db.doc(`games/${event.params.gid}`).get()).data();
-    await Promise.all(participants(g || {}).map(buildHistory));
+    await coalesceWork(`feedback:${event.params.gid}`, async () => {
+      await aggregateGame(event.params.gid);
+      const g = (await db.doc(`games/${event.params.gid}`).get()).data();
+      await buildHistories(participants(g || {}));
+    });
   },
 );
 // Store only the rendering fields, once per participant and match week.
@@ -860,11 +882,7 @@ export const onGame = policyWritten("games/{gid}", async (event) => {
   if (!latestGame.exists) {
     await db.doc(`gameSummaries/${event.params.gid}`).delete();
     await db.doc(`gameBalances/${event.params.gid}`).delete();
-    await Promise.all(
-      data(await db.collection("users").get())
-        .filter((u) => !u.disabled)
-        .map((u) => buildHistory(u.uid)),
-    );
+    await buildHistories(data(await db.collection("users").get()).filter(u => !u.disabled).map(u => u.uid));
     return;
   }
   const g = latestGame.data();
@@ -892,7 +910,7 @@ export const onGame = policyWritten("games/{gid}", async (event) => {
   const uids = data(await db.collection("users").get())
     .filter((u) => !u.disabled)
     .map((u) => u.uid);
-  await Promise.all(uids.map(buildHistory));
+  await buildHistories(uids);
   if (g.status === "closed") await closeEvents.run({});
   if (g.status === "closed" && event.data.before.data()?.status !== "closed")
     await Promise.all(
@@ -930,7 +948,7 @@ export const saveOvrWeights = policyCall("saveOvrWeights",
       updatedAt: FieldValue.serverTimestamp(),
     });
     const users = data(await db.collection("users").get());
-    for (const user of users) await buildHistory(user.uid);
+    await buildHistories(users.map(user => user.uid));
     return { ok: true, weights, positions };
   },
 );
@@ -956,12 +974,13 @@ async function publishWeeklyCard(uid, snapshot, cycle) {
       (current.data()?.weekId && current.data().weekId > snapshot.weekId)
     )
       return;
-    tx.set(db.doc(`weeklyCards/${uid}`), {
+    const next = {
       ...history.data(),
       uid,
       phase: history.data().locked ? "closed" : "open",
       nextOpensAt: cycle.nextOpensAt,
-    });
+    };
+    if (!sameData(current.data(), next)) tx.set(db.doc(`weeklyCards/${uid}`), next);
   });
 }
 export const closeCardWeek = policySchedule("closeCardWeek",
@@ -971,7 +990,7 @@ export const closeCardWeek = policySchedule("closeCardWeek",
     const users = data(await db.collection("users").get()).filter(
       (u) => !u.disabled,
     );
-    for (const user of users) await buildHistory(user.uid);
+    await buildHistories(users.map(user => user.uid));
   },
 );
 export const openCardWeek = policySchedule("openCardWeek",
@@ -981,7 +1000,7 @@ export const openCardWeek = policySchedule("openCardWeek",
     const users = data(await db.collection("users").get()).filter(
       (u) => !u.disabled,
     );
-    for (const user of users) await buildHistory(user.uid);
+    await buildHistories(users.map(user => user.uid));
   },
 );
 export const ensureHistory = policyCall("ensureHistory",async (request) => {
@@ -990,6 +1009,17 @@ export const ensureHistory = policyCall("ensureHistory",async (request) => {
     user = await db.doc(`users/${uid}`).get();
   if (user.data()?.disabled)
     throw new HttpsError("permission-denied", "Conta desactivada.");
+  const cycle = cardWeek();
+  const [history, published] = await Promise.all([
+    db.doc(`users/${uid}/cardHistory/${cycle.weekId}`).get(),
+    db.doc(`weeklyCards/${uid}`).get(),
+  ]);
+  const age = Date.now() - (history.data()?.updatedAt?.toMillis?.() || 0);
+  if (history.exists && published.exists && age >= 0 && age < 300000 &&
+      published.data().weekId === cycle.weekId &&
+      published.data().phase === cycle.phase &&
+      !!history.data().locked === (cycle.phase === "closed"))
+    return { ok: true, current: true };
   await buildHistory(uid);
   return { ok: true };
 });
@@ -1077,8 +1107,8 @@ export const rebuildLeague = policyCall("rebuildLeague",async (request) => {
   for (const g of games) await aggregateGame(g.id);
   for (const u of users) {
     await aggregateCommunity(u.uid);
-    await buildHistory(u.uid);
   }
+  await buildHistories(users.map(u => u.uid));
   return { ok: true };
 });
 export const deleteGame = policyCall("deleteGame",async (request) => {
@@ -1109,7 +1139,7 @@ export const deleteGame = policyCall("deleteGame",async (request) => {
   await db.recursiveDelete(ref);
   await db.doc(`gameSummaries/${id}`).delete();
   await db.doc(`gameBalances/${id}`).delete();
-  await Promise.all(affected.map(buildHistory));
+  await buildHistories(affected);
   return { ok: true };
 });
 export const adminMessage = policyCall("adminMessage",async (request) => {
@@ -1412,6 +1442,6 @@ export const {
 
 export const { maintenanceRead, maintenanceAction, systemHeartbeat, systemCleanup } = maintenanceFunctions({
   rebuildPlayer: buildHistory,
-  rebuildGame: async id => { await aggregateGame(id); const game=(await db.doc(`games/${id}`).get()).data(); if(game)for(const uid of participants(game))await buildHistory(uid); },
-  rebuildAll: async () => { const users=data(await db.collection("users").get()), games=data(await db.collection("games").get()); for(const game of games)await aggregateGame(game.id); for(const user of users){await aggregateCommunity(user.uid);await buildHistory(user.uid);} return {ok:true}; },
+  rebuildGame: async id => { await aggregateGame(id); const game=(await db.doc(`games/${id}`).get()).data(); if(game)await buildHistories(participants(game)); },
+  rebuildAll: async () => { const users=data(await db.collection("users").get()), games=data(await db.collection("games").get()); for(const game of games)await aggregateGame(game.id); for(const user of users)await aggregateCommunity(user.uid); await buildHistories(users.map(user=>user.uid)); return {ok:true}; },
 });

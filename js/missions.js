@@ -103,7 +103,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
           missionUnlocked(event, user.uid, league.eventRewards || [])
         ) {
           if (event.kind === "mission") {
-            const detail = await DB.eventDetails(event.id);
+            const detail = Object.hasOwn(event, "missionSummary") ? event.missionSummary : await DB.eventDetails(event.id);
             if (!detail) return missions;
             const progress =
               detail.progress?.find((row) => row.uid === user.uid)?.progress ||
@@ -134,7 +134,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
               rewards: detail.rewardPreview || [],
             });
           } else if (event.method === "objective") {
-            const detail = await DB.eventDetails(event.id);
+            const detail = Object.hasOwn(event, "missionSummary") ? event.missionSummary : await DB.eventDetails(event.id);
             if (!detail) return missions;
             const progress =
               detail.progress?.find((row) => row.uid === user.uid)?.progress ||

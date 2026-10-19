@@ -50,6 +50,8 @@ flowchart TB
 
 ## Desenvolvimento e operação
 
+[Plano de redução das leituras do Firestore](plans/firestore-read-reduction.md): isolamento do desenvolvimento, diagnósticos reutilizáveis e otimização de missões, recálculos e automações. Implementação local de 19/10/2026, sem publicação. [Resultados medidos e estimativas](reports/firestore-read-reduction-2026-10-19.md) · [Procedimento de diagnósticos](guides/firestore-read-diagnostics.md).
+
 | Documento                                      | Encontrar aqui                                         |
 | :--------------------------------------------- | :----------------------------------------------------- |
 | [Desenvolvimento local](guides/development.md) | Requisitos, arranque e configuração Firebase.          |

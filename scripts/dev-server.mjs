@@ -3,6 +3,9 @@ import { readFile, stat } from "node:fs/promises";
 import { resolve, dirname, relative, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const modeIndex = process.argv.indexOf("--mode");
+const mode = modeIndex < 0 ? "fixtures" : process.argv[modeIndex + 1];
+if (!["fixtures", "emulator", "production"].includes(mode)) throw Error("Modo local inválido.");
 const index = process.argv.indexOf("--port");
 const port = index < 0 ? 8080 : Number(process.argv[index + 1]);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
@@ -36,6 +39,26 @@ const server = createServer(async (req, res) => {
     const path = decodeURIComponent(
       new URL(req.url, "http://localhost").pathname,
     );
+    const localModule = path.replace(/^\//, "");
+    if (mode === "fixtures" && ["tests/fixtures/game-ratings.js", "tests/fixtures/maintenance.js"].includes(localModule)) {
+      res.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" });
+      res.end(await readFile(resolve(root, localModule), "utf8"));
+      return;
+    }
+    if (mode === "fixtures" && ["js/firebase.js", "js/auth.js", "js/db.js"].includes(localModule)) {
+      res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+      res.setHeader("Cache-Control", "no-store");
+      res.end(localModule === "js/firebase.js" ? "export const configured=true;" :
+        (await readFile(resolve(root, "tests/fixtures", localModule.slice(3)), "utf8")).replaceAll("../../js/", "./"));
+      return;
+    }
+    if (localModule === "js/config.js" && mode !== "fixtures") {
+      res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+      res.setHeader("Cache-Control", "no-store");
+      res.end(mode === "emulator" ? `export const runtimeMode="emulator"; export const firebaseConfig=${JSON.stringify({ apiKey: "demo-key", authDomain: "demo-peladinhas-development.firebaseapp.com", projectId: "demo-peladinhas-development", storageBucket: "demo-peladinhas-development.appspot.com", appId: "demo-app" })};` :
+        (await readFile(resolve(root, "js/config.js"), "utf8")) + '\nexport const runtimeMode="production";');
+      return;
+    }
     const file = resolve(
       root,
       "." + (path.endsWith("/") ? path + "index.html" : path),
@@ -60,6 +83,6 @@ const server = createServer(async (req, res) => {
 });
 server.listen(port, "127.0.0.1", () =>
   console.log(
-    `Peladinhas Cards · http://localhost:${port} · Apenas frontend público`,
+    `Peladinhas Cards · http://localhost:${port} · Modo ${mode}`,
   ),
 );

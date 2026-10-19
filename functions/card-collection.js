@@ -1,4 +1,6 @@
 import { policyAt } from "../js/system-policy.js";
+import { createReadContext } from "./read-context.js";
+import { sameData } from "./equal-data.js";
 import {
   evaluateCardAchievements,
   periodCardAwards,
@@ -38,6 +40,7 @@ const dateValue = (value) => +asDate(value);
 
 export async function collectionContext(date = new Date()) {
   const db = getFirestore();
+  const reads = createReadContext();
   const [
     users,
     games,
@@ -74,7 +77,7 @@ export async function collectionContext(date = new Date()) {
     )
       continue;
     const feedback = rows(
-      await db.collection(`games/${game.id}/feedback`).get(),
+      await reads.read(`feedback:${game.id}`, () => db.collection(`games/${game.id}/feedback`).get()),
     ).filter(
       (vote) =>
         vote.submitted &&
@@ -126,6 +129,8 @@ export async function collectionContext(date = new Date()) {
     else summaryRows.push({ id: game.id, players });
   }
   return {
+    reads,
+    snapshots: { users, games, summaries, balances, initials, communities, weights, rewards },
     date,
     users: rows(users).filter((user) => !user.disabled),
     games: rows(games)
@@ -275,13 +280,15 @@ export async function refreshPlayerCollection(uid, context = null) {
         updatedAt: FieldValue.serverTimestamp(),
       });
     }
-    tx.set(ref, {
+    const next = {
       uid,
       version: 1,
       officialSince,
       awards,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    };
+    const previous = fresh.data();
+    if (!sameData(previous, next))
+      tx.set(ref, { ...next, updatedAt: FieldValue.serverTimestamp() });
     for (const award of awards.filter(
       (award) => policyAt().notifications.enabled && !existing.some((prior) => prior.id === award.id),
     )) {

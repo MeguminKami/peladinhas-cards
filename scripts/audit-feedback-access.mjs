@@ -1,9 +1,10 @@
+import { auditAuth } from "./firestore-audit-cache.mjs";
 // Read-only diagnostics. No credentials, identities or individual votes in output.
 import { createRequire } from "node:module";
 import { firebaseConfig } from "../js/config.js";
 import { policyAt } from "../js/system-policy.js";
 const require = createRequire(import.meta.url),
-  auth = require("firebase-tools/lib/auth.js"),
+  auth = auditAuth,
   account = auth.getGlobalDefaultAccount();
 if (!account) throw Error("Sem sessão Firebase.");
 const token = await auth.getAccessToken(

@@ -1,8 +1,9 @@
+import { auditAuth } from "./firestore-audit-cache.mjs";
 // Read-only deployment diagnostics. Does not deploy, cancel, or print credentials.
 import { createRequire } from "node:module";
 import { firebaseConfig } from "../js/config.js";
 const require = createRequire(import.meta.url);
-const auth = require("firebase-tools/lib/auth.js");
+const auth = auditAuth;
 const account = auth.getGlobalDefaultAccount();
 if (!account) throw Error("Sem sessão Firebase.");
 const token = await auth.getAccessToken(

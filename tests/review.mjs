@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
-import { chromium, webkit } from "playwright";
+import { chromium, webkit } from "./browser-sandbox.mjs";
 const root = resolve(".");
 const server = createServer((req, res) => {
   const path = resolve(

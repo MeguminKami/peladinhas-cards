@@ -1,3 +1,4 @@
+import { auditAuth } from "./firestore-audit-cache.mjs";
 // Dry-run by default. --repair updates only stale goalkeeper summary fields,
 // with an optimistic precondition; never alters votes, users or closed cards.
 import { createRequire } from "node:module";
@@ -7,7 +8,7 @@ const emulator=process.env.FIRESTORE_EMULATOR_HOST;
 if(emulator&&!process.env.GCLOUD_PROJECT?.startsWith("demo-"))throw Error("Emulador exige projeto demo.");
 let accessToken="owner";
 if(!emulator){
-  const require=createRequire(import.meta.url),auth=require("firebase-tools/lib/auth.js");
+  const require=createRequire(import.meta.url),auth=auditAuth;
   const account=auth.getGlobalDefaultAccount();
   if(!account)throw Error("Sem sessão Firebase.");
   accessToken=(await auth.getAccessToken(account.tokens.refresh_token,account.tokens.scopes)).access_token;

@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+import { chromium } from "./browser-sandbox.mjs";
 import {
   COLLECTION_EDITIONS,
   RESERVED_COLLECTION_IDS,

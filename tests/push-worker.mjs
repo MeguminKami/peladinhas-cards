@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { chromium, webkit } from "playwright";
+import { chromium, webkit } from "./browser-sandbox.mjs";
 const source = readFileSync("js/push-worker.js", "utf8");
 const engine = process.argv.includes("--webkit") ? webkit : chromium;
 const browser = await engine.launch({

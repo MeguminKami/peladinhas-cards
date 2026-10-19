@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
-import { chromium } from "playwright";
+import { chromium } from "./browser-sandbox.mjs";
 const root = resolve(".firebase/site");
 let revision = 0;
 const server = createServer((req, res) => {

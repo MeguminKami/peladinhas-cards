@@ -512,6 +512,67 @@ export async function cardLab(ctx, uid) {
       (key, i) => set(key, colors[i]),
     );
   };
+  const colorVariables = {
+    color1: ["--studio-primary", "--card-a"],
+    color2: ["--studio-secondary", "--card-b"],
+    textColor: ["--studio-text", "--card-text"],
+    borderColor: ["--studio-edge", "--card-edge"],
+    glowColor: ["--studio-glow", "--card-glow"],
+  };
+  const paletteChoices = [
+    ...form.querySelectorAll("[data-studio-palette]"),
+  ].map((button) => [
+    button,
+    STUDIO_PALETTES[button.dataset.studioPalette][1].map((color) =>
+      color.toLowerCase(),
+    ),
+  ]);
+  const syncPaletteSelection = () => {
+    const colors = Object.keys(colorVariables).map((key) =>
+      form.elements.namedItem(key).value.toLowerCase(),
+    );
+    for (const [button, palette] of paletteChoices) {
+      const pressed = String(palette.every((color, i) => color === colors[i]));
+      if (button.getAttribute("aria-pressed") !== pressed)
+        button.setAttribute("aria-pressed", pressed);
+    }
+  };
+  const nameBackgroundFields = [
+    "nameBackgroundRed",
+    "nameBackgroundGreen",
+    "nameBackgroundBlue",
+    "nameBackgroundTransparency",
+  ];
+  const recolor = (key) => {
+    const el = preview.firstElementChild;
+    // The first edit of a native model still initializes its custom design.
+    // Subsequent color events only update paint: no new card, image or SVGs.
+    if (!el?.classList.contains("lab-designed")) return false;
+    if (colorVariables[key]) {
+      const value = form.elements.namedItem(key).value;
+      for (const variable of colorVariables[key])
+        el.style.setProperty(variable, value);
+      if (key === "color1" || key === "color2")
+        form.style.setProperty(colorVariables[key][0], value);
+      syncPaletteSelection();
+      return true;
+    }
+    if (nameBackgroundFields.includes(key)) {
+      const [red, green, blue, transparency] = nameBackgroundFields.map(
+        (name) => Number(form.elements.namedItem(name).value),
+      );
+      el.style.setProperty(
+        "--name-background",
+        `rgba(${red}, ${green}, ${blue}, ${1 - transparency / 100})`,
+      );
+      document.querySelector("#name-background-transparency").value =
+        `${transparency}%`;
+      const input = form.querySelector(`[data-studio-property="${key}"]`);
+      input.value = form.elements.namedItem(key).value;
+      return true;
+    }
+    return false;
+  };
   const fitPreview = () => {
     const canvas = preview.getBoundingClientRect();
     const padding = getComputedStyle(preview);
@@ -610,22 +671,9 @@ export async function cardLab(ctx, uid) {
     const el = preview.firstElementChild;
     if (f.preserveOriginal !== "yes") {
       el.classList.add("lab-designed");
-      for (const [key, v] of [
-        ["color1", "--studio-primary"],
-        ["color2", "--studio-secondary"],
-        ["textColor", "--studio-text"],
-        ["borderColor", "--studio-edge"],
-        ["glowColor", "--studio-glow"],
-      ])
-        el.style.setProperty(v, f[key]);
-      for (const [key, v] of [
-        ["color1", "--card-a"],
-        ["color2", "--card-b"],
-        ["textColor", "--card-text"],
-        ["borderColor", "--card-edge"],
-        ["glowColor", "--card-glow"],
-      ])
-        el.style.setProperty(v, f[key]);
+      for (const [key, variables] of Object.entries(colorVariables))
+        for (const variable of variables)
+          el.style.setProperty(variable, f[key]);
     }
     applyCardDesign(el, readDesign());
     el.querySelector(".card-surface").insertAdjacentHTML(
@@ -670,17 +718,7 @@ export async function cardLab(ctx, uid) {
         (output) =>
           (output.value = Math.round(Number(f[output.dataset.studioReadout]))),
       );
-    form.querySelectorAll("[data-studio-palette]").forEach((button) => {
-      const colors = STUDIO_PALETTES[button.dataset.studioPalette][1];
-      button.setAttribute(
-        "aria-pressed",
-        String(
-          ["color1", "color2", "textColor", "borderColor", "glowColor"].every(
-            (key, i) => f[key].toLowerCase() === colors[i].toLowerCase(),
-          ),
-        ),
-      );
-    });
+    syncPaletteSelection();
     document
       .querySelectorAll("[data-photo-range]")
       .forEach(
@@ -760,7 +798,7 @@ export async function cardLab(ctx, uid) {
         field ? clamp(e.target.value, field[2], field[3]) : e.target.value,
       );
     }
-    draw();
+    if (!recolor(e.target.dataset.studioProperty || e.target.name)) draw();
     clearTimeout(timer);
     timer = setTimeout(commit, 250);
   };

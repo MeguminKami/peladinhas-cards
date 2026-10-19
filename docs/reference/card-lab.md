@@ -33,6 +33,8 @@ Silhuetas, ornamentos e símbolos têm nome próprio e pré-visualização em ga
 
 Cada paleta define superfície primária, superfície secundária, texto, traçado e luz. As 50 combinações têm nomes próprios; os IDs existentes foram preservados. Escolher uma paleta num fundo Original passa para Diagonal para tornar as cores visíveis; um fundo personalizado já escolhido é mantido.
 
+Os seletores de cor e os valores RGB/transparência do fundo do nome atualizam diretamente as variáveis CSS da carta. Após a primeira edição de um modelo nativo, estes ajustes não recriam a fotografia nem os símbolos e não percorrem novamente todas as ferramentas. Desfazer/refazer e guardar conservam os valores finais.
+
 O **Bicolor** mistura as duas cores por degradê, sem divisão brusca. Os controlos de **Distribuição e intensidade** só aparecem quando têm efeito:
 
 - Diagonal e Bicolor: ângulo e distribuição.
@@ -71,6 +73,7 @@ As opções de fonte `original` e `peladinhas`, e o campo `ratingLayout` (`origi
 
 ```powershell
 node tests/card-lab.mjs
+node tests/card-lab-colors.mjs
 node tests/card-lab-elements.mjs
 node tests/card-lab-admin-photo.mjs
 node tests/card-lab-lighting.mjs

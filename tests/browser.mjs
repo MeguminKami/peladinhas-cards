@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+import { chromium } from "./browser-sandbox.mjs";
 import { SPECIAL_CARD_DESIGNS } from "../js/card-specials.js";
 import { CATALOG_THEMES } from "../js/utils.js";
 const root = resolve(".");
