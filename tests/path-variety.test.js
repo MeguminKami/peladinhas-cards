@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { analyzeGoalDifficulty } from "../scripts/path-difficulty-analysis.mjs";
 import {
   PATH_ROUTES,
   PATH_FUSIONS,
@@ -74,6 +75,31 @@ const summary = (rows = votes(), revisions = []) =>
 const resolve = (obj, rows = votes(), at = deadline, match = game) =>
   pathWindowResult(obj, match, summary(rows), "a", at, evaluatePathMission);
 
+test("difficulty audit separates teams, players, closed windows and missing evidence",()=>{
+  const rows=[{game,summary:summary()},
+    {game:{...game,status:"open"},summary:summary()},
+    {game:{...game,deleting:true},summary:summary()},
+    {game:{...game,closedAt:"2030-01-01"},summary:summary()}];
+  const audit=analyzeGoalDifficulty(rows,deadline+1);
+  assert.equal(audit.statistics.games,1);
+  assert.equal(audit.statistics.participations,8);
+  assert.equal(audit.statistics.teamGoals.count,2);
+  assert.equal(audit.statistics.teamGoals.median,2);
+  assert.equal(audit.statistics.contributions.histogram[3],1);
+  assert.equal(audit.statistics.thresholds.conceded.find(row=>row.target===1).met,1);
+  const keeper=audit.missions.find(row=>row.templateId==="goalkeeping:solid"&&row.stage===0&&row.difficulty===0);
+  assert.equal(keeper.cancelled,7);
+  assert.equal(keeper.eligible,1);
+  const pending=analyzeGoalDifficulty([{game,summary:summary()}],deadline-1);
+  const ratings=pending.missions.find(row=>row.templateId==="shooting:quality");
+  assert.equal(ratings.windowPending,8);
+  assert.equal(ratings.successPercent,null);
+  const missing=analyzeGoalDifficulty([{game,summary:null}],deadline+1).missions.find(row=>row.templateId==="shooting:quality");
+  assert.equal(missing.waiting,8);
+  assert.equal(missing.eligible,0);
+  assert.ok(!JSON.stringify(audit).includes("v4-game"));
+});
+
 test("v4 catalogue: 120 templates, 6-8 per phase/level, diverse families and mandatory goalkeeper evidence", () => {
   let count = 0;
   for (const route of routes) {
@@ -130,7 +156,7 @@ test("v4 catalogue: 120 templates, 6-8 per phase/level, diverse families and man
     pathMissionTemplates("shooting", 2, 2).find((row) =>
       row.templateId.endsWith(":goals"),
     ).objective.conditions[0].target,
-    5,
+    4,
   );
 });
 

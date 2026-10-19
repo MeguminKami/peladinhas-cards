@@ -310,7 +310,7 @@ try {
   assert.ok(await page.locator(".feedback-info-tooltip").isVisible());
   assert.ok(
     (await page.locator(".feedback-info-tooltip").textContent()).includes(
-      "7 dias",
+      "não reinicia",
     ),
   );
   for (const width of [320, 390, 844, 1440]) {

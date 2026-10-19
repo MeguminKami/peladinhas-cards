@@ -1,3 +1,4 @@
+import { gameTeamSize, splitTeam, DEFAULT_TEAM_SIZE, MAX_TEAM_SIZE } from "./game-format.js";
 import { matchRatingSummary } from "./match-rating-summary.js";
 import { closedGamePage } from "./closed-game.js";
 export { matchStars } from "./match-stars.js";
@@ -95,6 +96,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
     participants(g).map((uid) => [uid, matchPerformance(uid, g)]),
   );
   const manager = ["admin", "dbs"].includes(ctx.user.role);
+  g.teamSize = gameTeamSize(g);
   const editable =
     manager && (g.status !== "closed" || ctx.user.role === "admin");
   const canClose = manager && g.status === "open";
@@ -108,7 +110,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
       ),
     );
   ctx.render(
-    `${pageHead("Peladinha", saved?.title || "Criar jogo", saved?.status === "closed" ? "Corrige os dados, as equipas e as estatísticas. O jogo continua encerrado." : editable ? "Escolhe as equipas e guarda o jogo." : "Equipas e resultado desta Peladinha.", "")}<form id="game-form" class="content-stack game-workspace"><div id="game-details" class="panel game-details-panel"><div class="form-grid"><label>Título<input name="title" required maxlength="80" value="${esc(g.title)}" ${editable ? "" : "disabled"}></label><label>Data e hora<input type="datetime-local" name="scheduledAt" required value="${g.scheduledAt}" ${editable ? "" : "disabled"}></label><label>Local<input name="location" maxlength="120" value="${esc(g.location)}" ${editable ? "" : "disabled"}></label><input type="hidden" name="notes" value="${esc(g.notes)}"></div></div>${editable && otherOpen.length && g.status !== "closed" ? `<section class="game-open-notice" id="game-open-warning" role="status">${icon("lock")}<div><strong>${esc(otherOpen[0].title || "Há um jogo aberto")}</strong><p>Só pode existir um jogo aberto na liga. Podes guardar rascunhos e abrir a próxima partida depois de encerrar a atual.</p>${linkButton(`#/game/${otherOpen[0].id}`,"Ver jogo aberto","ghost","games")}${otherOpen.length > 1 ? `<p>Existem ${otherOpen.length} jogos abertos anteriores à restrição. A gestão precisa de os encerrar; não serão alterados automaticamente.</p>`:""}</div></section>`:""}<div id="team-builder" class="content-stack"></div><div id="game-result" class="panel score-panel"><div class="score-heading"><div><span class="eyebrow">MARCADOR</span><h2>O jogo em números</h2></div></div><div class="score"><label>Equipa A<input type="number" min="0" max="999" name="scoreA" value="${g.score.teamA}" ${editable ? "" : "disabled"}></label><b>—</b><label>Equipa B<input type="number" min="0" max="999" name="scoreB" value="${g.score.teamB}" ${editable ? "" : "disabled"}></label></div><div id="match-performances"></div></div><div id="game-video"></div><div class="game-actionbar">${saved?.status === "closed" ? linkButton(`#/game/${id}`, "Cancelar", "secondary") : linkButton("#/games", "Todos os jogos", "ghost")}<button type="button" id="share-game" class="btn btn-ghost">${icon("share")}Partilhar</button>${editable ? `<div class="actions"><button class="btn btn-primary" name="action" value="save">${icon("check")}Guardar jogo</button>${saved && g.status === "draft" ? `<button class="btn btn-secondary" name="action" value="open" ${otherOpen.length ? 'disabled aria-describedby="game-open-warning"' : ""}>Abrir jogo</button>` : saved && g.status === "open" ? '<button class="btn btn-secondary" name="action" value="draft">Tornar rascunho</button><button class="btn btn-success" name="action" value="close">Encerrar jogo</button>' : ""}</div>` : ""}${saved && (ctx.user.role === "admin" || (ctx.user.role === "dbs" && g.status !== "closed")) ? `<div class="actions"><button type="button" id="delete-game" class="btn btn-danger" aria-label="Eliminar jogo" title="Eliminar jogo">${icon("trash")}</button></div>` : ""}${saved?.status === "closed" && participants(saved).includes(ctx.user.uid) ? linkButton(`#/game/${id}/feedback`, "Avaliar jogadores", "primary", "missions") : ""}</div></form>`,
+    `${pageHead("Peladinha", saved?.title || "Criar jogo", saved?.status === "closed" ? "Corrige os dados, as equipas e as estatísticas. O jogo continua encerrado." : editable ? "Escolhe as equipas e guarda o jogo." : "Equipas e resultado desta Peladinha.", "")}<form id="game-form" class="content-stack game-workspace"><div id="game-details" class="panel game-details-panel"><div class="form-grid"><label>Título<input name="title" required maxlength="80" value="${esc(g.title)}" ${editable ? "" : "disabled"}></label><label>Data e hora<input type="datetime-local" name="scheduledAt" required value="${g.scheduledAt}" ${editable ? "" : "disabled"}></label><label>Formato · titulares por equipa<select name="teamSize" ${editable ? "" : "disabled"}>${Array.from({ length: MAX_TEAM_SIZE - DEFAULT_TEAM_SIZE + 1 }, (_, i) => i + DEFAULT_TEAM_SIZE).map(size => `<option value="${size}" ${size === g.teamSize ? "selected" : ""}>${size} × ${size}${size === DEFAULT_TEAM_SIZE ? " · habitual" : ""}</option>`).join("")}</select></label><label>Local<input name="location" maxlength="120" value="${esc(g.location)}" ${editable ? "" : "disabled"}></label><input type="hidden" name="notes" value="${esc(g.notes)}"></div></div>${editable && otherOpen.length && g.status !== "closed" ? `<section class="game-open-notice" id="game-open-warning" role="status">${icon("lock")}<div><strong>${esc(otherOpen[0].title || "Há um jogo aberto")}</strong><p>Só pode existir um jogo aberto na liga. Podes guardar rascunhos e abrir a próxima partida depois de encerrar a atual.</p>${linkButton(`#/game/${otherOpen[0].id}`,"Ver jogo aberto","ghost","games")}${otherOpen.length > 1 ? `<p>Existem ${otherOpen.length} jogos abertos anteriores à restrição. A gestão precisa de os encerrar; não serão alterados automaticamente.</p>`:""}</div></section>`:""}<div id="team-builder" class="content-stack"></div><div id="game-result" class="panel score-panel"><div class="score-heading"><div><span class="eyebrow">MARCADOR</span><h2>O jogo em números</h2></div></div><div class="score"><label>Equipa A<input type="number" min="0" max="999" name="scoreA" value="${g.score.teamA}" ${editable ? "" : "disabled"}></label><b>—</b><label>Equipa B<input type="number" min="0" max="999" name="scoreB" value="${g.score.teamB}" ${editable ? "" : "disabled"}></label></div><div id="match-performances"></div></div><div id="game-video"></div><div class="game-actionbar">${saved?.status === "closed" ? linkButton(`#/game/${id}`, "Cancelar", "secondary") : linkButton("#/games", "Todos os jogos", "ghost")}<button type="button" id="share-game" class="btn btn-ghost">${icon("share")}Partilhar</button>${editable ? `<div class="actions"><button class="btn btn-primary" name="action" value="save">${icon("check")}Guardar jogo</button>${saved && g.status === "draft" ? `<button class="btn btn-secondary" name="action" value="open" ${otherOpen.length ? 'disabled aria-describedby="game-open-warning"' : ""}>Abrir jogo</button>` : saved && g.status === "open" ? '<button class="btn btn-secondary" name="action" value="draft">Tornar rascunho</button><button class="btn btn-success" name="action" value="close">Encerrar jogo</button>' : ""}</div>` : ""}${saved && (ctx.user.role === "admin" || (ctx.user.role === "dbs" && g.status !== "closed")) ? `<div class="actions"><button type="button" id="delete-game" class="btn btn-danger" aria-label="Eliminar jogo" title="Eliminar jogo">${icon("trash")}</button></div>` : ""}${saved?.status === "closed" && participants(saved).includes(ctx.user.uid) ? linkButton(`#/game/${id}/feedback`, "Avaliar jogadores", "primary", "missions") : ""}</div></form>`,
   );
   document.querySelector("#share-game").onclick = async () => {
     if (!saved) return toast("Guarda o jogo antes de partilhar.");
@@ -255,7 +257,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
         )
         .join("")}</div></details></div>`;
     }
-    return `<section class="balance-audit"><div class="section-head"><h2>Equilíbrio das equipas</h2><span class="pill">${g.status === "closed" ? (frozen ? "OVR de referência guardado" : "Sem referência guardada") : "Prévia com OVR atual"}</span></div><div class="metrics"><div><small>Média OVR · Equipa A</small><b>${number(balance.teamA.average)}</b><small>${balance.teamA.rated}/${balance.teamA.count} com carta</small></div><div><small>Média OVR · Equipa B</small><b>${number(balance.teamB.average)}</b><small>${balance.teamB.rated}/${balance.teamB.count} com carta</small></div><div><small>Diferença entre equipas</small><b>${number(balance.difference)}</b></div><div><small>Desvio médio entre equipas</small><b>${number(balance.meanDeviation)}</b></div></div><div class="table-wrap"><table><thead><tr><th>Equipa</th><th>Média dos cinco lugares base</th><th>Média de todos os jogadores</th></tr></thead><tbody>${[
+    return `<section class="balance-audit"><div class="section-head"><h2>Equilíbrio das equipas</h2><span class="pill">${g.status === "closed" ? (frozen ? "OVR de referência guardado" : "Sem referência guardada") : "Prévia com OVR atual"}</span></div><div class="metrics"><div><small>Média OVR · Equipa A</small><b>${number(balance.teamA.average)}</b><small>${balance.teamA.rated}/${balance.teamA.count} com carta</small></div><div><small>Média OVR · Equipa B</small><b>${number(balance.teamB.average)}</b><small>${balance.teamB.rated}/${balance.teamB.count} com carta</small></div><div><small>Diferença entre equipas</small><b>${number(balance.difference)}</b></div><div><small>Desvio médio entre equipas</small><b>${number(balance.meanDeviation)}</b></div></div><div class="table-wrap"><table><thead><tr><th>Equipa</th><th>Média dos titulares</th><th>Média de todos os jogadores</th></tr></thead><tbody>${[
       ["A", balance.teamA],
       ["B", balance.teamB],
     ]
@@ -265,7 +267,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
       )
       .join(
         "",
-      )}</tbody></table></div><p class="muted">A média inclui todos os jogadores. O desvio é metade da diferença entre as duas médias. Jogadores com OVR inferior à média dos colegas recebem até 25% de bónus nos ganhos quando são avaliados acima dessa média. A referência de OVR é guardada no fecho do jogo.</p>${!frozen && g.status === "closed" ? '<p class="warning">Sem referência guardada, não é aplicado o bónus por OVR inferior ao dos colegas.</p>' : ""}<p class="muted">Sorteio: até ${BALANCE_SETTINGS.attempts} combinações, escolhendo aleatoriamente entre as que ficam até ${number(BALANCE_SETTINGS.tolerance)} ponto da melhor diferença encontrada. Compara as médias de todos os jogadores e dos cinco lugares base.</p></section>`;
+      )}</tbody></table></div><p class="muted">A média inclui todos os jogadores. O desvio é metade da diferença entre as duas médias. Jogadores com OVR inferior à média dos colegas recebem até 25% de bónus nos ganhos quando são avaliados acima dessa média. A referência de OVR é guardada no fecho do jogo.</p>${!frozen && g.status === "closed" ? '<p class="warning">Sem referência guardada, não é aplicado o bónus por OVR inferior ao dos colegas.</p>' : ""}<p class="muted">Sorteio: até ${BALANCE_SETTINGS.attempts} combinações, escolhendo aleatoriamente entre as que ficam até ${number(BALANCE_SETTINGS.tolerance)} ponto da melhor diferença encontrada. Compara as médias de todos os jogadores e dos titulares.</p></section>`;
   };
   const autoPanel = () =>
     `<div class="auto-teams"><div class="section-head"><div><h2>Equipas</h2></div>${editable && g.status !== "closed" ? '<button type="button" id="auto-teams" class="btn btn-primary">Sortear equipas</button>' : `<span class="pill">${g.status === "closed" ? "Jogo encerrado" : g.status === "open" ? "Jogo aberto" : "Rascunho"}</span>`}</div></div>`;
@@ -317,8 +319,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
       const ranked = teamPlayers(side),
         rank = new Map(ranked.map((p, i) => [p.uid, i]));
       const ordered = [...g[side].starters, ...g[side].bench].sort((a,b) => (rank.get(a) ?? 999) - (rank.get(b) ?? 999));
-      g[side].starters = ordered.slice(0,5);
-      g[side].bench = ordered.slice(5);
+      Object.assign(g[side], splitTeam(ordered, g.teamSize));
     }
     drawPerformance();
     for (const [side, field] of [["teamA","scoreA"],["teamB","scoreB"]]) {
@@ -328,7 +329,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
     builder.innerHTML = `<section class="panel game-teams-frame content-stack">${autoPanel()}<div class="team-builder">${["A", "B"].map(side => {
       const team = `team${side}`, ids = [...g[team].starters, ...g[team].bench];
       const canName = saved && (ctx.user.role === "admin" || (g.status !== "closed" && saved[team].starters[0] === ctx.user.uid));
-      return `<section class="team-panel team-${side.toLowerCase()}"><div class="section-head"><div><span class="eyebrow">EQUIPA ${side} · ${ids.length} JOGADORES</span><h2>${esc(g.teamNames?.[team] || `Equipa ${side}`)}</h2></div>${canName ? `<button type="button" class="btn btn-icon btn-ghost" data-team-name="${team}" aria-label="Mudar nome da equipa ${side}">${icon("edit")}</button>` : `<span class="team-letter">${side}</span>`}</div><div class="team-player-list ordered-team-list">${ids.map(uid => chip(ctx.league.players.find(p => p.uid === uid) || {uid, displayName:"Jogador inativo"}, `${side}-starters`)).join("")}${editable ? Array.from({length:Math.max(0,5-ids.length)+1}, (_, i) => `<button type="button" class="team-slot" data-slot-team="${team}">${icon("plus")}<span>${ids.length+i < 5 ? `Lugar ${ids.length+i+1}` : "Adicionar jogador"}</span></button>`).join("") : !ids.length ? '<p class="muted">Sem jogadores</p>' : ""}</div></section>`;
+      return `<section class="team-panel team-${side.toLowerCase()}"><div class="section-head"><div><span class="eyebrow">EQUIPA ${side} · ${g[team].starters.length}/${g.teamSize} TITULARES${g[team].bench.length ? ` · ${g[team].bench.length} SUPLENTES` : ""}</span><h2>${esc(g.teamNames?.[team] || `Equipa ${side}`)}</h2></div>${canName ? `<button type="button" class="btn btn-icon btn-ghost" data-team-name="${team}" aria-label="Mudar nome da equipa ${side}">${icon("edit")}</button>` : `<span class="team-letter">${side}</span>`}</div><div class="team-player-list ordered-team-list">${ids.map((uid, index) => chip(ctx.league.players.find(p => p.uid === uid) || {uid, displayName:"Jogador inativo"}, `${side}-${index < g.teamSize ? "starters" : "bench"}`)).join("")}${editable ? Array.from({length:Math.max(0,g.teamSize-ids.length)+1}, (_, i) => `<button type="button" class="team-slot" data-slot-team="${team}">${icon("plus")}<span>${ids.length+i < g.teamSize ? `Lugar ${ids.length+i+1}` : "Adicionar jogador"}</span></button>`).join("") : !ids.length ? '<p class="muted">Sem jogadores</p>' : ""}</div></section>`;
     }).join("")}</div>${balancePanel()}</section>`;
     builder.querySelectorAll("[data-team-name]").forEach(button => button.onclick = () => {
       const side = button.dataset.teamName;
@@ -346,7 +347,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
       const search = document.querySelector("#slot-search"), list = document.querySelector(".slot-picker");
       const update = () => { list.innerHTML = ctx.league.players.filter(p => !assigned(p.uid) && (p.displayName || p.username || "").toLocaleLowerCase().includes(search.value.toLocaleLowerCase())).map(p => `<button type="button" class="slot-choice" data-pick="${esc(p.uid)}"><span class="chip-card">${card(p,{size:"sm",preview:true})}</span><span><b>${esc(p.displayName || p.username)}</b><small>${esc(p.primaryPosition || "Jogador")} · ${p.hasCard ? `${number(p.ovr)} OVR` : "Carta pendente"}</small></span>${icon("plus")}</button>`).join("") || '<p class="muted">Nenhum jogador disponível.</p>'; };
       search.oninput = update;
-      list.onclick = event => { const pick = event.target.closest("[data-pick]"); if(pick) { close(); move(pick.dataset.pick,side,g[side].starters.length < 5 ? "starters" : "bench"); } };
+      list.onclick = event => { const pick = event.target.closest("[data-pick]"); if(pick) { close(); move(pick.dataset.pick,side,g[side].starters.length < g.teamSize ? "starters" : "bench"); } };
       update(); search.focus();
     });
     builder.querySelector("#balance-details")?.addEventListener("click", () => {
@@ -421,7 +422,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
         try {
           const result = balancedTeams(
             ratedPlayers.filter((p) => selection.has(p.uid)),
-            { previous: balanceSignature(g) },
+            { previous: balanceSignature(g), teamSize: g.teamSize },
           );
           chosen.clear();
           selection.forEach((uid) => chosen.add(uid));
@@ -459,30 +460,34 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
     const displayedOvr = side
       ? (teamPlayers(side).find((player) => player.uid === p.uid)?.ovr ?? p.ovr)
       : p.ovr;
-    return `<div class="team-chip ${captain ? "is-captain" : ""}" data-uid="${esc(p.uid)}"><div class="chip-card">${card({...p, ...g.playerCards?.[p.uid]}, { size: "sm", preview: true })}</div><div class="chip-info"><b>${esc(p.displayName || p.username)}</b><small>${hasDisplayCard ? "OVR " + displayedOvr : "Carta pendente"}${captain ? ' <span class="captain-badge" title="Maior OVR da equipa">C · Capitão</span>' : ""}</small>${editable ? `<div class="chip-controls">${place === "available" ? `<button type="button" data-uid="${p.uid}" data-assign="teamA" data-kind="starters" class="btn btn-ghost">→ A</button><button type="button" data-uid="${p.uid}" data-assign="teamB" data-kind="starters" class="btn btn-ghost">→ B</button>` : `<select data-move-select="${p.uid}" aria-label="Mover ${esc(p.displayName)}"><option value="">Mover para…</option><option value="teamA">Equipa A</option><option value="teamB">Equipa B</option></select><button type="button" data-remove="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Remover jogador">${icon("trash")}</button>`}</div>` : ""}</div></div>`;
+    return `<div class="team-chip ${captain ? "is-captain" : ""}" data-uid="${esc(p.uid)}"><div class="chip-card">${card({...p, ...g.playerCards?.[p.uid]}, { size: "sm", preview: true })}</div><div class="chip-info"><b>${esc(p.displayName || p.username)}</b><small>${side ? `${place.endsWith("bench") ? "Suplente" : "Titular"} · ` : ""}${hasDisplayCard ? "OVR " + displayedOvr : "Carta pendente"}${captain ? ' <span class="captain-badge" title="Maior OVR da equipa">C · Capitão</span>' : ""}</small>${editable ? `<div class="chip-controls">${place === "available" ? `<button type="button" data-uid="${p.uid}" data-assign="teamA" data-kind="starters" class="btn btn-ghost">→ A</button><button type="button" data-uid="${p.uid}" data-assign="teamB" data-kind="starters" class="btn btn-ghost">→ B</button>` : `<select data-move-select="${p.uid}" aria-label="Mover ${esc(p.displayName)}"><option value="">Mover para…</option><option value="teamA">Equipa A</option><option value="teamB">Equipa B</option></select><button type="button" data-remove="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Remover jogador">${icon("trash")}</button>`}</div>` : ""}</div></div>`;
   }
   function move(uid, team, kind) {
     if (!ctx.league.players.some((p) => p.uid === uid)) return;
     if (
       team &&
       kind === "starters" &&
-      g[team].starters.filter((x) => x !== uid).length >= 5
+      g[team].starters.filter((x) => x !== uid).length >= g.teamSize
     )
-      return toast("Máximo de 5 titulares por equipa.", "error");
+      return toast(`Máximo de ${g.teamSize} titulares por equipa.`, "error");
     ["teamA", "teamB"].forEach((t) =>
       ["starters", "bench"].forEach(
         (k) => (g[t][k] = g[t][k].filter((x) => x !== uid)),
       ),
     );
     if (team) g[team][kind].push(uid);
-    for (const side of ["teamA", "teamB"]) { const ids = [...g[side].starters,...g[side].bench]; g[side].starters = ids.slice(0,5); g[side].bench = ids.slice(5); }
+    for (const side of ["teamA", "teamB"]) { const ids = [...g[side].starters,...g[side].bench]; Object.assign(g[side], splitTeam(ids, g.teamSize)); }
     draw();
   }
   builder.addEventListener("change", (e) => {
     if (e.target.matches("[data-move-select]") && e.target.value) {
-      const team = e.target.value, kind = g[team].starters.filter(uid => uid !== e.target.dataset.moveSelect).length < 5 ? "starters" : "bench";
+      const team = e.target.value, kind = g[team].starters.filter(uid => uid !== e.target.dataset.moveSelect).length < g.teamSize ? "starters" : "bench";
       move(e.target.dataset.moveSelect, team, kind);
     }
+  });
+  document.querySelector('[name="teamSize"]').addEventListener("change", (event) => {
+    g.teamSize = Number(event.target.value);
+    draw();
   });
   draw();
   document.querySelector("#game-form").onsubmit = async (e) => {
@@ -511,6 +516,7 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
             notes: f.get("notes").trim(),
             youtubeVideoId: youtubeVideoId(f.get("youtubeUrl")),
             scheduledAt: parseLisbonDateInput(f.get("scheduledAt")),
+            teamSize: g.teamSize,
             teamA: g.teamA,
             teamB: g.teamB,
             positions: matchPositions(g, ctx.league.players),

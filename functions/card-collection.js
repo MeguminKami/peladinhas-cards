@@ -66,6 +66,9 @@ export async function collectionContext(date = new Date()) {
       participants(game).every(
         (uid) =>
           summary?.players?.[uid]?.ratingCounts &&
+          typeof summary.players[uid].goalkeepingEligible === "boolean" &&
+          (summary.players[uid].goalkeepingEligible !== false ||
+            (summary.players[uid].goalkeeping === null && summary.players[uid].ratingCounts.goalkeeping === 0)) &&
           summary?.players?.[uid]?.evaluatedAt,
       )
     )
@@ -82,10 +85,13 @@ export async function collectionContext(date = new Date()) {
     const players = Object.fromEntries(
       participants(game).map((uid) => {
         const votes = feedback.filter((vote) => vote.targetId === uid);
+        const aggregate=calculateGameAggregate(votes);
+        const goalkeepingEligible=!votes.some(vote=>vote.raterId===uid&&vote.ratings?.goalkeeping===null);
         return [
           uid,
           {
-            ...calculateGameAggregate(votes),
+            ...aggregate,
+            goalkeepingEligible,
             count: votes.length,
             evaluatedAt: new Date(
               Math.max(
@@ -101,7 +107,7 @@ export async function collectionContext(date = new Date()) {
             ratingCounts: Object.fromEntries(
               FEEDBACK.map(([key]) => [
                 key,
-                votes.filter((vote) => Number.isFinite(vote.ratings?.[key]))
+                (key === "goalkeeping" && !goalkeepingEligible ? [] : votes).filter((vote) => Number.isFinite(vote.ratings?.[key]))
                   .length,
               ]),
             ),

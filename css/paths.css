@@ -336,8 +336,8 @@
 }
 .mission-list:has(> .path-mission-spotlight) { container: path-missions / inline-size; }
 .path-chosen-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
-.path-chosen-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; }
-.path-chosen-brand svg { width: 18px; height: 18px; color: var(--path-mission-ink); }
+.path-chosen-brand { display: inline-flex; align-items: center; gap: 12px; min-width: 0; color: var(--text-primary); font-size: clamp(1.25rem, 2vw, 1.65rem); font-weight: 800; line-height: 1.2; letter-spacing: -0.035em; }
+.path-chosen-brand svg { width: 28px; height: 28px; flex-shrink: 0; color: var(--path-mission-ink); }
 .has-chosen-mission .event-rarity-badge { color: var(--path-mission-ink); }
 .path-chosen-objective { display: flex; align-items: start; justify-content: space-between; gap: 24px 40px; }
 .path-chosen-objective > .path-spotlight-copy { flex: 1; }

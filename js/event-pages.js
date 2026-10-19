@@ -11,7 +11,7 @@ import {
   compareEventRarity,
 } from "./event-rarity.js";
 import { icon, eventIcon } from "./icons.js";
-import { rewardShowcase } from "./event-presentation.js";
+import { rewardShowcase, combinedProgress } from "./event-presentation.js";
 import { bindImages } from "./cards.js";
 import * as DB from "./db.js";
 import { policyAt } from "./system-policy.js";
@@ -140,7 +140,7 @@ export async function managedEventPage(ctx, event) {
     sharedRankingPositions(event, rows)
       .map(
         (row) =>
-          `<tr><td data-label="Posição">${event.kind === "mission" ? (row.reward ? "✓ Concluída" : "Em progresso") : positionLabel(row.position)}</td><td data-label="Jogador">${esc(name(ctx, row.uid))}</td><td data-label="Resultado">${event.method === "vote" ? row.votes : row.progress}</td><td data-label="Recompensa">${row.reward ? `${rewardBreakdown(row.reward)}${row.expiresAt && hasTemporaryReward(row.reward) ? `<small>Bónus temporários até ${formatDate(row.expiresAt)}</small>` : ""}` : "—"}</td></tr>`,
+          `<tr><td data-label="Posição">${event.kind === "mission" ? (row.reward ? "✓ Concluída" : "Em progresso") : positionLabel(row.position)}</td><td data-label="Jogador">${esc(name(ctx, row.uid))}</td><td data-label="Resultado">${event.method === "vote" ? row.votes : ["combined","all"].includes(event.objective?.metric) ? `${row.progress}%` : row.progress}</td><td data-label="Recompensa">${row.reward ? `${rewardBreakdown(row.reward)}${row.expiresAt && hasTemporaryReward(row.reward) ? `<small>Bónus temporários até ${formatDate(row.expiresAt)}</small>` : ""}` : "—"}</td></tr>`,
       )
       .join("");
   ctx.render(
@@ -156,6 +156,13 @@ export async function managedEventPage(ctx, event) {
         : ""
     }${event.ranking?.length ? `${event.method === "vote" ? `<p>${event.totalVotes || 0} ${event.totalVotes === 1 ? "voto" : "votos"}</p>` : ""}<div class="table-wrap"><table class="event-ranking-table"><thead><tr><th>${event.kind === "mission" ? "Conclusão" : "Posição"}</th><th>Jogador</th><th>${event.method === "vote" ? "Votos" : "Progresso"}</th><th>Recompensa atribuída</th></tr></thead><tbody>${rankRows(event.ranking.map((row) => ({ ...row, ...((event.winners || []).find((w) => w.uid === row.uid) || (event.participationAwards || []).find((w) => w.uid === row.uid)), position: row.position })))}</tbody></table></div>` : `<p class="muted">${event.kind === "mission" ? "Ainda não há conclusões registadas." : "Os resultados ainda não estão disponíveis."}</p>`}</section></div>${admin ? `<section class="panel event-audit content-stack"><div class="section-head"><div><span class="eyebrow">ACESSO ADMIN</span><h2>${event.kind === "mission" ? "Conclusões e entregas" : "Resultados e auditoria"}</h2></div><div class="actions">${event.status === "open" ? (event.kind === "mission" ? '<button class="btn btn-secondary" data-manage="close">Encerrar missão</button>' : '<button class="btn btn-secondary" data-manage="prepare">Preparar resultados</button>') : ""}${event.status === "review" ? '<button class="btn btn-primary" data-manage="confirm">Confirmar e entregar prémios</button>' : ""}${event.status === "closed" ? '<button class="btn btn-danger" data-manage="revoke">Anular prémios com motivo</button>' : ""}</div></div>${event.method === "admin" && ["open", "review"].includes(event.status) ? `<div id="manual-winners" class="form-grid">${Array.from({ length: event.winnerCount }, (_, i) => `<label>${medal(i + 1)} ${i + 1}.º lugar<select name="manual-${i}"><option value="">Sem vencedor nesta posição</option>${event.participantIds.map((uid) => `<option value="${esc(uid)}" ${event.manualWinners?.[i] === uid ? "selected" : ""}>${esc(name(ctx, uid))}</option>`).join("")}</select></label>`).join("")}</div>` : ""}<details open><summary>Recompensas configuradas</summary>${configuredRewards(event)}</details><div class="event-toolbar"><label>Votante<input id="audit-voter" type="search" placeholder="Nome ou identificador"></label><label>Candidato<input id="audit-candidate" type="search" placeholder="Nome ou identificador"></label></div><div class="table-wrap"><table><thead><tr><th>Quem votou</th><th>Em quem</th><th>Data e hora</th><th>Ação</th></tr></thead><tbody id="audit-votes"></tbody></table></div>${event.flags?.length ? `<details><summary>${event.flags.length} padrões para revisão</summary>${event.flags.map((flag) => `<p>${esc(flag.users.map((uid) => name(ctx, uid)).join(" ↔ "))}: ${esc(flag.message)}</p>`).join("")}</details>` : ""}<details><summary>Participantes (${event.participantIds.length})</summary><p>${event.participantIds.map((uid) => esc(name(ctx, uid))).join(" · ")}</p></details><details><summary>Registo de entregas e anulações</summary>${(event.deliveries || []).map((delivery) => `<article><h3>${esc(name(ctx, delivery.uid))} · ${delivery.revoked ? "Anulada" : "Entregue"}</h3>${rewardBreakdown(delivery.reward)}</article>`).join("") || "<p>Sem entregas.</p>"}</details><details><summary>Ações administrativas</summary>${(event.audit || []).map((entry) => `<p>${formatDateTime(entry.createdAt)} · ${esc(name(ctx, entry.actorId))} · ${esc(auditLabels[entry.action] || entry.action)}${entry.details?.voterId ? ` · ${esc(name(ctx, entry.details.voterId))}` : ""}${entry.details?.original?.selections ? ` · voto original: ${entry.details.original.selections.map((uid) => esc(name(ctx, uid))).join(", ")}` : ""}${entry.details?.reason ? ` · ${esc(entry.details.reason)}` : ""}</p>`).join("")}</details></section>` : ""}`,
   );
+  if (["combined","all"].includes(event.objective?.metric) && progress?.ratingState) {
+    const panel = document.querySelector(".mission-progress-panel");
+    if (panel) {
+      panel.querySelector(":scope > strong").remove();
+      panel.querySelector(":scope > .progress").outerHTML = combinedProgress(event, progress.ratingState);
+    }
+  }
   if (event.objective?.metric === "ratingAverage" && progress?.ratingState) {
     const state = progress.ratingState;
     document

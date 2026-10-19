@@ -52,7 +52,16 @@ test("game input: roster, position, performance, score, date and protected metad
     status: "draft",
   };
   assert.ok(validateGameInput(valid).scheduledAt instanceof Timestamp);
+  assert.equal(validateGameInput(valid).teamSize, 5);
+  for (let teamSize = 5; teamSize <= 12; teamSize++) {
+    const teamA = { starters: Array.from({length: teamSize}, (_, i) => i ? `a${i}` : "a"), bench: ["subA"] };
+    const teamB = { starters: Array.from({length: teamSize}, (_, i) => i ? `b${i}` : "b"), bench: ["subB"] };
+    const input = { ...valid, teamSize, teamA, teamB, status: "closed" };
+    assert.equal(validateGameInput(input).teamSize, teamSize);
+    assert.throws(() => validateGameInput({...input, teamA: {...teamA, starters: [...teamA.starters, "extra"]}}));
+  }
   for (const change of [
+    ...[4, 13, 5.5, "12", null].map(teamSize => ({teamSize})),
     { positions: { a: "INVALID" } },
     { positions: { outsider: "AV" } },
     { teamB: { starters: ["a"], bench: [] } },
@@ -83,7 +92,7 @@ test("game input: roster, position, performance, score, date and protected metad
   ])
     assert.throws(() => validateGameInput({ ...valid, ...change }));
 });
-test("game flow: concurrent opening requests allow exactly one game", async () => {
+test("game flow: 12x12 persists through opening and closing; concurrent opens remain exclusive", async () => {
   const uid = `open-admin-${randomUUID().slice(0, 8)}`;
   await db.doc(`users/${uid}`).set({ uid, role: "admin", disabled: false });
   const flow = gameFlowFunctions();
@@ -92,8 +101,9 @@ test("game flow: concurrent opening requests allow exactly one game", async () =
     location: "",
     notes: "",
     scheduledAt: new Date(Date.now() + 86400000).toISOString(),
-    teamA: { starters: [uid], bench: [] },
-    teamB: { starters: ["opponent"], bench: [] },
+    teamSize: 12,
+    teamA: { starters: [uid, ...Array.from({length: 11}, (_, i) => `home-${i}`)], bench: ["home-sub"] },
+    teamB: { starters: Array.from({length: 12}, (_, i) => `away-${i}`), bench: ["away-sub"] },
     score: { teamA: 0, teamB: 0 },
     status: "draft",
   };
@@ -110,6 +120,11 @@ test("game flow: concurrent opening requests allow exactly one game", async () =
     1,
   );
   await call(winner, { ...game, status: "closed" });
+  const stored = (await db.doc(`games/${winner}`).get()).data();
+  assert.equal(stored.teamSize, 12);
+  assert.deepEqual(stored.teamA, game.teamA);
+  assert.deepEqual(stored.teamB, game.teamB);
+  assert.equal(stored.status, "closed");
 });
 test("game flow: atomic freeze, singleton opening, immediate numeric settlement and 48-hour qualified ratings", async (t) => {
   if (
@@ -432,6 +447,27 @@ test("path settlement: an edit committed after the cutoff uses its old baseline;
     settled.history.find((row) => row.id === `qualified-${suffix}`).status,
     "success",
   );
+});
+
+test("feedback: all active participant roles can draft and submit; device does not grant or remove access",async()=>{
+  const suffix=randomUUID().slice(0,8),gid=`mobile-access-${suffix}`;
+  const roles=[...Array(7).fill("dbs"),"member","member","admin"];
+  const ids=roles.map((_,index)=>`mobile-${suffix}-${index}`);
+  for(const [index,uid] of ids.entries())await db.doc(`users/${uid}`).set({uid,role:roles[index],disabled:false});
+  await db.doc(`games/${gid}`).set({status:"closed",teamA:{starters:ids.slice(0,5),bench:[]},teamB:{starters:ids.slice(5),bench:[]},closedAt:Timestamp.now()});
+  const flow=gameFlowFunctions();
+  for(const [index,uid] of ids.entries()){
+    const targetId=ids[(index+1)%ids.length];
+    await flow.feedbackAction.run({auth:{uid},data:{gameId:gid,targetId,ratings:{physical:4},submit:false}});
+    await flow.feedbackAction.run({auth:{uid},data:{gameId:gid,targetId,ratings,submit:true}});
+    const saved=(await db.doc(`games/${gid}/feedback/${uid}_${targetId}`).get()).data();
+    assert.equal(saved.submitted,true);assert.equal(saved.raterId,uid);assert.equal(saved.ratings.physical,4);
+  }
+  const outsider=`outside-${suffix}`;
+  await db.doc(`users/${outsider}`).set({uid:outsider,role:"admin",disabled:false});
+  await assert.rejects(flow.feedbackAction.run({auth:{uid:outsider},data:{gameId:gid,targetId:ids[0],ratings,submit:true}}),error=>error.code==="permission-denied");
+  await db.doc(`users/${ids[0]}`).update({disabled:true});
+  await assert.rejects(flow.feedbackAction.run({auth:{uid:ids[0]},data:{gameId:gid,targetId:ids[1],ratings,submit:true}}),error=>error.code==="permission-denied");
 });
 
 test("feedback: self N/A forces peer goalkeeper N/A, complete valid dimensions are required and editing cannot restart the window", async () => {

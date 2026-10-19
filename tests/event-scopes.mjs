@@ -127,6 +127,7 @@ try {
       await page.locator('[data-editor-step="1"]').click();
       if (kind === "event")
         await page.locator('[data-selection-method="objective"]').click();
+      await page.locator(".event-goal-add").click();
       const scope = page.locator('#event-editor [name="scope"]');
       assert.ok(await scope.isVisible(), `${kind} scope visible`);
       assert.deepEqual(

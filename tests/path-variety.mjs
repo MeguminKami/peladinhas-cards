@@ -196,6 +196,22 @@ try {
       fullPage: true,
     });
   }
+  await page.evaluate(() => (location.hash = "#/missions"));
+  await page.locator(".path-chosen-brand").waitFor();
+  assert.deepEqual(await page.locator(".mission-groups > .activity-group").evaluateAll(groups => groups.slice(0,2).map(group => group.dataset.activityCategory)), ["path", "rating"]);
+  assert.equal(await page.locator(".missions-workspace > :last-child a").getAttribute("href"), "#/events");
+  assert.ok(await page.locator(".path-chosen-brand").evaluate(el =>
+    parseFloat(getComputedStyle(el).fontSize) >= 20 &&
+    Number(getComputedStyle(el).fontWeight) >= 800 &&
+    el.lastElementChild.tagName.toLowerCase() === "svg"
+  ));
+  for (const width of [1440,768,390,320]) {
+    await page.setViewportSize({width,height:1000});
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await page.locator(".has-chosen-mission").screenshot({path:`test-results/path-variety/spotlight-title-${width}.png`});
+  }
+  await page.evaluate(() => (location.hash = "#/missions/path"));
+  await page.locator(".path-hero h1").waitFor();
   await page.evaluate(async () => {
     const state = window.__pathState,
       active = state.active;

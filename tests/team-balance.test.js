@@ -7,10 +7,35 @@ import {
   balanceMatches,
 } from "../js/team-balance.js";
 import { participants } from "../js/utils.js";
+import { gameTeamSize, splitTeam } from "../js/game-format.js";
 const random = (seed) => () =>
   (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
 const players = (values) =>
   values.map((ovr, i) => ({ uid: String(i), ovr, hasCard: true }));
+
+test("formatos 5 a 12: sorteio, suplentes, médias e redistribuição sem perder jogadores", () => {
+  assert.equal(gameTeamSize({}), 5);
+  for (let teamSize = 5; teamSize <= 12; teamSize++) {
+    for (const count of [2, 2 * teamSize - 1, 2 * teamSize, 2 * teamSize + 3, 60]) {
+      const roster = players(Array.from({length: count}, (_, i) => 55 + i % 35));
+      const game = balancedTeams(roster, { teamSize, random: random(count + teamSize) });
+      assert.deepEqual(participants(game).sort(), roster.map(p => p.uid).sort());
+      for (const side of ["teamA", "teamB"]) {
+        const ids = [...game[side].starters, ...game[side].bench];
+        assert.equal(game[side].starters.length, Math.min(teamSize, ids.length));
+        const reduced = splitTeam(ids, 5);
+        assert.deepEqual([...reduced.starters, ...reduced.bench], ids);
+        assert.deepEqual(splitTeam([...reduced.starters, ...reduced.bench], teamSize), game[side]);
+        const actual = game[side].starters.map(id => roster.find(p => p.uid === id).ovr);
+        assert.equal(teamBalance(game, roster)[side].startersAverage, actual.reduce((a,b) => a+b,0) / actual.length);
+      }
+    }
+  }
+  for (const teamSize of [0, 4, 13, 5.5, "12", null, NaN]) {
+    assert.throws(() => balancedTeams(players([70, 80]), {teamSize}));
+    assert.throws(() => splitTeam(["a"], teamSize));
+  }
+});
 test("sorteio: variedade real, equipas equilibradas, sem duplicados e titulares limitados", () => {
   const roster = players([99, 90, 85, 80, 75, 70, 65, 60, 55, 50]);
   const variations = new Set();

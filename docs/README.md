@@ -12,6 +12,14 @@
 
 ## Por onde começar
 
+[Diagnóstico de permissões nas avaliações da app](reports/feedback-mobile-access-2026-10-19.md).
+
+[Explorar estatísticas e construir consultas](reference/statistics.md) · [Validação da nova tabela](reports/statistics-explorer-2026-10-19.md).
+
+[Autoavaliação sem GR: correção histórica e validação](reports/goalkeeping-optout-2026-10-19.md).
+
+[Calibrar missões com estatísticas novas](guides/path-calibration.md) · [Análise de golos de 19/10/2026](reports/path-goal-calibration-2026-10-19.md).
+
 | Quero trabalhar no projeto                           | Quero perceber o produto                                 | Quero publicar                                  |
 | :--------------------------------------------------- | :------------------------------------------------------- | :---------------------------------------------- |
 | [1. Preparar o ambiente](guides/development.md)      | [1. Cartas e avaliações](reference/cards-and-ratings.md) | [1. Escolher os testes](guides/testing.md)      |
@@ -75,6 +83,14 @@ As capturas usam dados fictícios. O [relatório de interface dos percursos](rep
 | Regenerar capturas com dados fictícios | `npm.cmd run docs:images`                 |
 
 ## Registo de revisão
+
+[Construtor de metas e preservação do progresso — 19 de outubro de 2026](reports/goal-builder-2026-10-19.md).
+
+[Totais históricos para missões e eventos — 19 de outubro de 2026](reports/historical-objectives-2026-10-19.md).
+
+[Resultados e estrelas em objetivos combinados — 19 de outubro de 2026](reports/combined-objectives-2026-10-19.md).
+
+[Recuperação de passwords com código — 19 de outubro de 2026](reports/password-recovery-2026-10-19.md).
 
 [Revisão da interface dos percursos — 19 de outubro de 2026 →](reports/path-interface-2026-10-19.md)
 

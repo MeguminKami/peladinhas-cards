@@ -131,7 +131,7 @@ export function pathMissionSpotlight(entry) {
         ? pathObjectiveLines(mission.offer.objective)
         : [pathObjectiveText(mission.offer.objective)];
     return `<a class="path-mission-spotlight has-chosen-mission event-rarity-surface" data-rarity="${eventRarityId(mission.offer)}" href="${esc(entry.href)}/${esc(mission.nodeId)}">
-<div class="path-chosen-header"><span class="path-chosen-brand">${icon("path")}Escolhe o teu caminho</span>${rarityBadge(mission.offer)}</div>
+<div class="path-chosen-header"><span class="path-chosen-brand"><span>Escolhe o teu caminho</span>${icon("path")}</span>${rarityBadge(mission.offer)}</div>
 <div class="path-chosen-objective"><div class="path-spotlight-copy"><p class="path-chosen-node">${esc(mission.routeLabel)} <span>· Nó ${String(mission.nodeNumber).padStart(2, "0")} · ${esc(mission.nodeLabel.split(" · ")[0])}</span></p>
 ${missionScope(!!mission.counts)}<h2>${esc(lines.length === 1 ? lines[0] : mission.offer.title || "A tua missão")}</h2>
 ${lines.length > 1 ? `<ul class="path-mission-conditions">${lines.map((line) => `<li>${esc(line)}</li>`).join("")}</ul>` : ""}

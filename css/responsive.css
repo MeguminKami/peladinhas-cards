@@ -907,6 +907,8 @@ main.wide-layout {
 .admin-player-actions {
   flex-wrap: nowrap;
   gap: 8px;
+  /* Reserve one expanded caption so hover never changes the table's intrinsic width. */
+  width: calc(var(--player-action-count, 9) * 44px + (var(--player-action-count, 9) - 1) * 8px + 128px);
 }
 .admin-player-actions .btn {
   flex: 0 0 auto;
@@ -939,6 +941,12 @@ main.wide-layout {
   margin-left: 8px;
   opacity: 1;
   transform: translateX(0);
+}
+.admin-player-actions:has(.btn:focus-visible) .btn:hover:not(:focus-visible) .admin-action-caption {
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  transform: translateX(-12px);
 }
 .admin-player-actions .btn:focus-visible {
   outline: 2px solid var(--accent);
@@ -974,43 +982,7 @@ main.wide-layout {
   border-left: 3px solid var(--accent);
   border-radius: var(--radius-md);
 }
-.statistics-metrics {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-}
-.statistics-metrics > div {
-  padding: 14px;
-}
-.statistics-metrics small {
-  font-size: 0.7rem;
-}
-.statistics-metrics b {
-  font-size: 1.4rem;
-}
-.statistics-panel {
-  margin-top: 24px;
-  padding: 18px;
-}
-.statistics-table {
-  width: 100%;
-  table-layout: fixed;
-  font-size: 0.7rem;
-}
-.statistics-table th,
-.statistics-table td {
-  padding: 12px 6px;
-  overflow-wrap: anywhere;
-}
-.statistics-table th:first-child {
-  width: 16%;
-}
-.statistics-table :is(th, td):not(:first-child) {
-  text-align: center;
-}
-.statistics-table td:nth-child(9),
-.statistics-table td:nth-child(10) {
-  color: var(--accent);
-  font-weight: 800;
-}
+
 .ratings-toolbar {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
@@ -1110,51 +1082,7 @@ main.wide-layout {
   }
 }
 @media (max-width: 800px) {
-  .statistics-table thead {
-    display: none;
-  }
-  .statistics-table,
-  .statistics-table tbody {
-    display: block;
-  }
-  .statistics-table tr {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    margin-top: 14px;
-    padding: 10px;
-  }
-  .statistics-table td {
-    display: block;
-    border: 0;
-    text-align: center;
-  }
-  .statistics-table td:first-child {
-    grid-column: 1 / -1;
-    font-size: 0.9rem;
-    text-align: left;
-  }
-  .statistics-table td::before {
-    display: block;
-    content: attr(data-label);
-    font-size: 0.6rem;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-  .statistics-metrics {
-    gap: 6px;
-  }
-  .statistics-metrics > div {
-    padding: 8px 4px;
-  }
-  .statistics-metrics small {
-    font-size: 0.58rem;
-    overflow-wrap: anywhere;
-  }
-  .statistics-metrics b {
-    font-size: 1rem;
-  }
+
   .admin-overview-columns,
   .ratings-toolbar {
     grid-template-columns: minmax(0, 1fr);
@@ -1226,15 +1154,7 @@ main.wide-layout {
 }
 
 /* Visual card creation studio */
-.statistics-table {
-  font-size: 0.88rem;
-}
-.statistics-table th {
-  font-size: 0.78rem;
-}
-.statistics-table td {
-  padding-block: 15px;
-}
+
 .studio-library { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,1fr); gap:20px 24px; align-items:center; padding:24px; margin-bottom:24px; border-left:3px solid var(--accent); }
 .studio-library h2 { margin:8px 0; font-size:1.2rem; }
 .studio-library p { margin:0; color:var(--text-secondary); font-size:.82rem; }
@@ -2207,39 +2127,7 @@ main.wide-layout {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
 }
-.statistics-table th button {
-  background: none;
-  border: 0;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  padding: 0;
-  min-height: 36px;
-}
-.statistics-table th[aria-sort="ascending"],
-.statistics-table th[aria-sort="descending"] {
-  color: var(--accent);
-}
-.statistics-table :is(.stat-wins, .stat-draws, .stat-losses) {
-  background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
-}
-.statistics-table .stat-wins {
-  color: #55e58c;
-  border-left: 1px solid var(--border-strong);
-}
-.statistics-table .stat-draws {
-  color: #e9c978;
-}
-.statistics-table .stat-losses {
-  color: #ff8585;
-  border-right: 1px solid var(--border-strong);
-}
-.statistics-table :is(.stat-goals, .stat-assists) {
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-}
+
 .preset-toolbar {
   display: flex;
   gap: 12px;
@@ -2389,7 +2277,6 @@ main.wide-layout {
 }
 .admin-layout .admin-player-actions {
   flex-wrap: nowrap;
-  width: max-content;
   gap: 8px;
 }
 .admin-layout .admin-player-actions .btn {
@@ -2565,54 +2452,6 @@ main.wide-layout {
   }
   .event-question {
     padding: 16px 12px;
-  }
-}
-
-@media (max-width: 800px) {
-  .statistics-table thead {
-    display: block;
-    margin-bottom: 14px;
-  }
-  .statistics-table thead tr {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
-  }
-  .statistics-table thead th {
-    display: block;
-    padding: 6px;
-    border: 1px solid var(--border-strong);
-    border-radius: 8px;
-    min-width: 0;
-  }
-  .statistics-table th button {
-    min-height: 44px;
-    width: 100%;
-    justify-content: space-between;
-    font-size: 0.72rem;
-    white-space: normal;
-    text-align: left;
-  }
-}
-
-@media (max-width: 800px) {
-  .statistics-table thead th:first-child {
-    width: auto;
-  }
-}
-
-@media (max-width: 800px) {
-  .statistics-table thead th {
-    order: 3;
-  }
-  .statistics-table thead :is(.stat-name, .stat-position, .stat-ovr) {
-    order: 0;
-  }
-  .statistics-table thead :is(.stat-wins, .stat-draws, .stat-losses) {
-    order: 1;
-  }
-  .statistics-table thead :is(.stat-played, .stat-winRate, .stat-goals) {
-    order: 2;
   }
 }
 

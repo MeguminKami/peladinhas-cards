@@ -1,4 +1,5 @@
 import { average, clamp } from "./utils.js";
+import { DEFAULT_TEAM_SIZE, validTeamSize, splitTeam } from "./game-format.js";
 export const BALANCE_SETTINGS = Object.freeze({
   tolerance: 1,
   attempts: 600,
@@ -67,8 +68,9 @@ export function balanceSignature(game) {
 }
 export function balancedTeams(
   players,
-  { random = Math.random, previous = null } = {},
+  { random = Math.random, previous = null, teamSize = DEFAULT_TEAM_SIZE } = {},
 ) {
+  if (!validTeamSize(teamSize)) throw Error("Escolhe entre 5 e 12 titulares por equipa.");
   if (
     players.length < 2 ||
     players.length > 60 ||
@@ -85,10 +87,7 @@ export function balancedTeams(
       const j = Math.floor(random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
-    const side = (list) => ({
-      starters: list.slice(0, 5).map((p) => p.uid),
-      bench: list.slice(5).map((p) => p.uid),
-    });
+    const side = (list) => splitTeam(list.map((p) => p.uid), teamSize);
     const game = {
       teamA: side(shuffled.slice(0, split)),
       teamB: side(shuffled.slice(split)),

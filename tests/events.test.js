@@ -29,6 +29,10 @@ import {
 } from "../js/event-model.js";
 import { applyEventRewards } from "../js/event-rules.js";
 import { eventIcon } from "../js/icons.js";
+import { TOTAL_OBJECTIVES, objectiveTargetLimit } from "../js/event-totals.js";
+import { goalOptions, goalSelection, storedGoalMetric } from "../js/event-goal-options.js";
+import { OBJECTIVES } from "../js/event-model.js";
+import { objectiveGoals } from "../js/event-goals.js";
 const date = new Date("2026-10-20T12:00:00Z");
 const event = {
   startsAt: "2026-10-01",
@@ -63,6 +67,136 @@ const ratedGame = (i, overall, passing = overall, outcome = 1) => ({
   ...game(i, outcome), ratingSummary: { a: { overall, passing,
     evaluatedAt: new Date(Date.UTC(2026, 9, i, 12)).toISOString(),
     ratingCounts: { overall: 3, passing: 3 } } },
+});
+
+test("historical totals: every supported counter uses real matches, contributions and recorded positions", () => {
+  const scores=[[2,0],[1,1],[0,3],[4,2],[0,0],[1,0]];
+  const positions=["GR","DEF","ALA","MED","AV",null];
+  const matches=scores.map(([teamA,teamB],i)=>({...game(i+1,1,[2,0,0,1,0,0][i],[1,1,0,0,0,0][i]),score:{teamA,teamB},positions:positions[i]?{a:positions[i]}:{}}));
+  for(const [index,value,count] of [[0,4,3],[1,4.5,3],[2,2,3],[4,4,3],[5,4,2]]) matches[index].ratingSummary={a:{overall:value,passing:value,ratingCounts:{overall:count,passing:count},evaluatedAt:matches[index].closedAt}};
+  const expected={totalGames:6,totalWins:3,totalDraws:2,totalLosses:1,totalGoals:3,totalAssists:2,totalContributions:5,
+    totalCleanSheets:3,totalUnbeatenGames:5,totalTeamGoals:8,totalGoalsConceded:6,totalScoringGames:2,totalAssistingGames:2,totalContributingGames:3,
+    totalGoalkeeperGames:1,totalGoalkeeperWins:1,totalGoalkeeperCleanSheets:1,totalDefenderGames:1,totalWingerGames:1,totalMidfielderGames:1,totalStrikerGames:1,
+    totalRatingGames:3,totalRatingWins:1};
+  const all=[...matches,{...game(7,1,9),status:"open"},{...game(8,1,9),deleting:true},game(25,1,9)];
+  for(const metric of Object.keys(TOTAL_OBJECTIVES)) {
+    const objective={...starObjective(metric),target:1};
+    const config={...event,startsAt:"2026-10-15",objective};
+    assert.equal(objectiveProgress("a",config,all,date),expected[metric],metric);
+    assert.equal(objectiveProgress("outsider",config,all,date),0,metric);
+    assert.equal(objectiveProgress("a",config,all,new Date("2026-10-14")),0,metric);
+    assert.match(objectiveSummary(config),/histórico/i,metric);
+    assert.ok(!objectiveSummary(config).includes("undefined"),metric);
+    assert.ok(eventIcon(config));
+    const period={...config,objective:{...objective,countFrom:"challenge"}};
+    assert.equal(objectiveProgress("a",period,all,date),0,`${metric}: excludes earlier matches`);
+    assert.equal(objectiveProgress("a",{...period,startsAt:event.startsAt},matches,date),expected[metric],`${metric}: counts period data`);
+    assert.ok(!objectiveSummary(period).includes("undefined"),metric);
+  }
+  assert.equal(objectiveProgress("a",{...event,startsAt:"2026-10-15",objective:{metric:"games",target:1}},all,date),0);
+  assert.equal(objectiveTargetLimit({metric:"totalGoals"}),1000000);
+  assert.equal(objectiveTargetLimit({metric:"goals"}),1000);
+});
+
+test("goal selectors preserve every metric without duplicate historical entries", () => {
+  const choices=goalOptions(OBJECTIVES);
+  assert.equal(choices.length,28);
+  for(const metric of Object.keys(OBJECTIVES).filter(key=>!["all","combined"].includes(key))) {
+    const selection=goalSelection({metric},choices);
+    assert.equal(storedGoalMetric(selection.metric,selection.countFrom,choices).metric,metric);
+  }
+  assert.deepEqual(storedGoalMetric("totalGoalkeeperGames","challenge",choices),{metric:"totalGoalkeeperGames",countFrom:"challenge"});
+  assert.equal(validRatingObjective({metric:"games",countFrom:"invalid"}),false);
+});
+
+test("historical objectives never backdate competition completion before opening or unlocking", () => {
+  const config={...event,kind:"event",method:"objective",startsAt:"2026-10-15",objective:{metric:"totalGames",target:2}};
+  const matches=[game(1,1),game(2,1),game(16,1)];
+  assert.equal(objectiveReachedAt("a",config,matches,date),"2026-10-15T00:00:00.000Z");
+  const mission={...config,kind:"mission",prerequisites:{mode:"all",missionIds:["first"]}};
+  assert.equal(eventRanking(mission,[],matches,[],date)[0].progress,0);
+  const completions=[{eventId:"first",uid:"a",periodKey:"once",completedAt:"2026-10-17"}];
+  assert.equal(objectiveReachedAt("a",mission,matches,date,completions),"2026-10-17T00:00:00.000Z");
+  const combined={...config,objective:{metric:"combined",target:100,results:{metric:"totalGames",target:2},ratings:starObjective("ratingGames",{target:1})}};
+  assert.equal(objectiveProgress("a",combined,[ratedGame(1,4)],date),0);
+  assert.equal(objectiveProgress("a",combined,[...matches,ratedGame(18,4)],date),100);
+  assert.equal(objectiveReachedAt("a",combined,[...matches,ratedGame(18,4)],date),"2026-10-18T12:00:00.000Z");
+});
+
+test("historical stars respect validation time and the final event cutoff", () => {
+  const objective=starObjective("totalRatingWins",{target:1});
+  const config={...event,startsAt:"2026-10-15",endsAt:"2026-10-19",objective};
+  const match=ratedGame(1,4);match.ratingSummary.a.evaluatedAt="2026-10-20";
+  assert.equal(objectiveProgress("a",config,[match],date),0);
+  match.ratingSummary.a.evaluatedAt="2026-10-18";
+  assert.equal(objectiveProgress("a",config,[match],date),1);
+  assert.equal(objectiveReachedAt("a",config,[match],date),"2026-10-18T00:00:00.000Z");
+});
+
+const combinedObjective = () => ({metric:"combined", target:100,
+  results:{metric:"goals",target:3}, ratings:starObjective("ratingGames",{target:2}),
+});
+test("goal lists preserve each real counter through edits, additions and reordering", () => {
+  const goals=[{id:"scoring",metric:"goals",target:5},{id:"winning",metric:"wins",target:2},{id:"stars",...starObjective("ratingGames",{target:1})}];
+  const matches=[game(1,1,3),game(2,-1,1),ratedGame(3,4.5)];
+  const config={...event,kind:"mission",method:"objective",objective:{metric:"all",target:100,goals}};
+  const state=objectiveProgress("a",config,matches,date,false,true);
+  assert.equal(state.progress,80);
+  assert.equal(state.goals.find(goal=>goal.id==="scoring").progress,4);
+  const changed={...config,objective:{...config.objective,goals:[...goals].reverse().map(goal=>goal.id==="scoring"?{...goal,target:8}:goal)}};
+  const next=objectiveProgress("a",changed,matches,date,false,true);
+  assert.equal(next.progress,50);
+  assert.equal(next.goals.find(goal=>goal.id==="scoring").progress,4);
+  assert.equal(next.goals.find(goal=>goal.id==="winning").progress,2);
+  const legacy=objectiveGoals({metric:"goals",target:5});
+  assert.equal(legacy[0].id,"legacy-primary");
+  assert.equal(objectiveProgress("a",{...config,objective:{metric:"all",target:100,goals:legacy}},matches,date,false,true).goals[0].progress,4);
+});
+test("goal lists validate IDs, arbitrary leaf types, limits and no nested combinations", () => {
+  const base={metric:"all",target:100,goals:[{id:"a",metric:"goals",target:3},{id:"b",metric:"goals",target:8}]};
+  assert.equal(validRatingObjective(base),true);
+  for(const goals of [[],[{...base.goals[0],target:0}], [...base.goals,{...base.goals[0]}],
+    [{id:"x",...base}], [{id:"x",...combinedObjective()}], Array.from({length:13},(_,i)=>({id:`g${i}`,metric:"games",target:1}))]) {
+    assert.equal(validRatingObjective({...base,goals}),false);
+  }
+  assert.equal(validRatingObjective({...base,goals:[{id:"a",metric:"totalGames",target:1000000}]}),true);
+  assert.equal(validRatingObjective({...base,goals:[{id:"a",...starObjective("ratingGames")} ]},"group"),false);
+});
+test("combined objectives require both independent goals within the same period", () => {
+  const config={...event,kind:"mission",method:"objective",scope:"individual",objective:combinedObjective()};
+  const results=game(1,1,3), star1=ratedGame(2,4), star2=ratedGame(3,4);
+  assert.equal(objectiveProgress("a",config,[results],date),0);
+  assert.equal(objectiveProgress("a",config,[star1,star2],date),0);
+  assert.equal(objectiveProgress("a",config,[results,star1],date),50);
+  assert.equal(objectiveProgress("a",config,[results,star1,star2],date),100);
+  assert.equal(objectiveProgress("a",config,[results,star1,star2],new Date("2026-10-03T06:00Z")),50);
+  assert.equal(objectiveReachedAt("a",config,[results,star1,star2],date),"2026-10-03T12:00:00.000Z");
+  const state=objectiveProgress("a",config,[results,star1],date,false,true);
+  assert.equal(state.results.progress,3);
+  assert.equal(state.ratings.progress,1);
+  assert.equal(objectiveProgress("outsider",config,[results,star1,star2],date),0);
+  assert.equal(objectiveProgress("a",{...config,progressStartsAt:"2026-10-02"},[results,star1,star2],date),0);
+});
+test("combined validation prevents nested objectives, impossible targets and shared scopes", () => {
+  const valid=combinedObjective();
+  assert.equal(validRatingObjective(valid),true);
+  for(const change of [{target:1},{results:valid},{results:{metric:"ratingGames",target:3}},
+    {results:{metric:"goals",target:0}},{ratings:{...valid.ratings,target:1001}},
+    {ratings:{...valid.ratings,attributes:[]}},{ratings:{metric:"wins",target:1}}]) {
+    assert.equal(validRatingObjective({...valid,...change}),false);
+  }
+  assert.equal(validRatingObjective(valid,"team"),false);
+  assert.equal(validRatingObjective(valid,"group"),false);
+  assert.match(objectiveSummary({objective:valid}),/ambas as metas/);
+});
+test("combined rolling averages stop eligibility when the current window fails", () => {
+  const objective=combinedObjective();objective.results={metric:"games",target:1};
+  objective.ratings=starObjective("ratingAverage",{target:2});
+  const config={...event,kind:"event",method:"objective",scope:"individual",objective};
+  const games=[ratedGame(1,4),ratedGame(2,4)];
+  assert.equal(objectiveProgress("a",config,games,date),100);
+  assert.equal(objectiveProgress("a",config,[...games,ratedGame(3,1)],date),0);
+  assert.equal(objectiveReachedAt("a",config,[...games,ratedGame(3,1)],date),null);
 });
 test("stars: count, winning games and streaks use each selected dimension", () => {
   const games = [ratedGame(1,4), ratedGame(2,5,3), ratedGame(3,4.5,4.5,-1), ratedGame(4,4), ratedGame(5,4)];
@@ -105,6 +239,18 @@ test("stars: late ratings, reopened games, period boundaries and prerequisites a
   const credits = [{uid:"a",eventId:"intro",periodKey:"once",completedAt:"2026-10-04"}];
   assert.equal(eventRanking(gated,[],[ratedGame(3,5)],[],date,credits).find(r=>r.uid==="a").progress,0);
   assert.equal(eventRanking(gated,[],[ratedGame(5,5)],[],date,credits).find(r=>r.uid==="a").progress,1);
+});
+
+test("goalkeeper opt-out overrides stale stars and counts in mission objectives",()=>{
+  const match=ratedGame(3,5);
+  Object.assign(match.ratingSummary.a,{goalkeeping:5,goalkeepingEligible:false});
+  match.ratingSummary.a.ratingCounts.goalkeeping=10;
+  for(const metric of ["ratingGames","ratingWins","ratingStreak","ratingAverage","totalRatingGames","totalRatingWins"]){
+    const config={...event,method:"objective",objective:starObjective(metric,{target:1,attributes:["goalkeeping"]})};
+    assert.equal(objectiveProgress("a",config,[match],date),0,metric);
+    config.objective.attributes=["overall"];
+    assert.equal(objectiveProgress("a",config,[match],date),1,metric);
+  }
 });
 test("stars: validation rejects unknown dimensions, duplicates, impossible thresholds and shared scopes", () => {
   const valid = starObjective("ratingGames");

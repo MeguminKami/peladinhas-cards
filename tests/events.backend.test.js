@@ -39,6 +39,108 @@ const payload = () => ({
   tieBreak: "uid",
 });
 
+test("goal builder edits preserve counts, window, participants and delivered rewards", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});t.after(()=>t.mock.timers.reset());
+  const owner="goals-admin",uid="goals-member";
+  for(const id of [owner,uid])await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  const action=(action,data={})=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  await db.doc("games/goals-preserve").set({status:"closed",closedAt:Timestamp.fromDate(new Date("2026-10-21T09:00Z")),
+    teamA:{starters:[uid],bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:3,teamB:0},
+    performance:{teamA:{goals:[uid,uid,uid],assists:[]},teamB:{goals:[],assists:[]}}});
+  const config={...payload(),kind:"mission",scope:"individual",method:"objective",winnerCount:1,positions:[prize(5)],audience:{mode:"selected",memberIds:[uid]},objective:{metric:"goals",target:3},cadence:"once",maxRepeats:1,openNow:true};
+  const {id}=await action("create",config);
+  await claimMission.run({auth:{uid},data:{eventId:id}});
+  const goals=[{id:"legacy-primary",metric:"goals",target:7},{id:"extra",metric:"wins",target:2}];
+  const update={...config,eventId:id,objective:{metric:"all",target:100,goals}};
+  await action("update",update);
+  let detail=await getEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal(detail.progress[0].ratingState.goals.find(goal=>goal.id==="legacy-primary").progress,3);
+  await action("update",{...update,title:"Renamed",objective:{...update.objective,goals:[...goals].reverse()}});
+  detail=await getEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal(detail.progress[0].ratingState.goals.find(goal=>goal.id==="legacy-primary").progress,3);
+  await claimMission.run({auth:{uid},data:{eventId:id}});
+  assert.equal((await db.collection("eventRewards").where("eventId","==",id).get()).size,1);
+  for(const changed of [{startsAt:"2026-10-21"},{cadence:"weekly",maxRepeats:2},{scope:"group"}])
+    await assert.rejects(action("update",{...update,...changed}));
+  await action("update",{...update,audience:{mode:"selected",memberIds:[owner]}});
+  assert.ok((await db.doc(`events/${id}`).get()).data().participantIds.includes(uid));
+});
+
+test("historical totals: old matches, authoritative claims, single completion and opening-time ranking", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="totals-admin",uid="totals-member";
+  for(const id of [owner,uid]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  const action=(action,data={})=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  for(let i=0;i<2;i++) {
+    const game={status:"closed",closedAt:Timestamp.fromDate(new Date(`2026-10-0${i+1}T09:00Z`)),teamA:{starters:[uid],bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:2,teamB:0},positions:{[uid]:i===0?"GR":"AV"}};
+    await db.doc(`games/totals-${i}`).set(game);
+    await db.doc(`gameSummaries/totals-${i}`).set({...game,players:{[uid]:{overall:4.5,evaluatedAt:`2026-10-0${i+1}T10:00Z`,ratingCounts:{overall:3}}}});
+  }
+  const config={...payload(),kind:"mission",scope:"individual",method:"objective",winnerCount:1,positions:[prize(5)],audience:{mode:"selected",memberIds:[uid]},objective:{metric:"totalGames",target:2},cadence:"once",maxRepeats:1,openNow:true};
+  await assert.rejects(action("create",{...config,cadence:"weekly",maxRepeats:2}));
+  await assert.rejects(action("create",{...config,objective:{metric:"totalGames",target:1000001}}));
+  const {id}=await action("create",config);
+  const detail=await getEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal(detail.progress[0].progress,2);
+  await claimMission.run({auth:{uid},data:{eventId:id}});
+  await claimMission.run({auth:{uid},data:{eventId:id}});
+  assert.equal((await db.collection("eventRewards").where("eventId","==",id).get()).size,1);
+  const missing=await action("create",{...config,objective:{metric:"totalGames",target:3}});
+  await assert.rejects(claimMission.run({auth:{uid},data:{eventId:missing.id,progress:999}}));
+  const race=await action("create",{...config,kind:"event",needsConfirmation:true,objective:{metric:"totalWins",target:2}});
+  await action("prepare",{eventId:race.id});
+  const stored=(await db.doc(`events/${race.id}`).get()).data();
+  assert.equal(stored.ranking[0].reachedAt,"2026-10-20T00:00:00.000Z");
+  const stars={metric:"totalRatingWins",target:2,attributes:["overall"],threshold:4,comparison:"gte",combine:"all",minRatings:3};
+  const historicalStars=await action("create",{...config,objective:stars});
+  await claimMission.run({auth:{uid},data:{eventId:historicalStars.id}});
+  const currentStars=await action("create",{...config,objective:{...stars,metric:"ratingWins"}});
+  await assert.rejects(claimMission.run({auth:{uid},data:{eventId:currentStars.id}}));
+});
+
+test("combined missions and events: both goals, trusted ratings, claim idempotence and race completion time", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="combined-admin", uid="combined-member";
+  for(const id of [owner,uid]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  const action=(action,data={})=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  const objective={metric:"combined",target:100,results:{metric:"goals",target:3},
+    ratings:{metric:"ratingGames",target:2,attributes:["overall","passing"],threshold:4,comparison:"gte",combine:"all",minRatings:3}};
+  const config={...payload(),kind:"mission",scope:"individual",method:"objective",winnerCount:1,positions:[prize(5)],audience:{mode:"selected",memberIds:[uid]},objective,openNow:true};
+  await assert.rejects(action("create",{...config,scope:"group"}));
+  await assert.rejects(action("create",{...config,objective:{...objective,target:1}}));
+  await assert.rejects(action("create",{...config,objective:{...objective,ratings:{...objective.ratings,attributes:[]}}}));
+  const {id}=await action("create",config);
+  const claim=()=>claimMission.run({auth:{uid},data:{eventId:id,progress:100,eligible:true}});
+  for(let i=0;i<3;i++) await db.doc(`games/combined-${i}`).set({status:"closed",closedAt:Timestamp.fromDate(new Date(`2026-10-${21+i}T09:00:00Z`)),
+    teamA:{starters:[uid],bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:3,teamB:0},
+    performance:{teamA:{goals:i===0?[uid,uid,uid]:[],assists:[]},teamB:{goals:[],assists:[]}}});
+  await assert.rejects(claim());
+  const summary=async(i,count=3)=>db.doc(`gameSummaries/combined-${i}`).set({...(await db.doc(`games/combined-${i}`).get()).data(),players:{[uid]:{
+    overall:4.5,passing:4.5,evaluatedAt:`2026-10-${21+i}T10:00:00Z`,ratingCounts:{overall:count,passing:count}}}});
+  await summary(1);
+  let detail=await getEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal(detail.progress[0].progress,50);
+  assert.equal(detail.progress[0].ratingState.results.progress,3);
+  assert.equal(detail.progress[0].ratingState.ratings.progress,1);
+  await assert.rejects(claim());
+  await summary(2,2);
+  await assert.rejects(claim());
+  await summary(2);
+  await claim();await claim();
+  assert.equal((await db.collection("eventRewards").where("eventId","==",id).get()).size,1);
+  const race=await action("create",{...config,kind:"event",needsConfirmation:true});
+  await action("prepare",{eventId:race.id});
+  const stored=(await db.doc(`events/${race.id}`).get()).data();
+  assert.equal(stored.ranking[0].eligible,true);
+  assert.equal(stored.ranking[0].reachedAt,"2026-10-23T10:00:00.000Z");
+  assert.equal(stored.objective.ratings.minRatings,3);
+});
+
 test("star missions: server validation, authoritative aggregates, rolling windows and one reward per period", async (t) => {
   t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
   t.after(()=>t.mock.timers.reset());

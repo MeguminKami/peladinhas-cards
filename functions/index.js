@@ -1,4 +1,5 @@
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
+import { passwordRecoveryFunctions } from "./password-recovery.js";
 import { maintenanceFunctions } from "./maintenance.js";
 import { pathFunctions } from "./paths.js";
 import { policyAt, budgetWindow, isQuietHour } from "../js/system-policy.js";
@@ -60,6 +61,7 @@ import {
 } from "../js/utils.js";
 initializeApp();
 setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
+export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {

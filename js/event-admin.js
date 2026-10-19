@@ -1,4 +1,8 @@
+import { mountGoalBuilder } from "./event-goal-builder.js";
+import { goalOptions, goalSelection, storedGoalMetric } from "./event-goal-options.js";
+import { isGoalList, objectiveGoals } from "./event-goals.js";
 import { rewardBreakdown } from "./reward-presentation.js";
+import { TOTAL_OBJECTIVES, isLifetimeObjective, usesLifetimeObjective, objectiveTargetLimit } from "./event-totals.js";
 import { groupActivities } from "./activity-categories.js";
 import { EVENT_RARITIES, eventRarityId, rarityBadge } from "./event-rarity.js";
 import { CARD_POLICY } from "./card-achievements.js";
@@ -18,6 +22,8 @@ import { votersFor, eventDeadline } from "./event-rules.js";
 import {
   OBJECTIVES,
   isRatingObjective,
+  isCombinedObjective,
+  usesRatingObjective,
   validRatingObjective,
   objectiveSummary,
   medal,
@@ -60,13 +66,21 @@ const options = (values, selected) =>
         `<option value="${esc(id)}" ${id === selected ? "selected" : ""}>${esc(label)}</option>`,
     )
     .join("");
+const goalChoices = goalOptions(OBJECTIVES);
+const objectiveOptions = (stars, selected) => options(goalChoices.filter(choice => isRatingObjective({metric:choice.id}) === stars).map(choice=>[choice.id,choice.label]),selected);
 const creationRules = (event) => {
-  const o = event.objective || {};
+  const combined = isCombinedObjective(event.objective);
+  const o = (combined ? event.objective.ratings : event.objective) || {};
+  if (isGoalList(event.objective)) return `<ul class="event-rule-list">${event.objective.goals.map((goal,i)=>`<li>${icon(eventIcon({objective:goal}))}<div><strong>Meta ${i+1}</strong><p>${esc(objectiveSummary({...event,objective:goal}))}</p></div></li>`).join("")}</ul>`;
   const entries = [];
   const add = (symbol, title, text) =>
     entries.push(
       `<li>${icon(symbol)}<div><strong>${esc(title)}</strong><p>${esc(text)}</p></div></li>`,
     );
+  if (event.method === "objective" && combined) {
+    add("check", "Conclusão", usesLifetimeObjective(event.objective) ? "Cumpre ambas as metas. Cada uma usa o histórico ou período indicado." : "Cumpre as duas metas no mesmo período. Podem ser cumpridas em jogos diferentes.");
+    add("goals", "Resultados", objectiveSummary({...event, objective:event.objective.results}));
+  }
   if (event.method === "objective" && isRatingObjective(o)) {
     const goals = {
       ratingAverage: `Média dos últimos ${o.target} jogos`,
@@ -74,7 +88,7 @@ const creationRules = (event) => {
       ratingStreak: `${o.target} jogos consecutivos`,
       ratingWins: `${o.target} vitórias com avaliação mínima`,
     };
-    add(eventIcon(event), "Meta", goals[o.metric]);
+    add(eventIcon(event), combined ? "Meta de estrelas" : "Meta", `${isLifetimeObjective(o) ? "Histórico total · " : ""}${goals[TOTAL_OBJECTIVES[o.metric]?.metric || o.metric]}`);
     add(
       "ratingGames",
       "Estrelas",
@@ -95,7 +109,7 @@ const creationRules = (event) => {
     add(
       "games",
       "Jogos válidos",
-      "Encerrados neste período, após o desbloqueio. As dimensões precisam de avaliações suficientes.",
+      isLifetimeObjective(o) ? "Todos os jogos encerrados do histórico, incluindo anteriores ao desafio, com avaliações suficientes até à verificação ou ao fecho." : "Encerrados neste período, após o desbloqueio. As dimensões precisam de avaliações suficientes.",
     );
     if (o.metric === "ratingAverage")
       add(
@@ -167,8 +181,12 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
           eventEndMillis(b) - eventEndMillis(a) ||
           a.title.localeCompare(b.title),
       );
-    const eventCard = (event) =>
-      `<article class="event-management-card event-rarity-surface" data-rarity="${eventRarityId(event)}">${rarityBadge(event)}<div class="section-head"><span class="pill">${statusName[event.status]}</span><small>${event.kind === "mission" ? "Missão" : "Evento"}</small></div><h3>${esc(event.title)}</h3><p>${esc(event.description || "")}</p><small>${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small><div class="actions"><a class="btn btn-ghost" href="#/event/${esc(event.id)}">Consultar / auditar</a>${event.schemaVersion === 2 ? `<button class="btn btn-secondary" data-edit="${esc(event.id)}">Editar</button>` : ""}${event.schemaVersion === 2 ? `<button class="btn btn-ghost" data-action="duplicate" data-id="${esc(event.id)}">Duplicar</button>` : ""}${event.schemaVersion === 2 && event.status === "cancelled" ? `<button class="btn btn-danger" data-action="delete" data-id="${esc(event.id)}">Apagar ${event.kind === "mission" ? "missão" : "evento"}</button>` : ""}${event.status === "draft" ? `<button class="btn btn-primary" data-action="open" data-id="${esc(event.id)}">Publicar</button>` : ""}${event.status === "open" && event.kind !== "mission" ? `<button class="btn btn-secondary" data-action="prepare" data-id="${esc(event.id)}">Preparar resultados</button>` : ""}${["draft", "scheduled", "open", "review"].includes(event.status) ? `<button class="btn btn-ghost" data-action="cancel" data-id="${esc(event.id)}">Cancelar</button>` : ""}</div></article>`;
+    const actionIcon = (label, symbol, tone, attributes) =>
+      `<button type="button" class="btn event-card-action action-${tone}" aria-label="${esc(label)}" ${attributes}>${icon(symbol)}</button>`;
+    const eventCard = (event) => {
+      const id = esc(event.id);
+      return `<article class="event-management-card event-admin-card event-rarity-surface" data-rarity="${eventRarityId(event)}"><div class="event-admin-card-head">${rarityBadge(event)}<span class="pill">${statusName[event.status]}</span></div><h3>${esc(event.title)}</h3>${event.description ? `<p class="event-admin-card-description">${esc(event.description)}</p>` : ""}<small class="event-admin-card-date">${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small><div class="actions compact event-admin-card-actions" role="group" aria-label="Ações do desafio"><a class="btn event-card-action action-audit" href="#/event/${id}" aria-label="Consultar / auditar">${icon("preview")}</a>${event.schemaVersion === 2 ? actionIcon("Editar", "edit", "edit", `data-edit="${id}"`) + actionIcon("Duplicar", "copy", "duplicate", `data-action="duplicate" data-id="${id}"`) : ""}${event.schemaVersion === 2 && event.status === "cancelled" ? actionIcon("Apagar", "trash", "delete", `data-action="delete" data-id="${id}"`) : ""}${event.status === "draft" ? actionIcon("Publicar", "publish", "publish", `data-action="open" data-id="${id}"`) : ""}${event.status === "open" && event.kind !== "mission" ? actionIcon("Preparar resultados", "chart", "prepare", `data-action="prepare" data-id="${id}"`) : ""}${["draft", "scheduled", "open", "review"].includes(event.status) ? actionIcon("Cancelar", "close", "cancel", `data-action="cancel" data-id="${id}"`) : ""}</div></article>`;
+    };
     list.innerHTML =
       groupActivities(filtered)
         .map(
@@ -279,6 +297,9 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
   });
   const openEditor = (event = {}, configuration = {}) => {
     const isMission = event.kind === "mission";
+    const firstGoal = objectiveGoals(event.objective)[0] || {metric:"games",target:3};
+    let goalBuilder;
+    const preserveProgress = !!event.id && event.status !== "draft";
     selectArea(isMission ? "mission" : "event");
     editing = event.id || null;
     editor.hidden = false;
@@ -323,7 +344,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         ["participation", "Mais jogos no período"],
       ],
       event.tieBreak || "uid",
-    )}</select></label><label>Objetivo<select name="metric">${options(Object.entries(OBJECTIVES), event.objective?.metric || "games")}</select></label><label>Quantidade alvo<input name="target" type="number" min="1" max="1000" value="${event.objective?.target || 3}"></label><label>Âmbito<select name="scope">${options(
+    )}</select></label><label>Objetivo<select name="metric">${options(Object.entries(OBJECTIVES), firstGoal.metric)}</select></label><label>Quantidade alvo<input name="target" type="number" min="1" max="1000" value="${firstGoal.target}"></label><label>Âmbito<select name="scope">${options(
       [
         ["individual", "Individual"],
         ["group", "Grupo · soma dos participantes"],
@@ -348,8 +369,11 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     editor.querySelector(".section-head .eyebrow").textContent =
       "DESAFIOS DA LIGA";
     const ratingFields = document.createElement("div");
+    const historyNote = document.createElement("p");
+    historyNote.className = "muted event-history-note";
     ratingFields.className = "event-rating-config content-stack";
-    const rating = event.objective || {};
+    let objectiveFamily = isRatingObjective(firstGoal) ? "stars" : "results";
+    const rating = firstGoal;
     ratingFields.innerHTML = `<div class="event-rating-presets" aria-label="Exemplos de objetivos por estrelas">${[
       ["ratingGames", "Regularidade", "4 estrelas em 5 jogos"],
       ["ratingAverage", "Em forma", "Média superior a 4 nos últimos 3 jogos"],
@@ -410,69 +434,45 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       "ratingMinRatings",
     ])
       form.elements[key].required = true;
-    const readObjective = () => ({
-      metric: form.elements.metric.value,
-      target: Number(form.elements.target.value),
-      ...(isRatingObjective({ metric: form.elements.metric.value })
-        ? {
-            attributes: [
-              ...form.querySelectorAll('[name="ratingAttribute"]:checked'),
-            ].map((input) => input.value),
-            threshold: Number(form.elements.ratingThreshold.value),
-            comparison: form.elements.ratingComparison.value,
-            combine: form.elements.ratingCombine.value,
-            minRatings: Number(form.elements.ratingMinRatings.value),
-          }
-        : {}),
+    const readLeafObjective = () => ({...storedGoalMetric(form.elements.metric.value,form.elements.countFrom?.value || "challenge",goalChoices),target:Number(form.elements.target.value),
+      ...(isRatingObjective({metric:form.elements.metric.value}) ? {
+        attributes:[...form.querySelectorAll('[name="ratingAttribute"]:checked')].map(input=>input.value),
+        threshold:Number(form.elements.ratingThreshold.value),comparison:form.elements.ratingComparison.value,
+        combine:form.elements.ratingCombine.value,minRatings:Number(form.elements.ratingMinRatings.value),
+      } : {}),
     });
+    const readObjective = () => form.elements.method.value !== "objective"
+      ? {metric:"games",target:1}
+      : goalBuilder?.read() || event.objective || {metric:"all",target:100,goals:[]};
     const refreshRating = () => {
-      const objective = readObjective();
-      const enabled = form.elements.method.value === "objective";
-      const stars = enabled && isRatingObjective(objective);
-      ratingFields.hidden = !stars;
-      ratingFields
-        .querySelectorAll("[data-rating-preset]")
-        .forEach((button) =>
-          button.setAttribute(
-            "aria-pressed",
-            String(button.dataset.ratingPreset === objective.metric),
-          ),
-        );
-      ratingFields.querySelector("#rating-conditions").hidden = !stars;
-      ratingFields.querySelector("#rating-objective-preview").hidden = !stars;
-      ratingFields
-        .querySelectorAll("#rating-conditions input, #rating-conditions select")
-        .forEach((input) => (input.disabled = !stars));
-      if (stars) {
-        form.elements.scope.value = "individual";
-        form.elements.scope.disabled = true;
-        ratingFields.querySelector("#rating-objective-preview").innerHTML =
-          creationRules({
-            method: "objective",
-            objective,
-            scope: form.elements.scope.value,
-          });
-      } else form.elements.scope.disabled = false;
-      const targetLabel = form.elements.target.closest("label");
-      targetLabel.firstChild.textContent =
-        objective.metric === "ratingAverage"
-          ? "Últimos quantos jogos"
-          : stars
-            ? "Número de jogos a cumprir"
-            : "Quantidade alvo";
+      const counting=form.elements.countFrom;
+      if(counting){
+        const choice=goalChoices.find(choice=>choice.id===form.elements.metric.value);
+        counting.querySelector('[value="history"]').disabled=!choice?.historical;
+        if(!choice?.historical) counting.value="challenge";
+      }
+      const leaf=readLeafObjective(), objective=readObjective(), enabled=form.elements.method.value==="objective";
+      const stars=enabled && isRatingObjective(leaf), historical=enabled && usesLifetimeObjective(objective);
+      historyNote.hidden=!enabled;
+      historyNote.textContent=isLifetimeObjective(leaf) ? "Inclui jogos anteriores ao desafio. Uma única conclusão, sem renovação." : "Conta os jogos do período do desafio, após o desbloqueio.";
+      form.elements.target.max=String(objectiveTargetLimit(leaf));
+      if(historical){form.elements.cadence.value="once";form.elements.maxRepeats.value="1";form.elements.maxRepeats.closest("label").hidden=true;}
+      form.elements.cadence.disabled=historical || preserveProgress;
+      form.elements.maxRepeats.disabled=historical;
+      ratingFields.hidden=!stars;
+      ratingFields.querySelectorAll("input,select").forEach(input=>input.disabled=!stars);
+      ratingFields.querySelector("#rating-objective-preview").innerHTML=stars ? creationRules({method:"objective",objective:leaf,scope:"individual"}) : "";
+      ratingFields.querySelectorAll("[data-rating-preset]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.ratingPreset===leaf.metric)));
+      if(usesRatingObjective(objective)) form.elements.scope.value="individual";
+      form.elements.scope.disabled=usesRatingObjective(objective) || preserveProgress;
+      if(preserveProgress) ["startsAt","unlockMode","prerequisiteIds"].forEach(key=>{if(form.elements[key])form.elements[key].disabled=true;});
+      form.elements.target.closest("label").firstChild.textContent=leaf.metric==="ratingAverage"?"Últimos quantos jogos":isLifetimeObjective(leaf)?"Total a atingir":"Quantidade alvo";
     };
-    ratingFields.querySelectorAll("[data-rating-preset]").forEach(
-      (button) =>
-        (button.onclick = () => {
-          const metric = button.dataset.ratingPreset;
-          form.elements.metric.value = metric;
-          form.elements.target.value = metric === "ratingGames" ? "5" : "3";
-          form.elements.ratingThreshold.value = "4";
-          form.elements.ratingComparison.value =
-            metric === "ratingAverage" ? "gt" : "gte";
-          refreshRating();
-        }),
-    );
+    ratingFields.querySelectorAll("[data-rating-preset]").forEach(button=>button.onclick=()=>{
+      form.elements.metric.value=button.dataset.ratingPreset;form.elements.target.value="3";
+      form.elements.ratingThreshold.value="4";form.elements.ratingComparison.value=button.dataset.ratingPreset==="ratingAverage"?"gt":"gte";
+      refreshRating();
+    });
     form.addEventListener("input", refreshRating);
     form.addEventListener("change", refreshRating);
     form.elements.rarity.addEventListener("change", () => {
@@ -593,7 +593,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         !validRatingObjective(readObjective(), form.elements.scope.value)
       )
         message =
-          "Escolhe as dimensões, as estrelas exigidas e um mínimo válido de avaliações.";
+          "Adiciona pelo menos uma meta e revê os alvos e critérios de todas as metas.";
       if (
         index === 2 &&
         isMission &&
@@ -782,49 +782,45 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       "scope",
       "difficulty",
     ]);
-    objectiveGroup.append(ratingFields);
-    const objectiveFamilies = document.createElement("div");
-    objectiveFamilies.className = "event-choice-grid";
-    objectiveFamilies.innerHTML = `<button type="button" data-objective-family="results"><strong>Resultados dos jogos</strong><span>Jogos, golos, assistências e vitórias.</span></button><button type="button" data-objective-family="stars"><strong>Avaliações em estrelas</strong><span>Desempenho avaliado pelos jogadores.</span></button>`;
-    objectiveGroup.querySelector("h4").after(objectiveFamilies);
-    const rememberedMetrics = { results: "games", stars: "ratingGames" };
-    let resultScope = form.elements.scope.value;
-    const selectObjectiveFamily = (family) => {
-      const stars = family === "stars";
-      const current = form.elements.metric.value;
-      if (current)
-        rememberedMetrics[
-          isRatingObjective({ metric: current }) ? "stars" : "results"
-        ] = current;
-      form.elements.metric.innerHTML = options(
-        Object.entries(OBJECTIVES).filter(
-          ([metric]) => isRatingObjective({ metric }) === stars,
-        ),
-        rememberedMetrics[family],
-      );
-      objectiveFamilies
-        .querySelectorAll("button")
-        .forEach((button) =>
-          button.setAttribute(
-            "aria-pressed",
-            String(button.dataset.objectiveFamily === family),
-          ),
-        );
+    const leafPane=document.createElement("div");leafPane.className="event-goal-pane content-stack";
+    const familyChoices=document.createElement("div");familyChoices.className="event-choice-grid";
+    familyChoices.innerHTML=`<button type="button" data-objective-family="results"><strong>Resultados e totais</strong><span>Jogos, golos, vitórias e histórico.</span></button><button type="button" data-objective-family="stars"><strong>Avaliações em estrelas</strong><span>Critérios, mínimos e sequências.</span></button>`;
+    const leafGrid=document.createElement("div");leafGrid.className="form-grid";
+    ["metric","target"].forEach(key=>leafGrid.append(form.elements[key].closest("label")));
+    const countingLabel=document.createElement("label");
+    countingLabel.innerHTML='Contagem<select name="countFrom"><option value="challenge">Durante o desafio</option><option value="history">Histórico completo</option></select>';
+    leafGrid.insertBefore(countingLabel,leafGrid.querySelector('[name="target"]').closest("label"));
+    leafPane.append(familyChoices,leafGrid,historyNote,ratingFields);
+    ratingFields.querySelector(".event-rating-examples")?.remove();
+    const goalRoot=document.createElement("div");goalRoot.className="event-goal-builder content-stack";
+    objectiveGroup.querySelector("h4").after(goalRoot);
+    goalRoot.append(leafPane);
+    const selectFamily=(stars,metric)=>{
+      objectiveFamily=stars?"stars":"results";
+      const selection=goalSelection({metric:metric || (stars?"ratingGames":"games")},goalChoices);
+      form.elements.metric.innerHTML=objectiveOptions(stars,selection.metric);
+      form.elements.countFrom.value=selection.countFrom;
+      familyChoices.querySelectorAll("button").forEach(button=>button.setAttribute("aria-pressed",String((button.dataset.objectiveFamily==="stars")===stars)));
     };
-    selectObjectiveFamily(
-      isRatingObjective(event.objective) ? "stars" : "results",
-    );
-    objectiveFamilies.onclick = (e) => {
-      const button = e.target.closest("[data-objective-family]");
-      if (!button) return;
-      if (!isRatingObjective({ metric: form.elements.metric.value }))
-        resultScope = form.elements.scope.value;
-      selectObjectiveFamily(button.dataset.objectiveFamily);
-      if (button.dataset.objectiveFamily === "results")
-        form.elements.scope.value = resultScope;
-      update();
-      refreshRating();
+    familyChoices.onclick=event=>{
+      const button=event.target.closest("[data-objective-family]");if(!button)return;
+      selectFamily(button.dataset.objectiveFamily==="stars");refreshRating();
     };
+    selectFamily(isRatingObjective(firstGoal),firstGoal.metric);
+    goalBuilder=mountGoalBuilder(goalRoot,{objective:event.objective,pane:leafPane,readLeaf:readLeafObjective,
+      writeLeaf:goal=>{
+        selectFamily(isRatingObjective(goal),goal.metric);form.elements.target.value=goal.target;
+        form.elements.countFrom.value=goalSelection(goal,goalChoices).countFrom;
+        form.elements.ratingThreshold.value=goal.threshold ?? 4;form.elements.ratingComparison.value=goal.comparison || "gte";
+        form.elements.ratingCombine.value=goal.combine || "all";form.elements.ratingMinRatings.value=goal.minRatings ?? 3;
+        form.querySelectorAll('[name="ratingAttribute"]').forEach(input=>input.checked=(goal.attributes || ["overall"]).includes(input.value));
+        refreshRating();
+      },changed:()=>{update();refreshRating();},
+    });
+    if(preserveProgress){
+      objectiveGroup.insertAdjacentHTML("beforeend",'<p class="event-progress-preserved">As contagens vêm dos jogos guardados. Alterar o alvo mantém o valor acumulado; trocar o tipo usa os dados reais da nova meta. Recompensas já entregues mantêm-se.</p>');
+      form.elements.startsAt.disabled=true;
+    }
     const votingGroup = groupFields(
       sections[2],
       "Classificação e visibilidade",
@@ -1127,7 +1123,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         rules: f.rules.value,
         kind: f.kind.value,
         method: f.method.value,
-        startsAt: eventDeadline(f.startsAt.value),
+        startsAt: preserveProgress ? asDate(event.startsAt).toISOString() : eventDeadline(f.startsAt.value),
         indefinite: f.indefinite.checked,
         prerequisites: {
           mode: isMission && f.unlockMode.value === "any" ? "any" : "all",
@@ -1138,7 +1134,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
                 )
               : [],
         },
-        endsAt: f.indefinite.checked ? null : eventDeadline(f.endsAt.value),
+        endsAt: f.indefinite.checked ? null : preserveProgress && event.endsAt && f.endsAt.value === wallDate(event.endsAt) ? asDate(event.endsAt).toISOString() : eventDeadline(f.endsAt.value),
         votingStartsAt: f.votingStartsAt.value
           ? eventDeadline(f.votingStartsAt.value)
           : eventDeadline(f.startsAt.value),

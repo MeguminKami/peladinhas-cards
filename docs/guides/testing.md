@@ -4,6 +4,12 @@
 
 ## Escolher pelo tipo de alteração
 
+Estatísticas: `node --test tests/statistics.test.js` verifica recortes, médias, amostras, filtros, GR não aplicável e CSV; faz parte de `npm.cmd test`. `npm.cmd run test:statistics` verifica a interface modular em quatro larguras/temas, teclado, persistência, tabela com deslocação local e os painéis expandidos. [Referência funcional](../reference/statistics.md).
+
+Construtor de metas: `npm.cmd run test:event-goals` verifica adicionar/recolher, editar/remover/reordenar, tipos de resultados/estrelas/histórico, IDs estáveis, revisão e persistência em quatro larguras e temas. Os comandos `test:event-creation`, `test:event-combined` e `test:event-totals` são aliases compatíveis para este fluxo unificado. `npm.cmd run test:event-scopes` verifica os âmbitos. Os cálculos e os 23 totais estão em `tests/events.test.js`; a preservação autoritativa e as regressões antigas estão em `tests/events.backend.test.js`.
+
+Para recuperação de passwords, usar `npm.cmd run test:password-recovery` (UI com fixtures em 1440/768/390/320 px) e `npm.cmd run test:password-recovery:backend` (Firestore e Auth locais, projeto demo). O segundo verifica alteração real da credencial no emulador, expiração, revogação, concorrência, permissões, falhas e limite de tentativas. A privacidade dos documentos `passwordRecoveries` está coberta por `tests/firestore.rules.test.js`. Estes testes não confirmam configuração nem publicação cloud.
+
 Os scripts npm existentes estão em `package.json`. Os ficheiros `.mjs` indicados abaixo são executados diretamente com Node e não pressupõem um alias npm adicional.
 
 | Alteração                       | Verificação inicial                                        |

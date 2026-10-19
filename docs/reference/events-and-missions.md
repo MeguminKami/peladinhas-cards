@@ -98,6 +98,44 @@ Ao abrir um evento ou uma missão, os participantes elegíveis recebem uma notif
 
 `npm.cmd test`: regras puras e objetivos. `npm.cmd run test:backend`: integração de eventos antigos e novos, entrega, missão, agendamento e confirmação. `npm.cmd run test:rules`: privacidade e escrita protegida. `npm.cmd run test:ui`: criação, pré-visualização, voto, compatibilidade e layout desktop/mobile.
 
+## Cartões na gestão
+
+Na gestão de eventos/missões, os cartões juntam raridade e estado na mesma linha, limitam a descrição a duas linhas e apresentam as ações com ícones coloridos de 44 px. Consultar/auditar, editar, duplicar, publicar/preparar e cancelar/apagar conservam as mesmas permissões e confirmações. Os nomes aparecem no hover/foco e estão disponíveis para leitores de ecrã. As animações são discretas e respeitam movimento reduzido; o cartão mantém as dimensões durante o hover. A consulta conserva a descrição completa.
+
+## Totais do histórico
+
+O seletor separa **Durante o período do desafio** de **Totais do histórico · inclui jogos anteriores**. Os totais são calculados pelos jogos encerrados, sem jogos eliminados/reabertos ou futuros, até à verificação ou ao fecho do desafio. Não usam números enviados pelo cliente.
+
+Disponíveis 23 objetivos históricos:
+
+- Jogos jogados, vitórias, empates e derrotas.
+- Golos, assistências e golos + assistências.
+- Jogos sem sofrer golos e jogos sem perder (total, sem exigir sequência).
+- Golos da equipa e golos sofridos pela equipa nos jogos do participante.
+- Jogos a marcar, a assistir e com golo ou assistência.
+- Jogos como GR, defesa, ala, médio e avançado; vitórias e jogos sem sofrer golos como GR.
+- Jogos e vitórias com estrelas mínimas, respeitando dimensões, comparação e votos mínimos configurados.
+
+Posições vêm do registo de cada jogo; não são inferidas pelo perfil atual. Os restantes âmbitos mantêm a soma dos participantes ou os resultados da equipa já existentes. Metas aceitam até 1 000 000; objetivos de período mantêm o limite de 1 000. Uma meta histórica tem uma única conclusão, sem renovação diária/semanal, incluindo quando é combinada com estrelas. Isso impede entregar repetidamente o prémio por um total que já estava atingido.
+
+O desafio pode ter pré-requisitos: a elegibilidade só aparece depois da abertura e do desbloqueio, conservando o histórico anterior. Em competições, quem já cumpria a meta fica elegível na abertura/desbloqueio, nunca numa data anterior ao desafio; igualdade segue o desempate configurado. Avaliações publicadas depois do fecho não contam.
+
+Podem combinar-se resultados históricos com estrelas do período, ou ambas as metas históricas. Cada meta indica a sua contagem. Os formatos antigos mantêm-se; não é necessária migração nem recálculo de semanas fechadas. Definições partilhadas em `js/event-totals.js`; cálculo em `js/event-model.js`; validação autoritativa em `functions/event-management.js`.
+
+Publicação: frontend e `eventAction`, `getEvent`, `claimMission`, `closeEvents`, `onGame`, `refreshCardCollection`. Sem alterações de regras/índices.
+
+## Combinar resultados e avaliações
+
+O editor usa um construtor de **1 a 12 metas**. «+ Adicionar nova meta» abre uma meta de resultados, estrelas ou histórico; acrescentar outra recolhe a anterior num resumo com as características escolhidas. Só uma fica expandida. Permite editar, remover e subir metas na ordem. Podem repetir-se tipos (por exemplo, golos, vitórias e duas condições de estrelas). É obrigatório cumprir todas; não existe uma escolha separada «Combinar ambos».
+
+O modelo atual é `objective: { metric: "all", target: 100, goals: [{ id, metric, target, ...criteria }] }`. Cada meta tem ID estável; os IDs são preservados ao editar e reordenar. Não admite listas vazias, IDs repetidos nem combinações aninhadas. Mantém os critérios de média dos últimos jogos, sequência, comparação estrita e mínimo de avaliações por dimensão. Metas com estrelas exigem âmbito individual; listas só com resultados mantêm os âmbitos existentes.
+
+O editor separa **Objetivo** de **Contagem**: «Durante o desafio» ou «Histórico completo». Conserva todas as opções anteriores, incluindo empates, derrotas, contribuições, golos da equipa, jogos por posição e estrelas, sem duplicar as variantes históricas no primeiro seletor. Sequências e médias dos últimos jogos continuam restritas ao período do desafio. Cada meta escolhe a sua contagem. Os IDs históricos antigos continuam válidos; `countFrom: "challenge"` permite usar os novos contadores (incluindo posições) apenas no período e após desbloqueio. Sem esse campo, os IDs `total*` conservam o histórico completo. Não exige migração nem recálculo de semanas fechadas. O código partilhado exige publicar os mesmos consumidores indicados abaixo.
+
+O progresso global é a menor percentagem de conclusão das metas, limitada a 100%. Cada contagem aparece separadamente nos detalhes e no resumo de Missões. Metas de período contam no mesmo período e após desbloqueio; metas históricas incluem jogos anteriores. Podem usar jogos diferentes. A recompensa só fica elegível a 100%; nos eventos, a conclusão considera quando todos os dados necessários ficaram disponíveis. Médias móveis continuam a exigir que a janela atual cumpra o critério.
+
+Os objetivos simples e o antigo formato `combined` conservam o cálculo até serem editados. Ao guardar no novo editor, convertem-se em metas com IDs `legacy-primary`, ou `legacy-results`/`legacy-ratings`. Não exige migração em massa nem recálculo de semanas fechadas. Publicar frontend e `eventAction`, `getEvent`, `claimMission`, `closeEvents`, `onGame`, `refreshCardCollection`. As regras e índices não mudam. [Relatório do construtor e preservação](../reports/goal-builder-2026-10-19.md).
+
 ## Missões sem prazo e desbloqueio
 
 Em Detalhes, a opção **Sem prazo de conclusão** mantém a missão disponível até ser encerrada ou cancelada. As missões diárias e semanais mantêm a periodicidade e o limite de repetições configurados.
@@ -108,7 +146,11 @@ Só contam jogos cuja data de encerramento esteja depois do desbloqueio e dentro
 
 ## Editar missões
 
-O ADMIN pode usar **Editar** em qualquer missão, incluindo abertas, terminadas ou canceladas, e alterar os detalhes, as datas, os participantes, o objetivo, os requisitos, a periodicidade e a recompensa. **Guardar alterações** conserva o estado e todas as entregas existentes. As novas condições recalculam o progresso ainda por cumprir; recompensas já atribuídas não são alteradas nem entregues novamente por guardar a missão. Editar uma missão encerrada não a reabre.
+Guardar conserva o estado, os jogos/avaliações de origem e todas as entregas existentes. Acrescentar, remover ou reordenar metas não reinicia as contagens das restantes. Subir um alvo mantém a quantidade real: 3 golos continuam a ser 3, mesmo que o alvo passe de 3 para 5 e a percentagem desça. Trocar o tipo/critério recalcula a nova condição pelos dados reais, sem converter golos em vitórias ou conservar avaliações que já não cumprem o critério.
+
+Na edição publicada pelo construtor, o início, a frequência, o âmbito e o desbloqueio ficam protegidos no cliente e no servidor. Um prazo ativo pode ser prolongado, mas não encurtado; participantes anteriores são conservados ao atualizar a audiência. Para mudar o contexto de contagem, duplicar o desafio. Isso também impede introduzir uma meta histórica numa missão semanal alterando silenciosamente os períodos existentes.
+
+As recompensas já entregues mantêm os mesmos registos e não são entregues novamente. Editar uma missão encerrada não a reabre. As alterações de metas são auditadas com a configuração anterior. Não há cópia de progresso enviado pelo cliente nem créditos artificiais: uma correção real aos jogos/avaliações pode alterar legitimamente a contagem.
 
 ## Apagar missões canceladas
 
@@ -145,3 +187,8 @@ As páginas de detalhe separam meta, critérios, requisitos mínimos e condiçõ
 ## Escolhe o teu caminho: próximo jogo
 
 Os percursos têm um [catálogo próprio de 120 modelos](path-mission-catalogue.md) e não usam os períodos, sequências ou recolhas das missões criadas no editor de eventos. Cada tentativa vale apenas para o próximo jogo; condições compostas usam **E** e o avanço de 25/50/100%, ou raro de 150/200%, preenche nós de 100%. O boost é entregue ao completar o nó, não por simplesmente escolher uma missão. A [referência dos percursos](player-paths.md) descreve os limites próprios, raridades, fusões, sete votos/48 horas, cancelamentos e compatibilidade. O resumo da missão escolhida e a composição compacta usam o tema da sua raridade, com objetivo explícito **No próximo jogo** e recompensa integrada.
+
+## Apresentação do progresso
+
+Na lista de missões e no detalhe, cada objetivo mostra diretamente o que é pedido, o contador atual/alvo e uma barra com a cor da raridade. Os desafios com vários objetivos apresentam uma barra por objetivo, sem repetir uma barra global nem rótulos como «Meta 1» ou «todas as metas». Esta apresentação não altera o cálculo nem o progresso guardado.
+

@@ -158,6 +158,12 @@ O pacote de Functions usa a raiz como fonte porque partilha regras de cálculo c
 
 ## Percursos e apresentação da tentativa
 
+### Formato dos jogos
+
+`js/game-format.js` define `teamSize` inteiro entre 5 e 12, com predefinição 5 para novos jogos e documentos históricos sem o campo. `js/games.js` usa esse limite nos lugares, movimentos, redistribuição e envio; `balancedTeams` em `js/team-balance.js` recebe o mesmo valor para comparar as médias de todos os jogadores e dos titulares. O excedente permanece no banco. A validação de `gameAction`, em `functions/game-flow.js`, rejeita formatos inválidos e equipas acima do limite escolhido; continua a aceitar equipas incompletas e até 60 participantes únicos no total.
+
+Participantes, golos/assistências, avaliações, médias de equipa, progressão e missões usam as listas reais de titulares e suplentes. Não há alteração às fórmulas de progressão, mínimos de votos ou assinaturas das referências de equilíbrio. Não é necessário migrar jogos existentes nem recalcular semanas fechadas. Para esta alteração, publicar o frontend e `functions:peladinhas:gameAction`; as funções que apenas consomem `teamBalance`, `balanceSignature` ou `balanceMatches` conservam o mesmo comportamento.
+
 `js/path-missions.js` concentra os 120 modelos, normalização, requisitos, textos e seleção diversa. `js/path-model.js` gera propostas v4 e avalia condições, preservando os avaliadores antigos; `js/path-window.js` reconstrói votos no corte de 48 horas. `functions/paths.js` persiste ofertas/aceitação/reroll/apuramento; `functions/game-flow.js` congela a preparação atomicamente ao abrir.
 
 No browser, `pathMissionEntry` / `pathMissionSpotlight` em `js/paths.js` alimentam a entrada de Missões através de `js/missions.js`. O destino `#/missions/path/{nodeId}` é validado contra os nós conhecidos por `pathsPage`; sem nó válido usa a escolha guardada. O desenho local atualiza a entrada de missões em memória quando o estado muda, evitando aguardar o refresh global para refletir uma escolha/remoção. `css/paths.css` usa os tokens de tema e raridade e adapta o resumo à largura disponível.

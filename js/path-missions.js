@@ -1,4 +1,5 @@
 // Shared v4 catalogue. Only trusted server code turns these templates into offers.
+import { PATH_GOAL_TARGETS } from "./path-difficulty.js";
 const names = {
   attack: "Ataque",
   passing: "Passe",
@@ -389,7 +390,7 @@ function familyFor(conditions) {
     : "individual-action";
 }
 
-// Provisional, explicit targets. No historical success rates are claimed.
+// Explicit, manually reviewed targets; dated samples are not success forecasts.
 export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
   if (
     !catalogue[routeId] ||
@@ -425,23 +426,17 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
               );
           return r(criterion, adjusted);
         }
-        if (metric === "goals" && template.conditions.length === 1)
-          return g(
-            [
-              [1, 2, 3],
-              [1, 2, 4],
-              [2, 3, 5],
-            ][stage][difficulty],
-          );
+        if (metric === "goals")
+          return g(template.conditions.length===1?PATH_GOAL_TARGETS.goals[stage][difficulty]:Math.max(target,PATH_GOAL_TARGETS.mixedGoals[stage][difficulty]));
         if (metric === "assists" && template.conditions.length === 1)
-          return a((stage === 2 ? [1, 2, 2] : [1, 1, 2])[difficulty]);
+          return a(PATH_GOAL_TARGETS.assists[stage][difficulty]);
         if (metric === "contributions")
           return contribution(
-            Math.max(target, difficulty + 1 + (stage === 2 ? 1 : 0)),
+            Math.max(target, PATH_GOAL_TARGETS.contributions[stage][difficulty]),
           );
         if (metric === "conceded")
-          return solidTarget(Math.max(1, 3 - difficulty));
-        if (metric === "teamGoals") return c(metric, 2 + difficulty);
+          return solidTarget(PATH_GOAL_TARGETS.conceded[stage][difficulty]);
+        if (metric === "teamGoals") return c(metric, PATH_GOAL_TARGETS.teamGoals[stage][difficulty]);
         return { ...condition };
       });
       if (["goalkeeping", "fusion-wall"].includes(routeId))

@@ -7,6 +7,12 @@ export const ACTIVITY_CATEGORIES = [
     icon: "path",
   },
   {
+    id: "rating",
+    title: "Avaliações",
+    description: "Avalia o teu futebol e o dos teus colegas.",
+    icon: "edit",
+  },
+  {
     id: "competition",
     title: "Competições",
     description: "Disputa os lugares e acompanha os teus adversários.",
@@ -23,12 +29,6 @@ export const ACTIVITY_CATEGORIES = [
     title: "Missões pessoais",
     description: "Os teus objetivos, ao teu ritmo.",
     icon: "missions",
-  },
-  {
-    id: "rating",
-    title: "Avaliações",
-    description: "Avalia o teu futebol e o dos teus colegas.",
-    icon: "edit",
   },
   {
     id: "other",

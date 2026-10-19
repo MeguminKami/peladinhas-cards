@@ -1,47 +1,59 @@
 import { missionObjectivePreview } from "./mission-objective-preview.js";
-import { isRatingObjective } from "./event-model.js";
+import { isCombinedObjective, usesRatingObjective } from "./event-model.js";
+import { isLifetimeObjective, usesLifetimeObjective } from "./event-totals.js";
 import { FEEDBACK, formatDateTime } from "./utils.js";
 import { icon, eventIcon } from "./icons.js";
 import { esc } from "./ui.js";
+import { isGoalList } from "./event-goals.js";
+import { objectiveSummary } from "./event-model.js";
 export function challengeRules(event) {
+  if(event.method==="objective" && isGoalList(event.objective)) return `<section class="challenge-rules"><h2>Cumpre todas as metas</h2><ol class="challenge-goal-list">${event.objective.goals.map(goal=>{
+    const preview=missionObjectivePreview({...event,objective:goal});
+    return `<li><strong>${esc(preview.text)}</strong>${preview.criteria?`<p>${esc(preview.criteria)}</p>`:""}<details><summary>Critérios desta meta</summary><p>${esc(objectiveSummary({...event,objective:goal}))}</p></details></li>`;
+  }).join("")}</ol>${event.rules?`<p>${esc(event.rules)}</p>`:""}</section>`;
   const facts = [],
     conditions = [];
   const fact = (label, value) =>
     facts.push(`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`);
   const objective = event.objective;
+  const ratingObjective = isCombinedObjective(objective) ? objective.ratings : objective;
   let lead,
     criteria = "";
   if (event.method === "objective") {
     lead = missionObjectivePreview(event).text;
-    if (isRatingObjective(objective)) {
-      const attributes = objective.attributes || [];
+    if (isCombinedObjective(objective)) {
+      fact("Conclusão", usesLifetimeObjective(objective) ? "Cumprir ambas, com a contagem indicada em cada meta" : "Cumprir ambas as metas no mesmo período");
+      conditions.push(usesLifetimeObjective(objective) ? "As metas de histórico incluem jogos anteriores; as metas de período contam depois do início e desbloqueio." : "As metas de resultados e estrelas podem ser cumpridas em jogos diferentes dentro do mesmo período.");
+    }
+    if (usesRatingObjective(objective)) {
+      const attributes = ratingObjective.attributes || [];
       criteria = `<div class="challenge-criteria"><h3>Critérios de avaliação</h3><ul>${attributes.map((key) => `<li>${esc((FEEDBACK.find(([id]) => id === key)?.[1] || key).replace("colectivo", "coletivo"))}</li>`).join("")}</ul></div>`;
       fact(
         "Cálculo",
-        objective.combine === "mean"
+        ratingObjective.combine === "mean"
           ? "Média conjunta dos critérios"
           : "Mínimo em cada critério",
       );
       fact(
         "Avaliações mínimas",
-        `${objective.minRatings} por critério, em cada jogo`,
+        `${ratingObjective.minRatings} por critério, em cada jogo`,
       );
       fact(
         "Jogos",
-        objective.metric === "ratingAverage"
-          ? `Os últimos ${objective.target}`
-          : objective.metric === "ratingStreak"
+        ratingObjective.metric === "ratingAverage"
+          ? `Os últimos ${ratingObjective.target}`
+          : ratingObjective.metric === "ratingStreak"
             ? "Consecutivos"
             : "Não precisam de ser consecutivos",
       );
       conditions.push(
-        "Só contam jogos encerrados neste período, depois do desbloqueio da missão ou evento.",
+        isLifetimeObjective(ratingObjective) ? "Contam todos os jogos encerrados do histórico, incluindo anteriores ao desafio, com avaliações suficientes até à verificação ou ao fecho." : "Só contam jogos encerrados neste período, depois do desbloqueio da missão ou evento.",
       );
-      if (objective.metric === "ratingAverage")
+      if (ratingObjective.metric === "ratingAverage")
         conditions.push(
           "Cada jogo tem o mesmo peso na média. A janela inclui os últimos jogos, mesmo quando ainda aguardam avaliações; todos precisam do mínimo de avaliações.",
         );
-      else if (objective.metric === "ratingStreak")
+      else if (ratingObjective.metric === "ratingStreak")
         conditions.push(
           "Conta a melhor sequência. Um jogo abaixo do mínimo ou sem avaliações suficientes interrompe-a.",
         );
@@ -60,7 +72,7 @@ export function challengeRules(event) {
         }[event.scope] || "Individual",
       );
       conditions.push(
-        "Só contam jogos finalizados neste período, depois do desbloqueio.",
+        isLifetimeObjective(objective) ? "Contam todos os jogos finalizados do histórico, incluindo anteriores ao desafio. Jogos reabertos ou eliminados não contam." : "Só contam jogos finalizados neste período, depois do desbloqueio.",
       );
     }
     if (event.kind !== "mission")

@@ -1,5 +1,6 @@
 // Shared, deterministic rules. Only the server creates offers and settles attempts.
 import { pathMissionTemplates, pickDiversePathOffers, pathObjectiveRequirements, pathObjectiveLines } from "./path-missions.js";
+import { PATH_DIFFICULTY_REVISION } from "./path-difficulty.js";
 import {
   ATTRIBUTES,
   asDate,
@@ -471,6 +472,7 @@ export function createPathOffers(
         id: String(difficulty),
         difficulty,
         proposalVersion: 4,
+        calibrationRevision: PATH_DIFFICULTY_REVISION,
         rarity,
         advance,
       }),

@@ -2,7 +2,6 @@ import { componentWeeklyTopPlayers, matchAverageSummary } from "./match-rating-s
 import { policyAt, canManage, setPolicyDocument } from "./system-policy.js";
 import * as Firebase from "./firebase.js";
 import { homeCardPanel } from "./home-card.js";
-import { compareEventRarity } from "./event-rarity.js";
 import { mountHomePodium } from "./home-podium.js";
 import { applyPendingReads } from "./notification-read-queue.js";
 import {
@@ -37,7 +36,7 @@ import { ticketsPage } from "./tickets.js";
 import { bindThemePicker } from "./themes.js";
 import { startAuth, currentUser, loadProfile, logout } from "./auth.js";
 import { loadLeague } from "./data.js";
-import { refreshMissionsForCurrentUser, missionList } from "./missions.js";
+import { refreshMissionsForCurrentUser, missionList, compareMissionPriority } from "./missions.js";
 import {
   refreshNotifications,
   notificationsPage,
@@ -298,7 +297,7 @@ function home() {
   const me = ctx.league.players.find((p) => p.uid === ctx.user.uid),
     players = ctx.league.players.filter((p) => p.hasCard);
   const visibleMissions = [...ctx.missions]
-    .sort(compareEventRarity)
+    .sort(compareMissionPriority)
     .slice(0, 4);
   const hour = Number(
     new Intl.DateTimeFormat("pt-PT", {
@@ -532,7 +531,7 @@ async function route({ cachedOnly = false } = {}) {
       else if (parts[1] === "new") await initialMission(pageCtx, parts[2]);
       else
         ctx.render(
-          `${pageHead("A tua evolução", "Missões", "Acompanha os teus objetivos e as avaliações por concluir.")}<div class="missions-workspace content-stack"><div class="missions-toolbar">${linkButton("#/events", "Calendário e histórico de eventos", "secondary")}</div>${missionList(ctx.missions)}</div>`,
+          `${pageHead("A tua evolução", "Missões", "Acompanha os teus objetivos e as avaliações por concluir.")}<div class="missions-workspace content-stack">${missionList(ctx.missions)}<div class="missions-toolbar">${linkButton("#/events", "Calendário e histórico de eventos", "secondary")}</div></div>`,
         );
     } else if (parts[0] === "notifications") notificationsPage(pageCtx);
     else if (parts[0] === "tickets") await ticketsPage(pageCtx, parts[1]);

@@ -246,6 +246,18 @@ try {
   }
   await page.locator("#confirm-auto-teams").click();
   assert.equal(await page.locator(".team-chip").count(), 13);
+  assert.equal(await page.locator('[name="teamSize"]').inputValue(), "5");
+  await page.locator('[name="teamSize"]').selectOption("12");
+  assert.equal(await page.locator('.team-chip .chip-info > small').filter({hasText: "Suplente"}).count(), 0);
+  assert.equal(await page.locator(".team-chip").count(), 13);
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({width, height:1000});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+    await page.locator('#game-details').screenshot({path:`test-results/game-format-${width}.png`});
+  }
+  await page.locator('[name="teamSize"]').selectOption("5");
+  assert.equal(await page.locator('.team-chip .chip-info > small').filter({hasText: "Suplente"}).count(), 3);
+  assert.equal(await page.locator(".team-chip").count(), 13);
   const cardColourIssues = await page
     .locator(".team-panel .football-card")
     .evaluateAll((cards) =>
@@ -348,28 +360,38 @@ try {
     await page.locator('[name="action"][value="open"]').isDisabled(),
     true,
   );
-  assert.equal(
-    await page
-      .locator('.game-open-notice a[href="#/game/open-preview"]')
-      .count(),
-    1,
-  );
+  assert.equal(await page.locator('.game-open-notice a[href="#/game/open-preview"]').count(), 1);
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
-    assert.equal(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth > innerWidth + 1,
-      ),
-      false,
-    );
-    await page
-      .locator(".game-open-notice")
-      .screenshot({ path: `test-results/game-open-notice-${width}.png` });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false);
+    await page.locator(".game-open-notice").screenshot({path:`test-results/game-open-notice-${width}.png`});
   }
-  console.log(
-    "Match editing and game list passed at 1440, 768, 390 and 320px.",
-  );
+  await page.evaluate(async () => {
+    const ctx = window.__gameLayoutContext;
+    ctx.league.players = Array.from({length:26}, (_, i) => ({
+      uid:`large-${i}`, displayName:`Jogador com nome bastante longo ${i}`,
+      primaryPosition:"MED", hasCard:true, ovr:60 + i,
+    }));
+    ctx.league.games = [{...ctx.league.games[0], id:"large", status:"draft", teamSize:12,
+      teamA:{starters:[],bench:[]}, teamB:{starters:[],bench:[]}}];
+    await (await import("/js/games.js")).gamePage(ctx, "large");
+  });
+  await page.locator("#auto-teams").click();
+  await page.locator("#select-all-players").click();
+  await page.locator("#confirm-auto-teams").click();
+  assert.equal(await page.locator(".team-chip").count(),26);
+  assert.equal(await page.locator('.team-chip .chip-info > small').filter({hasText:"Suplente"}).count(),2);
+  for (const width of [1440,768,390,320]) {
+    await page.setViewportSize({width,height:1000});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),false);
+    await page.locator("#game-details").screenshot({path:`test-results/game-format-full-${width}.png`});
+  }
+  await page.locator('[name="teamSize"]').selectOption("5");
+  assert.equal(await page.locator(".team-chip").count(),26);
+  assert.equal(await page.locator('.team-chip .chip-info > small').filter({hasText:"Suplente"}).count(),16);
+  console.log("Match editing, 5x5 to 12x12 formats and game list passed at 1440, 768, 390 and 320px.");
 } finally {
   await browser.close();
   server.close();
 }
+

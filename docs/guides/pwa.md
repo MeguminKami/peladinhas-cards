@@ -27,7 +27,7 @@ flowchart TB
 | **Com Internet**    | Consultar a liga e guardar alterações.                        |
 | **Sem Internet**    | Ecrã de recuperação; recursos públicos da interface em cache. |
 | **Rede recuperada** | Verificar o servidor e recuperar o destino.                   |
-| **Nova versão**     | Oferecer atualizar ou adiar; não interromper formulários.     |
+| **Nova versão**     | Atualizar automaticamente num ecrã seguro; aguardar durante formulários. |
 
 **O cache não guarda pedidos Firebase, dados privados nem gravações.** O worker publicado é o gerado por `build:hosting`.
 
@@ -70,13 +70,17 @@ Sem ligação, a abertura apresenta `offline.html`. A recuperação verifica o s
 
 ## Atualizações
 
-Um novo worker fica à espera. A aplicação oferece atualizar ou adiar e indica que o trabalho deve ser guardado. Não recarrega automaticamente um formulário a meio de uma edição.
+Um novo worker aguarda que todas as janelas da app respondam que estão visíveis e sem formulários, diálogos ou edição de conteúdo. Depois ativa a versão e recarrega automaticamente, tanto no navegador como na app instalada. A verificação repete-se a cada 15 segundos, ao navegar e ao regressar à app; o regresso também procura uma nova versão. Enquanto houver um formulário aberto, mesmo com gravação automática, a atualização espera que o utilizador saia desse ecrã. Abas em segundo plano ou com versões antigas também adiam a ativação; fechar essas abas permite continuar. O trabalho por guardar nunca é descartado para atualizar.
+
+Na transição para este mecanismo, uma instalação que ainda tenha o código antigo pode pedir uma última atualização manual. As versões seguintes usam a atualização automática. Publicar não garante instalação imediata: é necessária ligação e uma nova consulta do service worker.
 
 O worker deve ser publicado a partir do build em `.firebase/site`, com inventário/hash corretos. O ficheiro fonte é destinado ao desenvolvimento e tem um inventário mínimo.
 
+Se uma app instalada apresentar «não tens permissões» ao avaliar, confirmar primeiro que ativou a atualização disponível, preservando escolhas ainda não guardadas. Uma versão antiga pode tentar escrever diretamente no Firestore, enquanto a versão atual usa `feedbackAction` para gravar avaliação e revisão juntas. Não assumir que esse erro exige perfil de administrador ou abrir as regras de escrita. Se continuar atualizado, recolher jogador, jogo, hora e código do erro e verificar conta, participação, janela de edição e logs do callback. [Exemplo de auditoria datada](../reports/feedback-mobile-access-2026-10-19.md).
+
 ## Confirmar nos aparelhos
 
-`npm.cmd run test:pwa` verifica o worker real em raiz e subpasta, manifest, ícones, cache privado excluído, recuperação offline e atualização adiada/ativada. Os testes não substituem a instalação física.
+`npm.cmd run test:pwa` verifica o worker real em raiz e subpasta, manifest, ícones, cache privado excluído, recuperação offline e atualização automática adiada enquanto existe um formulário. Os testes não substituem a instalação física.
 
 Depois de publicar por HTTPS, testar em iPhone e Android: instalação, arranque pelo ícone, conta, navegação, safe areas, teclado, fotografias, reabertura offline, regresso da rede e atualização de uma versão já instalada.
 

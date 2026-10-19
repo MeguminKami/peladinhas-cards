@@ -45,9 +45,9 @@ const server = createServer((req, res) => {
   if (path === "/js/auth.js")
     content = readFileSync("tests/fixtures/auth.js", "utf8");
   if (path === "/js/db.js")
-    content = readFileSync("tests/fixtures/db.js", "utf8").replace(
-      '"../../js/utils.js"',
-      '"./utils.js"',
+    content = readFileSync("tests/fixtures/db.js", "utf8").replaceAll(
+      '"../../js/',
+      '"./',
     );
   res.end(content);
 });
@@ -66,10 +66,14 @@ try {
     });
     const page = await context.newPage();
     page.setDefaultTimeout(15000);
-    const errors = [];
+    const errors = [],consoleErrors=[];
     page.on("pageerror", (e) => errors.push(e.message));
+    page.on("console",message=>{if(message.type()==="error")consoleErrors.push(message.text());});
     await page.goto(`http://127.0.0.1:5191${prefix}/`);
-    await page.locator(".dashboard-greeting").waitFor();
+    try { await page.locator(".dashboard-greeting").waitFor(); }
+    catch(error){console.log("PWA startup diagnostic",prefix,errors,consoleErrors,await page.locator("body").innerText());throw error;}
+    // The push invitation is a separate opt-in flow; dismiss it before testing installation.
+    if(await page.locator("[data-push-later]").isVisible())await page.locator("[data-push-later]").click();
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.waitForFunction(()=>document.querySelector('#main').lastElementChild?.classList.contains('install-spotlight'));
     assert.equal(
@@ -245,23 +249,32 @@ try {
       );
       throw error;
     }
+    await page.evaluate(() => {
+      const form = document.createElement("form");
+      form.id = "update-protection";
+      form.innerHTML = '<input value="unsaved rating">';
+      document.body.append(form);
+      window.__beforeAutoUpdate = true;
+    });
     revision++;
     await page.evaluate(async () => {
       const reg = await navigator.serviceWorker.getRegistration();
       await reg.update();
     });
-    await page.locator("#app-update").waitFor();
-    await page.locator("#app-update [data-later]").click();
-    await page.evaluate(() =>
-      document.dispatchEvent(new Event("visibilitychange")),
-    );
-    await page.locator("#app-update").waitFor();
-    await page.locator("#app-update [data-update]").click();
+    await page.waitForFunction(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting));
+    assert.equal(await page.locator("#update-protection input").inputValue(), "unsaved rating");
+    assert.equal(await page.locator("#app-update").count(), 0);
+    await page.evaluate(() => {
+      document.querySelector("#update-protection").remove();
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
     await page.waitForFunction(
       () =>
-        !document.querySelector("#app-update") &&
+        !window.__beforeAutoUpdate &&
         document.querySelector(".dashboard-greeting"),
     );
+    await page.waitForFunction(async revision => (await caches.keys()).includes(`peladinhas:${new URL(document.baseURI).pathname}:test-update-${revision}`), revision);
+    await page.waitForLoadState("domcontentloaded");
     const keys = await page.evaluate(() => caches.keys());
     assert.ok(keys.includes("another-app"));
     assert.ok(keys.includes(`peladinhas:${prefix}/:test-update-${revision}`));
@@ -313,7 +326,7 @@ try {
   const androidErrors = [];
   androidPage.on("pageerror", (error) => androidErrors.push(error.message));
   await androidPage.goto("http://127.0.0.1:5191/");
-  await androidPage.locator(".push-invitation [data-push-enable]").waitFor();
+  await androidPage.locator('#modal-root .push-invitation [data-push-enable]').waitFor();
   assert.equal(
     await androidPage.locator(".install-spotlight").count(),
     0,
@@ -342,6 +355,8 @@ try {
   });
   const page = await ios.newPage();
   await page.goto("http://127.0.0.1:5191/");
+  await page.locator(".dashboard-greeting").waitFor();
+  if(await page.locator("[data-push-later]").isVisible())await page.locator("[data-push-later]").click();
   await page.locator("#mobile-more").click();
   await page.locator("#menu-install").click();
   await page.getByText("Abre este site no Safari.", { exact: true }).waitFor();

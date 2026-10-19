@@ -1,6 +1,12 @@
+import { TOTAL_OBJECTIVES } from "./event-totals.js";
 const paths = {
+  search: "M15 15l6 6 M17 9a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
+  filter: "M3 5h18 M6 12h12 M9 19h6 M8 2v6 M16 9v6 M11 16v6",
   info: "M12 17v-5 M12 8h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0",
   lock: "M6 10h12v11H6Z M8 10V6a4 4 0 0 1 8 0v4 M12 14v3",
+  resetPassword: "M15 7a5 5 0 1 1-4.8 6.4L3 20H1v-3l7.6-7.2A5 5 0 0 1 15 7Z M16 10h.01 M4 16l2 2",
+  copy: "M9 9h12v12H9Z M5 15H3V3h12v2",
+  publish: "M12 16V3 m-5 5 5-5 5 5 M4 15v6h16v-6",
   path: "M12 21v-7M12 14 5 8M12 14l7-6M5 8V3M19 8V3M2 3h6M16 3h6M9 21h6 M9 14h6",
   gift: "M3 8h18v4H3Z M5 12v9h14v-9 M12 8v13 M12 8H8a3 3 0 1 1 3-3l1 3Z M12 8h4a3 3 0 1 0-3-3l-1 3Z",
   preview: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
@@ -77,6 +83,7 @@ export const trendArrow = (delta) =>
   `<svg class="trend-arrow${delta < 0 ? " trend-arrow-down" : ""}" viewBox="0 0 16 20" fill="none" aria-hidden="true" focusable="false"><path class="trend-arrow-body" d="M8 1.5 14.5 8H10v9.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-facet" d="M8 1.5V17.5H6V8H1.5L8 1.5Z"/><path class="trend-arrow-edge" d="m2 7.5 6-6 6 6"/></svg>`;
 
 export function eventIcon(event = {}) {
+  if (TOTAL_OBJECTIVES[event.objective?.metric]) return eventIcon({...event, objective:{...event.objective, metric:TOTAL_OBJECTIVES[event.objective.metric].metric}});
   if (
     ["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(
       event.objective?.metric,
@@ -99,6 +106,16 @@ export function eventIcon(event = {}) {
       unbeatenGames: "unbeatenGames",
       goalsAndAssists: "goalContributions",
       cleanSheets: "cleanSheets",
+      combined: "goalContributions",
+      all: "missions",
+      draws: "games",
+      losses: "games",
+      nonLosses: "unbeatenGames",
+      goalsFor: "goals",
+      goalsAgainst: "cleanSheets",
+      scoringGames: "goals",
+      assistingGames: "assists",
+      contributingGames: "goalContributions",
     }[event.objective?.metric] || "trophy"
   );
 }

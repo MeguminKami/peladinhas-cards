@@ -100,6 +100,8 @@ O pódio alterna OVR, Performance e Crescimento. No PC, as bases distinguem clar
 
 ## 02 · Jogadores e perfis
 
+Para recuperar o acesso, pede um código ao admin. Em **Administração → Jogadores → Reset password** (ícone de chave), o admin confirma a identidade e gera um código válido por uma hora. No login, escolhe **Recuperar password** e introduz username, código e nova password. O código só funciona uma vez; o perfil e as cartas mantêm-se.
+
 ### O plantel
 
 A área de jogadores apresenta as cartas da comunidade. A pesquisa e a ordenação ajudam a encontrar um membro e a consultar os seus dados antes de abrir o perfil completo.
@@ -160,6 +162,8 @@ A página de jogos apresenta data, local e estado de cada encontro. Os jogos fin
 ### Preparar o jogo
 
 Os responsáveis definem título, data, hora de Lisboa e local. Podem associar um vídeo do YouTube e organizar as equipas manualmente ou através do sorteio equilibrado.
+
+O formato habitual é **5×5**. Em «Formato · titulares por equipa», escolhe entre **5 e 12 titulares por equipa** para esse jogo. O sorteio, os lugares disponíveis e as médias dos titulares acompanham o formato. Os restantes jogadores ficam como suplentes; reduzir o formato não remove ninguém. Jogos antigos sem formato guardado continuam a usar 5×5.
 
 <img src="docs/media/game-setup.png" width="100%" alt="Gestão de um jogo aberto com dados do encontro, configuração do sorteio e comparação de equilíbrio entre equipas." />
 

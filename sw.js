@@ -41,9 +41,25 @@ self.addEventListener("activate", (event) => {
     })(),
   );
 });
-// Updates are activated only after the user chooses to reload, protecting forms.
+// Every open tab must be ready before automatic activation.
 self.addEventListener("message", (event) => {
   if (event.data?.type === "ACTIVATE_UPDATE") self.skipWaiting();
+  if (event.data?.type === "AUTO_UPDATE") event.waitUntil((async () => {
+    const clients = (await self.clients.matchAll({ type: "window", includeUncontrolled: true }))
+      .filter(client => client.url.startsWith(self.registration.scope));
+    if (!clients.length) return;
+    const ready = await Promise.all(clients.map(client => new Promise(resolve => {
+      const channel = new MessageChannel();
+      const timer = setTimeout(() => { channel.port1.close(); resolve(false); }, 2000);
+      channel.port1.onmessage = message => {
+        clearTimeout(timer);
+        channel.port1.close();
+        resolve(message.data === true);
+      };
+      client.postMessage({ type: "UPDATE_READY" }, [channel.port2]);
+    })));
+    if (ready.every(Boolean)) await self.skipWaiting();
+  })());
 });
 self.addEventListener("fetch", (event) => {
   const request = event.request,
@@ -61,7 +77,7 @@ self.addEventListener("fetch", (event) => {
           const response = await fetch(request);
           if (!response.ok) return response;
           // Keep the document and modules on the same installed release until
-          // the user activates an update. Still check the network for live data.
+          // a safe update is activated. Still check the network for live data.
           if (
             url.pathname === BASE.pathname ||
             url.pathname === new URL("index.html", BASE).pathname

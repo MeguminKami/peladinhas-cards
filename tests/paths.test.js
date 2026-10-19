@@ -370,7 +370,7 @@ test("difficulty uses awarded own points, counts fusions and excludes other sour
   );
   assert.equal(
     pathMissionTemplates("shooting", 2, 2).find((row) => row.templateId === "shooting:goals").objective.conditions[0].target,
-    5,
+    4,
   );
   assert.equal(
     nodeAvailable(pathNode("shooting-0-1"), emptyPathState("a")),

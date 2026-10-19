@@ -1,4 +1,5 @@
 import { upgradePathProposals } from "../js/path-model.js";
+import { gameTeamSize, validTeamSize } from "../js/game-format.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { policyCall, assertFeature } from "./policy-runtime.js";
@@ -38,6 +39,7 @@ export function validateGameInput(input) {
       "positions",
       "performance",
       "status",
+      "teamSize",
     ])
   )
     fail("Dados de jogo inválidos.");
@@ -60,6 +62,8 @@ export function validateGameInput(input) {
     fail("Vídeo inválido.");
   if (typeof input.scheduledAt !== "string") fail("Data de jogo inválida.");
   const date = new Date(input.scheduledAt);
+  if (input.teamSize !== undefined && !validTeamSize(input.teamSize))
+    fail("Escolhe entre 5 e 12 titulares por equipa.");
   if (
     !Number.isFinite(+date) ||
     !["draft", "open", "closed"].includes(input.status)
@@ -71,7 +75,7 @@ export function validateGameInput(input) {
       !only(team, ["starters", "bench"]) ||
       !Array.isArray(team.starters) ||
       !Array.isArray(team.bench) ||
-      team.starters.length > 5 ||
+      team.starters.length > gameTeamSize(input) ||
       ![...team.starters, ...team.bench].every(validId)
     )
       fail("Equipa inválida.");
@@ -123,7 +127,7 @@ export function validateGameInput(input) {
         );
     }
   }
-  return { ...input, scheduledAt: Timestamp.fromDate(date) };
+  return { ...input, teamSize: gameTeamSize(input), scheduledAt: Timestamp.fromDate(date) };
 }
 
 // Called from every feedback writer, including administrative corrections.

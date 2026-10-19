@@ -1,6 +1,8 @@
 import { rewardBudget, policyAt, policyVersion } from "../js/system-policy.js";
 import { assertFeature, recordTaskFailure } from "./policy-runtime.js";
 import { EVENT_RARITIES } from "../js/event-rarity.js";
+import { usesLifetimeObjective, objectiveTargetLimit } from "../js/event-totals.js";
+import { isGoalList } from "../js/event-goals.js";
 import { CARD_POLICY } from "../js/card-achievements.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
@@ -12,7 +14,7 @@ import {
   EVENT_LIMITS,
   OBJECTIVES,
   validRatingObjective,
-  isRatingObjective,
+  usesRatingObjective,
   validEventReward,
   eventRanking,
   periodWindow,
@@ -239,11 +241,13 @@ async function configuration(input, eventId = null) {
     !Object.hasOwn(OBJECTIVES, objective.metric) ||
     !Number.isInteger(objective.target) ||
     objective.target < 1 ||
-    objective.target > 1000
+    objective.target > objectiveTargetLimit(objective)
   )
     fail("Objetivo inválido.");
   if (!validRatingObjective(objective, input.scope || "individual"))
     fail("Configura dimensões, estrelas entre 0 e 5, comparação e mínimo de avaliações. Objetivos por estrelas são individuais.");
+  if (usesLifetimeObjective(objective) && ((input.cadence || "once") !== "once" || (input.maxRepeats || 1) !== 1))
+    fail("Objetivos de histórico total têm uma única conclusão, sem repetição diária ou semanal.");
   if (
     !["individual", "collective", "team", "group"].includes(
       input.scope || "individual",
@@ -473,6 +477,24 @@ export function managedEvents(rebuild) {
           fail("Escolhe uma missão ou evento válido para editar.");
         if (editingMission && config.event.kind !== "mission")
           fail("Uma missão existente deve continuar a ser uma missão.");
+        const preservingProgress = previous && previous.status !== "draft" && isGoalList(config.event.objective);
+        if (preservingProgress) {
+          const scope = value => ["collective","team"].includes(value) ? "team" : value || "individual";
+          const prerequisite = value => {
+            const ids=[...(value?.missionIds || [])].sort();
+            return JSON.stringify({mode:ids.length ? value?.mode || "all" : "all",ids});
+          };
+          if (+asDate(previous.startsAt) !== +asDate(config.event.startsAt) ||
+              (previous.cadence || "once") !== config.event.cadence ||
+              scope(previous.scope) !== scope(config.event.scope) || previous.method !== config.event.method ||
+              prerequisite(previous.prerequisites) !== prerequisite(config.event.prerequisites))
+            fail("Para preservar o progresso, mantém o início, a frequência, o âmbito e o desbloqueio. Duplica o desafio para mudar essas condições.");
+          if (["open","scheduled"].includes(previous.status) && eventEndMillis(config.event) < eventEndMillis(previous))
+            fail("Não encurtes o prazo de um desafio ativo: isso excluiria progresso já conseguido.");
+          config.event.participantIds = [...new Set([...(previous.participantIds || []), ...config.event.participantIds])];
+          if (config.event.participantIds.length > 200) fail("O limite é de 200 participantes, incluindo os que já tinham acesso ao desafio.");
+          if (config.event.audience.mode === "selected") config.event.audience.memberIds = config.event.participantIds;
+        }
 
         const published = !!input.openNow,
           preservingMission = !!previous && previous.status !== "draft",
@@ -504,7 +526,9 @@ export function managedEvents(rebuild) {
           positions: config.positions,
           participationReward: config.participationReward,
         });
-        audit(tx, ref, request.auth.uid, action, { status });
+        audit(tx, ref, request.auth.uid, action, { status, ...(preservingProgress ? {
+          preservesProgress:true, previousObjective:previous.objective, objective:config.event.objective,
+        } : {}) });
       });
       return { id: ref.id };
     }
@@ -554,7 +578,7 @@ export function managedEvents(rebuild) {
       const event = snap.data();
       const [votesSnap, gamesSnap, rewardSnap, ledgerSnap] = await Promise.all([
         tx.get(ref.collection("votes")),
-        objectiveGames(tx, isRatingObjective(event.objective)),
+        objectiveGames(tx, usesRatingObjective(event.objective)),
         tx.get(ref.collection("private").doc("rewards")),
         tx.get(db().collection("eventRewards")),
       ]);
@@ -848,7 +872,7 @@ export function managedEvents(rebuild) {
       result.unlockedAt = unlocked ? unlocked.toISOString() : null;
     }
     if (event.method === "objective") {
-      const games = rows(await objectiveGames(null, isRatingObjective(event.objective)));
+      const games = rows(await objectiveGames(null, usesRatingObjective(event.objective)));
       result.progress = eventRanking(
         event,
         [],
@@ -925,7 +949,7 @@ export function managedEvents(rebuild) {
     await db().runTransaction(async (tx) => {
       const ref = db().doc(`events/${id}`),
         snap = await tx.get(ref),
-        games = await objectiveGames(tx, isRatingObjective(snap.data()?.objective)),
+        games = await objectiveGames(tx, usesRatingObjective(snap.data()?.objective)),
         rewards = await tx.get(ref.collection("private").doc("rewards")),
         ledgerSnap = await tx.get(db().collection("eventRewards"));
       const event = snap.data(),

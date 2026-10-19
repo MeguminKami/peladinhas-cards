@@ -1,6 +1,6 @@
 import { missionObjectivePreview } from "./mission-objective-preview.js";
 import { pathMissionEntry, pathMissionSpotlight } from "./paths.js";
-import { groupActivities } from "./activity-categories.js";
+import { groupActivities, activityCategory } from "./activity-categories.js";
 import { policyAt } from "./system-policy.js";
 import {
   eventRarityId,
@@ -20,7 +20,7 @@ import * as DB from "./db.js";
 import { ATTRIBUTES, profileComplete, participants } from "./utils.js";
 import { esc, empty, linkButton } from "./ui.js";
 import { icon, eventIcon } from "./icons.js";
-import { rewardMarkers } from "./event-presentation.js";
+import { rewardMarkers, combinedProgress } from "./event-presentation.js";
 export async function refreshMissionsForCurrentUser(user, league) {
   const p = league.players.find((x) => x.uid === user.uid) || user;
   const missions = [];
@@ -122,6 +122,8 @@ export async function refreshMissionsForCurrentUser(user, league) {
                 (detail.claimable ?? !!detail.progress?.find((row) => row.uid === user.uid)?.eligible),
               title: event.title,
               objectivePreview: missionObjectivePreview(event),
+              objective: event.objective,
+              combinedState: detail.progress?.find(row => row.uid === user.uid)?.ratingState,
               eventDescription: event.description || "",
               rarity: eventRarityId(event),
               description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
@@ -142,6 +144,8 @@ export async function refreshMissionsForCurrentUser(user, league) {
               type: "COMPETITION_OBJECTIVE",
               title: event.title,
               objectivePreview: missionObjectivePreview(event),
+              objective: event.objective,
+              combinedState: detail.progress?.find(row => row.uid === user.uid)?.ratingState,
               eventDescription: event.description || "",
               rarity: eventRarityId(event),
               description: objectiveSummary(event),
@@ -203,6 +207,10 @@ export async function refreshMissionsForCurrentUser(user, league) {
 
   return missions;
 }
+export function compareMissionPriority(a, b) {
+  const priority = (mission) => ({path: 0, rating: 1}[activityCategory(mission)] ?? 2);
+  return priority(a) - priority(b) || compareEventRarity(a, b);
+}
 export function missionList(missions, { grouped = true } = {}) {
   missions = missions.filter(
     (mission) => !mission.hiddenCard && mission.type !== "HIDDEN_CARD",
@@ -214,14 +222,15 @@ export function missionList(missions, { grouped = true } = {}) {
       linkButton("#/games", "Ver jogos", "secondary"),
       "check",
     );
-  const ordered = [...missions].sort(compareEventRarity);
+  const ordered = [...missions].sort(compareMissionPriority);
   const cards = (entries) =>
     `<div class="mission-list">${entries
       .map((m) => {
         if (m.type === "PLAYER_PATH") return pathMissionSpotlight(m);
         const competition = m.type === "COMPETITION_OBJECTIVE";
         const percentage = Math.round((m.done / m.total) * 100);
-        return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div>${["OBJECTIVE_MISSION", "COMPETITION_OBJECTIVE"].includes(m.type) ? `<p class="mission-objective">${esc(m.objectivePreview?.text || "Consulta o objetivo e os critérios da missão.")}${m.objectivePreview?.criteria ? `<span class="mission-objective-criteria">${esc(m.objectivePreview.criteria)}</span>` : ""}</p>` : `<p>${esc(m.description)}</p>`}${rewardMarkers(m.rewards)}<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small></div><span class="mission-arrow">${icon("arrow")}</span></a>`;
+        const objectiveProgress = combinedProgress(m, m.combinedState);
+        return `<a class="mission${competition ? " mission-competition" : ""}${m.rarity ? " event-rarity-surface" : ""}"${m.rarity ? ` data-rarity="${eventRarityId(m)}"` : ""} href="${esc(m.href)}"><div class="mission-symbol">${icon(m.icon)}</div><div class="mission-content"><div class="mission-heading"><h3>${esc(m.title)}</h3>${m.rarity ? rarityBadge(m) : ""}${competition ? '<span class="mission-competition-label">Competição</span>' : ""}</div>${objectiveProgress ? "" : ["OBJECTIVE_MISSION", "COMPETITION_OBJECTIVE"].includes(m.type) ? `<p class="mission-objective">${esc(m.objectivePreview?.text || "Consulta o objetivo e os critérios da missão.")}${m.objectivePreview?.criteria ? `<span class="mission-objective-criteria">${esc(m.objectivePreview.criteria)}</span>` : ""}</p>` : `<p>${esc(m.description)}</p>`}${rewardMarkers(m.rewards)}${objectiveProgress || `<div class="progress"><span style="--progress:${percentage}%"></span></div><small>${m.done} / ${m.total} · ${percentage}%</small>`}</div><span class="mission-arrow">${icon("arrow")}</span></a>`;
       })
       .join("")}</div>`;
   if (!grouped) return cards(ordered);

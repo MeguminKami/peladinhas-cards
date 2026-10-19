@@ -19,6 +19,16 @@ import {
   Timestamp,
 } from "firebase/firestore";
 let env;
+test("password recovery approvals remain private and server-only", async () => {
+  await env.withSecurityRulesDisabled(async c => {
+    await setDoc(doc(c.firestore(), "passwordRecoveries/joao"), {status:"authorized", codeHash:"private"});
+  });
+  for (const context of [env.unauthenticatedContext(), env.authenticatedContext("joao"), env.authenticatedContext("boss")]) {
+    const ref = doc(context.firestore(), "passwordRecoveries/joao");
+    await assertFails(getDoc(ref));
+    await assertFails(setDoc(ref, {status:"authorized",codeHash:"forged"}));
+  }
+});
 test("personal paths and attempts are private and progression is server-only", async () => {
   await env.withSecurityRulesDisabled(async c => {
     await setDoc(doc(c.firestore(), "pathStates/joao"), { uid: "joao", nodes: {}, active: null });

@@ -1,6 +1,26 @@
 import { icon } from "./icons.js";
 import { card } from "./cards.js";
 import { rewardBreakdown } from "./reward-presentation.js";
+import { isCombinedObjective } from "./event-model.js";
+import { missionObjectivePreview } from "./mission-objective-preview.js";
+import { esc } from "./ui.js";
+import { isGoalList } from "./event-goals.js";
+
+export function combinedProgress(event, state) {
+  if (!state) return "";
+  const goals = isGoalList(event.objective)
+    ? event.objective.goals.map(goal => ({ objective: goal, progress: state.goals?.find(row => row.id === goal.id)?.progress }))
+    : isCombinedObjective(event.objective)
+      ? ["results", "ratings"].map(key => ({ objective: event.objective[key], progress: state[key]?.progress }))
+      : [];
+  if (!goals.length) return "";
+  return `<div class="event-combined-progress" aria-label="Progresso dos objetivos">${goals.map(({ objective, progress }) => {
+    const value = Math.max(0, Math.min(objective.target, progress || 0));
+    const percent = Math.min(100, value / objective.target * 100);
+    const text = missionObjectivePreview({ ...event, objective }).text;
+    return `<div><p><span>${esc(text)}</span><strong>${value} / ${objective.target}</strong></p><div class="progress" role="progressbar" aria-label="${esc(text)}" aria-valuemin="0" aria-valuemax="${objective.target}" aria-valuenow="${value}"><span style="--progress:${percent}%"></span></div></div>`;
+  }).join("")}</div>`;
+}
 
 export function rewardMarkers(rewards = []) {
   const stats = rewards.some(r => Object.values(r.boosts || {}).some(v => v > 0));

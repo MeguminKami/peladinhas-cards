@@ -1,4 +1,4 @@
-import { login, register } from "./auth.js";
+import { login, register, recoverPassword } from "./auth.js";
 import { policyAt } from "./system-policy.js";
 import {
   profileFields,
@@ -11,6 +11,7 @@ import { esc, busy, toast, friendlyError } from "./ui.js";
 import { icon } from "./icons.js";
 import * as DB from "./db.js";
 export function authPage(ctx) {
+  let recovering = false;
   let mode = "login",
     step = 1,
     draft = {},
@@ -20,7 +21,7 @@ export function authPage(ctx) {
   const draw = () => {
     dispose();
     ctx.render(
-      `<div class="auth-layout"><div class="auth-story"><p class="eyebrow">Futebol entre amigos.</p><h1>O teu futebol.<br>A tua <em>carta</em>.<br>A tua liga.</h1><p>Organiza jogos, avalia os teus colegas e acompanha a evolução da tua carta.</p><div class="auth-card">${card({ displayName: "O TEU NOME", ovr: 84, country: "Portugal", countryCode: "PT", primaryPosition: "ALA", stats: { pace: 87, shooting: 82, passing: 85, dribbling: 88, defending: 74, physical: 83, goalkeeping: 43, stamina: 90 }, cardType: "gold-rare", hasCard: true }, { preview: true, size: "md" })}</div><div class="auth-signature">01 / CADA SEMANA É UMA NOVA CARTA</div></div><section class="auth-panel panel"><div class="auth-tabs"><button type="button" data-mode="login" class="${mode === "login" ? "active" : ""}">Entrar</button><button type="button" data-mode="register" class="${mode === "register" ? "active" : ""}" ${!policyAt().features.registration || policyAt().features.mode==="readOnly" ? "disabled" : ""}>Criar conta</button></div>${mode === "register" ? `<ol class="steps" aria-label="Etapas">${["Conta", "Perfil", "Foto", "Carta"].map((n, i) => `<li class="${step >= i + 1 ? "active" : ""}"><span>${i + 1}</span><small>${n}</small></li>`).join("")}</ol>` : ""}<form id="auth-form">${mode === "login" ? `<p class="eyebrow">Bem-vindo de volta</p><h2>Entra na tua liga.</h2><label>Username<input name="username" required autocomplete="username"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><button class="btn btn-primary full-width">Entrar ${icon("arrow")}</button>` : step === 1 ? `<h2>A tua conta</h2><label>Username<input name="username" required pattern="[a-zA-Z0-9_.-]{3,20}" maxlength="20" value="${esc(draft.username || "")}" autocomplete="username"></label><p class="small muted">3–20 caracteres. Letras sem acentos, números, _, - ou .</p><label>Password<input name="password" type="password" required minlength="6" autocomplete="new-password"></label><label>Confirmar password<input name="confirmPassword" type="password" required minlength="6" autocomplete="new-password"></label><button class="btn btn-primary full-width">Continuar ${icon("arrow")}</button>` : step === 2 ? `<h2>O teu perfil</h2>${profileFields(details)}<div class="actions"><button type="button" id="back" class="btn btn-secondary">Voltar</button><button class="btn btn-primary">Continuar ${icon("arrow")}</button></div>` : step === 3 ? `<h2>Dá uma cara à tua carta</h2><p class="muted">A fotografia é opcional. Podes adicioná-la mais tarde.</p>${photoField()}<div class="actions"><button type="button" id="back" class="btn btn-secondary">Voltar</button><button class="btn btn-primary">Continuar ${icon("arrow")}</button></div>` : `<h2>Pronto para entrar em campo?</h2><p class="muted">Olá, ${esc(details.displayName)}. Vais começar com uma autoavaliação de 12 atributos. Depois, três colegas ajudam a tornar a tua carta oficial.</p><div class="onboarding-summary"><b>${esc(details.displayName)}</b><span>${esc(details.country)} · ${details.heightCm} cm · ${details.primaryPosition}</span></div><div class="actions"><button type="button" id="back" class="btn btn-secondary">Voltar</button><button class="btn btn-primary">Criar conta e avaliar ${icon("arrow")}</button></div>`}<p id="auth-error" class="error" role="alert"></p></form></section></div>`,
+      `<div class="auth-layout"><div class="auth-story"><p class="eyebrow">Futebol entre amigos.</p><h1>O teu futebol.<br>A tua <em>carta</em>.<br>A tua liga.</h1><p>Organiza jogos, avalia os teus colegas e acompanha a evolução da tua carta.</p><div class="auth-card">${card({ displayName: "O TEU NOME", ovr: 84, country: "Portugal", countryCode: "PT", primaryPosition: "ALA", stats: { pace: 87, shooting: 82, passing: 85, dribbling: 88, defending: 74, physical: 83, goalkeeping: 43, stamina: 90 }, cardType: "gold-rare", hasCard: true }, { preview: true, size: "md" })}</div><div class="auth-signature">01 / CADA SEMANA É UMA NOVA CARTA</div></div><section class="auth-panel panel"><div class="auth-tabs"><button type="button" data-mode="login" class="${mode === "login" ? "active" : ""}">Entrar</button><button type="button" data-mode="register" class="${mode === "register" ? "active" : ""}" ${!policyAt().features.registration || policyAt().features.mode==="readOnly" ? "disabled" : ""}>Criar conta</button></div>${mode === "register" ? `<ol class="steps" aria-label="Etapas">${["Conta", "Perfil", "Foto", "Carta"].map((n, i) => `<li class="${step >= i + 1 ? "active" : ""}"><span>${i + 1}</span><small>${n}</small></li>`).join("")}</ol>` : ""}<form id="auth-form">${mode === "login" ? `<p class="eyebrow">Bem-vindo de volta</p><h2>${recovering ? "Recupera o teu acesso." : "Entra na tua liga."}</h2>${recovering ? '<p class="muted">Pede ao admin um código de recuperação. Usa-o aqui para escolher a tua nova palavra-passe.</p>' : ""}<label>Username<input name="username" required autocomplete="username"></label>${recovering ? '<label>Código de recuperação<input name="recoveryCode" required maxlength="24" autocomplete="off" autocapitalize="none" spellcheck="false"></label>' : ""}<label>${recovering ? "Nova password" : "Password"}<input name="password" type="password" required ${recovering ? 'minlength="6" maxlength="128" autocomplete="new-password"' : 'autocomplete="current-password"'}></label>${recovering ? '<label>Confirmar nova password<input name="confirmPassword" type="password" required minlength="6" maxlength="128" autocomplete="new-password"></label>' : ""}<button class="btn btn-primary full-width">${recovering ? "Guardar password e entrar" : "Entrar"} ${icon("arrow")}</button><button type="button" id="toggle-recovery" class="btn btn-ghost full-width">${recovering ? "Voltar ao login" : "Recuperar password"}</button>` : step === 1 ? `<h2>A tua conta</h2><label>Username<input name="username" required pattern="[a-zA-Z0-9_.-]{3,20}" maxlength="20" value="${esc(draft.username || "")}" autocomplete="username"></label><p class="small muted">3–20 caracteres. Letras sem acentos, números, _, - ou .</p><label>Password<input name="password" type="password" required minlength="6" autocomplete="new-password"></label><label>Confirmar password<input name="confirmPassword" type="password" required minlength="6" autocomplete="new-password"></label><button class="btn btn-primary full-width">Continuar ${icon("arrow")}</button>` : step === 2 ? `<h2>O teu perfil</h2>${profileFields(details)}<div class="actions"><button type="button" id="back" class="btn btn-secondary">Voltar</button><button class="btn btn-primary">Continuar ${icon("arrow")}</button></div>` : step === 3 ? `<h2>Dá uma cara à tua carta</h2><p class="muted">A fotografia é opcional. Podes adicioná-la mais tarde.</p>${photoField()}<div class="actions"><button type="button" id="back" class="btn btn-secondary">Voltar</button><button class="btn btn-primary">Continuar ${icon("arrow")}</button></div>` : `<h2>Pronto para entrar em campo?</h2><p class="muted">Olá, ${esc(details.displayName)}. Vais começar com uma autoavaliação de 12 atributos. Depois, três colegas ajudam a tornar a tua carta oficial.</p><div class="onboarding-summary"><b>${esc(details.displayName)}</b><span>${esc(details.country)} · ${details.heightCm} cm · ${details.primaryPosition}</span></div><div class="actions"><button type="button" id="back" class="btn btn-secondary">Voltar</button><button class="btn btn-primary">Criar conta e avaliar ${icon("arrow")}</button></div>`}<p id="auth-error" class="error" role="alert"></p></form></section></div>`,
     );
     document.querySelectorAll("[data-mode]").forEach(
       (b) =>
@@ -33,6 +34,13 @@ export function authPage(ctx) {
         }),
     );
     const form = document.querySelector("#auth-form");
+    form.querySelector("#toggle-recovery")?.addEventListener("click", () => {
+      const username = form.elements.username.value;
+      recovering = !recovering;
+      draw();
+      document.querySelector('[name="username"]').value = username;
+      document.querySelector(recovering ? '[name="recoveryCode"]' : '[name="password"]').focus();
+    });
     if (mode === "register" && step === 3) dispose = bindPhoto(form);
     form.querySelector("#back")?.addEventListener("click", () => {
       step--;
@@ -42,8 +50,11 @@ export function authPage(ctx) {
       e.preventDefault();
       try {
         if (mode === "login") {
-          await busy(e.submitter, () =>
-            login(form.username.value, form.password.value),
+          if (recovering && form.password.value !== form.confirmPassword.value)
+            throw Error("As passwords não coincidem.");
+          await busy(e.submitter, () => recovering
+            ? recoverPassword(form.username.value, form.recoveryCode.value, form.password.value)
+            : login(form.username.value, form.password.value),
           );
           return;
         }

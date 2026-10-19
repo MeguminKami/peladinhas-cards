@@ -12,6 +12,8 @@ import {
   formatDateTime,
 } from "./utils.js";
 import { CARD_POLICY, durationName, cardExpiry } from "./card-achievements.js";
+import { TOTAL_OBJECTIVES, isLifetimeObjective, usesLifetimeObjective, objectiveTargetLimit } from "./event-totals.js";
+import { isGoalList, MAX_EVENT_GOALS } from "./event-goals.js";
 export const EVENT_LIMITS = Object.freeze({
   get winners() { return policyAt().rules.maxWinners; },
   get votes() { return policyAt().rules.maxVotes; },
@@ -30,17 +32,39 @@ export const OBJECTIVES = Object.freeze({
   unbeatenGames: "Jogos sem perder",
   goalsAndAssists: "Golos e assistências",
   cleanSheets: "Jogos sem sofrer golos",
+  combined: "Resultados e estrelas · cumprir ambas as metas",
+  all: "Cumprir todas as metas",
   ratingGames: "Estrelas · jogos com mínimo",
   ratingAverage: "Estrelas · média dos últimos jogos",
   ratingStreak: "Estrelas · jogos consecutivos",
   ratingWins: "Estrelas · vitórias com mínimo",
+  ...Object.fromEntries(Object.entries(TOTAL_OBJECTIVES).map(([id, value]) => [id, value.label])),
 });
 export const isRatingObjective = (objective) =>
-  ["ratingGames", "ratingAverage", "ratingStreak", "ratingWins"].includes(
+  ["ratingGames", "ratingAverage", "ratingStreak", "ratingWins", "totalRatingGames", "totalRatingWins"].includes(
     objective?.metric,
   );
+export const isCombinedObjective = (objective) => objective?.metric === "combined";
+export const usesRatingObjective = (objective) => isRatingObjective(objective) || isCombinedObjective(objective) ||
+  (isGoalList(objective) && Array.isArray(objective.goals) && objective.goals.some(isRatingObjective));
 
 export function validRatingObjective(objective, scope = "individual") {
+  if (objective?.countFrom !== undefined && !["challenge", "history"].includes(objective.countFrom)) return false;
+  if (isGoalList(objective)) return objective.target === 100 && Array.isArray(objective.goals) &&
+    objective.goals.length >= 1 && objective.goals.length <= MAX_EVENT_GOALS &&
+    new Set(objective.goals.map(goal => goal?.id)).size === objective.goals.length &&
+    objective.goals.every(goal => goal && typeof goal.id === "string" && /^[\w-]{1,80}$/.test(goal.id) &&
+      Object.hasOwn(OBJECTIVES, goal.metric) && !isGoalList(goal) && !isCombinedObjective(goal) &&
+      Number.isInteger(goal.target) && goal.target >= 1 && goal.target <= objectiveTargetLimit(goal) &&
+      validRatingObjective(goal, scope));
+  if (isCombinedObjective(objective)) {
+    const {results, ratings} = objective;
+    const target = (part) => Number.isInteger(part?.target) && part.target >= 1 && part.target <= objectiveTargetLimit(part);
+    return scope === "individual" && objective.target === 100 &&
+      !!results && Object.hasOwn(OBJECTIVES, results.metric) &&
+      !usesRatingObjective(results) && !isGoalList(results) && target(results) &&
+      isRatingObjective(ratings) && target(ratings) && validRatingObjective(ratings, scope);
+  }
   if (!isRatingObjective(objective)) return true;
   return (
     scope === "individual" &&
@@ -68,12 +92,14 @@ export function ratingObjectiveState(
   matches,
   date = new Date(),
 ) {
+  if (TOTAL_OBJECTIVES[objective.metric]) objective = {...objective, metric:TOTAL_OBJECTIVES[objective.metric].metric};
   const attributes = objective.attributes || [];
   const valueFor = (game) => {
     const row = game.ratingSummary?.[uid];
     if (
       !row ||
       !row.evaluatedAt ||
+      (attributes.includes("goalkeeping") && row.goalkeepingEligible === false) ||
       +asDate(row.evaluatedAt) > +date ||
       !attributes.length
     )
@@ -134,6 +160,22 @@ export function ratingObjectiveState(
 }
 export function objectiveSummary(event) {
   const count = event.objective?.target || 1;
+  const periodDefinition = TOTAL_OBJECTIVES[event.objective?.metric];
+  if (periodDefinition && !isLifetimeObjective(event.objective)) {
+    if (periodDefinition.family === "stars") return objectiveSummary({...event, objective:{...event.objective, metric:periodDefinition.metric}});
+    return `Atinge ${count} ${count === 1 ? periodDefinition.one : periodDefinition.many} durante o desafio, após o desbloqueio.`;
+  }
+  if (isGoalList(event.objective)) return `Cumpre todas as ${event.objective.goals.length} metas. ${event.objective.goals.map((goal,i) => `${i+1}. ${objectiveSummary({...event, objective:goal})}`).join(" ")}`;
+  if (isLifetimeObjective(event.objective)) {
+    const definition = TOTAL_OBJECTIVES[event.objective.metric];
+    if (definition.family === "stars") return `Histórico total: ${objectiveSummary({...event, objective:{...event.objective, metric:definition.metric}}).replace("Só contam jogos encerrados neste período, após o desbloqueio;", "Contam todos os jogos encerrados do histórico até à verificação ou ao fecho do desafio;")}`;
+    return `Atinge um total de ${count} ${count === 1 ? definition.one : definition.many} no histórico${event.scope === "group" ? " dos participantes" : ""}. Inclui jogos anteriores ao desafio.`;
+  }
+  if (isCombinedObjective(event.objective)) {
+    const {results, ratings} = event.objective;
+    if (usesLifetimeObjective(event.objective)) return `Cumpre ambas as metas, usando o histórico ou o período indicado em cada uma. Resultados: ${objectiveSummary({...event, objective:results})} Estrelas: ${objectiveSummary({...event, objective:ratings})}`;
+    return `Cumpre ambas as metas no mesmo período. Resultados: ${objectiveSummary({...event, objective:results})} Estrelas: ${objectiveSummary({...event, objective:ratings})} As metas podem ser cumpridas em jogos diferentes dentro desse período.`;
+  }
   if (isRatingObjective(event.objective)) {
     const o = event.objective;
     const attributes = (o.attributes || [])
@@ -341,14 +383,37 @@ export function objectiveProgress(
   ratingDetails = false,
 ) {
   const window = periodWindow(event, date);
+  if (isGoalList(event.objective)) {
+    const goals = event.objective.goals.map(goal => {
+      const state = objectiveProgress(uid,{...event,objective:goal},games,date,teamStats,true);
+      return {id:goal.id, target:goal.target, ...(typeof state === "number" ? {progress:state} : state)};
+    });
+    const progress = goals.length ? Math.floor(100*Math.min(1,...goals.map(goal=>goal.progress/goal.target))) : 0;
+    return ratingDetails ? {progress,goals} : progress;
+  }
+  if (isCombinedObjective(event.objective)) {
+    const {results, ratings} = event.objective;
+    const resultProgress = objectiveProgress(uid, {...event, objective:results}, games, date, teamStats);
+    const ratingState = objectiveProgress(uid, {...event, objective:ratings}, games, date, false, true);
+    const progress = Math.floor(100 * Math.min(1, resultProgress / results.target, ratingState.progress / ratings.target));
+    return ratingDetails ? {
+      progress, results:{progress:resultProgress, target:results.target},
+      ratings:{...ratingState, target:ratings.target},
+    } : progress;
+  }
+  const historical = isLifetimeObjective(event.objective);
+  const total = TOTAL_OBJECTIVES[event.objective?.metric];
+  const metric = total?.metric || event.objective?.metric;
+  if (historical && +date < Math.max(+window.start, +asDate(event.progressStartsAt))) return ratingDetails ? {progress:0} : 0;
   const matches = games
     .filter(
       (g) =>
         g.status === "closed" &&
         !g.deleting &&
         participants(g).includes(uid) &&
-        +asDate(g.closedAt || g.scheduledAt) >=
-          Math.max(+window.start, +asDate(event.progressStartsAt)) &&
+        (historical || +asDate(g.closedAt || g.scheduledAt) >=
+          Math.max(+window.start, +asDate(event.progressStartsAt))) &&
+        (!total?.position || g.positions?.[uid] === total.position) &&
         (!window.end || +asDate(g.closedAt || g.scheduledAt) < +window.end) &&
         +asDate(g.closedAt || g.scheduledAt) <= +date,
     )
@@ -382,7 +447,7 @@ export function objectiveProgress(
           assists: game.performance?.[side]?.assists?.length || 0,
         }
       : matchPerformance(uid, game);
-    switch (event.objective?.metric) {
+    switch (metric) {
       case "games":
         value++;
         break;
@@ -410,6 +475,14 @@ export function objectiveProgress(
       case "wins":
         if (outcome > 0) value++;
         break;
+      case "draws": if (outcome === 0) value++; break;
+      case "losses": if (outcome < 0) value++; break;
+      case "nonLosses": if (outcome >= 0) value++; break;
+      case "goalsFor": value += game.score?.[side] || 0; break;
+      case "goalsAgainst": value += game.score?.[side === "teamA" ? "teamB" : "teamA"] || 0; break;
+      case "scoringGames": if (performance.goals > 0) value++; break;
+      case "assistingGames": if (performance.assists > 0) value++; break;
+      case "contributingGames": if (performance.goals + performance.assists > 0) value++; break;
       case "unbeatenWins":
         if (outcome < 0) streak = 0;
         else if (outcome > 0) streak++;
@@ -429,7 +502,15 @@ export function scopedObjectiveProgress(
   games,
   date = new Date(),
   completions = [],
+  details = false,
 ) {
+  if (isGoalList(event.objective)) {
+    const goals = event.objective.goals.map(goal => ({id:goal.id,target:goal.target,
+      progress:scopedObjectiveProgress(uid,{...event,objective:goal},games,date,completions),
+    }));
+    const progress=goals.length ? Math.floor(100*Math.min(1,...goals.map(goal=>goal.progress/goal.target))) : 0;
+    return details ? {progress,goals} : progress;
+  }
   const progressFor = (id) => {
     const unlocked = missionUnlockedAt(event, id, completions);
     if (!unlocked) return 0;
@@ -454,15 +535,17 @@ export function objectiveReachedAt(
   date = new Date(),
   completions = [],
 ) {
+  const historical = usesLifetimeObjective(event.objective);
+  const availableAt = Math.max(+periodWindow(event, date).start, +missionUnlockedAt(event, uid, completions));
   if (
-    isRatingObjective(event.objective) &&
+    usesRatingObjective(event.objective) &&
     scopedObjectiveProgress(uid, event, games, date, completions) <
       event.objective.target
   )
     return null;
   const times = [
     ...new Set(
-      games
+      [...(historical && availableAt <= +date ? [availableAt] : []), ...games
         .filter(
           (game) =>
             game.status === "closed" &&
@@ -475,11 +558,11 @@ export function objectiveReachedAt(
         )
         .flatMap((game) => [
           +asDate(game.closedAt || game.scheduledAt),
-          ...(isRatingObjective(event.objective)
+          ...(usesRatingObjective(event.objective)
             ? [+asDate(game.ratingSummary?.[uid]?.evaluatedAt)]
             : []),
         ])
-        .filter((time) => time <= +date),
+        .filter((time) => time <= +date && (!historical || time >= availableAt))],
     ),
   ].sort((a, b) => a - b);
   for (const time of times)
@@ -545,10 +628,10 @@ export function eventRanking(
     uid,
     votes: counts[uid],
     progress: progressFor(uid),
-    ...(isRatingObjective(event.objective)
+    ...(usesRatingObjective(event.objective) || isGoalList(event.objective)
       ? {
           ratingState: missionUnlockedAt(event, uid, completions)
-            ? objectiveProgress(
+            ? isGoalList(event.objective) ? scopedObjectiveProgress(uid,event,games,date,completions,true) : objectiveProgress(
                 uid,
                 {
                   ...event,

@@ -116,26 +116,29 @@ function connectionStatus() {
     document.querySelector("#header").after(status);
   }
 }
+// Wait for operational screens to close, including forms with autosave in flight.
+const safeToUpdate = () => document.visibilityState === "visible" &&
+  !document.querySelector('form, [role="dialog"], #modal-root > *, [contenteditable="true"]');
+let pendingController = false;
 function updateAvailable(worker) {
-  if (!worker || document.querySelector("#app-update")) return;
-  const notice = document.createElement("aside");
-  notice.id = "app-update";
-  notice.className = "app-update";
-  notice.setAttribute("aria-label", "Atualização da aplicação");
-  notice.innerHTML =
-    '<div><strong>A tua liga tem novidades.</strong><p>Guarda o que estás a fazer antes de atualizar.</p></div><div class="actions"><button type="button" class="btn btn-primary" data-update>Atualizar</button><button type="button" class="btn btn-ghost" data-later>Mais tarde</button></div>';
-  document.body.append(notice);
-  notice.querySelector("[data-later]").onclick = () => notice.remove();
-  notice.querySelector("[data-update]").onclick = (event) => {
-    event.currentTarget.disabled = true;
-    navigator.serviceWorker.addEventListener(
-      "controllerchange",
-      () => location.reload(),
-      { once: true },
-    );
-    worker.postMessage({ type: "ACTIVATE_UPDATE" });
-  };
+  if (pendingController && safeToUpdate()) return location.reload();
+  if (worker && safeToUpdate()) worker.postMessage({ type: "AUTO_UPDATE" });
 }
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", event => {
+    if (event.data?.type === "UPDATE_READY") event.ports[0]?.postMessage(safeToUpdate());
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!navigator.serviceWorker.controller) return;
+    // First installation needs no reload.
+    if (!hadController) { hadController = true; return; }
+    pendingController = true;
+    updateAvailable();
+  });
+}
+let hadController = Boolean(navigator.serviceWorker?.controller);
+setInterval(() => updateAvailable(registration?.waiting), 15000);
+window.addEventListener("hashchange", () => setTimeout(() => updateAvailable(registration?.waiting), 1000));
 window.addEventListener("peladinhas-install", installHelp);
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();

@@ -14,6 +14,7 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { normalizeUsername, technicalEmail } from "./utils.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
 export let currentUser = null;
 let registration = null;
 export function startAuth(onChange, onError) {
@@ -77,6 +78,14 @@ export const login = (username, password) =>
     technicalEmail(normalizeUsername(username)),
     password,
   );
+export async function recoverPassword(username, code, password) {
+  const normalized = normalizeUsername(username);
+  await httpsCallable(getFunctions(undefined, "europe-west1"), "completePasswordRecovery")({
+    username:normalized, code:code.trim(), password,
+  });
+  try { return await login(normalized, password); }
+  catch { throw Error("Password atualizada. Volta ao login e entra com a nova password."); }
+}
 export const logout = async () => {
   await detachPushForLogout();
   return signOut(auth);

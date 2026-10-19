@@ -35,6 +35,18 @@ Os valores iniciais estão em `js/system-policy.js`. Não é necessário criar d
 
 As permissões são verificadas em cada operação. Administradores sem lista de capacidades mantêm acesso total; uma lista restringe as áreas. Só administradores completos distribuem capacidades. É preservado pelo menos um administrador completo. Alterações de papel/estado em Jogadores reutilizam a operação segura do servidor. Recuperar uma conta exige autenticação recente, motivo, palavra-passe com pelo menos 12 caracteres e revoga as sessões existentes. Palavras-passe não entram na auditoria.
 
+### Recuperação pelo próprio jogador
+
+Além da recuperação manual em Manutenção descrita acima, **Jogadores → Reset password** permite autorizar o próprio jogador a escolher a nova password. Exige capacidade `access` e login do admin nos últimos cinco minutos. Um admin com capacidades limitadas não pode recuperar a conta de um administrador completo. Confirmar a identidade por um canal conhecido antes de entregar o código.
+
+`passwordRecoveryAction` gera um código aleatório de uso único, válido por uma hora, ou revoga a autorização. Uma nova autorização substitui a anterior. O código só é apresentado nessa resposta; apenas o hash fica em `passwordRecoveries/{uid}`, sem leitura ou escrita direta pelo cliente, incluindo administradores. A password atual continua válida até concluir a recuperação.
+
+No login, **Recuperar password** pede username, código, nova password e confirmação (6–128 caracteres, sujeita também à política Firebase Auth do projeto). `completePasswordRecovery` verifica autorização, validade e estado ativo, consome o código com exclusão transacional e atualiza a mesma conta Firebase Auth. Revoga sessões anteriores e atualiza `tokensValidAfter`; o cliente entra com a nova password. Perfil, jogos, cartas e avaliações conservam o mesmo UID. Ações são auditadas sem códigos nem passwords.
+
+O endpoint público limita tentativas por IP e respeita App Check quando exigido. Se a alteração no Auth falhar, o código não volta a ficar utilizável: tentar o login com a nova password e, se necessário, gerar nova autorização. Uma operação interrompida em processamento bloqueia novas autorizações durante cinco minutos. Não é necessário migrar utilizadores nem alterar regras Firestore.
+
+Publicação seletiva: `npm.cmd run deploy:frontend` e `npx.cmd firebase deploy --only "functions:peladinhas:passwordRecoveryAction,functions:peladinhas:completePasswordRecovery"`. A operação antiga de Manutenção mantém o seu comportamento.
+
 O diagnóstico não aplica sanções automáticas. A limpeza mostra a quantidade antes de confirmar e elimina apenas notificações lidas antigas, contadores expirados e estados de tarefas concluídas antigos; preserva jogos, recompensas e auditoria. Exportações usam coleções autorizadas e paginação; não existe editor livre da base de dados.
 
 ## Backups e condições cloud

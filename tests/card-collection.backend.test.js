@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { ensureHistory, selectWeeklyCard } from "../functions/index.js";
 import {
@@ -15,6 +17,33 @@ import { cardWeek } from "../js/card-week.js";
 const db = getFirestore();
 const all = (value) =>
   Object.fromEntries(ATTRIBUTES.map(([key]) => [key, value]));
+
+test("self non-keeper repairs stale summaries idempotently and collection fallback excludes goalkeeper votes",async()=>{
+  const gid="keeper-stale-repair",uid="keeper.optout",peer="keeper.external";
+  const when=Timestamp.fromDate(new Date("2026-10-15T12:00Z"));
+  await db.doc(`games/${gid}`).set({status:"closed",closedAt:when,scheduledAt:when,teamA:{starters:[uid],bench:[]},teamB:{starters:[peer],bench:[]},score:{teamA:5,teamB:7}});
+  for(const raterId of [uid,peer])await db.doc(`games/${gid}/feedback/${raterId}_${uid}`).set({submitted:true,raterId,targetId:uid,updatedAt:when,
+    ratings:{...Object.fromEntries(FEEDBACK.map(([key])=>[key,4])),goalkeeping:raterId===uid?null:5}});
+  const stale={goalkeeping:5,attack:4,count:2,evaluatedAt:when.toDate().toISOString(),ratingCounts:{goalkeeping:1,attack:2}};
+  await db.doc(`gameSummaries/${gid}`).set({players:{[uid]:stale},status:"closed",sentinel:"preserve"});
+  const context=await collectionContext();
+  const computed=context.summaries?.find(row=>row.id===gid)?.players?.[uid];
+  assert.equal(computed.goalkeeping,null);
+  assert.equal(computed.goalkeepingEligible,false);
+  assert.equal(computed.ratingCounts.goalkeeping,0);
+  const run=()=>promisify(execFile)(process.execPath,["scripts/audit-goalkeeping.mjs","--repair"],{env:process.env});
+  await run();
+  const repaired=(await db.doc(`gameSummaries/${gid}`).get()).data();
+  assert.equal(repaired.players[uid].goalkeeping,null);
+  assert.equal(repaired.players[uid].goalkeepingEligible,false);
+  assert.equal(repaired.players[uid].ratingCounts.goalkeeping,0);
+  assert.equal(repaired.players[uid].attack,4);assert.equal(repaired.players[uid].count,2);
+  assert.equal(repaired.players[uid].ratingCounts.attack,2);assert.equal(repaired.sentinel,"preserve");
+  const timestamp=(await db.doc(`gameSummaries/${gid}`).get()).updateTime.toMillis();
+  const output=await run();
+  assert.ok(!output.stdout.includes(uid));
+  assert.equal((await db.doc(`gameSummaries/${gid}`).get()).updateTime.toMillis(),timestamp);
+});
 
 test("coleção permanente, expiração e seleção normal são autoritativas e idempotentes", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00Z") });

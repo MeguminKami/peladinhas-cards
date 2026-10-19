@@ -42,10 +42,13 @@ test("grouping preserves every item exactly once, stable order and future types"
   const groups = groupActivities(entries);
   assert.deepEqual(
     groups.map((g) => g.id),
-    ["vote", "rating", "other"],
+    ["rating", "vote", "other"],
   );
-  assert.deepEqual(groups[1].items, [entries[1], entries[3]]);
+  assert.deepEqual(groups[0].items, [entries[1], entries[3]]);
   assert.equal(groups.flatMap((g) => g.items).length, entries.length);
   assert.deepEqual(groups[2].items, [entries[0]]);
   assert.deepEqual(groupActivities([]), []);
+  assert.deepEqual(groupActivities([
+    {type:"OBJECTIVE_MISSION"}, {type:"EVENT_VOTE"}, {type:"PLAYER_PATH"}, {type:"GAME_FEEDBACK"},
+  ]).map(group => group.id), ["path", "rating", "vote", "personal"]);
 });
