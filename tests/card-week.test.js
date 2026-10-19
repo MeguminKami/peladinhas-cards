@@ -74,6 +74,9 @@ test("estúdio: combinações válidas e fontes/efeitos arbitrários rejeitados"
     validCardDesign({
       background: "waves",
       nameFont: "editorial",
+      positionFont: "original",
+      statsFont: "peladinhas",
+      ratingLayout: "compact",
       ratingFont: "sport",
       watermark: "crown",
       effect: "holographic",
@@ -86,6 +89,7 @@ test("estúdio: combinações válidas e fontes/efeitos arbitrários rejeitados"
   for (const design of [
     { effect: "url(script)" },
     { nameFont: "unknown" },
+    { ratingLayout: "arbitrary" },
     { watermark: "script" },
     { ratingSize: 999 },
   ])

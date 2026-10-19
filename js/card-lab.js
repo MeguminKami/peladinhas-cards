@@ -47,12 +47,25 @@ const defaults = () => ({
   ),
   nameY: 57,
   statsY: 67,
-  nameFont: "sport",
-  ratingFont: "sport",
-  statsFont: "modern",
-  labelsFont: "narrow",
-  positionFont: "heavy",
+  ratingX: 10,
+  ratingY: 12,
+  nameFont: "original",
+  ratingFont: "original",
+  statsFont: "original",
+  labelsFont: "original",
+  positionFont: "original",
 });
+const ratingPresets = {
+  topLeft: ["Um pouco acima e à esquerda", 9, 11, -135],
+  up: ["Um pouco acima", 10, 11, -90],
+  topRight: ["Um pouco acima e à direita", 11, 11, -45],
+  left: ["Um pouco à esquerda", 9, 12, 180],
+  original: ["Posição original", 10, 12, null],
+  right: ["Um pouco à direita", 11, 12, 0],
+  bottomLeft: ["Um pouco abaixo e à esquerda", 9, 13, 135],
+  down: ["Um pouco abaixo", 10, 13, 90],
+  bottomRight: ["Um pouco abaixo e à direita", 11, 13, 45],
+};
 export async function cardLab(ctx, uid) {
   if (ctx.user?.role !== "admin") {
     ctx.render(
@@ -225,7 +238,7 @@ export async function cardLab(ctx, uid) {
       "",
     )}</div><p class="studio-help" id="photo-tool-help">Arrasta a fotografia na carta para a mover.</p><label>Tamanho<input type="range" data-photo-range="size" min="35" max="130" value="65" aria-label="Tamanho da fotografia"></label><label>Ampliar<input type="range" data-photo-range="zoom" min="50" max="200" value="100" aria-label="Ampliação da fotografia"></label><label>Rotação<input type="range" data-photo-range="rotate" min="-45" max="45" value="0" aria-label="Rotação da fotografia"></label><div class="studio-two-col">${picker("fit", "Enquadramento", { cover: "Preencher", contain: "Imagem completa" })}${picker("fade", "Recorte", { soft: "Desvanecer", none: "Sem efeito" })}${picker("photoOpacity", "Opacidade", { 100: "Total", 75: "Suave", 50: "Transparente" })}${picker("saturation", "Cor", { 0: "Preto e branco", 65: "Suave", 100: "Original", 140: "Viva", 180: "Intensa" })}</div><div class="actions"><button type="button" id="lab-center-photo" class="btn btn-secondary">Centrar fotografia</button><button type="button" id="lab-reset" class="btn btn-ghost">Repor composição</button></div></section>
   <div hidden><input name="player" value="${selected?.uid || ""}"><input name="displayName" value="${esc(base.displayName || base.username)}"><input name="ovr" value="${base.ovr || 82}"><input name="primaryPosition" value="${base.primaryPosition || "ALA"}"><input name="countryCode" value="${base.countryCode || "PT"}">${ATTRIBUTES.map(([key]) => `<input name="${key}" value="${base.stats?.[key] ?? 82}">`).join("")}</div></form>
-  <section class="lab-preview studio-stage"><div class="studio-stage-head"><span class="pill">Pré-visualização</span><span id="studio-selection-label">Modelo livre</span></div><div id="card-preview" class="studio-canvas"></div><div class="studio-stage-footer"><span>PELADINHAS / CARD STUDIO</span><span id="studio-change-state" aria-live="polite"></span></div></section></div>`);
+  <section class="lab-preview studio-stage"><div class="studio-stage-head"><span class="pill">Pré-visualização</span><span id="studio-selection-label">Modelo livre</span><button type="button" id="studio-center" class="btn btn-secondary studio-center">${icon("studioOutline")}Centrar editor</button></div><div id="card-preview" class="studio-canvas"></div><div class="studio-stage-footer"><span>PELADINHAS / CARD STUDIO</span><span id="studio-change-state" aria-live="polite"></span></div></section></div>`);
   const form = document.querySelector("#lab-controls"),
     preview = document.querySelector("#card-preview"),
     history = [],
@@ -260,6 +273,37 @@ export async function cardLab(ctx, uid) {
   const bar = document.querySelector(".studio-project-bar");
   bar.before(workspace);
   workspace.append(bar, document.querySelector(".studio-layout"));
+  const layout = workspace.querySelector(".studio-layout");
+  const header = document.querySelector("#header");
+  const bottomNav = document.querySelector(".bottom-nav");
+  const sizeWorkbench = () => {
+    main.style.setProperty(
+      "--studio-top",
+      `${(header?.getBoundingClientRect().height || 0) + 12}px`,
+    );
+    main.style.setProperty(
+      "--studio-bottom",
+      `${(bottomNav?.getBoundingClientRect().height || 0) + 12}px`,
+    );
+  };
+  const workbenchResize = new ResizeObserver(sizeWorkbench);
+  if (header) workbenchResize.observe(header);
+  if (bottomNav) workbenchResize.observe(bottomNav);
+  sizeWorkbench();
+  document.querySelector("#studio-center").onclick = () => {
+    sizeWorkbench();
+    layout.scrollIntoView({
+      block: "start",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "instant"
+        : "smooth",
+    });
+  };
+  ctx.cleanup(() => {
+    workbenchResize.disconnect();
+    main.style.removeProperty("--studio-top");
+    main.style.removeProperty("--studio-bottom");
+  });
   const libraryPanel = document.querySelector(".studio-library");
   libraryPanel.removeAttribute("class");
   libraryPanel.className = "studio-library";
@@ -328,11 +372,24 @@ export async function cardLab(ctx, uid) {
       })
       .join("") +
     "</div>";
+  form.querySelector('[data-studio-panel="composition"] h3').insertAdjacentHTML(
+    "beforebegin",
+    '<fieldset class="studio-type-group studio-rating-presets"><legend>OVR + posição + país</legend><p class="studio-help">Ajustes mínimos em torno da posição original. A ordem e o espaçamento mantêm-se.</p><div class="studio-rating-options" role="group" aria-label="Posições do bloco, com um desvio de 1%">' +
+      Object.entries(ratingPresets)
+        .map(
+          ([id, [label, , , angle]]) =>
+            `<button type="button" class="btn btn-secondary" data-rating-preset="${id}" aria-label="${label}" title="${label}" aria-pressed="false">${angle === null ? icon("studioOutline") : `<span class="studio-rating-direction" style="--direction:${angle}deg">${icon("arrow")}</span>`}</button>`,
+        )
+        .join("") +
+      "</div><details><summary>Afinar posição do bloco</summary>" +
+      sliders(["ratingX", "ratingY"]) +
+      "</details></fieldset>",
+  );
   form
     .querySelector('[data-studio-panel="composition"]')
     .insertAdjacentHTML(
       "beforeend",
-      sliders(["nameY", "statsY", "ratingX", "ratingY", "ornamentOpacity"]),
+      sliders(["nameY", "statsY", "ornamentOpacity"]),
     );
   form
     .querySelector('[data-studio-panel="layers"]')
@@ -408,6 +465,27 @@ export async function cardLab(ctx, uid) {
       "</div></details>",
   );
   enhanceCardLabInterface(form, (fn) => ctx.cleanup(fn));
+  form.querySelector('[data-studio-panel="text"] > .studio-help').textContent =
+    "Original do modelo mantém a letra e as proporções da carta. Peladinhas Sans está incluída na aplicação. As fontes locais usam uma substituição quando não estão instaladas.";
+  const localFonts = {
+    dinRegular: "DIN Pro Condensed Regular",
+    dinMedium: "DIN Pro Condensed Medium",
+    dinBold: "DIN Pro Condensed Bold",
+    posterama: "Posterama 1927 Bold",
+  };
+  for (const [id, name] of Object.entries(localFonts)) {
+    document.fonts.load(`16px "${name}"`).then(
+      (faces) => {
+        labelFont(faces.length > 0);
+      },
+      () => labelFont(false),
+    );
+    function labelFont(available) {
+      form.querySelectorAll(`option[value="${id}"]`).forEach((option) => {
+        option.textContent = `${name} · ${available ? "instalada" : "substituição local"}`;
+      });
+    }
+  }
   fitCardSymbols(form);
   let historyIndex = -1,
     timer,
@@ -436,12 +514,18 @@ export async function cardLab(ctx, uid) {
   };
   const fitPreview = () => {
     const canvas = preview.getBoundingClientRect();
+    const padding = getComputedStyle(preview);
+    const width =
+      canvas.width -
+      parseFloat(padding.paddingLeft) -
+      parseFloat(padding.paddingRight);
+    const height =
+      canvas.height -
+      parseFloat(padding.paddingTop) -
+      parseFloat(padding.paddingBottom);
     preview.firstElementChild?.style.setProperty(
       "--card-width",
-      Math.max(
-        50,
-        Math.min(320, canvas.width - 32, (canvas.height - 24) / 1.5),
-      ) + "px",
+      Math.max(50, Math.min(width, height * 0.67)) + "px",
     );
   };
   form
@@ -569,6 +653,17 @@ export async function cardLab(ctx, uid) {
     document
       .querySelectorAll("[data-studio-property]")
       .forEach((input) => (input.value = f[input.dataset.studioProperty]));
+    form.querySelectorAll("[data-rating-preset]").forEach((button) => {
+      const [, x, y] = ratingPresets[button.dataset.ratingPreset];
+      button.setAttribute(
+        "aria-pressed",
+        String(
+          f.ratingLayout === "original" &&
+            Number(f.ratingX) === x &&
+            Number(f.ratingY) === y,
+        ),
+      );
+    });
     document
       .querySelectorAll("[data-studio-readout]")
       .forEach(
@@ -623,6 +718,15 @@ export async function cardLab(ctx, uid) {
     commit();
   };
   form.onsubmit = (e) => e.preventDefault();
+  form.querySelectorAll("[data-rating-preset]").forEach((button) => {
+    button.onclick = () => {
+      const [, x, y] = ratingPresets[button.dataset.ratingPreset];
+      set("ratingLayout", "original");
+      set("ratingX", x);
+      set("ratingY", y);
+      changed();
+    };
+  });
   form.oninput = (e) => {
     if (e.target === library) return;
     if (e.target.name !== "themeName") set("preserveOriginal", "no");

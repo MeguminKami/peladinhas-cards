@@ -6,6 +6,8 @@ O Card Lab é a bancada de composição de cartas reservada a ADMIN. Os controlo
 
 ## Percurso de criação
 
+A bancada tem uma altura própria ajustada ao ecrã, sem descontar o título, a navegação de administração ou a barra do projeto. **Centrar editor** desloca a página até ao início das ferramentas, abaixo do cabeçalho. O menu mantém deslocação independente e a carta cresce até ao maior tamanho que cabe na pré-visualização. No telemóvel, a carta aparece acima das ferramentas e a altura disponível respeita a navegação inferior. A deslocação do botão é imediata quando há preferência por movimento reduzido.
+
 | Ferramenta | Conteúdo                                                           |
 | ---------- | ------------------------------------------------------------------ |
 | Modelos    | Todas as cartas de `CATALOG_THEMES` e **Do zero**.                 |
@@ -23,7 +25,7 @@ Os menus usam ícones próprios, cabeçalhos consistentes e secções expansíve
 
 Escolher um modelo conserva o desenho nativo com `preserveOriginal: "yes"`, incluindo ao guardar sem alterações. Editar um controlo visual passa para composição personalizada. **Original** significa conservar a camada nativa do modelo, não uma superfície vazia.
 
-Silhuetas, ornamentos e símbolos têm nome próprio e pré-visualização em galerias. Os 41 ornamentos distribuem-se por Essenciais, Geometria e tecnologia, Luz e natureza, Emblemas e gravuras, e Festa e movimento. Os IDs das edições continuam internos para compatibilidade com projetos guardados.
+Silhuetas, ornamentos e símbolos têm nome próprio e pré-visualização em galerias. Os 56 ornamentos distribuem-se por Essenciais, Geometria e tecnologia, Luz e natureza, Emblemas e gravuras, Festa e movimento, e Percursos pessoais. Novos ornamentos sem categoria atribuída aparecem automaticamente em Outras edições. Os IDs das edições continuam internos para compatibilidade com projetos guardados.
 
 **Do zero** começa com cor sólida, sem decoração, acabamento, iluminação nem moldura. A fotografia de exemplo é sempre a do ADMIN autenticado. A identidade e os temas premiados desse jogador não devem voltar a aplicar-se por cima do projeto.
 
@@ -47,7 +49,9 @@ Uma superfície personalizada remove as texturas e os reflexos nativos que poder
 
 ## Texto, fotografia e símbolos
 
-Não há uma segunda pré-visualização de texto no formulário: o resultado é mostrado na carta. DIN Pro Condensed Regular, Medium e Bold, e Posterama 1927 Bold usam `local()`; os ficheiros dessas fontes não são distribuídos. Na ausência das fontes instaladas, aplicam-se os fallbacks do catálogo.
+Não há uma segunda pré-visualização de texto no formulário: o resultado é mostrado na carta. **Original do modelo** é a escolha inicial para nome, OVR, atributos, legendas e posição; editar outro elemento conserva a família, peso e proporções nativas. Os tamanhos permitem ampliar ou reduzir essa tipografia. **Peladinhas Sans** está incluída na aplicação e pode ser escolhida explicitamente. DIN Pro Condensed Regular, Medium e Bold, e Posterama 1927 Bold usam `local()`; os ficheiros dessas fontes não são distribuídos. O menu indica se estão instaladas ou se será usada uma substituição local. As restantes fontes opcionais usam as famílias e fallbacks do catálogo.
+
+Em **Composição → OVR + posição + país**, uma grelha direcional oferece a posição original e oito desvios mínimos de 1 ponto percentual: acima, abaixo, esquerda, direita e diagonais. Cada opção posiciona o bloco completo perto da âncora nativa (10% horizontal, 12% vertical), mantendo a mesma ordem, alinhamento, espaçamento, fontes e tamanhos. As posições são predefinidas, não acumulativas. A escolha suporta guardar, importar, desfazer e refazer. As barras de posição ficam recolhidas para ajustes manuais.
 
 A fotografia vem do perfil do ADMIN atual, inclusive ao abrir modelos, importar projetos ou usar desfazer/refazer. O editor permite alterar o seu enquadramento, não selecionar a fotografia de outro jogador através do projeto.
 
@@ -58,6 +62,8 @@ Os símbolos usam SVG normalizado, centrado junto à parte inferior, com espaço
 Guardar um projeto novo cria um ID. Reabrir pela biblioteca e guardar alterações mantém o ID; guardar uma cópia cria outro. Escolher um modelo do catálogo desassocia o projeto anteriormente aberto, evitando gravá-lo por engano. A importação JSON inicia uma nova composição. Desfazer/refazer conserva os valores do projeto.
 
 O esquema é validado por `validCardDesign` no browser e em `saveTheme`. Novos campos/opções exigem publicar ambos os consumidores; mudar apenas CSS ou o conteúdo visual de uma paleta é uma alteração de frontend.
+
+As opções de fonte `original` e `peladinhas`, e o campo `ratingLayout` (`original`, `compact`, `sidecar`), exigem publicar o frontend e a função `saveTheme`. As posições predefinidas usam `ratingLayout: "original"` e os campos existentes `ratingX`/`ratingY`; os outros valores de layout continuam aceites para projetos anteriores. Os projetos existentes mantêm as fontes e coordenadas guardadas até uma nova escolha. Não é necessário recalcular dados.
 
 ## Implementação e verificação
 
