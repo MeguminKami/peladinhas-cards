@@ -1,4 +1,6 @@
 // Immutable game attempts and historical votes. No browser clock decides results.
+import { pathObjectiveRequirements } from "./path-missions.js";
+import { pathNode } from "./path-model.js";
 import {
   FEEDBACK,
   participants,
@@ -12,7 +14,7 @@ export const pathMillis = (value) =>
 export const pathReviewDeadline = (game) =>
   pathMillis(game?.closedAt) ? pathMillis(game.closedAt) + PATH_REVIEW_MS : 0;
 export const pathUsesRatings = (objective) =>
-  !["goals", "assists", "wins"].includes(objective.kind);
+  pathObjectiveRequirements(objective).criteria.length > 0;
 
 export function freezePathForGame(state, game, now) {
   if (!state?.active || !participants(game).includes(state.uid)) return state;
@@ -32,6 +34,14 @@ export function freezePathForGame(state, game, now) {
     windowVersion: next.active.offer.proposalVersion >= 3 ? 3 : 1,
   });
   next.active = null;
+  const route = pathNode(state.active.nodeId)?.route;
+  if (route && state.active.offer.family) {
+    next.recentPathFamilies ||= {};
+    next.recentPathFamilies[route] = [
+      ...(next.recentPathFamilies[route] || []),
+      state.active.offer.family,
+    ].slice(-3);
+  }
   next.revision++;
   return next;
 }
@@ -137,6 +147,17 @@ export function pathWindowResult(objective, game, summary, uid, now, evaluate) {
       status: "waiting",
       reason: "Missão bloqueada: este jogo está aberto.",
     };
+  const requirements = pathObjectiveRequirements(objective);
+  if (
+    objective.kind === "conditions" &&
+    requirements.goalkeeper &&
+    game.positions?.[uid] !== "GR"
+  )
+    return {
+      status: "cancelled",
+      reason:
+        "Tentativa cancelada: não jogaste na posição GR. O progresso foi preservado.",
+    };
   if (!pathUsesRatings(objective))
     return evaluate(objective, game, summary, uid);
   const deadline = pathReviewDeadline(game);
@@ -147,7 +168,18 @@ export function pathWindowResult(objective, game, summary, uid, now, evaluate) {
       reviewDeadline: deadline,
     };
   const player = summary?.players?.[uid];
-  const criteria = objective.criteria || [objective.criterion];
+  const criteria = requirements.criteria;
+  if (
+    objective.kind === "conditions" &&
+    requirements.goalkeeper &&
+    player?.goalkeepingEligible === false
+  )
+    return {
+      status: "cancelled",
+      reason:
+        "Tentativa cancelada: participação a GR não elegível. O progresso foi preservado.",
+      reviewDeadline: deadline,
+    };
   if (
     criteria.some(
       (key) =>

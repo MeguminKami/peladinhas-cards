@@ -1,4 +1,5 @@
 import { PATH_CARD_EDITIONS } from "./path-card-designs.js";
+import { pathObjectiveLines, pathObjectiveRequirements } from "./path-missions.js";
 import { pathReviewDeadline, pathUsesRatings } from "./path-window.js";
 import {
   PATH_ROUTES,
@@ -25,9 +26,18 @@ import { card, bindImages } from "./cards.js";
 import { linkButton, busy, toast, modal, closeModal } from "./ui.js";
 import * as DB from "./db.js";
 
-export function pathMissionEntry(state) {
+const missionScope = (frozen = false) => `<span class="path-mission-scope">${icon("games")}${frozen ? "Escolhida para o próximo jogo" : "No próximo jogo"}</span>`;
+const missionTitle = (offer) => esc(offer.title || pathObjectiveText(offer.objective));
+const missionConditions = (offer) => offer.objective.kind === "conditions"
+  ? `<ul class="path-mission-conditions" aria-label="Condições da missão">${pathObjectiveLines(offer.objective).map((line) => `<li>${esc(line)}</li>`).join("")}</ul>` : "";
+
+export function pathMissionEntry(
+  state,
+  { rewards = [], uid = state?.uid } = {},
+) {
   const active = state?.active || state?.pending?.[0],
     result = state?.lastResult;
+  const node = pathNode(active?.nodeId);
   const discovery = PATH_FUSIONS.find(
     (fusion) =>
       !(state?.unifiedFusions || []).includes(fusion.id) &&
@@ -57,6 +67,28 @@ export function pathMissionEntry(state) {
     type: "PLAYER_PATH",
     icon: "path",
     href: "#/missions/path",
+    mission:
+      active && node
+        ? {
+            nodeId: node.id,
+            nodeNumber: node.tier + 1,
+            nodeLabel: node.label,
+            routeLabel: pathRoute(node.route).label,
+            offer: active.offer,
+            boosts: pathRewardPreview(node, rewards, uid),
+            cardName:
+              node.specialId ||
+              (active.offer.legacyFinalEligible &&
+                (node.tier === 9 ||
+                  (node.style === "fusion" && node.tier === 0)))
+                ? pathRoute(node.route).cardName
+                : null,
+            counts: frozen ? active.ratingCounts || {} : null,
+            rated: pathUsesRatings(active.offer.objective),
+            criteria: pathObjectiveRequirements(active.offer.objective)
+              .criteria,
+          }
+        : null,
     title: active
       ? pathObjectiveText(active.offer.objective)
       : result?.status === "failure"
@@ -92,9 +124,39 @@ export function pathMissionEntry(state) {
 }
 export function pathMissionSpotlight(entry) {
   const progress = Math.min(100, Math.max(0, entry.done || 0));
+  if (entry.mission) {
+    const mission = entry.mission;
+    const lines =
+      mission.offer.objective.kind === "conditions"
+        ? pathObjectiveLines(mission.offer.objective)
+        : [pathObjectiveText(mission.offer.objective)];
+    return `<a class="path-mission-spotlight has-chosen-mission event-rarity-surface" data-rarity="${eventRarityId(mission.offer)}" href="${esc(entry.href)}/${esc(mission.nodeId)}">
+<div class="path-chosen-header"><span class="path-chosen-brand">${icon("path")}Escolhe o teu caminho</span>${rarityBadge(mission.offer)}</div>
+<div class="path-chosen-objective"><div class="path-spotlight-copy"><p class="path-chosen-node">${esc(mission.routeLabel)} <span>· Nó ${String(mission.nodeNumber).padStart(2, "0")} · ${esc(mission.nodeLabel.split(" · ")[0])}</span></p>
+${missionScope(!!mission.counts)}<h2>${esc(lines.length === 1 ? lines[0] : mission.offer.title || "A tua missão")}</h2>
+${lines.length > 1 ? `<ul class="path-mission-conditions">${lines.map((line) => `<li>${esc(line)}</li>`).join("")}</ul>` : ""}
+${mission.counts ? `<p class="path-chosen-review">${icon(entry.stateIcon || "lock")}${esc(entry.stateText)}</p>${mission.rated ? `<p class="path-spotlight-votes">${mission.criteria.map((key) => `${esc({ attack: "Ataque", passing: "Passe", physical: "Físico", defense: "Defesa", goalkeeping: "GR", attitude: "Atitude" }[key])}: <b>${mission.counts[key] || 0}/7 votos</b>`).join(" · ")}</p>` : ""}` : ""}</div>
+<div class="path-chosen-advance"><strong>+${mission.offer.advance}<small>%</small></strong><span>avanço se cumprires</span></div></div>
+<div class="path-chosen-outcome"><div class="path-chosen-progress"><span class="path-chosen-label">PROGRESSO DO NÓ <b>${progress}%</b></span><span class="path-spotlight-meter" role="progressbar" aria-label="Progresso atual do nó" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="--progress:${progress}%"></i></span><small>O avanço extra passa ao nó seguinte.</small></div>
+<div class="path-chosen-prize"><span class="path-chosen-label">RECOMPENSA DO NÓ (AOS 100%)</span><div class="path-chosen-rewards">${pathRewardMarkup(mission.boosts, mission.cardName)}</div></div></div>
+<span class="path-spotlight-cta">Ver missão e percurso${icon("arrow")}</span></a>`;
+  }
   return `<a class="path-mission-spotlight" href="${esc(entry.href)}"><div class="path-spotlight-copy"><p class="eyebrow">${icon("path")}EVOLUÇÃO PESSOAL</p><h2>Escolhe o teu <br><em>caminho!</em></h2><span class="path-spotlight-route">${esc(entry.routeLabel)}</span><p class="path-spotlight-objective">${esc(entry.title)}</p>${entry.stateText ? `<p class="path-spotlight-state">${icon(entry.stateIcon || "path")}${esc(entry.stateText)}</p>` : ""}<span class="path-spotlight-cta">${entry.started ? "Continuar o meu caminho" : "Descobrir o meu primeiro caminho"}${icon("arrow")}</span></div><div class="path-spotlight-art" aria-hidden="true"><svg viewBox="0 0 260 210"><path class="spotlight-pitch" d="m20 180 55-150h155l-55 150ZM48 105h155M152 30 96 180"/><path class="spotlight-trail" d="m55 166 41-57 56 22 42-74"/><circle cx="55" cy="166" r="7"/><circle cx="96" cy="109" r="10"/><circle cx="152" cy="131" r="7"/><path class="spotlight-goal" d="m194 36 6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2Z"/></svg><span>O TEU JOGO.<br>A TUA ASSINATURA.</span></div>${progress ? `<span class="path-spotlight-progress" aria-label="Avanço do nó: ${progress}%"><i style="--progress:${progress}%"></i><b>${progress}%</b></span>` : ""}</a>`;
 }
 const names = Object.fromEntries(ATTRIBUTES.map(([key, name]) => [key, name]));
+function pathRewardMarkup(boosts, cardName) {
+  return (
+    Object.entries(boosts)
+      .map(
+        ([key, value]) =>
+          `<span class="path-reward-chip${!value ? " is-capped" : ""}"><strong class="path-reward-value">+${String(value).replace(".", ",")}</strong><span class="path-reward-copy"><b class="path-reward-name">${esc(names[key])}</b><small>${value ? "Ponto permanente" : "Limite atingido"}</small></span></span>`,
+      )
+      .join("") +
+    (cardName
+      ? `<span class="path-reward-card">${icon("trophy")}<span class="path-reward-copy"><b class="path-reward-name">${esc(cardName)}</b><small>Carta permanente</small></span></span>`
+      : "")
+  );
+}
 const difficulty = ["Acessível", "Exigente", "Difícil"];
 const statusLabel = {
   complete: "Conquistado",
@@ -106,9 +168,9 @@ const statusLabel = {
 const progressRing = (value, label) =>
   `<span class="path-ring" style="--fill:${Math.min(100, Math.max(0, value))};--target-fill:${Math.min(100, Math.max(0, value))}" role="img" aria-label="${esc(label)}"><b>${value}<small>%</small></b></span>`;
 
-export async function pathsPage(ctx) {
+export async function pathsPage(ctx, requestedNodeId) {
   let state = await DB.getPath(),
-    selected = state.selectedNode || state.active?.nodeId || "shooting-0-0";
+    selected = pathNode(requestedNodeId) ? requestedNodeId : state.selectedNode || state.active?.nodeId || "shooting-0-0";
   let routeId = pathNode(selected)?.route || "shooting",
     chapter = Math.floor((pathNode(selected)?.tier || 0) / 5);
   let disposed = false,
@@ -155,10 +217,8 @@ export async function pathsPage(ctx) {
         const deadline = pathUsesRatings(attempt.offer.objective)
           ? attempt.reviewDeadline || pathReviewDeadline(game)
           : 0;
-        const criteria = attempt.offer.objective.criteria || [
-          attempt.offer.objective.criterion,
-        ];
-        return `<article class="path-pending-attempt"><span class="path-pending-symbol">${icon(deadline ? "ratingAverage" : "lock")}</span><div><p class="eyebrow">${esc(pathRoute(pathNode(attempt.nodeId)?.route)?.label || "O teu percurso")}</p><h3>${esc(pathObjectiveText(attempt.offer.objective))}</h3><p>${deadline && pathUsesRatings(attempt.offer.objective) ? `Avaliações · <strong data-path-deadline="${deadline}">${remainingTime(deadline)}</strong>` : game?.status === "closed" || attempt.closedGame?.status === "closed" ? "Resultado em apuramento." : "Missão bloqueada para este jogo."}</p>${deadline && pathUsesRatings(attempt.offer.objective) ? `<p class="path-vote-counts">${criteria.map((key) => `${esc({ attack: "Ataque", passing: "Passe", physical: "Físico", defense: "Defesa", goalkeeping: "GR", attitude: "Atitude" }[key] || key)}: <b>${attempt.ratingCounts?.[key] || 0}/7 votos</b>`).join(" · ")}</p><p>Com menos de sete votos por critério no fim das 48 horas, a tentativa é cancelada sem perder progresso.</p>` : ""}<div class="path-pending-actions"><button class="btn btn-ghost" data-path-node="${attempt.nodeId}">Ver nó${icon("arrow")}</button>${linkButton(`#/game/${attempt.gameId}`, "Ver jogo", "ghost", "games")}</div></div></article>`;
+        const criteria = pathObjectiveRequirements(attempt.offer.objective).criteria;
+        return `<article class="path-pending-attempt"><span class="path-pending-symbol">${icon(deadline ? "ratingAverage" : "lock")}</span><div><p class="eyebrow">${esc(pathRoute(pathNode(attempt.nodeId)?.route)?.label || "O teu percurso")}</p>${missionScope(true)}<h3>${missionTitle(attempt.offer)}</h3>${missionConditions(attempt.offer)}<p>${deadline && pathUsesRatings(attempt.offer.objective) ? `Avaliações · <strong data-path-deadline="${deadline}">${remainingTime(deadline)}</strong>` : game?.status === "closed" || attempt.closedGame?.status === "closed" ? "Resultado em apuramento." : "Missão bloqueada para este jogo."}</p>${deadline && pathUsesRatings(attempt.offer.objective) ? `<p class="path-vote-counts">${criteria.map((key) => `${esc({ attack: "Ataque", passing: "Passe", physical: "Físico", defense: "Defesa", goalkeeping: "GR", attitude: "Atitude" }[key] || key)}: <b>${attempt.ratingCounts?.[key] || 0}/7 votos</b>`).join(" · ")}</p><p>Com menos de sete votos por critério no fim das 48 horas, a tentativa é cancelada sem perder progresso.</p>` : ""}<div class="path-pending-actions"><button class="btn btn-ghost" data-path-node="${attempt.nodeId}">Ver nó${icon("arrow")}</button>${linkButton(`#/game/${attempt.gameId}`, "Ver jogo", "ghost", "games")}</div></div></article>`;
       })
       .join(
         "",
@@ -209,18 +269,27 @@ export async function pathsPage(ctx) {
       ? `path-${node.route}`
       : null;
   }
+  function rewardPreview(node) {
+    const delivered =
+      state.nodes[node.id]?.completedAt &&
+      (ctx.league.eventRewards || []).find(
+        (row) =>
+          row.uid === ctx.user.uid &&
+          row.pathNodeId === node.id &&
+          !row.revokedAt &&
+          !row.pending,
+      );
+    if (delivered?.reward)
+      return Object.fromEntries(
+        node.rewardKeys.map((key) => [
+          key,
+          delivered.reward.boosts?.[key] || 0,
+        ]),
+      );
+    return pathRewardPreview(node, ctx.league.eventRewards || [], ctx.user.uid);
+  }
   function rewardText(node) {
-    const preview = pathRewardPreview(
-      node,
-      ctx.league.eventRewards || [],
-      ctx.user.uid,
-    );
-    return node.rewardKeys
-      .map(
-        (key) =>
-          `<span class="path-reward-chip">${icon("plus")}<b>+${preview[key]}</b> ${esc(names[key])}${!preview[key] ? " · limite atingido" : ""}</span>`,
-      )
-      .join("");
+    return pathRewardMarkup(rewardPreview(node), specialForNode(node) ? pathRoute(node.route).cardName : null);
   }
   function finalCard(route) {
     const id = `path-${route.id}`,
@@ -236,12 +305,8 @@ export async function pathsPage(ctx) {
     if (node.id === selected) return details();
     const status = nodeStatus(node, state),
       progress = state.nodes[node.id]?.progress || 0,
-      preview = pathRewardPreview(
-        node,
-        ctx.league.eventRewards || [],
-        ctx.user.uid,
-      );
-    return `<button type="button" class="path-node ${status}${animateResult && state.lastResult?.completed && state.lastResult.nodeId === node.id ? " just-earned" : ""}${selected === node.id ? " is-selected" : ""}" data-path-node="${node.id}" aria-pressed="${selected === node.id}" aria-label="${esc(node.label)}, ${stateLabel(node, status)}, ${progress}%, ${esc(Object.entries(preview).map(([key,value])=>`+${value} ${names[key]}`).join(", "))}"><span class="path-node-mark">${icon(status === "complete" ? "check" : ["locked", "reserved"].includes(status) ? "lock" : specialForNode(node) ? "trophy" : node.lane ? "streak" : "path")}</span><span class="path-node-copy"><b>${esc(node.label.split(" · ")[0])}</b><small>${stateLabel(node, status)} · ${progress}%</small><span class="path-node-progress"><i style="--progress:${progress}%"></i></span><span class="path-node-prize">${node.rewardKeys.map((key) => `+${preview[key]} ${esc(names[key])}`).join(" · ")}${specialForNode(node) ? " · Carta permanente" : ""}</span></span></button>`;
+      preview = rewardPreview(node);
+    return `<button type="button" class="path-node ${status}${animateResult && state.lastResult?.completed && state.lastResult.nodeId === node.id ? " just-earned" : ""}${selected === node.id ? " is-selected" : ""}" data-path-node="${node.id}" aria-pressed="${selected === node.id}" aria-label="${esc(node.label)}, ${stateLabel(node, status)}, ${progress}%, ${esc(Object.entries(preview).map(([key,value])=>`+${value} ${names[key]}`).join(", "))}"><span class="path-node-mark">${icon(status === "complete" ? "check" : ["locked", "reserved"].includes(status) ? "lock" : specialForNode(node) ? "trophy" : node.lane ? "streak" : "path")}</span><span class="path-node-copy"><b>${esc(node.label.split(" · ")[0])}</b><small>${stateLabel(node, status)} · ${progress}%</small><span class="path-node-progress"><i style="--progress:${progress}%"></i></span><span class="path-node-prize"><span class="path-reward-heading">${status === "complete" ? "NÓ CONQUISTADO" : "RECOMPENSA DO NÓ"}</span><span class="path-reward-list">${rewardText(node)}</span></span></span></button>`;
   }
   function map() {
     const route = pathRoute(routeId);
@@ -251,7 +316,7 @@ export async function pathsPage(ctx) {
       )
         .map(
           (node, index) =>
-            `<li class="path-map-row"><span class="path-stage-number">${index + 1}</span>${index ? `<svg class="path-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M50 0V100"/></svg>` : ""}${nodeButton(node)}</li>`,
+            `<li class="path-map-row${node.requires.some((id) => state.nodes[id]?.completedAt) ? " is-reached" : ""}"><span class="path-stage-number">${index + 1}</span>${index ? `<svg class="path-links" viewBox="0 0 24 48" aria-hidden="true" focusable="false"><path class="path-link-stem" d="M12 5v34"/><path class="path-link-head" d="m6 33 6 6 6-6"/></svg>` : ""}${nodeButton(node)}</li>`,
         )
         .join(
           "",
@@ -283,7 +348,7 @@ export async function pathsPage(ctx) {
         const reached =
           nodes.some((node) => nodeStatus(node, state) === "complete") ||
           nodes[0].requires.some((id) => state.nodes[id]?.completedAt);
-        return `<li class="path-map-row${reached ? " is-reached" : ""}"><span class="path-stage-number" aria-hidden="true">${String(tier + 1).padStart(2, "0")}</span>${index ? `<svg class="path-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M50 0V100"/></svg>` : ""}<div class="path-map-pair">${nodes.map(nodeButton).join("")}</div></li>`;
+        return `<li class="path-map-row${reached ? " is-reached" : ""}"><span class="path-stage-number" aria-hidden="true">${String(tier + 1).padStart(2, "0")}</span>${index ? `<svg class="path-links" viewBox="0 0 24 48" aria-hidden="true" focusable="false"><path class="path-link-stem" d="M12 5v34"/><path class="path-link-head" d="m6 33 6 6 6-6"/></svg>` : ""}<div class="path-map-pair">${nodes.map(nodeButton).join("")}</div></li>`;
       },
     ).join(
       "",
@@ -291,7 +356,21 @@ export async function pathsPage(ctx) {
   }
   function preparedMission(active, node) {
     const rated = pathUsesRatings(active.offer.objective);
-    return `<div class="path-active"><div class="path-prepared-main"><div class="path-prepared-objective"><span class="path-next-match">${icon(active.reviewDeadline ? "ratingAverage" : active.frozenAt ? "lock" : "games")}${active.reviewDeadline ? "EM AVALIAÇÃO" : active.frozenAt ? "MISSÃO BLOQUEADA" : "NO PRÓXIMO JOGO"}</span>${rarityBadge(active.offer)}<h3>${esc(pathObjectiveText(active.offer.objective))}</h3><p>${active.reviewDeadline ? `Apuramento em <strong data-path-deadline="${active.reviewDeadline}">${remainingTime(active.reviewDeadline)}</strong>` : active.frozenAt ? "A tua escolha está confirmada para este jogo." : "Desafio escolhido. Leva-o para o próximo jogo em que participares."}</p><span class="path-prepared-validation">${icon(rated ? "ratingAverage" : "check")}${rated ? "Apura 48h após o fecho · 7 votos por critério" : "Apura no fecho do jogo"}</span></div><aside class="path-prepared-gain" aria-label="Avanço em caso de sucesso"><span>SE CONSEGUIRES</span><strong>+${active.offer.advance}<small>%</small></strong><p>de avanço no percurso</p><div class="path-rewards">${rewardText(node)}</div><p class="path-gain-note">Recompensa ao completar o nó.<br>O avanço extra passa ao seguinte.</p></aside></div><div class="path-prepared-failure">${icon("refresh")}<p><b>Se falhares</b>Este nó recomeça em 0%. Os anteriores e as cartas mantêm-se.</p></div><footer class="path-prepared-footer"><p>${icon(active.frozenAt ? "lock" : "info")}${active.frozenAt ? "Escolha protegida até ao apuramento." : "Podes mudar até à abertura do jogo, sem perder progresso."}</p><div class="path-prepared-actions">${active.gameId ? linkButton(`#/game/${active.gameId}`, "Ver jogo", "secondary", "games") : ""}${!active.frozenAt ? `<button class="btn btn-secondary" data-path-change ${choiceLocked() || paused() ? "disabled" : ""}>${icon("refresh")}Alterar missão</button><button class="btn btn-ghost" data-path-abandon ${paused() ? "disabled" : ""}>Remover escolha</button>` : ""}</div></footer></div>`;
+    const progress = Math.min(
+      100,
+      Math.max(0, state.nodes[node.id]?.progress || 0),
+    );
+    const lines =
+      active.offer.objective.kind === "conditions"
+        ? pathObjectiveLines(active.offer.objective)
+        : [pathObjectiveText(active.offer.objective)];
+    return `<div class="path-active"><div class="path-prepared-main">
+<div class="path-prepared-objective"><p class="path-prepared-objective-label">${icon("missions")}A TUA MISSÃO <span>· ${active.frozenAt ? "ESCOLHIDA PARA O PRÓXIMO JOGO" : "NO PRÓXIMO JOGO"}</span></p><h3>${lines.length === 1 ? esc(lines[0]) : missionTitle(active.offer)}</h3>${lines.length > 1 ? missionConditions(active.offer) : ""}</div>
+<div class="path-prepared-metrics"><div class="path-prepared-progress"><span>Progresso do nó</span><b>${progress}%</b><span class="path-spotlight-meter" role="progressbar" aria-label="Progresso atual do nó" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="--progress:${progress}%"></i></span></div><div class="path-prepared-advance"><span>Avanço se cumprires</span><b>+${active.offer.advance}%</b></div><div class="path-prepared-reward"><span class="path-reward-heading">Recompensa do nó</span><div class="path-rewards">${rewardText(node)}</div></div></div>
+<div class="path-prepared-validation">${icon(rated ? "ratingAverage" : "check")}<span>${active.reviewDeadline ? `Apuramento em <b data-path-deadline="${active.reviewDeadline}">${remainingTime(active.reviewDeadline)}</b>` : rated ? "Apura 48h após o fecho · 7 votos por critério" : "Apura no fecho do jogo"}</span></div></div>
+<div class="path-prepared-failure">${icon("refresh")}<p><b>Se falhares:</b> este nó recomeça em 0%. Os anteriores e as cartas mantêm-se.</p></div>
+<footer class="path-prepared-footer"><p>${icon(active.frozenAt ? "lock" : "info")}${active.frozenAt ? "Escolha protegida até ao apuramento." : "Podes mudar até à abertura do jogo, sem perder progresso."}</p><div class="path-prepared-actions">${active.gameId ? linkButton(`#/game/${active.gameId}`, "Ver jogo", "secondary", "games") : ""}${!active.frozenAt ? `<button class="btn btn-secondary" data-path-change ${choiceLocked() || paused() ? "disabled" : ""}>${icon("refresh")}Alterar missão</button><button class="btn btn-ghost" data-path-abandon ${paused() ? "disabled" : ""}>Remover escolha</button>` : ""}</div></footer></div>
+`;
   }
   function details() {
     const node = pathNode(selected),
@@ -306,11 +385,16 @@ export async function pathsPage(ctx) {
       (review) => !review.acknowledgedAt,
     );
     const proposals = state.offers[node.id];
-    return `<section class="path-detail path-node-expanded${active ? " has-prepared-mission" : ""}" id="path-detail" aria-labelledby="path-detail-title"><div class="path-detail-head"><span class="path-state">${stateLabel(node, status)}</span>${progressRing(progress, `Avanço deste nó: ${progress}%`)}</div><p class="eyebrow">${node.style === "fusion" ? "COMBINAÇÃO" : esc(pathRoute(node.route).label)} · NÓ ${String(node.tier + 1).padStart(2, "0")}</p><h2 id="path-detail-title" tabindex="-1">${esc(node.label)}</h2>${!active ? `<p class="path-style-note">${node.style === "fusion" ? "Combina duas áreas do teu jogo, sem bloquear as especializações." : "Cada nó termina nos 100%. Todo o excedente passa para o nó seguinte deste percurso."}</p><div class="path-rewards">${rewardText(node)}</div>` : ""}${specialForNode(node) ? `<p class="path-permanent">${icon("gift")}Inclui carta permanente: <b>${esc(pathRoute(node.route).cardName)}</b></p>` : ""}
-    ${review ? `<p class="path-feedback warning" role="status">Um resultado foi corrigido. O percurso está em revisão pela administração; as tuas conquistas mantêm-se visíveis.</p>` : status === "complete" ? `<div class="path-completed">${icon("check")}<h3>Este nó já é teu.</h3><p>Explora os caminhos que desbloqueaste. Esta recompensa é entregue uma única vez.</p></div>` : status === "locked" || status === "reserved" ? `<div class="path-locked"><h3>${status === "reserved" ? "Este nó está reservado." : "Há caminho até aqui."}</h3><p>${status === "reserved" ? "Pode receber avanço de uma tentativa em avaliação. Aguarda o apuramento para escolher uma missão aqui." : node.groups ? "Conquista um nó da etapa 5 em cada uma destas áreas:" : "Conquista um dos nós anteriores:"}</p><div class="path-prerequisites">${(node.groups ? node.groups.map((group) => group.find((id) => state.nodes[id]?.completedAt) || group[0]) : node.requires.length ? [node.requires.find((id) => state.nodes[id]?.completedAt) || node.requires[0]] : []).map((id) => `<button class="btn btn-secondary" data-path-node="${id}">${icon(state.nodes[id]?.completedAt ? "check" : "path")}${esc(names[pathNode(id).route])} · Etapa ${pathNode(id).tier + 1}</button>`).join("")}</div></div>` : active ? (active.nodeId === node.id ? preparedMission(active, node) : `<p>Já escolheste uma missão para o próximo jogo.</p><button class="btn btn-primary" data-path-node="${active.nodeId}">${icon("path")}Ver missão atual</button>`) : paused() ? '<p role="status">As missões estão temporariamente pausadas. Podes continuar a explorar o mapa.</p>' : proposals ? `<p class="path-proposal-intro">Três maneiras de avançar. Escolhe uma para o próximo jogo em que participares.</p><div class="path-proposals">${proposals.map((offer) => `<article class="path-proposal event-rarity-surface difficulty-${offer.difficulty}" data-rarity="${eventRarityId(offer)}"><div>${rarityBadge(offer)}<span class="visually-hidden">${difficulty[offer.difficulty]}</span><strong>+${offer.advance}%</strong></div><h3>${esc(pathObjectiveText(offer.objective))}</h3><p>${["goals", "assists", "wins"].includes(offer.objective.kind) ? "Pelo registo validado do jogo." : `Mínimo de ${offer.objective.minRatings} avaliações válidas por critério; apura às 48 horas do fecho. Sem sete votos por critério, cancela sem perda de progresso.`}</p>${!pathOfferAvailable(node, offer, state) ? `<p class="path-offer-blocked">Este avanço pode atingir outro nó em avaliação. Escolhe outra proposta ou aguarda o apuramento.</p>` : ""}<button class="btn ${offer.difficulty === 2 ? "btn-primary" : "btn-secondary"}" data-path-accept="${offer.id}" ${choiceLocked() || !pathOfferAvailable(node, offer, state) ? "disabled" : ""}>Escolher missão${icon("arrow")}</button></article>`).join("")}</div><div class="path-reroll"><button class="btn btn-secondary" data-path-reroll ${!pathRerollAvailable(state) || choiceLocked() ? "disabled" : ""}>${icon("refresh")}${pathRerollAvailable(state) ? "Renovar estas três missões" : "Reroll diário utilizado"}</button><p>Um reroll por dia, partilhado por todos os caminhos. Renova à meia-noite de Lisboa.</p></div><p class="path-failure-rule">${icon("refresh")}Falhar reinicia o avanço deste nó. A dificuldade aumenta o avanço, não o valor da recompensa.</p>` : `<p>Conhece as tuas três propostas para este nó. Ficam guardadas mesmo se saíres da página.</p><button class="btn btn-primary" data-path-offers>${icon("path")}Revelar as três missões</button>`}</section>`;
+    if (active && !review) return `<section class="path-detail path-node-expanded has-prepared-mission event-rarity-surface" data-rarity="${eventRarityId(active.offer)}" id="path-detail" aria-labelledby="path-detail-title"><header class="path-prepared-top"><div class="path-prepared-context"><p>${esc(pathRoute(node.route).label)} · Nó ${String(node.tier + 1).padStart(2, "0")}</p><h2 id="path-detail-title" tabindex="-1">${esc(node.label)}</h2></div><div class="path-prepared-status">${rarityBadge(active.offer)}<span class="path-state">${stateLabel(node, status)}</span></div></header>${preparedMission(active, node)}</section>`;
+    return `<section class="path-detail path-node-expanded${active ? " has-prepared-mission event-rarity-surface" : ""}" ${active ? `data-rarity="${eventRarityId(active.offer)}"` : ""} id="path-detail" aria-labelledby="path-detail-title"><div class="path-detail-head"><span class="path-state">${stateLabel(node, status)}</span>${progressRing(progress, `Avanço deste nó: ${progress}%`)}</div><p class="eyebrow">${node.style === "fusion" ? "COMBINAÇÃO" : esc(pathRoute(node.route).label)} · NÓ ${String(node.tier + 1).padStart(2, "0")}</p><h2 id="path-detail-title" tabindex="-1">${esc(node.label)}</h2>${!active ? `<p class="path-style-note">${node.style === "fusion" ? "Combina duas áreas do teu jogo, sem bloquear as especializações." : "Cada nó termina nos 100%. Todo o excedente passa para o nó seguinte deste percurso."}</p><div class="path-rewards"><span class="path-reward-heading">RECOMPENSA DO NÓ</span><div class="path-reward-list">${rewardText(node)}</div><p class="path-reward-timing">Entregue ao completar este nó a 100%.</p></div>` : ""}
+    ${review ? `<p class="path-feedback warning" role="status">Um resultado foi corrigido. O percurso está em revisão pela administração; as tuas conquistas mantêm-se visíveis.</p>` : status === "complete" ? `<div class="path-completed">${icon("check")}<h3>Este nó já é teu.</h3><p>Explora os caminhos que desbloqueaste. Esta recompensa é entregue uma única vez.</p></div>` : status === "locked" || status === "reserved" ? `<div class="path-locked"><h3>${status === "reserved" ? "Este nó está reservado." : "Há caminho até aqui."}</h3><p>${status === "reserved" ? "Pode receber avanço de uma tentativa em avaliação. Aguarda o apuramento para escolher uma missão aqui." : node.groups ? "Conquista um nó da etapa 5 em cada uma destas áreas:" : "Conquista um dos nós anteriores:"}</p><div class="path-prerequisites">${(node.groups ? node.groups.map((group) => group.find((id) => state.nodes[id]?.completedAt) || group[0]) : node.requires.length ? [node.requires.find((id) => state.nodes[id]?.completedAt) || node.requires[0]] : []).map((id) => `<button class="btn btn-secondary" data-path-node="${id}">${icon(state.nodes[id]?.completedAt ? "check" : "path")}${esc(names[pathNode(id).route])} · Etapa ${pathNode(id).tier + 1}</button>`).join("")}</div></div>` : active ? (active.nodeId === node.id ? preparedMission(active, node) : `<p>Já escolheste uma missão para o próximo jogo.</p><button class="btn btn-primary" data-path-node="${active.nodeId}">${icon("path")}Ver missão atual</button>`) : paused() ? '<p role="status">As missões estão temporariamente pausadas. Podes continuar a explorar o mapa.</p>' : proposals ? `<p class="path-proposal-intro">Três maneiras de avançar. Escolhe uma para o próximo jogo em que participares.</p><div class="path-proposals">${proposals.map((offer) => `<article class="path-proposal event-rarity-surface difficulty-${offer.difficulty}" data-rarity="${eventRarityId(offer)}"><div>${rarityBadge(offer)}<span class="visually-hidden">${difficulty[offer.difficulty]}</span><strong>+${offer.advance}%</strong></div>${missionScope()}<h3>${missionTitle(offer)}</h3>${missionConditions(offer)}<p>${!pathUsesRatings(offer.objective) ? "Pelo registo validado do jogo." : `Mínimo de ${offer.objective.minRatings} avaliações válidas por critério; apura às 48 horas do fecho. Sem sete votos por critério, cancela sem perda de progresso.`}</p>${!pathOfferAvailable(node, offer, state) ? `<p class="path-offer-blocked">Este avanço pode atingir outro nó em avaliação. Escolhe outra proposta ou aguarda o apuramento.</p>` : ""}<button class="btn ${offer.difficulty === 2 ? "btn-primary" : "btn-secondary"}" data-path-accept="${offer.id}" ${choiceLocked() || !pathOfferAvailable(node, offer, state) ? "disabled" : ""}>Escolher missão${icon("arrow")}</button></article>`).join("")}</div><div class="path-reroll"><button class="btn btn-secondary" data-path-reroll ${!pathRerollAvailable(state) || choiceLocked() ? "disabled" : ""}>${icon("refresh")}${pathRerollAvailable(state) ? "Renovar estas três missões" : "Reroll diário utilizado"}</button><p>Um reroll por dia, partilhado por todos os caminhos. Renova à meia-noite de Lisboa.</p></div><p class="path-failure-rule">${icon("refresh")}Falhar reinicia o avanço deste nó. A dificuldade aumenta o avanço, não o valor da recompensa.</p>` : `<p>Conhece as tuas três propostas para este nó. Ficam guardadas mesmo se saíres da página.</p><button class="btn btn-primary" data-path-offers>${icon("path")}Revelar as três missões</button>`}</section>`;
   }
   function draw(focus = false, animate = true) {
     if (disposed) return;
+    const entryIndex = ctx.missions?.findIndex((mission) => mission.type === "PLAYER_PATH");
+    if (entryIndex >= 0) ctx.missions.splice(entryIndex, 1, pathMissionEntry(state, {
+      rewards: ctx.league.eventRewards || [], uid: ctx.user.uid,
+    }));
     animateResult =
       !!state.lastResult?.id && state.lastResult.id !== animatedResult;
     animatedResult = state.lastResult?.id || null;

@@ -20,6 +20,16 @@ Os scripts npm existentes estão em `package.json`. Os ficheiros `.mjs` indicado
 
 Testes adequados à mudança devem passar antes da publicação. Não interpretar a execução de um cenário dirigido como execução de toda a suite de backend ou de todas as rotas.
 
+## Variedade de missões dos percursos
+
+```powershell
+npm.cmd run test:paths:variety
+npm.cmd run test:paths:variety:ui
+npx.cmd firebase emulators:exec --config firebase.backend.json --project demo-peladinhas-variety --only firestore "node --test --test-concurrency=1 tests/path-variety.backend.test.js"
+```
+
+Cobrem catálogo v4, condições compostas, sorteio diverso, compatibilidade, janela de votos e integração com a abertura/fecho do jogo. O browser usa dados fictícios e verifica as condições nas propostas, preparação, tentativas e revisão administrativa. Resultados datados e limitações no [relatório de variedade](../reports/path-variety-2026-10-19.md). Para uma alteração isolada, executar apenas os cenários afetados ou ainda não validados.
+
 ## Regressões de cartas e Card Lab
 
 ```powershell

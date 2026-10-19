@@ -1,4 +1,5 @@
 // Shared, deterministic rules. Only the server creates offers and settles attempts.
+import { pathMissionTemplates, pickDiversePathOffers, pathObjectiveRequirements, pathObjectiveLines } from "./path-missions.js";
 import {
   ATTRIBUTES,
   asDate,
@@ -41,7 +42,10 @@ export function rerollPathOffers(
     ...state,
     offers: {
       ...state.offers,
-      [node.id]: createPathOffers(node, random, earned),
+      [node.id]: createPathOffers(node, random, earned, {
+        recentFamilies: pathRecentFamilies(state, node.route),
+        previousOffers: state.offers[node.id],
+      }),
     },
     active: state.active?.nodeId === node.id ? null : state.active,
     rerollDay: pathOfferDay(now),
@@ -429,26 +433,28 @@ export function pathEarnedStats(rewards, uid) {
     ]),
   );
 }
-export function createPathOffers(node, random = Math.random, earned = {}) {
-  const route =
-    PATH_ROUTES.find((route) => route.id === node.route) ||
-    PATH_ROUTES.find((route) => route.id === node.rewardKeys[0]);
+export function pathRecentFamilies(state, routeId) {
+  if (state.recentPathFamilies?.[routeId])
+    return state.recentPathFamilies[routeId];
+  return [...(state.history || []), ...(state.pending || [])]
+    .filter(
+      (row) =>
+        pathNode(row.nodeId)?.route === routeId &&
+        row.offer?.family &&
+        row.frozenAt,
+    )
+    .slice(-3)
+    .map((row) => row.offer.family);
+}
+export function createPathOffers(
+  node,
+  random = Math.random,
+  earned = {},
+  context = {},
+) {
   const points = Math.max(...node.rewardKeys.map((key) => earned[key] || 0));
   const stage = points >= 10 ? 2 : points >= 5 ? 1 : 0;
-  const targets =
-    route.criterion === "attitude"
-      ? [
-          [3.5, 4, 4.25],
-          [3.75, 4.25, 4.5],
-          [4, 4.5, 4.75],
-        ][stage]
-      : [
-          [3, 3.5, 4],
-          [3.25, 3.75, 4.25],
-          [3.75, 4, 4.5],
-        ][stage];
-  const chosen = new Set();
-  return [25, 50, 100].map((baseAdvance, difficulty) => {
+  const pools = [25, 50, 100].map((baseAdvance, difficulty) => {
     const rare = difficulty === 2 ? random() : 0;
     const advance = rare >= 0.99 ? 200 : rare >= 0.95 ? 150 : baseAdvance;
     const rarity =
@@ -456,94 +462,26 @@ export function createPathOffers(node, random = Math.random, earned = {}) {
         ? "ultimate"
         : advance === 150
           ? "icon"
-          : ["bronze", "silver", "gold"][difficulty];
-    const rating = {
-      kind: "rating",
-      criterion: route.criterion,
-      target: targets[difficulty],
-      minRatings: 7,
-    };
-    const pools = [rating];
-    if (
-      difficulty === 0 &&
-      ["defending", "physical", "teamwork", "stamina"].includes(node.route)
-    )
-      pools.push({ kind: "wins", target: 1 });
-    if (["shooting", "dribbling"].includes(node.route))
-      pools.push({
-        kind: "goals",
-        target: (stage === 2 ? [2, 3, 5] : stage === 1 ? [1, 2, 4] : [1, 2, 3])[
-          difficulty
-        ],
-      });
-    if (["passing", "vision", "teamwork"].includes(node.route))
-      pools.push({
-        kind: "assists",
-        target: (stage === 2 ? [1, 2, 2] : [1, 1, 2])[difficulty],
-      });
-    if (
-      [
-        "pace",
-        "physical",
-        "stamina",
-        "composure",
-        "positioning",
-        "defending",
-      ].includes(node.route)
-    )
-      pools.push({
-        kind: "ratingWin",
-        criterion: route.criterion,
-        target: Math.max(2.5, targets[difficulty] - 0.5),
-        minRatings: 7,
-      });
-    if (node.route === "goalkeeping")
-      pools.push({
-        kind: "keeper",
-        criterion: "goalkeeping",
-        target: targets[difficulty],
-        minRatings: 7,
-        maxConceded: [3, 2, 1][difficulty],
-      });
-    if (node.style === "fusion")
-      return {
+          : (node.style === "fusion"
+              ? ["gold", "special-gold", "elite"]
+              : ["bronze", "silver", "gold"])[difficulty];
+    return pathMissionTemplates(node.route, stage, difficulty).map(
+      (template) => ({
+        ...template,
         id: String(difficulty),
         difficulty,
-        proposalVersion: 3,
-        rarity:
-          advance > 100
-            ? rarity
-            : ["gold", "special-gold", "elite"][difficulty],
+        proposalVersion: 4,
+        rarity,
         advance,
-        objective: {
-          kind: "hybrid",
-          criteria: node.rewardKeys.map(
-            (key) => PATH_ROUTES.find((route) => route.id === key).criterion,
-          ),
-          target: targets[difficulty],
-          minRatings: 7,
-        },
-      };
-    const pick = Math.min(
-      pools.length - 1,
-      Math.floor(random() * pools.length),
+      }),
     );
-    const candidate = pools[pick];
-    // Two assistance targets can coincide. Never offer the same task for
-    // different progress amounts; fall back to this level's rating objective.
-    const objective = chosen.has(JSON.stringify(candidate))
-      ? rating
-      : candidate;
-    chosen.add(JSON.stringify(objective));
-    return {
-      id: String(difficulty),
-      difficulty,
-      proposalVersion: 3,
-      rarity,
-      advance,
-      objective,
-    };
   });
+  return pickDiversePathOffers(
+    pools,
+    context.recentFamilies || [],
+    random,
+    context.previousOffers || [],
+  );
 }
 const criterionNames = {
   attack: "Ataque",
@@ -554,6 +492,7 @@ const criterionNames = {
   attitude: "Atitude",
 };
 export function pathObjectiveText(objective) {
+  if (objective.kind === "conditions") return pathObjectiveLines(objective).join(" · ");
   const value = String(objective.target).replace(".", ",");
   if (objective.kind === "wins") return "Vence o próximo jogo";
   if (objective.kind === "goals")
@@ -589,6 +528,8 @@ export function nextPathGame(games, uid, acceptedAt, excluded = []) {
 }
 // A stale aggregate or too little feedback is a waiting state, never a defeat.
 export function evaluatePathMission(objective, game, summary, uid) {
+  pathObjectiveRequirements(objective);
+  if (objective.kind === "conditions") return evaluatePathConditions(objective, game, summary, uid);
   if (!game || game.status !== "closed")
     return {
       status: "waiting",
@@ -680,6 +621,98 @@ export function evaluatePathMission(objective, game, summary, uid) {
           ? ` · ${conceded} sofridos`
           : ""),
   };
+}
+export function evaluatePathConditions(objective, game, summary, uid) {
+  const { conditions, criteria, goalkeeper } =
+    pathObjectiveRequirements(objective);
+  if (!game || game.status !== "closed")
+    return { status: "waiting", reason: "À espera do fecho do jogo." };
+  if (
+    !participants(game).includes(uid) ||
+    (goalkeeper && game.positions?.[uid] !== "GR") ||
+    (goalkeeper && summary?.players?.[uid]?.goalkeepingEligible === false)
+  )
+    return {
+      status: "cancelled",
+      reason: "Participação não elegível; progresso preservado.",
+    };
+  // Reuse legacy snapshot validation, including roster, close timestamp and votes.
+  if (criteria.length) {
+    const readiness = evaluatePathMission(
+      { kind: "hybrid", criteria, target: 0, minRatings: 7 },
+      game,
+      summary,
+      uid,
+    );
+    if (readiness.status !== "success") return readiness;
+  }
+  const own = [
+    ...(game.teamA?.starters || []),
+    ...(game.teamA?.bench || []),
+  ].includes(uid)
+    ? "teamA"
+    : "teamB";
+  const performance =
+    game.pathPerformance?.[uid] || matchPerformance(uid, game);
+  const values = {
+    position: game.positions?.[uid],
+    goals: performance.goals || 0,
+    assists: performance.assists || 0,
+    contributions: (performance.goals || 0) + (performance.assists || 0),
+    win: matchOutcome(uid, game) > 0 ? 1 : 0,
+    teamGoals: game.score?.[own],
+    conceded: game.score?.[own === "teamA" ? "teamB" : "teamA"],
+  };
+  const conditionResults = conditions.map((condition) => {
+    const actual =
+      condition.metric === "rating"
+        ? summary.players[uid][condition.criterion]
+        : values[condition.metric];
+    const valid =
+      condition.metric === "position"
+        ? actual === condition.target
+        : Number.isFinite(actual);
+    return {
+      ...condition,
+      actual: actual ?? null,
+      status: !valid
+        ? "waiting"
+        : (
+              condition.metric === "position"
+                ? actual === condition.target
+                : condition.metric === "conceded"
+                  ? actual <= condition.target
+                  : actual >= condition.target
+            )
+          ? "success"
+          : "failure",
+    };
+  });
+  const status = conditionResults.some((row) => row.status === "waiting")
+    ? "waiting"
+    : conditionResults.every((row) => row.status === "success")
+      ? "success"
+      : "failure";
+  const reason = conditionResults
+    .map((row) => {
+      const label =
+        row.metric === "rating"
+          ? criterionNames[row.criterion]
+          : {
+              goals: "Golos",
+              assists: "Assistências",
+              contributions: "Contribuições",
+              win: "Vitória",
+              teamGoals: "Golos da equipa",
+              conceded: "Golos sofridos",
+              position: "Posição",
+            }[row.metric];
+      if (row.metric === "position") return `${label}: ${row.actual}`;
+      if (row.metric === "win") return `Vitória: ${row.actual ? "sim" : "não"}`;
+      return `${label}: ${row.actual === null ? "por validar" : String(row.actual).replace(".", ",")}${row.metric === "rating" ? "★" : ""} (${row.metric === "conceded" ? "máximo" : "mínimo"} ${String(row.target).replace(".", ",")}${row.metric === "rating" ? "★" : ""})`;
+    })
+    .join(" · ");
+  return { status, reason, conditionResults };
 }
 export function settlePathState(state, attempt, result, now) {
   if (

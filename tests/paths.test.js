@@ -26,6 +26,7 @@ import { applyEventRewards } from "../js/event-rules.js";
 import { rewardBudget, DEFAULT_POLICY } from "../js/system-policy.js";
 import { activityCategory } from "../js/activity-categories.js";
 import { PATH_CARD_EDITIONS } from "../js/path-card-designs.js";
+import { pathMissionTemplates } from "../js/path-missions.js";
 
 test("twelve independent specializations reach fifteen / twenty-five nodes without fusion prerequisites", () => {
   for (const route of PATH_ROUTES) {
@@ -75,13 +76,13 @@ test("three offers have increasing progress, meaningful metrics and deterministi
       ["0", "1", "2"],
     );
     assert.equal(
-      new Set(offers.map((offer) => offer.objective.target)).size,
+      new Set(offers.map((offer) => offer.templateId)).size,
       3,
     );
   }
   assert.equal(
     createPathOffers(pathNode("shooting-0-0"), () => 0.9)[2].objective.kind,
-    "goals",
+    "conditions",
   );
 });
 const game = (id = "g", date = "2026-10-20T12:00:00Z") => ({
@@ -364,13 +365,11 @@ test("difficulty uses awarded own points, counts fusions and excludes other sour
   assert.equal(earned.shooting, 10);
   assert.equal(earned.passing, 2);
   assert.equal(
-    createPathOffers(pathNode("shooting-0-0"), () => 0, earned)[2].objective
-      .target,
-    4.5,
+    createPathOffers(pathNode("shooting-0-0"), () => 0, earned)[0].objective.conditions.find((row) => row.metric === "rating").target,
+    3.75,
   );
   assert.equal(
-    createPathOffers(pathNode("shooting-0-0"), () => 0.9, earned)[2].objective
-      .target,
+    pathMissionTemplates("shooting", 2, 2).find((row) => row.templateId === "shooting:goals").objective.conditions[0].target,
     5,
   );
   assert.equal(

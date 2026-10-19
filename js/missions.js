@@ -199,7 +199,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
   );
   missions.push(...eventMissions.flat());
 
-  missions.push(pathMissionEntry(await DB.read(`pathStates/${user.uid}`)));
+  missions.push(pathMissionEntry(await DB.read(`pathStates/${user.uid}`), { rewards: league.eventRewards || [], uid: user.uid }));
 
   return missions;
 }

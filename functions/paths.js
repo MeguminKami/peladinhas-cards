@@ -37,6 +37,7 @@ import {
   pathVisibleRoute,
   pathRoute,
   pathOfferAvailable,
+  pathRecentFamilies,
 } from "../js/path-model.js";
 import { participants } from "../js/utils.js";
 
@@ -470,6 +471,7 @@ export function pathFunctions(rebuildPlayer) {
               node,
               () => randomInt(1_000_000) / 1_000_000,
               pathEarnedStats(rewards, uid),
+              { recentFamilies: pathRecentFamilies(state, node.route) },
             );
             changed = true;
           }

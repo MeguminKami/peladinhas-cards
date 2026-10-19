@@ -54,7 +54,7 @@ flowchart TB
 
 ## Alterações e operação atuais
 
-- [Variedade de missões dos percursos](plans/escolhe-o-teu-caminho-variedade.md): proposta de novas famílias, objetivos combinados e sorteio com menos repetição; ainda não implementada.
+- [Variedade de missões dos percursos](plans/escolhe-o-teu-caminho-variedade.md): 120 modelos, objetivos combinados e sorteio com menos repetição; implementação local, com [validação e publicação seletiva](reports/path-variety-2026-10-19.md). Metas provisórias; ainda sem deploy.
 - [Escolhe o teu caminho!](reference/player-paths.md): percursos pessoais, missões para o próximo jogo e cartas permanentes; [plano de implementação](plans/escolhe-o-teu-caminho.md).
 - [Update de Escolhe o teu caminho!](plans/escolhe-o-teu-caminho-update.md): caminho ativo, fusões desbloqueáveis, reroll diário global, sete votos por critério e dificuldade final desde +10; implementação local concluída, com [validação e publicação seletiva](reports/path-update-2026-10-18.md).
 - [Card Lab](reference/card-lab.md): ferramentas, paletas, luz, traçado e projetos.

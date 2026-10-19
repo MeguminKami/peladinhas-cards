@@ -527,7 +527,7 @@ async function route({ cachedOnly = false } = {}) {
     else if (parts[0] === "events") await eventsPage(pageCtx);
     else if (parts[0] === "event") await eventPage(pageCtx, parts[1]);
     else if (parts[0] === "missions") {
-      if (parts[1] === "path") await pathsPage(pageCtx);
+      if (parts[1] === "path") await pathsPage(pageCtx, parts[2]);
       else if (parts[1] === "self") await initialMission(pageCtx);
       else if (parts[1] === "new") await initialMission(pageCtx, parts[2]);
       else

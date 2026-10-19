@@ -2,7 +2,7 @@
 
 [← Documentação](../README.md) · [Plano aprovado](../plans/escolhe-o-teu-caminho-update.md) · [Fichas das cartas](../plans/path-reward-card-concepts.md) · [Validação e publicação](../reports/path-update-2026-10-18.md)
 
-Referência do código local em 18 de outubro de 2026. Implementação e validação locais; publicação não executada.
+Referência do código local em 19 de outubro de 2026. Implementação e validação locais; publicação não executada. A atualização de variedade está descrita no [catálogo](../plans/escolhe-o-teu-caminho-variedade.md) e no [relatório v4](../reports/path-variety-2026-10-19.md).
 
 ## Escolher e preparar
 
@@ -14,9 +14,13 @@ Cada nó revela três propostas guardadas pelo servidor. Sair, trocar de disposi
 
 ## Risco, raridade e reroll
 
+Novos sorteios usam propostas v4: oito modelos por cada um dos 12 atributos e das três fusões, num total de 120. Nos níveis intermédio e superior, as quatro especializações com vitória isolada excluem esse modelo, mantendo sete opções. Cada proposta guarda título, modelo, família, condições, avanço e raridade no servidor. As condições combinam-se por **E**; uma contribuição é a soma de golos e assistências individuais, sem contar lances distintos.
+
+O sorteio procura três famílias de objetivo diferentes, evita modelos repetidos e condições equivalentes e não atribui menos avanço a uma alternativa que implique todas as condições de outra. Admite repetição de família como fallback quando não existem três famílias compatíveis. As últimas três famílias de tentativas congeladas por percurso têm menor peso; o reroll reduz também o peso das famílias e modelos substituídos. São preferências, sem bloqueios nem saldo extra de reroll. A preparação, a lista de condições e a gestão mostram o objetivo completo; a lista de tentativas mostra votos por critério e o resultado regista cada condição.
+
 As propostas normais dão 25%, 50% ou 100%. A terceira tem 4% de probabilidade de Ícone/150% e 1% de Ultimate/200%. As superfícies e os emblemas usam as raridades existentes. O avanço é explícito na proposta: a raridade não decide boosts nem altera as outras missões/eventos.
 
-A dificuldade usa os pontos permanentes efetivamente entregues por esta origem, incluindo fusões: fundamentos até +4, evolução desde +5 e fase final desde +10. A fase final pode propor 5 golos ou 4,5★ no desafio superior, mantendo alternativas possíveis. Assistências não ultrapassam duas; Atitude tem parâmetros próprios. Esta é uma calibração inicial baseada em dois jogos, não uma previsão estatística nem uma adaptação automática durante o jogo.
+A dificuldade usa os pontos permanentes efetivamente entregues por esta origem, incluindo fusões: fundamentos até +4, evolução desde +5 e fase final desde +10. A fase final pode propor 5 golos ou 4,5★ no desafio superior, mantendo alternativas possíveis. Assistências isoladas não ultrapassam duas; Atitude tem parâmetros próprios. As combinações usam metas individuais menores. A v4 tem parâmetros provisórios, sem análise de jogos reais nesta sessão; não é uma previsão estatística nem uma adaptação automática durante o jogo.
 
 Existe **um reroll por jogador e dia de Lisboa**, partilhado por todos os percursos e focos. Só renova o trio escolhido, exige propostas já reveladas e preserva os outros trios e o progresso. Renovar o trio da preparação remove essa escolha, para escolher novamente entre as novas propostas. A meia-noite de Lisboa repõe o saldo, incluindo mudanças de horário de verão. Pedidos concorrentes não permitem gastar mais de um.
 
@@ -30,7 +34,7 @@ Só pode existir um jogo aberto na liga. Rascunhos são ilimitados; jogos fechad
 
 Uma participação acrescentada depois da abertura só pode congelar uma preparação que já existia antes dela. Preparações posteriores não contam retroativamente. Um jogo já usado não é reutilizado, incluindo quando o histórico compacto deixa de o mostrar; o índice privado `pathGameLinks` preserva essa associação.
 
-No fecho, objetivos exclusivamente de **golos, assistências ou vitória** apuram imediatamente. O servidor guarda os dados numéricos da tentativa e um hash dos dados completos do jogo. As contribuições individuais são compactas, evitando copiar extensas listas de marcadores para cada jogador.
+No fecho, objetivos sem avaliações apuram imediatamente, incluindo combinações de golos, assistências, contribuições, vitória e golos da equipa. O servidor guarda os dados numéricos da tentativa e um hash dos dados completos do jogo. As contribuições individuais são compactas, evitando copiar extensas listas de marcadores para cada jogador. Qualquer avaliação na combinação faz a tentativa aguardar as 48 horas.
 
 ## Avaliações: 48 horas e sete votos
 
@@ -43,6 +47,8 @@ Uma missão que inclua avaliações aguarda **48 horas desde `closedAt`**, mesmo
 | Menos de sete votos em qualquer critério | Cancelamento sem perda do progresso anterior |
 
 Não contam N/A, rascunhos, duplicados, valores inválidos, identidades fora da participação ou votos submetidos antes do fecho. Guarda-redes exige posição GR e respeita a autoavaliação N/A existente no instante de corte.
+
+Nas propostas v4, não jogar a GR cancela sem penalização uma missão que exija essa posição. Isto aplica-se a todas as variantes de Guarda-redes e Fortaleza, incluindo as que só avaliam Defesa/Passe. Uma autoavaliação N/A de GR no corte também cancela. Nas missões mistas, falta de votos em qualquer critério cancela mesmo quando uma condição numérica já falhou. Propostas anteriores conservam os seus avaliadores.
 
 `feedbackAction` escreve o voto e uma revisão completa imutável na mesma transação, com timestamp de commit do servidor. A correção administrativa também usa esse registo. A primeira edição de um voto anterior ao histórico conserva uma baseline da versão antiga.
 
@@ -80,6 +86,8 @@ A especialização entrega a carta no nó 15, ou 25 em GR; a combinação entreg
 
 Os IDs antigos, ofertas, avanços, entregas e cartas continuam reconhecidos. Propostas guardadas são atualizadas para `proposalVersion: 3` sem sortear novamente metas, raridades ou percentagens. Todas as tentativas ainda por apurar passam à validação de sete votos/48 horas; as antigas já associadas a um jogo são movidas para `pending`, sem poderem ser substituídas por uma nova preparação. Conservam a associação, a meta, a percentagem e uma cópia da proposta anterior para auditoria. Se o prazo original de 48 horas já passou sem a amostra necessária, cancelam sem perder progresso; resultados já apurados não são reabertos. Mantém-se a elegibilidade anterior à carta da etapa 10/fusão quando aplicável.
 
+A atualização v4 não converte propostas v3 nem as volta a sortear. Só propostas novas, incluindo rerolls autorizados, usam o catálogo v4. O estado continua na versão 1, com `recentPathFamilies` aditivo; os avaliadores e textos anteriores mantêm-se. Não é necessário recalcular dados existentes ou semanas fechadas.
+
 Propostas antigas dos ramos alternativos continuam acessíveis numa secção recolhida do seletor. `PATH_VERSION = 1` continua compatível; `activePath`, `unifiedFusions`, `pending` e metadados são aditivos.
 
 Correções dos dados do jogo colocam o percurso em revisão administrativa. Para uma tentativa ainda em avaliação, a decisão pode conservar o registo numérico do fecho e retomar o apuramento; para uma conquista já validada, conserva a conquista. A ação em `#/admin/paths` exige motivo e não permite editar pontos manualmente. Alterações normais dos votos posteriores ao corte não reabrem conquistas.
@@ -96,7 +104,7 @@ Os cálculos futuros das cartas abertas usam o novo teto. Não foi executado rec
 
 O cliente não escreve jogos, feedback, progresso, propostas ou entregas diretamente. Callables verificam identidade, capacidades, políticas, transições e dados. Triggers, a tarefa de cinco minutos e a atualização explícita retomam apuramentos pendentes.
 
-Consultar [testes, limitações locais e deploy seletivo](../reports/path-update-2026-10-18.md). Backend, regras e frontend precisam de publicação; não basta atualizar o frontend.
+Consultar [testes e publicação da atualização anterior](../reports/path-update-2026-10-18.md) e o [deploy seletivo da variedade v4](../reports/path-variety-2026-10-19.md). Para a v4, publicar Functions consumidoras e frontend; não houve alterações de regras ou índices nesta atualização. Se a atualização anterior também estiver por publicar, os seus requisitos continuam aplicáveis.
 
 As antevisões das cartas explicam os requisitos de desbloqueio: concluir a 100% o nó 15 do atributo (25 em GR); nas fusões, conquistar o marco 5 nas duas origens, ativar a fusão e concluir os cinco nós de Combinação. Os conceitos artísticos ficam nas fichas de direção de arte.
 
