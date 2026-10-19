@@ -120,7 +120,7 @@ O frontend Firebase usa SDK web por importação remota; o servidor usa as depen
 - `calculateGameAggregate` em `js/utils.js` exclui guarda-redes quando encontra a autoavaliação submetida com N/A. `gameSummaries.players[uid].goalkeepingEligible` permite ao formulário refletir essa decisão sem revelar respostas de colegas. As regras verificam o documento de autoavaliação; a administração também não pode introduzir uma nota numérica incompatível numa resposta de colega.
 - `js/push.js` gere ativação, recuperação de ligação e convite móvel. `scripts/setup-push.mjs --verify-cloud` compara chaves em memória; o segredo não entra no frontend.
 
-As regras de publicação destas alterações estão no [procedimento seletivo](../deploy-feedback-fixes.md).
+As regras atuais de publicação estão no [guia por âmbito](../guides/deployment.md); os relatórios datados conservam os consumidores específicos de cada alteração.
 
 ## Coleções
 
@@ -155,3 +155,11 @@ A perspetiva visual de um papel não muda a identidade autenticada nem substitui
 O pacote de Functions usa a raiz como fonte porque partilha regras de cálculo com `js/`. `firebase.json` exclui os recursos visuais, documentação, originais, caches, dependências locais e segredos; as dependências npm são instaladas no ambiente de Functions.
 
 </details>
+
+## Percursos e apresentação da tentativa
+
+`js/path-missions.js` concentra os 120 modelos, normalização, requisitos, textos e seleção diversa. `js/path-model.js` gera propostas v4 e avalia condições, preservando os avaliadores antigos; `js/path-window.js` reconstrói votos no corte de 48 horas. `functions/paths.js` persiste ofertas/aceitação/reroll/apuramento; `functions/game-flow.js` congela a preparação atomicamente ao abrir.
+
+No browser, `pathMissionEntry` / `pathMissionSpotlight` em `js/paths.js` alimentam a entrada de Missões através de `js/missions.js`. O destino `#/missions/path/{nodeId}` é validado contra os nós conhecidos por `pathsPage`; sem nó válido usa a escolha guardada. O desenho local atualiza a entrada de missões em memória quando o estado muda, evitando aguardar o refresh global para refletir uma escolha/remoção. `css/paths.css` usa os tokens de tema e raridade e adapta o resumo à largura disponível.
+
+Estado em `pathStates/{uid}`, tentativas históricas em `attempts`, famílias recentes em `recentPathFamilies`, ligações de jogo em `pathGameLinks` e versões de votos em `pathVoteRevisions`. [Referência funcional](player-paths.md) · [Catálogo](path-mission-catalogue.md) · [Publicação v4](../reports/path-variety-2026-10-19.md#publicação-seletiva).

@@ -122,4 +122,10 @@ Os testes de regras apagam os dados do projeto emulado. Os testes de UI substitu
 
 Os testes de backend injetam um transportador push simulado e não enviam alertas reais. Instalação nativa, permissões do sistema, entrega Apple/Google, IAM e faturação exigem confirmação nos ambientes correspondentes.
 
-O [relatório de revisão](../reports/experience-review.md) distingue os conjuntos efetivamente executados. Para publicação, seguir os [seletores por área](deployment.md); testes ou comandos documentados não equivalem a um deploy.
+O [relatório de interface](../reports/path-interface-2026-10-19.md) e o [relatório v4](../reports/path-variety-2026-10-19.md) distinguem os conjuntos efetivamente executados. Para publicação, seguir os [seletores por área](deployment.md); testes ou comandos documentados não equivalem a um deploy.
+
+## Regressões da interface compacta dos percursos
+
+Usar `npm.cmd run test:paths:variety:ui` para as interações afetadas. Rever missão de meta única e composta, propostas antigas, preparação a 0%/75%, fase congelada/em avaliação, atributos com limite atingido, fusão com duas recompensas, carta final e remoção da escolha. O resumo só deve mostrar detalhes quando existe tentativa e a ligação deve abrir o nó correto, mesmo após explorar outro percurso.
+
+Na composição, confirmar **A tua missão · No próximo jogo**, tema da raridade, objetivo legível, recompensa sem caixa, par atributo/valor com tipografia uniforme e avisos **Se falhares** / **Podes mudar**. Verificar também setas entre nós, limites de texto/valores, 1440/768/390/320 px, quatro temas, foco, teclado e redução de movimento. Os scripts ad hoc e as capturas em `test-results/` são evidência local, não uma suite portátil garantida após exportação. Não repetir suites sem relação com a alteração; resultados datados no [relatório de interface](../reports/path-interface-2026-10-19.md).

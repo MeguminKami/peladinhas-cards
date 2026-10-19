@@ -114,3 +114,7 @@ DIN Pro Condensed Regular/Medium/Bold e Posterama 1927 Bold são referências lo
 **Modelos · Composição · Cores · Materiais · Símbolos · Texto · Foto · Projetos**
 
 A carta mantém-se visível enquanto se usam os menus, com scroll dentro da ferramenta. A fotografia é sempre a do ADMIN autenticado. Há 50 paletas, iluminação configurável e traçado removível; consultar a [referência funcional](../docs/reference/card-lab.md). O Card Lab gere composições dentro da aplicação. Os scripts acima gerem os ficheiros estáticos do repositório.
+
+## Interface compacta dos percursos
+
+O objetivo no próximo jogo fica identificado e delimitado, com o tema da raridade. Contexto do nó no cabeçalho e progresso, avanço e recompensa numa faixa de apoio. O par +1 Drible usa cor, fonte, tamanho e peso iguais, sem caixa própria. Preservar os avisos Se falhares e Podes mudar, foco e alvos de 44 px. As setas entre nós têm largura fixa de 24 px. Fontes: js/paths.js, css/paths.css, js/event-rarity.js e js/path-card-designs.js. Ver [referência dos percursos](../docs/reference/player-paths.md) e [validação visual](../docs/reports/path-interface-2026-10-19.md).

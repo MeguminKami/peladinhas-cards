@@ -95,3 +95,7 @@ O service worker pode continuar a servir uma versão anterior já instalada. Par
 `.secret.local` contém a chave privada VAPID. Não entra em Git, Hosting, no pacote de Functions nem na exportação do repositório. É necessária uma cópia segura dessa chave para conservar subscrições push existentes; não a substituir por uma nova por conveniência.
 
 </details>
+
+## Trabalhar nos percursos
+
+O catálogo é `js/path-missions.js`; regras de progresso/recompensas estão em `js/path-model.js` e a janela histórica em `js/path-window.js`. O servidor persiste propostas e apura tentativas em `functions/paths.js`, com congelamento na abertura em `functions/game-flow.js`. A interface é `js/paths.js` / `css/paths.css`; `js/missions.js` alimenta o resumo e `js/app.js` aceita o destino direto do nó. Consultar [arquitetura](../reference/architecture.md) e [testes dirigidos](testing.md#variedade-de-missões-dos-percursos) antes de escolher o âmbito da mudança. Alterar apresentação não autoriza reescrever metas, progresso ou propostas guardadas.

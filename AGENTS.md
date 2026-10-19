@@ -56,3 +56,11 @@
 - Consultar a configuração e os scripts atuais antes de indicar comandos. Não recomendar deploy completo por defeito; `deploy:backend` publica todas as funções e as regras, e `deploy` publica todas as áreas.
 - Esta indicação é uma instrução para o utilizador, não uma autorização para executar um deploy. Não afirmar que uma alteração foi publicada sem confirmação da execução.
 - Usa sempre npm.cmd e npx.cmd
+
+## Composição das missões dos percursos
+
+- Identificar o objetivo de uma tentativa por «A tua missão · No próximo jogo»; em tentativas congeladas, deixar claro que a escolha já foi associada ao jogo.
+- Preferir um bloco compacto com o tema da raridade: contexto do nó no cabeçalho, objetivo evidente e progresso/avanço/recompensa numa faixa de apoio. Evitar saltos excessivos de tamanho tipográfico e painéis laterais só para números.
+- Incorporar a recompensa à frente de «Recompensa do nó», sem caixa própria. O valor e o atributo (por exemplo, «+1 Drible») usam a mesma cor, fonte, peso e tamanho. Preservar a distinção entre avanço percentual e pontos de atributo.
+- Preservar o aviso «Se falhares» com ícone e destaque vermelho e o aviso com ícone de informação sobre poder mudar até à abertura do jogo. Não remover regras de comportamento ao compactar a interface.
+- No resumo de Missões/início, mostrar o detalhe da tentativa apenas quando há uma missão preparada ou pendente; sem escolha, manter a apresentação simples. A ligação deve abrir o nó da missão apresentada.

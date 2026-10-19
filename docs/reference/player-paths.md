@@ -1,8 +1,8 @@
 # Escolhe o teu caminho!
 
-[← Documentação](../README.md) · [Plano aprovado](../plans/escolhe-o-teu-caminho-update.md) · [Fichas das cartas](../plans/path-reward-card-concepts.md) · [Validação e publicação](../reports/path-update-2026-10-18.md)
+[← Documentação](../README.md) · [Catálogo atual](path-mission-catalogue.md) · [Conceitos das cartas em código](../../js/path-card-designs.js) · [Validação da interface](../reports/path-interface-2026-10-19.md)
 
-Referência do código local em 19 de outubro de 2026. Implementação e validação locais; publicação não executada. A atualização de variedade está descrita no [catálogo](../plans/escolhe-o-teu-caminho-variedade.md) e no [relatório v4](../reports/path-variety-2026-10-19.md).
+Referência do código local em 19 de outubro de 2026. Implementação e validação locais; publicação não executada. A atualização de variedade está descrita no [catálogo atual](path-mission-catalogue.md) e no [relatório v4](../reports/path-variety-2026-10-19.md).
 
 ## Escolher e preparar
 
@@ -78,7 +78,7 @@ Dentro de cada fusão há três focos: as duas especializações individuais e a
 
 ## Cartas permanentes
 
-As 15 cartas mantêm os IDs existentes. Todas têm [ficha de conceito própria](../plans/path-reward-card-concepts.md), silhueta, composição vetorial, material e motivos individuais; não são apenas recolorações. A antevisão explica o conceito. A revelação usa movimento específico da edição e respeita redução de movimento.
+As 15 cartas mantêm os IDs existentes. Todas têm [conceito próprio em código](../../js/path-card-designs.js), silhueta, composição vetorial, material e motivos individuais; não são apenas recolorações. A antevisão explica o conceito. A revelação usa movimento específico da edição e respeita redução de movimento.
 
 A especialização entrega a carta no nó 15, ou 25 em GR; a combinação entrega-a no quinto nó. A carta é permanente e não atribui stats ocultas. O prémio especial não duplica uma carta já conquistada. Aparências antigas recebem o desenho revisto sem retirar a conquista.
 
@@ -106,8 +106,14 @@ O cliente não escreve jogos, feedback, progresso, propostas ou entregas diretam
 
 Consultar [testes e publicação da atualização anterior](../reports/path-update-2026-10-18.md) e o [deploy seletivo da variedade v4](../reports/path-variety-2026-10-19.md). Para a v4, publicar Functions consumidoras e frontend; não houve alterações de regras ou índices nesta atualização. Se a atualização anterior também estiver por publicar, os seus requisitos continuam aplicáveis.
 
-As antevisões das cartas explicam os requisitos de desbloqueio: concluir a 100% o nó 15 do atributo (25 em GR); nas fusões, conquistar o marco 5 nas duas origens, ativar a fusão e concluir os cinco nós de Combinação. Os conceitos artísticos ficam nas fichas de direção de arte.
+As antevisões das cartas explicam os requisitos de desbloqueio: concluir a 100% o nó 15 do atributo (25 em GR); nas fusões, conquistar o marco 5 nas duas origens, ativar a fusão e concluir os cinco nós de Combinação. Os conceitos artísticos estão em `js/path-card-designs.js`.
 
 O nó selecionado expande dentro do mapa com estado, progresso, recompensa e propostas. Não existe um painel lateral separado; selecionar outro nó transfere a expansão e mantém o foco no título.
 
-A missão preparada destaca objetivo e raridade, avanço em caso de sucesso, recompensa do nó e momento de apuramento. A regra de falha tem ícone e título vermelhos; o rodapé reúne as ações e explica até quando é possível alterar a escolha.
+A missão preparada usa uma composição compacta com o tema da raridade. O cabeçalho reúne atributo, número/nome do nó, raridade e estado. O objetivo fica delimitado e identificado por **A tua missão · No próximo jogo**; metas únicas aparecem diretamente e combinações mostram todas as condições. Progresso do nó, avanço se cumprires e recompensa partilham uma faixa de apoio, sem anel grande nem painel lateral. O par **+1 Drible**, por exemplo, usa a mesma cor, fonte, tamanho e peso, à frente de **Recompensa do nó**, sem caixa própria. O texto redundante de entrega/excedente foi retirado deste bloco; a regra de entrega aos 100% mantém-se.
+
+O apuramento aparece numa linha própria. **Se falhares** conserva ícone e título vermelhos; o rodapé mantém o ícone de informação, a regra **Podes mudar até à abertura do jogo, sem perder progresso** e as ações **Alterar missão** / **Remover escolha**. Tentativas congeladas apresentam o estado e prazo aplicáveis e não permitem alterar a escolha.
+
+Em Missões e no resumo do início, o bloco fica detalhado apenas quando existe uma missão preparada ou pendente. Mostra objetivo, nó, raridade, progresso, avanço e recompensa; em avaliação, inclui estado e votos por critério. Sem tentativa, mantém a apresentação de descoberta. A ligação `#/missions/path/{nodeId}` abre diretamente o nó mostrado. Ao escolher, alterar ou remover a preparação, o resumo em memória é atualizado sem esperar pela renovação geral dos dados.
+
+As ligações entre nós são setas de 24 px centradas no intervalo, sem invadir cartões nem esticar o traço à largura do mapa. Troços desbloqueados usam linha contínua; os bloqueados, tracejado. O mesmo desenho serve especializações e fusões. Para a apresentação final e os testes, consultar o [relatório de interface](../reports/path-interface-2026-10-19.md).

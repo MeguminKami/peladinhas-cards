@@ -1,5 +1,7 @@
 # Calibração dos percursos — 18 de outubro de 2026
 
+> Registo histórico de 18 de outubro de 2026. As regras, limitações e resultados abaixo pertencem a essa etapa. Para o código local atual, consultar a [referência dos percursos](../reference/player-paths.md), o [catálogo v4](../reference/path-mission-catalogue.md) e a [interface validada em 19 de outubro](path-interface-2026-10-19.md). Esta nota não reexecuta testes nem comprova publicação.
+
 Estado: análise e proposta de equilíbrio. Não altera os limites, missões ou interface implementados. Sem deploy.
 
 ## Dados consultados

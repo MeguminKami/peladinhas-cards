@@ -2,7 +2,7 @@
 
 Data: 19 de outubro de 2026, Europe/Lisbon.
 
-[Referência funcional](../reference/player-paths.md) · [Catálogo e decisões](../plans/escolhe-o-teu-caminho-variedade.md)
+[Referência funcional](../reference/player-paths.md) · [Catálogo extraído do código](../reference/path-mission-catalogue.md) · [Interface final](path-interface-2026-10-19.md)
 
 ## Resultado local
 
@@ -59,3 +59,9 @@ npx.cmd firebase deploy --only "functions:peladinhas:getPath,functions:peladinha
 ```
 
 Não é necessário publicar regras, índices ou Storage para esta alteração. Se a atualização anterior também estiver por publicar, seguir adicionalmente os requisitos do relatório anterior; este conjunto cobre apenas a variedade v4. Confirmar depois uma tentativa nova e uma proposta antiga preservada, sem recalcular semanas fechadas.
+
+## Atualização documental e interface final
+
+A interface foi refinada depois da primeira validação v4: resumo condicional com destino direto do nó, setas, recompensas integradas e bloco preparado compacto. A composição final, os estados e os testes de browser constam do [relatório de interface](path-interface-2026-10-19.md). As nove verificações de lógica e os três cenários backend acima continuam a ser o registo daquela execução, não uma nova execução de suites nesta revisão documental.
+
+Os 19 erros de ligações acima eram o resultado naquela data da implementação. A revisão documental posterior corrige as referências ausentes e documenta o catálogo a partir do código; o resultado atual do verificador está no relatório de interface. Os antigos planos não foram recriados. O âmbito backend v4 mantém os oito consumidores indicados; os refinamentos visuais posteriores exigem apenas frontend.

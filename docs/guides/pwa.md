@@ -83,3 +83,7 @@ Depois de publicar por HTTPS, testar em iPhone e Android: instalação, arranque
 A instalação Web Push no iPhone exige a aplicação no ecrã inicial e uma versão do sistema compatível. Os passos e limites estão no [guia de push](notifications.md).
 
 </details>
+
+## Atualizações visuais dos percursos
+
+O build de Hosting inclui os módulos dos percursos e `css/paths.css` no inventário da PWA. Depois de publicar alterações, confirmar que a aplicação carregou a nova versão e abrir Missões com e sem preparação. Verificar o objetivo **No próximo jogo**, o destino do nó e a legibilidade da composição compacta nos temas usados. As [capturas locais](../reports/path-interface-2026-10-19.md) usam fixtures de browser; a confirmação numa instalação física e da versão publicada é uma etapa distinta.

@@ -1,8 +1,10 @@
 # Escolhe o teu caminho! — update implementado
 
+> Registo histórico de 18 de outubro de 2026. As regras, limitações e resultados abaixo pertencem a essa etapa. Para o código local atual, consultar a [referência dos percursos](../reference/player-paths.md), o [catálogo v4](../reference/path-mission-catalogue.md) e a [interface validada em 19 de outubro](path-interface-2026-10-19.md). Esta nota não reexecuta testes nem comprova publicação.
+
 Data: 18 de outubro de 2026, Europe/Lisbon.
 
-[← Documentação](../README.md) · [Plano e checklist](../plans/escolhe-o-teu-caminho-update.md) · [Referência funcional](../reference/player-paths.md) · [15 fichas de conceito](../plans/path-reward-card-concepts.md)
+[← Documentação](../README.md) · plano histórico ausente desta cópia · [Referência funcional](../reference/player-paths.md) · [Conceitos atuais em código](../../js/path-card-designs.js)
 
 ## Resultado local
 

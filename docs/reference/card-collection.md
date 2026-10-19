@@ -41,3 +41,7 @@ Quinze edições têm [condições de conquista e validade](card-unlocks.md). Ap
 `js/card-collection.js` mantém os IDs e metadados, incluindo os nove temas de `js/card-fut-themes.js`. `CATALOG_THEMES` inclui todas as edições para apresentação; `THEMES` inclui apenas as elegíveis para recompensas. `js/card-achievements.js` centraliza pistas e durações. Os critérios exatos ficam em `functions/card-unlock-rules.js`, fora dos recursos públicos, e `functions/card-collection.js` guarda as conquistas no servidor.
 
 Verificação: `npm.cmd run test:card-collection` testa nomes, materiais distintos, camadas abaixo do retrato, ecrãs de 320/390 px e a distinção entre cartas ativas e designs em reserva. Produz também duas folhas de comparação dos nove temas FUT: com jogador (`test-results/card-fut-themes.png`) e apenas molduras e materiais (`test-results/card-fut-frames.png`). `npm.cmd test` verifica condições de conquista, validades e os IDs elegíveis para recompensas.
+
+## Identidades dos percursos
+
+As 15 cartas `path-*` pertencem ao sistema de [percursos pessoais](player-paths.md), com nomes, silhuetas e materiais definidos em `js/path-card-designs.js`. A antevisão explica o nó necessário e as recompensas mostram o nome da carta quando esse nó a entrega. Os 120 modelos de missão variam objetivos, não criam novas identidades de carta. A raridade visual da proposta e a carta permanente conquistada têm funções distintas; consultar o [catálogo de missões](path-mission-catalogue.md).

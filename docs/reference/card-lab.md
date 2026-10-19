@@ -72,3 +72,7 @@ node tests/card-lab-state.mjs
 ```
 
 Consultar [testes](../guides/testing.md) e [publicação seletiva](../guides/deployment.md). As capturas de demonstração não confirmam que a mesma versão já tenha sido publicada.
+
+## Temas de missão e cartas dos percursos
+
+A composição de missões em `js/paths.js` usa os tokens de raridade de `css/experience.css` e regras próprias de `css/paths.css`. As cartas finais `path-*` têm conceitos em `js/path-card-designs.js` e requisitos na [referência dos percursos](player-paths.md). Alterar a apresentação de uma missão não altera projetos guardados do Card Lab nem os critérios de conquista; a edição de projetos continua a seguir o esquema e o fluxo de publicação descritos nesta referência.

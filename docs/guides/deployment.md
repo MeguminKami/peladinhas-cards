@@ -37,7 +37,7 @@ Os scripts `deploy:*` verificam sintaxe e um conjunto de testes de lógica antes
 ## Casos com código partilhado
 
 - **Card Lab:** novos campos ou opções em `js/card-design.js` precisam de frontend e de `saveTheme`, que valida o mesmo esquema no servidor. CSS e mudanças visuais de paletas não exigem publicar Functions.
-- **Avaliações e evolução:** `js/utils.js` e os módulos de cálculo/coleção são partilhados. A [publicação das correções de feedback](../deploy-feedback-fixes.md) enumera as funções de agregação, histórico e recompensas afetadas pela autoridade da autoavaliação de guarda-redes.
+- **Avaliações e evolução:** `js/utils.js` e os módulos de cálculo/coleção são partilhados. Identificar os consumidores efetivos dos módulos alterados antes de preparar os seletores; o [relatório do update](../reports/path-update-2026-10-18.md) conserva o âmbito histórico daquela alteração, não uma lista universal para qualquer correção.
 - **Push:** atualizar a chave privada no Secret Manager exige republicar `pushDeviceAction` e `onNotificationPush`. Atualizar apenas o frontend não ativa a nova versão do segredo nas funções.
 
 Depois de publicar uma mudança de cálculo que afete dados existentes, usar **Administração → Manutenção → Recalcular liga**. A operação atualiza resumos e cartas em evolução; cartas de semanas fechadas conservam os snapshots.
@@ -79,4 +79,12 @@ npx.cmd firebase functions:list --project pedalinhas-cards
 npx.cmd firebase hosting:sites:list --project pedalinhas-cards
 ```
 
-Preparar ficheiros ou escrever estes comandos não os executa. O [relatório de revisão](../reports/experience-review.md) regista as verificações realizadas sem as confundir com deploys.
+Preparar ficheiros ou escrever estes comandos não os executa. Os [relatórios de validação local](../reports/path-interface-2026-10-19.md) distinguem as verificações realizadas de publicações e verificações cloud.
+
+## Percursos: separar catálogo e interface
+
+As alterações de composição em `js/paths.js`, entrada em `js/missions.js`, navegação em `js/app.js` e `css/paths.css` são frontend: publicar com `npm.cmd run deploy:frontend`. Documentação não exige deploy.
+
+O catálogo v4 altera módulos partilhados e exige também as oito Functions consumidoras identificadas no [relatório v4](../reports/path-variety-2026-10-19.md#publicação-seletiva). Publicar só o frontend não substitui esse passo se o catálogo ainda estiver por publicar. Para esta v4, não houve alteração de regras/índices nem é necessário recalcular dados existentes ou semanas fechadas. O [relatório da interface](../reports/path-interface-2026-10-19.md) não afirma execução de deploy.
+
+O wrapper `deploy:frontend` executa os testes explicitamente listados em `scripts/deploy.mjs`; não equivale a toda a suite `npm.cmd test`, aos testes dirigidos v4 ou à validação visual. Executar os cenários afetados antes da publicação.

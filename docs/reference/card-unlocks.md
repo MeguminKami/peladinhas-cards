@@ -64,3 +64,7 @@ As posições são registadas por DBS/admin no formulário do jogo. Não se dedu
 As conquistas são verificadas nos recálculos de cartas e por uma tarefa horária, que também fecha ciclos e prepara FUTTIES. O histórico existente é processado com as datas originais, sem renovar cartas temporárias antigas. As missões mostram pistas antes do desbloqueio; o seletor revela a condição depois da conquista. Apogeu, Legado, Titã e Carnaval nos designs originais ficam em reserva, sem atribuição automática; as identidades ativas usam TOTY, ICON, HEROES e BIRTHDAY quando aplicável.
 
 Testes: `npm.cmd test`, `npm.cmd run test:backend`, `npm.cmd run test:rules`, `npm.cmd run test:card-choice` e `npm.cmd run test:card-collection`.
+
+## Cartas permanentes dos percursos
+
+Além das conquistas automáticas descritas acima, [Escolhe o teu caminho](player-paths.md) entrega 15 cartas permanentes: nó 15 de cada atributo, nó 25 de GR e quinto nó de cada fusão. Exige completar o nó a 100%; os marcos 5 nas duas origens desbloqueiam a fusão. Estas missões com avaliações usam sete votos e corte de 48 horas, conforme as suas próprias regras, sem substituir o mínimo de três avaliações das conquistas desta página. Propostas antigas mantêm a elegibilidade legada quando aplicável.

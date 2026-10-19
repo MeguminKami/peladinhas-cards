@@ -109,4 +109,8 @@ node --test tests/push-config.test.js
 
 Os testes do worker cobrem alertas com app aberta e sem clientes abertos. Os testes de interface cobrem permissão por gesto, subscrição, teste, leituras, desativação, troca de conta e orientação iOS. O teste do popup cobre adiamento, acessibilidade, larguras 320/390/768/1440 e ativação. Os emuladores verificam envio simulado e privacidade; não comprovam a entrega através de Apple/Google.
 
-Na intervenção registada em **17 de outubro de 2026**, o segredo cloud incompatível foi substituído pela privada correspondente ao par local e a comparação posterior passou. Não foi registado nessa intervenção o deploy das duas funções nem um teste de entrega num aparelho físico. Este é um registo histórico, não uma consulta permanente do estado de produção; ver o [relatório](../reports/experience-review.md).
+Na intervenção registada em **17 de outubro de 2026**, o segredo cloud incompatível foi substituído pela privada correspondente ao par local e a comparação posterior passou. Não foi registado nessa intervenção o deploy das duas funções nem um teste de entrega num aparelho físico. Este é um registo histórico, não uma consulta permanente do estado de produção. O relatório histórico citado nessa intervenção não está disponível nesta cópia; confirmar novamente o estado cloud pelo procedimento acima, sem tomar esse registo como prova de entrega atual.
+
+## Missões dos percursos e contexto do próximo jogo
+
+O resumo em Missões e no início apresenta a missão escolhida para o próximo jogo e liga diretamente a `#/missions/path/{nodeId}`. A indicação de estado, prazo e votos nessa interface vem da tentativa; o relógio apresentado não decide o apuramento. A documentação e os testes dessa interface estão na [referência dos percursos](../reference/player-paths.md) e no [relatório local](../reports/path-interface-2026-10-19.md). A verificação de transporte push continua a exigir o procedimento próprio deste guia.

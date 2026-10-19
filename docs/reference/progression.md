@@ -101,3 +101,7 @@ Esta curva é um cenário de calibração, não uma garantia para todas as posi�
 O teto abaixo de 75 mantém-se em +4. A parcela acima de +3 é multiplicada por `clamp(estrelas − 4, 0, 1) × clamp(max(diferença_colegas, diferença_adversários)/0,5, 0, 1)`. O ganho completo de +4 exige 5 estrelas e vantagem de pelo menos 0,5 face a uma das equipas. Avaliações de 4,5 podem ganhar até +3,5; avaliações iguais às médias não recebem esta parcela excecional. Na simulação de 4 estrelas, 88 é atingido no 12.º jogo.
 
 </details>
+
+## Evolução por jogo e avanço das missões
+
+A progressão calculada a partir de jogos e avaliações e o avanço percentual de [Escolhe o teu caminho](player-paths.md) são mecanismos distintos. Nos percursos, +100% é avanço e +1 é um ponto permanente entregue ao completar um nó; os atributos continuam sujeitos aos tetos e aos orçamentos aplicáveis. Uma missão mista usa sete votos por critério no corte de 48 horas, sem substituir os requisitos próprios da evolução por jogo. A variedade v4 preserva propostas reveladas e semanas fechadas e não exige recálculo de dados existentes.

@@ -69,3 +69,7 @@ node scripts/maintenance-release.mjs
 O comando acima apenas imprime os comandos de publicação. Executar os comandos impressos pela ordem indicada: índices, funções da codebase `peladinhas`, regras Firestore/Storage e frontend. As funções antigas também precisam de publicação porque importam os motores e proteções partilhados. Não é necessário recalcular semanas fechadas; ficam preservadas. Depois da publicação, validar IAM de backups, App Check, tarefas agendadas e entrega push num aparelho real.
 
 A aplicação continua a representar uma liga por projeto Firebase. Gestão de múltiplas ligas exigiria isolamento de dados, regras e migração próprios. Não são apresentados valores de custo cloud estimados como faturação real. A cronologia pública tem uma margem de segurança de 850 KB; atingir esse limite exige migração planeada, sem apagar o histórico.
+
+## Operação dos percursos v4
+
+O catálogo v4 preserva propostas guardadas, conquistas e snapshots; não requer recálculo de semanas fechadas nem de dados existentes. Guardar uma nova configuração ou publicar CSS não deve ser usado para voltar a sortear propostas reveladas. Os tetos próprios dos percursos (+15 por atributo e +25 em GR), os orçamentos de recompensa e a pausa global continuam aplicáveis. Apuramentos e revisões administrativas seguem a [referência dos percursos](player-paths.md); os consumidores a publicar constam do [relatório v4](../reports/path-variety-2026-10-19.md#publicação-seletiva). A confirmação cloud é independente dos testes locais de interface.

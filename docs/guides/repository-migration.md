@@ -52,7 +52,7 @@ O script verifica os links da documentação e a ausência do valor da chave pri
 
 Validar o par local com `npm.cmd run setup:push` e comparar com o segredo cloud através de `node scripts/setup-push.mjs --verify-cloud`, quando houver autorização e acesso ao projeto. Este último comando apenas consulta e compara; não publica funções nem mostra a chave privada. Guardar uma nova versão do segredo exige republicar `pushDeviceAction` e `onNotificationPush`.
 
-Os comandos de verificação e publicação estão no [guia de publicação](deployment.md). O [procedimento das correções de avaliações](../deploy-feedback-fixes.md) identifica os consumidores do cálculo partilhado e o recálculo administrativo necessário para dados anteriores.
+Os comandos de verificação e publicação estão no [guia de publicação](deployment.md). Para os percursos v4, os consumidores e a compatibilidade estão no [relatório de variedade](../reports/path-variety-2026-10-19.md); alterações de cálculo noutras áreas exigem identificar novamente os seus consumidores e a necessidade de recálculo.
 
 ## Se mudar apenas o repositório
 
@@ -85,3 +85,7 @@ O script usa uma lista explícita de entradas e recusa links simbólicos. Exclui
 Se criares um novo repositório a partir da exportação, preserva os ficheiros ocultos `.gitignore` e `.firebaserc`. Instala as dependências e valida antes do primeiro commit. Não copies o histórico do portefólio.
 
 </details>
+
+## Documentação e evidências dos percursos
+
+Preservar `js/path-missions.js`, modelo/janela, interfaces e testes dos percursos juntamente com `docs/reference/path-mission-catalogue.md` e `docs/reference/player-paths.md`. Os scripts ad hoc e imagens em `test-results/` são locais e ficam fora da exportação. Validar as ligações com `npm.cmd run test:docs`; um plano ausente não deve ser recriado a partir de suposições nem substituir a referência extraída do código.
