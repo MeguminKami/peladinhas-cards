@@ -379,13 +379,6 @@
 .studio-edition-preview .football-card {
   --card-width: 80px;
 }
-.studio-saved-cards { display:grid; gap:16px; margin-bottom:24px; }
-.studio-saved-cards h2,.studio-saved-cards h3,.studio-saved-cards p { margin:0; }
-.studio-saved-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:16px; }
-.studio-saved-card { display:flex; flex-direction:column; align-items:center; gap:16px; min-width:0; padding:20px 16px; border:1px solid var(--border); border-radius:12px; background:var(--bg-surface); }
-.studio-saved-card h3 { font-size:1rem; text-align:center; overflow-wrap:anywhere; }
-.studio-saved-card .actions { width:100%; margin-top:auto; display:flex; flex-wrap:wrap; gap:8px; }
-.studio-saved-card .btn { flex:1 1 160px; min-height:44px; }
 .studio-edition-choice {
   position: relative;
 }

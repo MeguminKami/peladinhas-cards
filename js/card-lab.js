@@ -254,7 +254,6 @@ export async function cardLab(ctx, uid) {
       `<section class="studio-library panel"><div><span class="eyebrow">BIBLIOTECA DO ADMIN</span><h2>As tuas composições</h2><p id="studio-project-status" role="status">Nova composição</p></div><label>Editar composição guardada<select id="studio-saved-project"><option value="">Selecionar composição</option></select></label><div class="actions"><button type="button" class="btn btn-secondary" id="lab-new-project">${icon("plus")}Nova composição</button><button type="button" class="btn btn-secondary" id="save-theme-copy" hidden>${icon("assets")}Guardar uma cópia</button></div></section>`,
     );
   const library = document.querySelector("#studio-saved-project");
-  let refreshSavedCards = () => {};
   const refreshLibrary = () => {
     const selected = form.elements.projectId.value;
     library.innerHTML =
@@ -265,7 +264,6 @@ export async function cardLab(ctx, uid) {
             `<option value="${esc(theme.id)}" ${theme.id === selected ? "selected" : ""}>${esc(theme.name)}</option>`,
         )
         .join("");
-    refreshSavedCards();
   };
   refreshLibrary();
   const workspace = document.createElement("div");
@@ -339,14 +337,6 @@ export async function cardLab(ctx, uid) {
     .join("")}</div>`;
   models.querySelector('[name="theme"]').closest("label").hidden = true;
   models.append(editionCatalog);
-  const savedCards = document.createElement("section");
-  savedCards.className = "studio-saved-cards";
-  models.prepend(savedCards);
-  refreshSavedCards = () => {
-    savedCards.innerHTML = `<h2>Cartas guardadas</h2><p class="studio-help">Edita a carta existente ou usa-a como ponto de partida para uma nova.</p>${experimental.length ? `<div class="studio-saved-grid">${experimental.map(theme => `<article class="studio-saved-card"><div class="studio-edition-preview" aria-hidden="true">${card({...sample, specials:[{id:`saved:${theme.id}`, cardTheme:theme}]}, {theme:`saved:${theme.id}`, preview:true, size:"sm"})}</div><h3>${esc(theme.name)}</h3><div class="actions"><button type="button" class="btn btn-primary" data-saved-edit="${esc(theme.id)}">${icon("edit")}Editar carta</button><button type="button" class="btn btn-secondary" data-saved-model="${esc(theme.id)}">${icon("assets")}Usar como modelo</button></div></article>`).join("")}</div>` : '<p class="muted">As cartas que guardares aparecem aqui.</p>'}`;
-    bindImages(savedCards);
-  };
-  refreshSavedCards();
   fitCardSymbols(models);
   const search = editionCatalog.querySelector("#studio-model-search");
   search.oninput = (event) => {
@@ -969,24 +959,6 @@ export async function cardLab(ctx, uid) {
     if (!library.value) return;
     set("theme", `saved:${library.value}`);
     form.theme.onchange();
-  };
-  savedCards.onclick = (event) => {
-    const button = event.target.closest("[data-saved-edit], [data-saved-model]");
-    if (!button) return;
-    const copy = button.hasAttribute("data-saved-model");
-    const id = copy ? button.dataset.savedModel : button.dataset.savedEdit;
-    const source = experimental.find(theme => theme.id === id);
-    if (!source) return;
-    set("theme", `saved:${id}`);
-    form.theme.onchange();
-    if (copy) {
-      set("projectId", "");
-      set("themeName", `${source.name.slice(0, 32)} · Cópia`);
-      changed(true);
-    }
-    document.querySelector("#studio-change-state").textContent = copy
-      ? "Nova carta a partir do modelo. A original mantém-se."
-      : "A editar a carta existente. Guardar atualiza esta carta.";
   };
   editionCatalog.onclick = (e) => {
     const button = e.target.closest("[data-studio-edition]");

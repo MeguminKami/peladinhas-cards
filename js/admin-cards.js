@@ -319,7 +319,7 @@ export async function adminCardsPage(ctx, uid) {
         .querySelector("#modal-root .modal")
         .insertAdjacentHTML(
           "beforeend",
-          `<div class="actions">${linkButton(`#/admin/cards/${entry.id}`, entry.created ? "Editar no Card Lab" : "Criar a partir desta carta", "primary", "edit")}</div>`,
+          `<div class="actions">${linkButton(`#/admin/cards/${entry.id}`, "Editar carta", "primary", "edit")}</div>`,
         );
     bindImages(document.querySelector("#modal-root"));
   };

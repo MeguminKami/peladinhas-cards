@@ -104,6 +104,10 @@ try {
       await page.locator('[data-card-type="' + id + '"]').count(),
       1,
     );
+  await page.locator('[data-card-type="ultimate-guarda-redes-v2"]').click();
+  assert.equal(await page.locator('#modal-root a').filter({hasText:"Editar carta"}).count(),1);
+  assert.equal(await page.getByRole("link",{name:"Editar carta",exact:true}).getAttribute("href"),"#/admin/cards/ultimate-guarda-redes-v2");
+  await page.keyboard.press("Escape");
   await page.evaluate(async () => {
     const { card, bindImages } = await import("/js/cards.js");
     const { ULTIMATE_CARD_EDITIONS } =
