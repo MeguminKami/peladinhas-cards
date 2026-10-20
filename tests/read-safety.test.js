@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 test("local Firebase requires an explicit mode and backend tests require demo emulator", () => {
-  for (const host of ["localhost", "127.0.0.1", "[::1]"]) {
+  for (const host of ["localhost", "127.0.0.1", "[::1]", "", "192.168.1.12", "10.0.0.2", "172.16.1.5", "169.254.1.1", "laptop.local", "app.localhost", "[fd12::1]"]) {
     assert.throws(() => firebaseMode(host), /bloqueado/);
     assert.equal(firebaseMode(host, "emulator"), "emulator");
     assert.equal(firebaseMode(host, "production"), "production");

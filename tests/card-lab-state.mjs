@@ -155,6 +155,25 @@ try {
   await page.waitForFunction(() => window.__testState.cardThemes?.length > 0);
   await page.locator('[data-studio-tab="projects"]').click();
   const saved = await page.evaluate(() => window.__testState.cardThemes.at(-1));
+  await page.locator('[data-studio-tab="models"]').click();
+  await page.locator(`[data-saved-edit="${saved.id}"]`).click();
+  assert.equal(await page.locator('[name="projectId"]').inputValue(),saved.id);
+  await page.locator('[name="themeName"]').fill("Carta editada");
+  await page.locator("#save-theme").click();
+  await page.waitForFunction(id=>window.__testState.cardThemes.find(t=>t.id===id)?.name==="Carta editada",saved.id);
+  const beforeCopy=await page.evaluate(()=>window.__testState.cardThemes.length);
+  await page.locator(`[data-saved-model="${saved.id}"]`).click();
+  assert.equal(await page.locator('[name="projectId"]').inputValue(),"");
+  await page.locator("#save-theme").click();
+  await page.waitForFunction(count=>window.__testState.cardThemes.length===count+1,beforeCopy);
+  assert.equal(await page.evaluate(id=>window.__testState.cardThemes.find(t=>t.id===id).name,saved.id),"Carta editada");
+  for(const width of [1440,768,390,320]){
+    await page.setViewportSize({width,height:1000});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+    await page.locator(".studio-saved-cards").screenshot({path:`${output}/saved-cards-${width}.png`});
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await page.locator('[data-studio-tab="projects"]').click();
   await page.locator("#studio-saved-project").selectOption(saved.id);
   await page.locator('[data-studio-tab="models"]').click();
   await page.locator('[data-studio-edition="toty"]').click();

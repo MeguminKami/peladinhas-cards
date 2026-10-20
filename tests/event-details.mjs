@@ -227,10 +227,12 @@ try {
     const {managedEventPage}=await import("/js/event-pages.js");
     const users=[{uid:"carlos",displayName:"Carlos"},{uid:"joao",displayName:"João"},{uid:"pedro",displayName:"Pedro Alexandre da Conceição e Silva"},{uid:"zero",displayName:"Álvaro"},{uid:"locked",displayName:"Filipe"}];
     window.__participantsUsers=users;
-    window.__renderParticipants=async(complex=false)=>{
+    window.__renderParticipants=async(complex=false,scope="individual")=>{
       const objective=complex?{metric:"all",target:100,goals:[{id:"goals",metric:"goals",target:10},{id:"wins",metric:"wins",target:2}]}:{metric:"goals",target:10};
       const rows=[{uid:"zero",progress:0,percent:0},{uid:"joao",progress:10,percent:100,completed:true,claimed:true},{uid:"pedro",progress:4,percent:40},{uid:"locked",progress:0,percent:0,locked:true},{uid:"carlos",progress:10,percent:100,completed:true}].map(row=>({...row,target:complex?100:10,...(complex?{goals:[{id:"goals",progress:row.percent/10,target:10},{id:"wins",progress:row.completed?2:row.percent>0?1:0,target:2}]}:{})}));
       const event={id:"participants-fixture",schemaVersion:2,title:"Missão pessoal",kind:"mission",method:"objective",scope:"individual",status:"open",startsAt:"2026-10-01",endsAt:"2026-12-01",cadence:"once",maxRepeats:1,participantIds:users.map(row=>row.uid),objective,participantProgress:rows,progress:[{uid:"pedro",progress:complex?40:4,eligible:false}],claimedPeriods:[],rewardPreview:[],myRewards:[],winners:[],ranking:[]};
+      event.scope=scope;
+      if(scope!=="individual") event.title="Carregas ou és carregado";
       await managedEventPage({user:{uid:"pedro",role:"member"},league:{users,players:users},render:html=>document.querySelector("#main").innerHTML=html},event);
     };
     await window.__renderParticipants();
@@ -261,6 +263,12 @@ try {
   await details.focus();await page.keyboard.press("Enter");
   assert.equal(await page.locator('[data-participant-uid="pedro"] [role="progressbar"]').count(),3);
   assert.match(await page.locator('[data-participant-uid="pedro"] .event-combined-progress').innerText(),/4 \/ 10/);
+  for(const scope of ["team","collective","group"]){
+    await page.evaluate(scope=>window.__renderParticipants(false,scope),scope);
+    assert.equal(await page.locator("[data-participant-uid]").count(),5,scope);
+    assert.deepEqual(await page.locator("[data-participant-uid]").evaluateAll(rows=>rows.map(row=>row.dataset.participantUid)),["carlos","joao","pedro","zero","locked"]);
+    assert.match(await page.locator('[data-participant-uid="pedro"]').innerText(),/40%/);
+  }
   assert.deepEqual(errors, []);
   console.log(
     "Event details: six objective/method variants, all/mixed rewards, separate duration, configured rewards and 1440/768/390/320px passed.",

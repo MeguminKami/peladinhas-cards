@@ -10,7 +10,7 @@ A bancada tem uma altura própria ajustada ao ecrã, sem descontar o título, a 
 
 | Ferramenta | Conteúdo                                                           |
 | ---------- | ------------------------------------------------------------------ |
-| Modelos    | Todas as cartas de `CATALOG_THEMES` e **Do zero**.                 |
+| Modelos    | Cartas guardadas com **Editar carta** / **Usar como modelo**, catálogo nativo e **Do zero**. |
 | Composição | Organização dos elementos, silhuetas e posições.                   |
 | Cores      | Cinco cores editáveis e 50 paletas vibrantes com nomes próprios.   |
 | Materiais  | Iluminação, fundos, ornamentos, acabamentos e traçado.             |
@@ -22,6 +22,8 @@ A bancada tem uma altura própria ajustada ao ecrã, sem descontar o título, a 
 Os menus usam ícones próprios, cabeçalhos consistentes e secções expansíveis com operação por teclado. As animações respeitam `prefers-reduced-motion`. A carta mantém-se visível; o scroll fica nos controlos da ferramenta.
 
 ## Modelos e elementos
+
+Em **Cartas guardadas**, **Editar carta** abre a composição existente e **Guardar alterações** atualiza o mesmo ID em `cardThemes`. **Usar como modelo** carrega o mesmo desenho, desliga o ID do projeto e sugere um nome de cópia; guardar cria outra carta e conserva a original. A lista é atualizada após guardar, sem nova consulta ao Firestore. Os modelos nativos continuam disponíveis como ponto de partida.
 
 Escolher um modelo conserva o desenho nativo com `preserveOriginal: "yes"`, incluindo ao guardar sem alterações. Editar um controlo visual passa para composição personalizada. **Original** significa conservar a camada nativa do modelo, não uma superfície vazia.
 

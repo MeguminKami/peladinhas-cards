@@ -2256,7 +2256,6 @@ a.football-card:hover {
   --collection-material:radial-gradient(ellipse at 65% 27%,#5cb1bc55,transparent 46%),conic-gradient(from 45deg at 61% 34%,#0b1c2b,#23496b 25%,#0a1925 50%,#183c55 75%,#0b1c2b);
   --stats-material:linear-gradient(180deg,#041523e8,#071927d4);
 }
-.ultimate-guarda-redes-v2 .ultimate-barrier { fill:#b6f1ff08; stroke:#b6edff; stroke-width:.65; opacity:.45; }
 .ultimate-guarda-redes-v2 .card-caption { background:linear-gradient(90deg,transparent,#082133eb 15% 85%,transparent); clip-path:polygon(6% 0,94% 0,100% 100%,0 100%); }
 .ultimate-guarda-redes-v2 .card-stats { border-radius:0; clip-path:polygon(4% 0,96% 0,100% 100%,0 100%); }
 /* Reused ornaments follow the current Card Lab palette, including non-Ultimate models. */
@@ -2265,4 +2264,3 @@ a.football-card:hover {
 .football-card .studio-edition-art :is(.ultimate-prism,.ultimate-node) { fill:var(--studio-glow,var(--card-edge)); stroke:none; }
 .football-card .studio-edition-art .ultimate-energy { fill:var(--studio-primary,var(--card-a)); stroke:none; }
 .football-card .studio-edition-art :is(.ultimate-engraving,.ultimate-flow,.ultimate-orbit,.ultimate-rays) { fill:none; stroke:var(--studio-edge,var(--card-edge)); }
-.football-card .studio-edition-art .ultimate-barrier { fill:none; stroke:var(--studio-edge,var(--card-edge)); opacity:.45; }

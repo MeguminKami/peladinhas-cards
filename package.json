@@ -13,7 +13,7 @@
     "dev:production": "node scripts/dev-server.mjs --mode production",
     "emulators:dev": "node scripts/emulator-cli.mjs emulators:start --project demo-peladinhas-development --only auth,firestore,functions,storage",
     "test:docs": "node scripts/check-docs.mjs",
-    "test:read-safety": "node --test tests/read-safety.test.js && node tests/read-safety.mjs",
+    "test:read-safety": "node --test tests/read-safety.test.js tests/live-poll.test.js && node tests/read-safety.mjs",
     "deploy:read-reduction": "npx.cmd firebase deploy --project pedalinhas-cards --only \"functions:peladinhas:onCommunityRating,functions:peladinhas:onPlayerPosition,functions:peladinhas:onInitialRating,functions:peladinhas:onFeedback,functions:peladinhas:onGame,functions:peladinhas:saveOvrWeights,functions:peladinhas:rebuildHistory,functions:peladinhas:closeCardWeek,functions:peladinhas:openCardWeek,functions:peladinhas:ensureHistory,functions:peladinhas:refreshCardCollection,functions:peladinhas:selectWeeklyCard,functions:peladinhas:rebuildLeague,functions:peladinhas:deleteGame,functions:peladinhas:saveWeeklyCardPhoto,functions:peladinhas:correctRating,functions:peladinhas:eventAction,functions:peladinhas:voteEvent,functions:peladinhas:closeEvents,functions:peladinhas:getEvent,functions:peladinhas:listEvents,functions:peladinhas:claimMission,functions:peladinhas:getPath,functions:peladinhas:pathAction,functions:peladinhas:onPathGame,functions:peladinhas:onPathSummary,functions:peladinhas:settlePaths,functions:peladinhas:gameAction,functions:peladinhas:feedbackAction,functions:peladinhas:maintenanceAction,functions:peladinhas:systemHeartbeat\"",
     "docs:images": "node scripts/capture-doc-images.mjs",
     "export:repo": "node scripts/export-repository.mjs",

@@ -73,6 +73,16 @@ Continuam deliberadamente fora de uma conclusão cloud:
 
 ## Publicação seletiva e reversão
 
+### Reforço de 20/10/2026 após novo relato de consumo
+
+O detalhe de eventos ainda atualizava a cada 5 segundos, mesmo em separadores escondidos, e permitia sobrepor pedidos lentos. Passou para 60 segundos, apenas com página visível, ligação disponível e sem pedido pendente. Ao sair da página, a atualização é cancelada e respostas tardias são ignoradas. O carregamento inicial e as ações explícitas continuam imediatos. Numa hora continuamente visível, são até 60 atualizações periódicas em vez de 720 (cerca de 92% menos pedidos periódicos, não uma redução medida de leituras totais). Os resultados podem demorar até um minuto a refletir alterações de outros jogadores.
+
+O bloqueio local foi alargado a endereços privados IPv4/IPv6, nomes locais e acesso por ficheiro. Os testes de isolamento passaram: seis casos de segurança existentes, dois casos novos de atualização periódica e browser com fixtures/barreira de produção. Estes testes não consultam documentos cloud. O relato de 100 mil leituras do dia não foi atribuído a uma função ou ao desenvolvimento: não se recolheram novas métricas nem documentos de produção. As otimizações anteriores continuam sem publicação confirmada neste relatório.
+
+Estas alterações adicionais afetam apenas frontend e ferramentas/testes locais. Não exigem migração nem recálculo. A publicação das otimizações anteriores de backend continua a exigir o comando seletivo abaixo.
+
+Regressão adicional: `npm.cmd run test:event-details` passou nas larguras 1440/768/390/320 px; `npm.cmd run test:docs` validou 43 documentos e 327 referências. A alteração não modifica a composição visual do detalhe.
+
 Publicar primeiro backend e depois frontend para ativar os resumos agregados. O script abaixo chama `npx.cmd firebase deploy --project pedalinhas-cards --only` com seletores explícitos `functions:peladinhas:NOME`; não publica todas as Functions, regras ou índices.
 
 ```powershell

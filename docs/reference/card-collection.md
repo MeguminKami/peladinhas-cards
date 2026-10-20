@@ -10,7 +10,7 @@ Cinco edições nativas adicionais, com desenhos próprios, disponíveis no cat�
 | V2 · The Ultimate Participação | `ultimate-participacao-v2` | Eternidade: medalhão de platina, órbitas de continuidade e opala holográfica |
 | V2 · The Ultimate Modric | `ultimate-modric-v2` | Maestro: seda de titânio, fitas iridescentes e curvas fluidas |
 | V2 · The Ultimate Vitorioso | `ultimate-vitorioso-v2` | Ascensão: monólitos de ouro, ónix esmeralda e raios prismáticos |
-| V2 · The Ultimate Guarda-Redes | `ultimate-guarda-redes-v2` | Reflexo: armadura de titânio glacial, placas facetadas, barreira de cristal e luva |
+| V2 - The Ultimate Redes | `ultimate-guarda-redes-v2` | Reflexo: armadura de titânio glacial, placas facetadas e luva |
 
 São desenhos SVG/CSS em `js/card-ultimate-designs.js`, com materiais em `css/cards.css`. O tier reconhece-se pelo acabamento metálico e prismático; não há títulos ou nomes de edição dentro das cartas. Os nomes V2 ficam apenas no catálogo e nas fichas. Nome do jogador, OVR e atributos mantêm zonas de leitura protegidas. [Validação e publicação](../reports/ultimate-cards-v2-2026-10-20.md).
 

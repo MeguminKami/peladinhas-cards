@@ -4,7 +4,7 @@ Quatro modelos nativos de mérito, independentes dos projetos do Card Lab já gu
 
 ## Integração
 
-Adicionada também a edição `ultimate-guarda-redes-v2`, «V2 · The Ultimate Guarda-Redes»: conceito Reflexo, titânio glacial, placas facetadas e barreira hexagonal de cristal, com luva como emblema. A coleção passa a cinco edições, sem títulos dentro das cartas. Validade permanente e atribuição pelos prémios configurados do admin, sem novas metas automáticas. Usa o mesmo seletor de backend documentado abaixo, por acrescentar um ID ao catálogo partilhado.
+Adicionada também a edição `ultimate-guarda-redes-v2`, agora «V2 - The Ultimate Redes»: conceito Reflexo, titânio glacial e placas facetadas, com luva como emblema. A gema hexagonal atrás da fotografia foi retirada a pedido do utilizador. O ID permanece para preservar atribuições existentes. A coleção passa a cinco edições, sem títulos dentro das cartas. Validade permanente e atribuição pelos prémios configurados do admin, sem novas metas automáticas. Usa o mesmo seletor de backend documentado abaixo, por acrescentar um ID ao catálogo partilhado; a renomeação visual posterior e remoção da gema exigem apenas frontend.
 
 `js/card-ultimate-designs.js` é incluído no catálogo e na política de validade permanente. O editor disponibiliza as silhuetas, ornamentos e emblemas com nomes próprios. Os modelos entram nas opções de prémio do admin. Não foram criadas metas, alteradas missões, atribuídos prémios nem escritos dados cloud. Os limites e os destinatários continuam a ser os escolhidos pelo administrador. Não é necessário recalcular cartas ou semanas fechadas.
 

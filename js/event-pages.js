@@ -1,4 +1,5 @@
 import { personalMissionBoard, bindPersonalMissionBoard } from "./mission-participants.js";
+import { startLivePoll } from "./live-poll.js";
 import { challengeRules } from "./event-objective-view.js";
 import { rewardBreakdown, configuredRewards } from "./reward-presentation.js";
 import {
@@ -118,7 +119,7 @@ export async function eventsPage(ctx) {
   draw();
 }
 export async function managedEventPage(ctx, event) {
-  clearInterval(polling);
+  polling?.();
   const admin = ctx.user.role === "admin",
     now = Date.now(),
     active =
@@ -137,7 +138,7 @@ export async function managedEventPage(ctx, event) {
   const candidates = event.participantIds.filter(
     (uid) => event.allowSelfVote || uid !== ctx.user.uid,
   );
-  const personal = event.kind === "mission" && event.method === "objective" && (event.scope || "individual") === "individual";
+  const personal = event.kind === "mission" && event.method === "objective";
   const rankRows = (rows) =>
     sharedRankingPositions(event, rows)
       .map(
@@ -192,13 +193,10 @@ export async function managedEventPage(ctx, event) {
   ) {
     let previous = JSON.stringify(event.ranking || []);
     let previousParticipants = JSON.stringify(event.participantProgress || []);
-    polling = setInterval(async () => {
-      if (location.hash !== `#/event/${event.id}`) {
-        clearInterval(polling);
-        return;
-      }
+    polling = startLivePoll(async (isCurrent) => {
       try {
         const fresh = await DB.eventDetails(event.id);
+        if (!isCurrent()) return;
         if (fresh.status !== event.status) return managedEventPage(ctx, fresh);
         if (personal) {
           const nextParticipants=JSON.stringify(fresh.participantProgress || []);
@@ -234,7 +232,8 @@ export async function managedEventPage(ctx, event) {
           board.innerHTML = `<h2>Classificação em direto</h2>${event.method === "vote" ? `<p>${fresh.totalVotes || 0} votos</p>` : ""}<div class="table-wrap"><table class="event-ranking-table"><thead><tr><th>${event.kind === "mission" ? "Conclusão" : "Posição"}</th><th>Jogador</th><th>${event.method === "vote" ? "Votos" : "Progresso"}</th><th>Recompensa</th></tr></thead><tbody>${rankRows(fresh.ranking || [])}</tbody></table></div>`;
         }
       } catch {}
-    }, 5000);
+    }, { isCurrent: () => location.hash === `#/event/${event.id}` });
+    ctx.cleanup?.(polling);
   }
   const vote = document.querySelector("#event-vote-form");
   if (vote)

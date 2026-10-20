@@ -1,13 +1,13 @@
 // Native merit editions: identity is expressed visually, never by titles inside the card.
 export const ULTIMATE_CARD_EDITIONS = Object.freeze({
   "ultimate-guarda-redes-v2": {
-    name: "V2 · The Ultimate Guarda-Redes",
-    ultimate: "GUARDA-REDES",
+    name: "V2 - The Ultimate Redes",
+    ultimate: "REDES",
     hint: "Conquista uma meta extraordinária como guarda-redes.",
-    detail: "Reflexo · armadura de titânio glacial e barreira de cristal prismático",
+    detail: "Reflexo · armadura de titânio glacial e placas prismáticas",
     outline: "18,0 38,5 62,5 82,0 96,14 100,33 94,48 100,65 92,83 72,96 50,100 28,96 8,83 0,65 6,48 0,33 4,14",
     motif: '<path d="M65 35V24q0-4 3-4t3 4v7-12q0-4 3-4t3 4v12-10q0-4 3-4t3 4v12-7q0-4 3-4t3 4v12q0 9-12 10H72l-12-12q-3-4 1-6l7 6"/>',
-    art: '<path class="ultimate-metal" d="M0 33 4 14 18 0 23 9 12 23 15 36ZM82 0 96 14 100 33 85 36 88 23 77 9ZM6 48l9-12 4 13-8 14 8 14-11 6L0 65ZM85 36l9 12 6 17-8 18-11-6 8-14-8-14ZM28 96 8 83l11-6 17 12 14 5 14-5 17-12 11 6-20 13-22 4Z"/><path class="ultimate-dark" d="m4 14 8 9 11-14-5-9ZM96 14l-8 9L77 9l5-9ZM15 36l-9 12 5 15 8-14ZM85 36l9 12-5 15-8-14ZM19 77l17 12-8 7L8 83Zm62 0L64 89l8 7 20-13Z"/><path class="ultimate-prism" d="m0 33 15 3-3 6-9-4ZM100 33l-15 3 3 6 9-4ZM8 83l20 13 22 4-18-8-18-13Zm84 0L72 96l-22 4 18-8 18-13Z"/><path class="ultimate-barrier" d="m61 10 22 12v23L61 57 39 45V22Zm0 7 16 9v15l-16 9-16-9V26Zm0-7v7m22 5-6 4m6 19-6-4M61 57v-7M39 45l6-4m-6-19 6 4"/><path class="ultimate-engraving" d="m8 21 8-11m-5 16 9-12m72 7-8-11m5 16-9-12M7 53l6-10m-5 18 7-11m78 3-6-10m5 18-7-11M18 83l16 10m48-10L66 93"/>',
+    art: '<path class="ultimate-metal" d="M0 33 4 14 18 0 23 9 12 23 15 36ZM82 0 96 14 100 33 85 36 88 23 77 9ZM6 48l9-12 4 13-8 14 8 14-11 6L0 65ZM85 36l9 12 6 17-8 18-11-6 8-14-8-14ZM28 96 8 83l11-6 17 12 14 5 14-5 17-12 11 6-20 13-22 4Z"/><path class="ultimate-dark" d="m4 14 8 9 11-14-5-9ZM96 14l-8 9L77 9l5-9ZM15 36l-9 12 5 15 8-14ZM85 36l9 12-5 15-8-14ZM19 77l17 12-8 7L8 83Zm62 0L64 89l8 7 20-13Z"/><path class="ultimate-prism" d="m0 33 15 3-3 6-9-4ZM100 33l-15 3 3 6 9-4ZM8 83l20 13 22 4-18-8-18-13Zm84 0L72 96l-22 4 18-8 18-13Z"/><path class="ultimate-engraving" d="m8 21 8-11m-5 16 9-12m72 7-8-11m5 16-9-12M7 53l6-10m-5 18 7-11m78 3-6-10m5 18-7-11M18 83l16 10m48-10L66 93"/>',
   },
   "ultimate-goleador-v2": {
     name: "V2 · The Ultimate Goleador",

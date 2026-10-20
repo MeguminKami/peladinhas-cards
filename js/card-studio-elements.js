@@ -3,7 +3,7 @@ import { STUDIO_DECORATIONS } from "./card-studio-catalog.js";
 
 // Independent element names; existing IDs keep saved projects compatible.
 const names = {
-  "ultimate-guarda-redes-v2": ["Armadura Reflexo", "Barreira de cristal", "Luva do guarda-redes"],
+  "ultimate-guarda-redes-v2": ["Armadura Reflexo", "Placas prismáticas", "Luva do guarda-redes"],
   "ultimate-goleador-v2": ["Recorte de impacto", "Fragmentos de obsidiana", "Brasão do goleador"],
   "ultimate-participacao-v2": ["Medalhão de eternidade", "Órbitas de continuidade", "Selo de presença"],
   "ultimate-modric-v2": ["Recorte Maestro", "Fitas de titânio", "Triângulo do maestro"],

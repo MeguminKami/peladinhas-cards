@@ -881,7 +881,7 @@ export function managedEvents(rebuild) {
         new Date(),
         completionLedger,
       );
-      if (event.kind === "mission" && (event.scope || "individual") === "individual" && !context?.summaryOnly) {
+      if (event.kind === "mission" && !context?.summaryOnly) {
         const key = periodWindow(event).key;
         const credits=completionLedger.filter(row=>row.eventId===id && !row.revokedAt);
         const totals=new Map();

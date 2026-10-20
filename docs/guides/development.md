@@ -27,6 +27,8 @@ flowchart TB
 
 > **O arranque local usa fixtures por defeito.** `npm.cmd run dev` substitui autenticação, base e inicialização Firebase por dados locais. Não faz leituras Firestore. Para integração, usar os emuladores indicados abaixo.
 
+O bloqueio de Firebase sem modo explícito também abrange IPs privados da rede local, nomes `.local`/`.localhost` e acesso por ficheiro. Assim, abrir o servidor do computador no telemóvel não ativa produção implicitamente. `dev:production` continua a ser uma exceção explícita com acesso real; não usar para desenvolvimento ou testes habituais.
+
 | Guardar no Git                           | Manter local                                                     |
 | :--------------------------------------- | :--------------------------------------------------------------- |
 | Código, regras, documentação e lockfile. | `.secret.local`, dependências, builds, logs e capturas de teste. |

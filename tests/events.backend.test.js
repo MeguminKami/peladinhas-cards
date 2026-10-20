@@ -381,6 +381,20 @@ test("missões: objetivos reais, limite de repetição, progresso coletivo e dup
     auth: { uid: ids[1] },
     data: { eventId: collective.id },
   });
+  for (const scope of ["team", "collective", "group"]) {
+    const shared = await call("create", {
+      ...mission, title: "Carregas ou és carregado", scope,
+      objective: { metric: "goals", target: 10 },
+    });
+    const board = await getEvent.run({auth:{uid:ids[1]},data:{eventId:shared.id}});
+    assert.equal(board.participantProgress.length, ids.length, `${scope}: all participants are visible`);
+    assert.deepEqual(board.progress.map(row=>row.uid), [ids[1]], `${scope}: private progress remains restricted`);
+    if (scope !== "group") {
+      assert.deepEqual(board.participantProgress.map(row=>row.percent), [70,70,50,0]);
+      assert.equal(board.participantProgress.find(row=>row.uid===ids[1]).progress, 7, "counts the player's team goals, not individual goals");
+    }
+    assert.ok(board.participantProgress.every(row=>!Object.hasOwn(row,"ratingState") && !Object.hasOwn(row,"reward")));
+  }
   const copy = await call("duplicate", { eventId: id });
   assert.equal(
     (await db.doc(`events/${copy.id}`).get()).data().status,
