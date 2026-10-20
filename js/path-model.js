@@ -5,7 +5,7 @@ import {
   pathObjectiveRequirements,
   pathObjectiveLines,
 } from "./path-missions.js";
-import { PATH_DIFFICULTY_REVISION } from "./path-difficulty.js";
+import { PATH_DIFFICULTY_REVISION, PATH_GOAL_TARGETS, pathRareObjective } from "./path-difficulty.js";
 import {
   ATTRIBUTES,
   asDate,
@@ -351,7 +351,7 @@ export function emptyPathState(uid) {
 }
 // Preserve targets, progress and card eligibility. All unsettled attempts use
 // the approved validation window; retain old proposal snapshots for auditing.
-export function upgradePathProposals(state) {
+function upgradeLegacyPathProposals(state) {
   const upgrade = (offer, id = "") =>
     offer.proposalVersion >= 3
       ? offer
@@ -423,6 +423,57 @@ export function upgradePathProposals(state) {
     pending,
   };
 }
+// Repair only unbound defensive offers. Game snapshots and settled history are immutable.
+export function upgradePathProposals(stored) {
+  const state = upgradeLegacyPathProposals(stored);
+  const repair = (offer) => {
+    if (offer.objective?.kind !== "conditions") return offer;
+    const difficulty = [0, 1, 2].includes(offer.difficulty) ? offer.difficulty : 0;
+    const limit = PATH_GOAL_TARGETS.conceded[0][difficulty];
+    let changed = false;
+    const conditions = offer.objective.conditions.flatMap((condition) => {
+      if (condition.metric === "games" && offer.objective.conditions.length === 1) {
+        changed = true;
+        return { metric: "contributions", target: 1 };
+      }
+      if (["loss", "draw"].includes(condition.metric)) {
+        changed = true;
+        return { metric: "contributions", target: 1 };
+      }
+      if (condition.metric !== "cleanSheet" &&
+          !(condition.metric === "conceded" && condition.target < 5)) return condition;
+      changed = true;
+      return { ...condition, metric: "conceded", target: limit };
+    });
+    if (!changed) return offer;
+    return {
+      ...offer,
+      calibrationRevision: PATH_DIFFICULTY_REVISION,
+      ...(offer.objective.conditions.some(row => row.metric === "cleanSheet")
+        ? { family: "solidity", title: "Defender em equipa" } : {}),
+      ...(offer.objective.conditions.some(row => ["loss", "draw"].includes(row.metric))
+        ? { family: "action-quality", title: "Contribuir com qualidade" } : {}),
+      objective: { ...offer.objective, conditions },
+    };
+  };
+  let changed = false;
+  const offers = Object.fromEntries(Object.entries(state.offers || {}).map(([id, rows]) => [
+    id, rows.map((offer) => {
+      const updated = repair(offer);
+      changed ||= updated !== offer;
+      return updated;
+    }),
+  ]));
+  let active = state.active;
+  if (active && !active.gameId && !active.frozenAt) {
+    const offer = repair(active.offer);
+    if (offer !== active.offer) {
+      active = { ...active, offer };
+      changed = true;
+    }
+  }
+  return changed ? { ...state, offers, active } : state;
+}
 export function pathEarnedStats(rewards, uid) {
   const own = rewards.filter(
     (row) =>
@@ -474,6 +525,7 @@ export function createPathOffers(
     return pathMissionTemplates(node.route, stage, difficulty).map(
       (template) => ({
         ...template,
+        objective: pathRareObjective(template.objective, advance),
         id: String(difficulty),
         difficulty,
         proposalVersion: 4,

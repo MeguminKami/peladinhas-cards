@@ -24,10 +24,10 @@ Nas combinações com estrelas, o script reconstrói os votos às 48 horas. Jane
 1. Apresentar número de jogos, formatos, cobertura das avaliações e frequências observadas. Não tratar dois jogos como probabilidades definitivas nem inventar dificuldade de GR sem posições elegíveis.
 2. Avaliar a missão inteira. Não multiplicar percentagens de condições: golos, vitória, equipa e avaliações podem estar relacionados. Identificar condições triviais, nunca atingidas e combinações iguais em dificuldades diferentes.
 3. Explicar as alterações propostas antes de editar. Considerar as três fases, a raridade de cada percurso/fusão e as alternativas disponíveis.
-4. Editar `js/path-difficulty.js` e atualizar `PATH_DIFFICULTY_REVISION`. Repetir a auditoria para comparar; registar resultados e limitações num relatório datado, executar `node scripts/update-path-catalogue.mjs` para atualizar os 270 exemplos a partir do código e ligar o relatório no índice.
+4. Editar `js/path-difficulty.js` e atualizar `PATH_DIFFICULTY_REVISION`. Repetir a auditoria para comparar; registar resultados e limitações num relatório datado, executar `node scripts/update-path-catalogue.mjs` para atualizar os 225 exemplos a partir do código e ligar o relatório no índice.
 5. Executar `node --test tests/path-variety.test.js tests/paths.test.js tests/path-window.test.js`, o teste dirigido `tests/path-variety.backend.test.js` num emulador Firestore demo, e `npm.cmd run test:docs`. Fazer build antes de publicar.
 
-As metas aplicam-se apenas a propostas novas. Preservar propostas reveladas, tentativas escolhidas, progresso, recompensas e semanas fechadas. Não é necessária migração ou recálculo. Missões/eventos manuais continuam a usar os alvos definidos pelo administrador; a auditoria não os reescreve.
+Regra geral, as metas aplicam-se apenas a propostas novas. A correção de 20/10/2026 é uma exceção dirigida: a sincronização atualiza propostas e preparações sem jogo associado com cleanSheet, derrota, empate ou limite inferior a cinco golos sofridos. Preservar tentativas associadas a jogos, progresso, recompensas e semanas fechadas. A sincronização aplica a correção sem recalcular jogos antigos. Missões/eventos manuais continuam a usar os alvos definidos pelo administrador; a auditoria não os reescreve.
 
 ## Publicação
 
@@ -39,3 +39,6 @@ npm.cmd run deploy:frontend
 ```
 
 As regras e índices não mudam. Comandos e testes locais não confirmam publicação.
+
+
+As propostas novas de 150% e 200% usam o mesmo pequeno degrau adicional sobre 100%: +0,25 estrela num requisito de avaliação (prioritário), ou +1 numa meta numérica ofensiva quando não há avaliações. Só muda um requisito; limites defensivos e posições mantêm-se. No teto, mais de 4,75 estrelas passa a pelo menos 5, nunca mais de 5. As duas raridades têm o mesmo degrau; propostas já reveladas e tentativas existentes não são agravadas.

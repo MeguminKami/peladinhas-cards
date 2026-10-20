@@ -86,6 +86,8 @@ As capturas usam dados fictícios. O [relatório de interface dos percursos](rep
 
 ## Registo de revisão
 
+[Correção dos objetivos dos percursos - 20/10/2026](reports/path-objectives-2026-10-20.md).
+
 [Construtor de metas e preservação do progresso — 19 de outubro de 2026](reports/goal-builder-2026-10-19.md).
 
 [Totais históricos para missões e eventos — 19 de outubro de 2026](reports/historical-objectives-2026-10-19.md).

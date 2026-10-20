@@ -715,7 +715,42 @@ p {
   font-size: 0.84rem;
   line-height: 1.6;
 }
+.mission-content .mission-event-description {
+  margin: 8px 0 12px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .mission-objective-criteria { display:block; margin-top:4px; font-size:.78rem; color:var(--text-muted); }
+.admin-message-panel { max-width: 960px; }
+.admin-message-panel .section-head > .ui-icon { width: 32px; height: 32px; color: var(--accent); flex-shrink: 0; }
+.message-audience { border: 0; padding: 0; margin: 0; min-width: 0; }
+.message-audience legend { padding: 0; margin-bottom: 8px; font-weight: 700; }
+.message-audience-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.message-audience-options label { display: flex; align-items: center; gap: 10px; min-height: 72px; padding: 14px; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: border-color 160ms, background 160ms; }
+.message-audience-options label:has(:checked) { border-color: var(--accent); background: var(--accent-tint); }
+.message-audience-options label:hover { border-color: var(--accent); }
+.message-audience-options label:has(:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.message-audience-options input, .message-player-list input { width: 18px; height: 18px; flex-shrink: 0; margin: 0; }
+.message-audience-options .ui-icon { color: var(--accent); flex-shrink: 0; }
+.message-audience-options span { min-width: 0; overflow-wrap: anywhere; }
+.message-player-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 320px; overflow-y: auto; margin-top: 12px; padding: 4px; }
+.message-player-list label { display: flex; align-items: center; gap: 12px; min-height: 52px; margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--bg-app); cursor: pointer; }
+.message-player-list label:has(:checked) { box-shadow: inset 3px 0 var(--accent); background: var(--accent-tint); }
+.message-player-list label > span { min-width: 0; overflow-wrap: anywhere; }
+.message-player-list small { display: block; color: var(--text-muted); margin-top: 4px; }
+.message-recipient-summary { border-left: 3px solid var(--accent); padding: 8px 16px; min-width: 0; }
+.message-recipient-summary strong { font-variant-numeric: tabular-nums; }
+.message-recipient-summary p { margin: 6px 0 0; line-height: 1.6; overflow-wrap: anywhere; color: var(--text-muted); max-height: 140px; overflow-y: auto; }
+.admin-message-panel [hidden] { display: none !important; }
+.admin-message-panel [data-message-status] { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .message-audience-options, .message-player-list { grid-template-columns: minmax(0, 1fr); }
+  .message-audience-options label { min-height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .message-audience-options label { transition: none; }
+}
 .ticket-chat {
   background: transparent;
 }

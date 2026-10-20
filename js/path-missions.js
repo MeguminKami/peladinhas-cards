@@ -499,13 +499,6 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
       ...anchor(),
     ),
     entry("next-unbeaten", "Somar sem perder", c("nonLoss", 1), ...anchor()),
-    entry("next-draw", "Equilíbrio com qualidade", c("draw", 1), ...anchor()),
-    entry(
-      "next-resilience",
-      "Qualidade na adversidade",
-      c("loss", 1),
-      ...anchor(),
-    ),
     entry("next-mean", "Equilíbrio de qualidades", mean(), ...anchor()),
     entry("next-overall", "Exibição completa", r("overall", 3.5), ...anchor()),
     entry(
@@ -514,12 +507,6 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
       { ...r(primary, 3.5), comparison: "gt" },
       ...(routeId === "shooting" ? [g()] : []),
       ...(routeId === "fusion-wall" ? [r("goalkeeping")] : []),
-    ),
-    entry(
-      "next-clean",
-      "Não dar espaço ao golo",
-      c("cleanSheet", 1),
-      ...anchor(),
     ),
     entry(
       "next-team-mean",
@@ -715,6 +702,7 @@ export function pickDiversePathOffers(
 export function pathObjectiveLines(objective) {
   const conditions = normalizePathConditions(objective);
   return conditions
+    .filter(row => row.metric !== "games" || conditions.length === 1)
     .sort(
       (a, b) => metricOrder.indexOf(a.metric) - metricOrder.indexOf(b.metric),
     )

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { pathRareObjective } from "../js/path-difficulty.js";
 import { analyzeGoalDifficulty } from "../scripts/path-difficulty-analysis.mjs";
 import {
   PATH_ROUTES,
@@ -29,6 +30,35 @@ import {
 } from "../js/path-window.js";
 
 const routes = [...PATH_ROUTES, ...PATH_FUSIONS];
+
+test("rare missions add exactly one small step to every model and stage", () => {
+  for (const route of routes) for (const stage of [0, 1, 2]) {
+    for (const template of pathMissionTemplates(route.id, stage, 2)) {
+      const original = structuredClone(template.objective);
+      assert.equal(pathRareObjective(template.objective, 100), template.objective);
+      const rare = pathRareObjective(template.objective, 150);
+      assert.deepEqual(rare, pathRareObjective(template.objective, 200));
+      assert.deepEqual(template.objective, original);
+      const changes = rare.conditions.filter((row, index) =>
+        row.target !== original.conditions[index].target);
+      assert.equal(changes.length, 1);
+      const changed = changes[0];
+      const old = original.conditions.find(row => row.metric === changed.metric && row.criterion === changed.criterion);
+      assert.equal(changed.target - old.target,
+        ["rating", "ratingMean"].includes(changed.metric) ? 0.25 : 1);
+      assert.ok(!["conceded", "position", "win", "nonLoss"].includes(changed.metric));
+      assert.ok(pathConditionsImply(rare, original));
+      assert.ok(pathObjectiveLines(rare).length > 0);
+    }
+    for (const advance of [150, 200]) {
+      const offer = createPathOffers(pathNode(route.id.startsWith("fusion-") ? route.id : `${route.id}-0-0`), () => advance === 150 ? 0.97 : 0.999,
+        Object.fromEntries(PATH_ROUTES.map(row => [row.id, stage * 5])))[2];
+      const base = pathMissionTemplates(route.id, stage, 2).find(row => row.templateId === offer.templateId);
+      assert.equal(offer.advance, advance);
+      assert.deepEqual(offer.objective, pathRareObjective(base.objective, advance));
+    }
+  }
+});
 const randomFor = (seed) => () =>
   (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
 const objective = (...conditions) => ({
@@ -226,14 +256,14 @@ test("difficulty audit separates teams, players, closed windows and missing evid
   assert.ok(!JSON.stringify(audit).includes("v4-game"));
 });
 
-test("expanded catalogue: 270 templates, diverse families and mandatory goalkeeper evidence", () => {
+test("expanded catalogue: 225 templates, diverse families and mandatory goalkeeper evidence", () => {
   let count = 0;
   for (const route of routes) {
     count += pathMissionTemplates(route.id).length;
     for (const stage of [0, 1, 2])
       for (const level of [0, 1, 2]) {
         const templates = pathMissionTemplates(route.id, stage, level);
-        assert.ok(templates.length >= 17 && templates.length <= 18, route.id);
+        assert.ok(templates.length >= 14 && templates.length <= 15, route.id);
         assert.ok(
           new Set(templates.map((row) => row.family)).size >= 3,
           route.id,
@@ -277,7 +307,7 @@ test("expanded catalogue: 270 templates, diverse families and mandatory goalkeep
         }
       }
   }
-  assert.equal(count, 270);
+  assert.equal(count, 225);
   assert.equal(
     pathMissionTemplates("shooting", 2, 2).find((row) =>
       row.templateId.endsWith(":goals"),
@@ -462,7 +492,7 @@ test("v4 seeded offers: three families, no equivalent/dominated choices, stable 
           }
         }
       }
-      assert.equal(seenModels.size, 18, `${route.id}: all models reachable`);
+      assert.equal(seenModels.size, 15, `${route.id}: all models reachable`);
       assert.ok(
         slotFamilies.every((families) => families.size > 1),
         `${route.id}: no fixed family slot`,
@@ -712,4 +742,31 @@ test("v4 compatibility preserves saved v3 and v4 proposals, pending attempts, re
     () => 0.5,
   );
   assert.equal(fallback.length, 3);
+});
+
+
+test("defensive calibration repairs unbound offers, removes loss incentives and preserves game snapshots", () => {
+  for (const route of routes) for (let stage = 0; stage < 3; stage++) for (let difficulty = 0; difficulty < 3; difficulty++) {
+    for (const template of pathMissionTemplates(route.id, stage, difficulty)) {
+      assert.ok(template.objective.conditions.every(row => !["cleanSheet", "loss", "draw"].includes(row.metric)));
+      assert.ok(template.objective.conditions.filter(row => row.metric === "conceded").every(row => row.target >= 5));
+    }
+  }
+  const old = metric => ({ id: "1", difficulty: 1, proposalVersion: 4, family: metric,
+    objective: { kind: "conditions", minRatings: 7, conditions: [{ metric, target: 1 }, { metric: "rating", criterion: "defense", target: 3.5 }] } });
+  const state = { ...emptyPathState("a"), offers: { "defending-0-0": [old("cleanSheet"), old("conceded"), old("loss")] },
+    active: { id: "prepared", offer: old("conceded") }, pending: [{ id: "pending", windowVersion: 3, offer: old("cleanSheet") }],
+    history: [{ id: "settled", offer: old("loss") }] };
+  const snapshot = structuredClone(state);
+  const updated = upgradePathProposals(state);
+  assert.deepEqual(state, snapshot, "migration does not mutate its input");
+  assert.equal(updated.offers["defending-0-0"][0].objective.conditions[0].target, 7);
+  assert.equal(updated.offers["defending-0-0"][1].objective.conditions[0].target, 7);
+  assert.equal(updated.offers["defending-0-0"][2].objective.conditions[0].metric, "contributions");
+  assert.equal(updated.active.offer.objective.conditions[0].target, 7);
+  assert.equal(updated.pending, state.pending);
+  assert.equal(updated.history, state.history);
+  assert.equal(upgradePathProposals(updated), updated, "migration is idempotent");
+  const frozen = { ...state, active: { ...state.active, frozenAt: "2026-10-20" } };
+  assert.equal(upgradePathProposals(frozen).active, frozen.active);
 });

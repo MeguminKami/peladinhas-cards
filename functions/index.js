@@ -1145,7 +1145,7 @@ export const deleteGame = policyCall("deleteGame",async (request) => {
 export const adminMessage = policyCall("adminMessage",async (request) => {
   await requireAdmin(request);
   if(!policyAt().notifications.enabled) throw new HttpsError("failed-precondition", "As notifica\u00e7\u00f5es est\u00e3o pausadas nas regras globais.");
-  const { title, body } = request.data;
+  const { title, body, audience = "all", gameId, recipientIds } = request.data;
   if (
     typeof title !== "string" ||
     typeof body !== "string" ||
@@ -1155,10 +1155,28 @@ export const adminMessage = policyCall("adminMessage",async (request) => {
     !body.trim()
   )
     throw new HttpsError("invalid-argument", "Mensagem inválida.");
+  if (!["all", "game", "selected"].includes(audience))
+    throw new HttpsError("invalid-argument", "Destinatários inválidos.");
+  let ids;
+  if (audience === "game") {
+    if (typeof gameId !== "string" || !gameId || gameId.includes("/"))
+      throw new HttpsError("invalid-argument", "Escolhe um jogo válido.");
+    const game = await db.doc(`games/${gameId}`).get();
+    if (!game.exists || game.data().deleting)
+      throw new HttpsError("not-found", "Jogo indisponível.");
+    ids = new Set(participants(game.data()));
+  } else if (audience === "selected") {
+    if (!Array.isArray(recipientIds) || !recipientIds.length || recipientIds.length > 1000 ||
+        recipientIds.some(id => typeof id !== "string" || !id || id.includes("/")))
+      throw new HttpsError("invalid-argument", "Seleciona jogadores válidos.");
+    ids = new Set(recipientIds);
+  }
   const users = data(await db.collection("users").get()).filter(
-    (u) => !u.disabled,
+    (u) => !u.disabled && (!ids || ids.has(u.uid)),
   );
-  const id = `admin-${Date.now()}`;
+  if (!users.length)
+    throw new HttpsError("failed-precondition", "Não há jogadores ativos nos destinatários escolhidos.");
+  const id = `admin-${randomUUID()}`;
   await Promise.all(
     users.map((u) =>
       notification(u.uid, id, {
@@ -1169,7 +1187,7 @@ export const adminMessage = policyCall("adminMessage",async (request) => {
       }),
     ),
   );
-  return { ok: true };
+  return { ok: true, sent: users.length };
 });
 export const saveTheme = policyCall("saveTheme",async (request) => {
   await requireAdmin(request);

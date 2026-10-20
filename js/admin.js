@@ -1,3 +1,4 @@
+import { mountAdminMessages } from "./admin-messages.js";
 import { matchAverageSummary, matchComponentAverages } from "./match-rating-summary.js";
 import { openPasswordRecovery } from "./password-recovery.js";
 import { openGameRatings } from "./admin-game-ratings.js";
@@ -91,7 +92,7 @@ export async function adminPage(ctx, section = "overview") {
     weights: `<section class="panel"><h2>Pesos do OVR</h2><p>Define os pesos para cada posição. Cada posição deve somar 100%. A carta usa a posição principal do jogador. Guardar atualiza as cartas em evolução. Cartas de semanas fechadas mantêm os valores e pesos originais.</p><div id="ovr-presets"></div><form id="ovr-settings"><label>Posição<select id="ovr-position">${OVR_POSITIONS.map((p) => `<option ${p === "ALA" ? "selected" : ""}>${p}</option>`).join("")}</select></label><div class="form-grid">${ATTRIBUTES.map(([key, name]) => `<label>${esc(name)} (%)<input name="${key}" type="number" min="0" max="100" step="0.01" required value="${ctx.league.ovrWeights.positions.ALA[key]}"></label>`).join("")}</div><p id="ovr-total" aria-live="polite">Total: 100%</p><button class="btn btn-primary">Guardar pesos e recalcular</button></form></section>`,
     players: `<section><h2>Jogadores</h2><div class="table-wrap"><table><thead><tr><th>Jogador</th><th>Perfil de acesso</th><th>OVR</th><th>Acções</th></tr></thead><tbody>${players.map((p) => `<tr><td><a href="#/player/${p.uid}">${esc(p.displayName || p.username)}<small>@${esc(p.username)}</small></a></td><td>${roleLabel(p.role)}</td><td>${p.ovr}</td><td><div class="actions compact admin-player-actions" style="--player-action-count:${p.role === "admin" ? 8 : 9}" role="group" aria-label="Acções do jogador">${playerAction(`#/admin/player/${p.uid}/edit`, "Editar jogador", "edit", "primary", "Editar")}${playerAction(`#/admin/initial/${p.uid}`, "Avaliação inicial", "missions", "secondary", "Inicial")}${playerAction(`#/admin/cards/${p.uid}`, "Pré-visualizar carta", "preview", "ghost", "Carta")}${playerAction(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "chart", "ghost", "OVR")}${playerAction(`#/admin/ratings/${p.uid}`, "Avaliações detalhadas", "ratingGames", "ghost", "Votos")}<button type="button" data-reset-password="${esc(p.uid)}" class="btn btn-icon btn-ghost" aria-label="Reset password" aria-haspopup="dialog">${icon("resetPassword")}${actionCaption("Reset password")}</button><button data-rebuild="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Recalcular">${icon("refresh")}${actionCaption("Recalcular")}</button>${p.role !== "admin" ? `<button data-role="${p.uid}" data-target-role="${p.role === "dbs" ? "member" : "dbs"}" class="btn btn-icon ${p.role === "dbs" ? "btn-danger" : "btn-secondary"}" aria-label="${p.role === "dbs" ? "Remover DBS" : "Dar DBS"}">${icon("games")}${actionCaption(p.role === "dbs" ? "Tirar DBS" : "Dar DBS")}</button>` : ""}<button data-role="${p.uid}" class="btn btn-icon ${p.role === "admin" ? "btn-danger" : "btn-admin-access"}" aria-label="${p.role === "admin" ? "Remover admin" : "Promover admin"}" ${p.uid === ctx.user.uid ? "disabled" : ""}>${icon("shield")}${actionCaption(p.role === "admin" ? "Tirar admin" : "Dar admin")}</button></div></td></tr>`).join("")}</tbody></table></div>${!players.length ? empty("Sem jogadores", "As contas criadas aparecem aqui.") : ""}</section>`,
     games: `<section><h2>Jogos</h2>${games.length ? `<div class="game-list">${games.map((g) => `<div class="game-row admin-game-row"><div><b>${esc(g.title)}</b><small>${gameStatusLabel(g.status)}</small></div><div class="admin-game-actions">${g.status === "closed" ? `<button type="button" data-game-ratings="${esc(g.id)}" class="btn btn-secondary" aria-haspopup="dialog">${icon("ratingGames")}Avaliações</button>` : ""}${linkButton(`#/game/${g.id}`, "Editar", "ghost", "edit")}<button data-delete="${g.id}" class="btn btn-danger">${icon("trash")}Eliminar</button></div></div>`).join("")}</div>` : empty("Sem jogos", "Cria a primeira Peladinha.", linkButton("#/game/new", "Criar jogo"), "games")}</section>`,
-    messages: `<section class="panel"><h2>Mensagem à liga</h2><p class="muted">A mensagem aparece no sino de todos os jogadores ativos. O alerta no telemóvel chega apenas a quem ativou as notificações nesse dispositivo.</p><form id="admin-message"><label>Título<input name="title" maxlength="80" required></label><label>Mensagem<textarea name="body" maxlength="500" required></textarea></label><button class="btn btn-primary">Enviar mensagem</button></form><footer class="admin-device-settings"><div>${icon("bell")}<span>Notificações neste dispositivo</span></div>${linkButton("#/notifications", "Configurar", "secondary", "arrow")}</footer></section>`,
+    messages: `<div id="admin-message-workspace"></div>`,
     events: `<div id="event-admin"></div>`,
     maintenance: `<div id="maintenance-workspace"></div>`,
   };
@@ -273,22 +274,7 @@ export async function adminPage(ctx, section = "overview") {
         ctx.go(section === "overview" ? "#/admin" : `#/admin/${section}`);
       } catch {}
     };
-  const messageForm = document.querySelector("#admin-message");
-  if (messageForm)
-    messageForm.onsubmit = async (e) => {
-      e.preventDefault();
-      try {
-        const f = new FormData(e.target);
-        await busy(e.submitter, () =>
-          DB.callAdmin("adminMessage", {
-            title: f.get("title"),
-            body: f.get("body"),
-          }),
-        );
-        toast("Mensagem publicada nas notificações da liga.");
-        e.target.reset();
-      } catch {}
-    };
+  if (section === "messages") mountAdminMessages(ctx, document.querySelector("#admin-message-workspace"));
 }
 export async function adminEdit(ctx, uid) {
   const p = ctx.league.users.find((p) => p.uid === uid);

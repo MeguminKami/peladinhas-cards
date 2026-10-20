@@ -114,3 +114,8 @@ Na intervenção registada em **17 de outubro de 2026**, o segredo cloud incompa
 ## Missões dos percursos e contexto do próximo jogo
 
 O resumo em Missões e no início apresenta a missão escolhida para o próximo jogo e liga diretamente a `#/missions/path/{nodeId}`. A indicação de estado, prazo e votos nessa interface vem da tentativa; o relógio apresentado não decide o apuramento. A documentação e os testes dessa interface estão na [referência dos percursos](../reference/player-paths.md) e no [relatório local](../reports/path-interface-2026-10-19.md). A verificação de transporte push continua a exigir o procedimento próprio deste guia.
+
+
+## Mensagens do ADMIN
+
+Em ADMIN > Mensagens, escolher jogadores de um jogo (titulares e suplentes), jogadores selecionados ou todos os jogadores ativos. A contagem e os nomes mostram os destinatários antes do envio. Contas desativadas não recebem. O servidor confirma a seleção; o resultado conta notificações gravadas, não entregas push confirmadas. [Validação de 20/10/2026](../reports/admin-messages-2026-10-20.md).
