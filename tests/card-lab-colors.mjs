@@ -83,12 +83,14 @@ try {
   await page.locator('[name="color1"]').fill("#112233");
   assert.equal(await page.locator("#card-preview .lab-designed").count(), 1);
   const profile = async (kind) =>
-    page.evaluate((kind) => {
+    page.evaluate(async (kind) => {
       const preview = document.querySelector("#card-preview");
       const card = preview.firstElementChild;
       const image = preview.querySelector("img");
-      const observer = new MutationObserver(() => {});
+      const mutations=[];
+      const observer = new MutationObserver(records => mutations.push(...records));
       observer.observe(preview, { childList: true });
+      observer.observe(card, { attributes:true, attributeFilter:["style"] });
       const started = performance.now();
       for (let n = 0; n < 120; n++) {
         const input =
@@ -101,11 +103,15 @@ try {
           kind === "palette" ? "#" + (0x112200 + n).toString(16) : String(n);
         input.dispatchEvent(new Event("input", { bubbles: true }));
       }
+      const ms = performance.now() - started;
+      await new Promise(requestAnimationFrame);
+      mutations.push(...observer.takeRecords());
       const result = {
-        ms: performance.now() - started,
+        ms,
         cardRetained: preview.firstElementChild === card,
         imageRetained: preview.querySelector("img") === image,
-        replacements: observer.takeRecords().length,
+        replacements: mutations.filter(row=>row.type==="childList").length,
+        styleWrites: mutations.filter(row=>row.type==="attributes").length,
       };
       observer.disconnect();
       return result;
@@ -160,6 +166,7 @@ try {
     assert.equal(result.cardRetained, true);
     assert.equal(result.imageRetained, true);
     assert.equal(result.replacements, 0);
+    assert.ok(result.styleWrites<=3,"120 inputs are coalesced into one paint, not 120 style updates");
   }
   await page.locator('[data-studio-tab="colors"]').click();
   await page.locator('[data-studio-palette="gold"]').click();
@@ -169,7 +176,7 @@ try {
       .getAttribute("aria-pressed"),
     "true",
   );
-  const channels = await page.evaluate(() => {
+  const channels = await page.evaluate(async () => {
     const preview = document.querySelector("#card-preview");
     const card = preview.firstElementChild;
     const variables = {
@@ -184,12 +191,21 @@ try {
       const input = document.querySelector(`[name="${name}"]`);
       input.value = "#abcdef";
       input.dispatchEvent(new Event("input", { bubbles: true }));
-      values.push(...props.map((prop) => card.style.getPropertyValue(prop)));
     }
+    await new Promise(requestAnimationFrame);
+    values.push(...Object.values(variables).flatMap(props=>props.map(prop=>card.style.getPropertyValue(prop))));
     return { retained: preview.firstElementChild === card, values };
   });
   assert.equal(channels.retained, true);
   assert.ok(channels.values.every((value) => value === "#abcdef"));
+  const finalColor=await page.evaluate(()=>{
+    const input=document.querySelector('[name="color1"]');
+    input.value="#135790";
+    input.dispatchEvent(new Event("input",{bubbles:true}));
+    input.dispatchEvent(new Event("change",{bubbles:true}));
+    return document.querySelector("#card-preview .football-card").style.getPropertyValue("--studio-primary");
+  });
+  assert.equal(finalColor,"#135790","change flushes the final value immediately");
   assert.equal(
     await page.locator('[data-studio-palette][aria-pressed="true"]').count(),
     0,

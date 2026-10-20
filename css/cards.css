@@ -2182,3 +2182,87 @@ a.football-card:hover {
 .collection-proof p {
   margin-top: 12px;
 }
+/* Ultimate V2: four bespoke merit editions, authored in native vector. */
+.football-card.card-ultimate {
+  --card-text:#f6f7ff;
+  --collection-name:linear-gradient(90deg,transparent,#050810e8 20% 80%,transparent);
+  --stats-material:linear-gradient(180deg,#03070ebf,#03070e66);
+  --stats-inlay:none;
+  --ultimate-metal-light:#fff5d9;
+  --ultimate-metal:#d8b875;
+  --ultimate-metal-shadow:#6c5550;
+  --ultimate-prism:#8cf0ef;
+  --ultimate-ink:#11131e;
+  filter:drop-shadow(0 12px 18px #0008) drop-shadow(0 0 6px color-mix(in srgb,var(--ultimate-prism) 22%,transparent));
+}
+.card-ultimate .card-photo { top:8%; height:48%; }
+.card-ultimate .card-rating { top:11%; }
+.card-ultimate .card-rating::before { content:""; position:absolute; inset:-12% -30%; z-index:-1; background:radial-gradient(ellipse,#050812ba 20%,#05081270 45%,transparent 72%); pointer-events:none; }
+.card-ultimate .card-frame,.card-ultimate .special-inner { display:none; }
+.card-ultimate .special-outline { stroke-width:.35; opacity:.45; filter:none; }
+.card-ultimate .collection-art { stroke-width:.45; opacity:1; mask-image:none; }
+.card-ultimate .card-surface::before { background:var(--ultimate-texture,none); opacity:.25; }
+.card-ultimate .card-surface::after { background:linear-gradient(124deg,transparent 8%,#ffffff30 8.5%,transparent 9.3% 76%,#b8f8ff20 77%,transparent 78%); opacity:.65; }
+.card-ultimate .card-caption { border:0; box-shadow:none; text-shadow:0 2px 5px #000; }
+.card-ultimate .card-stats { border:0; border-radius:8% 8% 0 0; padding:3% 3% 2%; }
+.card-ultimate .card-symbol { color:var(--ultimate-metal-light); opacity:1; }
+.card-ultimate .ultimate-metal { stroke:none; }
+.card-ultimate .ultimate-dark { fill:var(--ultimate-ink); stroke:none; }
+.card-ultimate .ultimate-prism { fill:var(--ultimate-prism); stroke:none; }
+.card-ultimate .ultimate-energy { fill:var(--edition-flare); stroke:none; opacity:.85; }
+.card-ultimate .ultimate-engraving { stroke:var(--ultimate-metal-light); stroke-width:.3; opacity:.7; }
+.card-ultimate .ultimate-orbit { fill:none; stroke:var(--ultimate-metal-light); stroke-width:1.8; opacity:.7; }
+.card-ultimate .ultimate-orbit.secondary { stroke:var(--ultimate-prism); stroke-width:.4; opacity:.65; }
+.card-ultimate .ultimate-node { fill:var(--ultimate-prism); stroke:none; }
+.card-ultimate .ultimate-flow { fill:none; stroke:var(--ultimate-metal-light); stroke-width:.45; opacity:.65; }
+.card-ultimate .ultimate-rays { stroke:var(--ultimate-metal); stroke-width:2; stroke-linecap:square; opacity:.5; }
+.football-card.ultimate-goleador-v2 {
+  --card-a:#6f2030; --card-b:#0b0a12; --card-edge:#ffd096;
+  --edition-light:#ffe5a5; --edition-flare:#ff8240; --ultimate-prism:#87e8ee;
+  --ultimate-metal:#e99e57; --ultimate-metal-shadow:#593751; --ultimate-ink:#270d21;
+  --ultimate-texture:repeating-linear-gradient(135deg,#ffba740a 0 1px,transparent 1px 5px);
+  --collection-material:radial-gradient(ellipse at 77% 24%,#e8672666,transparent 46%),conic-gradient(from 112deg at 75% 39%,#110b18,#4f1527 20%,#0b0a12 34% 65%,#702b26 80%,#110b18);
+}
+.ultimate-goleador-v2 .card-caption { clip-path:polygon(0 0,100% 0,94% 100%,6% 100%); }
+.football-card.ultimate-participacao-v2 {
+  --card-a:#21404c; --card-b:#090e20; --card-edge:#dbe9f7;
+  --edition-light:#f0fbff; --edition-flare:#b19ddd;
+  --ultimate-metal-light:#f0ffff; --ultimate-metal:#b5d7de; --ultimate-metal-shadow:#515378; --ultimate-prism:#d1b6f5;
+  --collection-material:radial-gradient(ellipse at 58% 28%,#628a9a66,transparent 49%),repeating-radial-gradient(ellipse at 55% 34%,#a9d7ed08 0 1px,transparent 1px 7px),linear-gradient(135deg,#12333f,#14162e 55%,#112531);
+}
+.ultimate-participacao-v2 .card-caption { left:12%; width:76%; border-radius:40%; background:linear-gradient(90deg,#10182700,#101827f0 20% 80%,#10182700); }
+.ultimate-participacao-v2 .card-stats { border-radius:16% 16% 10% 10%; }
+.football-card.ultimate-modric-v2 {
+  --card-a:#424d9a; --card-b:#100f29; --card-edge:#e6e5ff;
+  --edition-light:#f9f4ff; --edition-flare:#9892ef;
+  --ultimate-metal-light:#fff6e6; --ultimate-metal:#ced3f3; --ultimate-metal-shadow:#716298; --ultimate-prism:#8ae3e4; --ultimate-ink:#29244b;
+  --collection-material:radial-gradient(ellipse at 82% 27%,#9b83c966,transparent 42%),conic-gradient(from 15deg at 80% 35%,#16152f,#34366a 30%,#111326 55%,#4b3b77 80%,#16152f);
+}
+.ultimate-modric-v2 .card-caption { background:linear-gradient(90deg,transparent,#151329d9 30% 70%,transparent); }
+.football-card.ultimate-vitorioso-v2 {
+  --card-a:#294940; --card-b:#0c1317; --card-edge:#f5dda3;
+  --edition-light:#fff6d5; --edition-flare:#d4b36b;
+  --ultimate-metal-light:#fff3cf; --ultimate-metal:#d9bb75; --ultimate-metal-shadow:#71614b; --ultimate-prism:#92d9d2; --ultimate-ink:#1a292b;
+  --ultimate-texture:repeating-linear-gradient(90deg,#f4dba20d 0 1px,transparent 1px 4px);
+  --collection-material:radial-gradient(ellipse at 64% 30%,#779a6544,transparent 45%),linear-gradient(90deg,#091313,#29423a 45%,#111c20 85%);
+}
+.ultimate-vitorioso-v2 .card-caption { left:12%; width:76%; background:#10201fe6; border-inline:2px solid var(--ultimate-metal); }
+.ultimate-vitorioso-v2 .card-stats { border-radius:0; }
+.football-card.ultimate-guarda-redes-v2 {
+  --card-a:#254f74; --card-b:#081923; --card-edge:#d2f1ff;
+  --edition-light:#efffff; --edition-flare:#83cfdc;
+  --ultimate-metal-light:#f4ffff; --ultimate-metal:#aac9df; --ultimate-metal-shadow:#3c5b7c; --ultimate-prism:#f0d6a0; --ultimate-ink:#112c41;
+  --ultimate-texture:repeating-linear-gradient(120deg,#b4ebff0c 0 1px,transparent 1px 7px);
+  --collection-material:radial-gradient(ellipse at 65% 27%,#5cb1bc55,transparent 46%),conic-gradient(from 45deg at 61% 34%,#0b1c2b,#23496b 25%,#0a1925 50%,#183c55 75%,#0b1c2b);
+  --stats-material:linear-gradient(180deg,#041523e8,#071927d4);
+}
+.ultimate-guarda-redes-v2 .ultimate-barrier { fill:#b6f1ff08; stroke:#b6edff; stroke-width:.65; opacity:.45; }
+.ultimate-guarda-redes-v2 .card-caption { background:linear-gradient(90deg,transparent,#082133eb 15% 85%,transparent); clip-path:polygon(6% 0,94% 0,100% 100%,0 100%); }
+.ultimate-guarda-redes-v2 .card-stats { border-radius:0; clip-path:polygon(4% 0,96% 0,100% 100%,0 100%); }
+/* Reused ornaments follow the current Card Lab palette, including non-Ultimate models. */
+.football-card .studio-edition-art .ultimate-metal { fill:var(--studio-edge,var(--card-edge)); stroke:none; }
+.football-card .studio-edition-art .ultimate-dark { fill:var(--studio-secondary,var(--card-b)); stroke:none; }
+.football-card .studio-edition-art :is(.ultimate-prism,.ultimate-node) { fill:var(--studio-glow,var(--card-edge)); stroke:none; }
+.football-card .studio-edition-art .ultimate-energy { fill:var(--studio-primary,var(--card-a)); stroke:none; }
+.football-card .studio-edition-art :is(.ultimate-engraving,.ultimate-flow,.ultimate-orbit,.ultimate-rays) { fill:none; stroke:var(--studio-edge,var(--card-edge)); }
+.football-card .studio-edition-art .ultimate-barrier { fill:none; stroke:var(--studio-edge,var(--card-edge)); opacity:.45; }

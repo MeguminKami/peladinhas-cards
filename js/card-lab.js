@@ -504,7 +504,7 @@ export async function cardLab(ctx, uid) {
     if (key === "theme" && value === "in-form")
       value = informTheme(base.cardType, base.ovr);
     const input = form.elements.namedItem(key);
-    if (input) input.value = value;
+    if (input && input.value !== String(value)) input.value = value;
   };
   const palette = (id) => {
     const colors = STUDIO_PALETTES[id][1];
@@ -573,6 +573,25 @@ export async function cardLab(ctx, uid) {
     }
     return false;
   };
+  // Color pickers can emit many inputs between two painted frames. Keep the
+  // latest form values and paint once, without rebuilding the card or images.
+  let colorFrame = null;
+  const pendingColors = new Set();
+  const flushColors = () => {
+    if (colorFrame !== null) cancelAnimationFrame(colorFrame);
+    colorFrame = null;
+    const keys = [...pendingColors];
+    pendingColors.clear();
+    for (const key of keys) if (!recolor(key)) { draw(); break; }
+  };
+  const queueColor = (key) => {
+    if (!preview.firstElementChild?.classList.contains("lab-designed")) {
+      draw();
+      return;
+    }
+    pendingColors.add(key);
+    if (colorFrame === null) colorFrame = requestAnimationFrame(flushColors);
+  };
   const fitPreview = () => {
     const canvas = preview.getBoundingClientRect();
     const padding = getComputedStyle(preview);
@@ -596,6 +615,9 @@ export async function cardLab(ctx, uid) {
   resize.observe(preview);
   ctx.cleanup(() => resize.disconnect());
   const draw = () => {
+    if (colorFrame !== null) cancelAnimationFrame(colorFrame);
+    colorFrame = null;
+    pendingColors.clear();
     const normalized = normalizeSymbolPosition(readDesign());
     set("badgeX", normalized.badgeX);
     set("badgeY", normalized.badgeY);
@@ -798,10 +820,14 @@ export async function cardLab(ctx, uid) {
         field ? clamp(e.target.value, field[2], field[3]) : e.target.value,
       );
     }
-    if (!recolor(e.target.dataset.studioProperty || e.target.name)) draw();
+    const colorKey = e.target.dataset.studioProperty || e.target.name;
+    if (colorVariables[colorKey] || nameBackgroundFields.includes(colorKey))
+      queueColor(colorKey);
+    else draw();
     clearTimeout(timer);
     timer = setTimeout(commit, 250);
   };
+  form.addEventListener("change", flushColors);
   document.querySelector('[form="lab-controls"][name="themeName"]').oninput =
     form.oninput;
   form.querySelectorAll("[data-studio-tab]").forEach(
@@ -1213,7 +1239,11 @@ export async function cardLab(ctx, uid) {
       ((event.clientY - rect.top) / rect.height) * 100 + "%",
     );
   });
-  ctx.cleanup(() => clearTimeout(timer));
+  ctx.cleanup(() => {
+    clearTimeout(timer);
+    if (colorFrame !== null) cancelAnimationFrame(colorFrame);
+    pendingColors.clear();
+  });
   if (uid && [...form.theme.options].some((option) => option.value === uid)) {
     set("theme", uid);
     form.theme.onchange();

@@ -365,6 +365,12 @@ test("missões: objetivos reais, limite de repetição, progresso coletivo e dup
   });
   assert.equal(detail.progress[0].progress, 2);
   assert.deepEqual(detail.claimedPeriods, ["once"]);
+  const publicBoard=await getEvent.run({auth:{uid:ids[1]},data:{eventId:id}});
+  assert.deepEqual(publicBoard.progress.map(row=>row.uid),[ids[1]],"private detail stays restricted to the viewer");
+  assert.deepEqual(publicBoard.participantProgress.map(row=>row.percent),[100,50,0,0]);
+  assert.equal(publicBoard.participantProgress.find(row=>row.uid===ids[0]).claimed,true);
+  assert.equal(publicBoard.participantProgress.find(row=>row.uid===ids[1]).progress,1);
+  assert.ok(publicBoard.participantProgress.every(row=>!Object.hasOwn(row,"ratingState") && !Object.hasOwn(row,"reward") && !Object.hasOwn(row,"votes")));
   const collective = await call("create", {
     ...mission,
     title: "Objetivo da equipa",
@@ -462,6 +468,8 @@ test("missões semanais renovam progresso; máximos permanentes e expiração s�
   );
   t.mock.timers.setTime(+new Date("2026-10-30T12:00:00Z"));
   await assert.rejects(claim(id));
+  const nextPeriod=await getEvent.run({auth:{uid:ids[0]},data:{eventId:id}});
+  assert.equal(nextPeriod.participantProgress.find(row=>row.uid===ids[0]).percent,0,"last period completion does not complete the new period");
   const stamp = Timestamp.fromDate(new Date("2026-10-30T10:00:00Z"));
   await db.doc("games/managed-repeat-game").set({
     status: "closed",
@@ -474,6 +482,8 @@ test("missões semanais renovam progresso; máximos permanentes e expiração s�
   });
   await claim(id);
   await claim(id);
+  const completedLimit=await getEvent.run({auth:{uid:ids[0]},data:{eventId:id}});
+  assert.equal(completedLimit.participantProgress.find(row=>row.uid===ids[0]).percent,100);
   assert.equal(
     (await db.collection("eventRewards").where("eventId", "==", id).get()).size,
     2,

@@ -2,6 +2,8 @@
 
 ## Direção de arte e qualidade da interface
 
+- Não colocar títulos, nomes de edição, nomes de tier ou rótulos como «THE ULTIMATE» e «V2» no topo nem no interior das cartas. O nome da edição pertence ao catálogo ou à ficha, fora da carta. Dentro da carta, preservar a identidade do jogador, OVR, posição, atributos e símbolos gráficos. O tier deve reconhecer-se pelo desenho, materiais e acabamento, sem títulos acrescentados.
+
 - Tratar cada alteração de interface como trabalho de produto e direção de arte. Entregar uma composição intencional, reconhecível como Peladinhas Cards, com hierarquia, acabamento e comportamento completos; cumprir a funcionalidade não basta para considerar a interface pronta.
 - Antes de desenhar, estudar a implementação atual do bloco de instalação da APP (`installSpotlight` em `js/pwa.js`, estilos `.install-*` em `css/experience.css`) e do ecrã de entrada (`.auth-*` e respetiva composição). São referências de qualidade: tipografia expressiva, contraste controlado, ilustração integrada, profundidade, movimento e ações claras. Confirmar os ficheiros atuais por pesquisa se estas referências mudarem.
 - Transportar esse cuidado para novas áreas sem copiar mecanicamente o telefone, as órbitas ou o mesmo cartão. Criar soluções próprias para o conteúdo: resultados com presença, progresso legível, comparações claras, recompensas com identidade e estados vazios que orientem a próxima ação. As páginas de gestão exigem o mesmo acabamento, adaptado à densidade de trabalho.

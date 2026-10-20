@@ -62,9 +62,6 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
   const specialArt = special
     ? `<svg class="special-ornament" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polygon class="special-outline" points="${expandCardOutline(special.outline)}" transform="translate(1.5 1.5) scale(.97)"/><polygon class="special-inner" points="${expandCardOutline(special.outline)}" transform="translate(4 4) scale(.92)"/></svg>${cardSymbol(special.motif)}`
     : "";
-  const collectionArt = special?.art
-    ? `<svg class="collection-art" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">${special.art}</svg>`
-    : "";
   const normal = /^(bronze|silver|gold)-(common|rare)$/.test(t);
   const rare = normal && t.endsWith("-rare");
   const outline =
@@ -73,6 +70,11 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
       ? "9,6 38,6 50,1 62,6 91,6 98,13 94,18 98,23 98,79 94,88 81,95 50,99 19,95 6,88 2,79 2,23 6,18 2,13"
       : undefined);
   const clip = cardClip(outline);
+  const foilId = clip.id + "-foil";
+  const foil = special?.ultimate ? '<defs><linearGradient id="'+foilId+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--ultimate-metal-light)"/><stop offset=".22" style="stop-color:var(--ultimate-metal)"/><stop offset=".48" style="stop-color:var(--ultimate-metal-shadow)"/><stop offset=".52" style="stop-color:var(--ultimate-metal-light)"/><stop offset=".76" style="stop-color:var(--ultimate-metal)"/><stop offset="1" style="stop-color:var(--ultimate-prism)"/></linearGradient></defs>' : "";
+  const art = special?.art?.replaceAll('class="ultimate-metal"', 'class="ultimate-metal" fill="url(#'+foilId+')"');
+  const collectionArt = art ? '<svg class="collection-art" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+foil+art+'</svg>' : "";
+
   const rareRim = rare
     ? `<svg class="rare-rim-detail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polygon class="rare-rim-outline" points="${expandCardOutline(outline)}" transform="translate(.8 .8) scale(.984)"/><path class="rare-rim-highlight" d="M12 2.5H36M64 2.5H88M2.8 12V37M97.2 12V37M2.8 63V90M97.2 63V90M16 98.8H36M64 98.8H84"/><path class="rare-rim-inlay" d="m50 1.3 2.5 1.5L50 4.3l-2.5-1.5ZM3 43l1 3-1 3-1-3ZM97 43l1 3-1 3-1-3Z"/></svg>`
     : "";
@@ -96,7 +98,7 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.ovrDelta !== 0
       ? `<span class="card-ovr-trend ${player.ovrDelta > 0 ? "positive" : "negative"}" role="img" aria-label="${player.ovrDelta > 0 ? "Subiu" : "Desceu"} OVR nos valores permanentes face à semana anterior">${trendArrow(player.ovrDelta)}</span>`
       : "";
-  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
+  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.ultimate ? " card-ultimate" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
     0,
     8,
   )

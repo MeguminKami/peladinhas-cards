@@ -35,6 +35,8 @@ Cada paleta define superfície primária, superfície secundária, texto, traça
 
 Os seletores de cor e os valores RGB/transparência do fundo do nome atualizam diretamente as variáveis CSS da carta. Após a primeira edição de um modelo nativo, estes ajustes não recriam a fotografia nem os símbolos e não percorrem novamente todas as ferramentas. Desfazer/refazer e guardar conservam os valores finais.
 
+Durante o arrasto, os eventos são agrupados por frame com `requestAnimationFrame`, aplicando o valor mais recente de cada canal. Terminar a alteração (`change`) aplica imediatamente os valores pendentes; uma reconstrução ou saída do editor cancela frames antigos. [Validação de desempenho de 20/10/2026](../reports/card-lab-colors-2026-10-20.md).
+
 O **Bicolor** mistura as duas cores por degradê, sem divisão brusca. Os controlos de **Distribuição e intensidade** só aparecem quando têm efeito:
 
 - Diagonal e Bicolor: ângulo e distribuição.

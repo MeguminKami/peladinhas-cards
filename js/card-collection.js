@@ -1,7 +1,9 @@
 // Shared visual catalog. Ownership and eligibility live in achievements and reward rules.
 import { FUT_INSPIRED_EDITIONS } from "./card-fut-themes.js";
 import { PATH_CARD_EDITIONS } from "./path-card-designs.js";
+import { ULTIMATE_CARD_EDITIONS } from "./card-ultimate-designs.js";
 export const COLLECTION_EDITIONS = Object.freeze({
+  ...ULTIMATE_CARD_EDITIONS,
   ...PATH_CARD_EDITIONS,
   ...FUT_INSPIRED_EDITIONS,
   apogee: {

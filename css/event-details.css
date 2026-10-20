@@ -210,3 +210,25 @@
     gap: 6px;
   }
 }
+.mission-participants { display:grid; gap:16px; min-width:0; }
+.mission-participants-head h2 { display:flex; align-items:center; gap:10px; margin:0; font-size:1.125rem; line-height:1.5; }
+.mission-participants-head h2 > svg { width:20px; height:20px; flex-shrink:0; color:var(--accent); }
+.mission-participants-head p { margin:6px 0 0; font-size:.875rem; color:var(--text-secondary); }
+.mission-participants-search { display:grid; gap:8px; font-size:.875rem; }
+.mission-participants-search input { min-width:0; width:100%; min-height:44px; }
+.mission-participants-result { margin:0; color:var(--text-secondary); font-size:.8rem; }
+.mission-participants-list { display:grid; list-style:none; padding:0; margin:0; }
+.mission-participant { display:grid; gap:10px; min-width:0; padding:16px 8px; border-bottom:1px solid var(--border); }
+.mission-participant.is-you { background:var(--accent-tint); border-left:2px solid var(--accent); padding-left:12px; }
+.mission-participant-heading { display:flex; align-items:baseline; justify-content:space-between; gap:16px; min-width:0; }
+.mission-participant-heading > strong { min-width:0; font-size:.95rem; overflow-wrap:anywhere; }
+.mission-participant-you { display:inline-block; margin-left:8px; color:var(--accent); font-size:.8rem; font-weight:600; }
+.mission-participant-percent { flex-shrink:0; font-size:1rem; font-weight:700; font-variant-numeric:tabular-nums; }
+.mission-participant.is-complete .mission-participant-percent { color:var(--accent); }
+.mission-participant > .progress { height:5px; margin:0; }
+.mission-participant-state { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; font-size:.85rem; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+.mission-participant-state > span:first-child { display:inline-flex; align-items:center; gap:8px; }
+.mission-participant-state svg { width:16px; height:16px; flex-shrink:0; }
+.mission-participant.is-complete .mission-participant-state > span:first-child { color:var(--accent); }
+.mission-participant-goals summary { min-height:44px; align-content:center; cursor:pointer; font-size:.85rem; }
+.mission-participants :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }

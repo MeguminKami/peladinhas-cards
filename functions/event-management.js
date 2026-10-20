@@ -881,6 +881,24 @@ export function managedEvents(rebuild) {
         new Date(),
         completionLedger,
       );
+      if (event.kind === "mission" && (event.scope || "individual") === "individual" && !context?.summaryOnly) {
+        const key = periodWindow(event).key;
+        const credits=completionLedger.filter(row=>row.eventId===id && !row.revokedAt);
+        const totals=new Map();
+        for(const row of credits)totals.set(row.uid,(totals.get(row.uid)||0)+1);
+        const claimed = new Set(credits.filter(row=>row.periodKey===key || totals.get(row.uid)>=(event.maxRepeats || 1)).map(row => row.uid));
+        const target = event.objective.target;
+        result.participantProgress = result.progress.map(row => {
+          const locked = !missionUnlocked(event,row.uid,completionLedger);
+          const completed = claimed.has(row.uid) || row.eligible;
+          return {
+            uid:row.uid, progress:row.progress, target,
+            percent:completed ? 100 : locked ? 0 : Math.max(0,Math.min(99,Math.floor(100*row.progress/target))),
+            completed, claimed:claimed.has(row.uid), locked,
+            ...(row.ratingState?.goals ? {goals:row.ratingState.goals.map(goal=>({id:goal.id,progress:goal.progress,target:goal.target}))} : {}),
+          };
+        }).sort((a,b)=>b.percent-a.percent || Number(b.completed)-Number(a.completed) || a.uid.localeCompare(b.uid));
+      }
       if (
         event.kind !== "mission" &&
         event.status === "open" &&

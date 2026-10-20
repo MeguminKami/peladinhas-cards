@@ -100,8 +100,8 @@ test("Em Forma acompanha bronze, prata e ouro, incluindo cartas raras", () => {
   assert.ok(validReward({ boosts: {}, specialId: "in-form" }));
 });
 test("edições do catálogo distinguem cartas ativas e designs em reserva", () => {
-  assert.equal(COLLECTION_THEME_IDS.length, 34);
-  assert.equal(new Set(COLLECTION_THEME_IDS.map(themeName)).size, 34);
+  assert.equal(COLLECTION_THEME_IDS.length, 39);
+  assert.equal(new Set(COLLECTION_THEME_IDS.map(themeName)).size, 39);
   for (const id of COLLECTION_THEME_IDS) {
     assert.ok(CATALOG_THEMES.includes(id));
     assert.equal(THEMES.includes(id), !RESERVED_COLLECTION_IDS.includes(id));

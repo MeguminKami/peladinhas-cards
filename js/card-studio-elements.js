@@ -3,6 +3,11 @@ import { STUDIO_DECORATIONS } from "./card-studio-catalog.js";
 
 // Independent element names; existing IDs keep saved projects compatible.
 const names = {
+  "ultimate-guarda-redes-v2": ["Armadura Reflexo", "Barreira de cristal", "Luva do guarda-redes"],
+  "ultimate-goleador-v2": ["Recorte de impacto", "Fragmentos de obsidiana", "Brasão do goleador"],
+  "ultimate-participacao-v2": ["Medalhão de eternidade", "Órbitas de continuidade", "Selo de presença"],
+  "ultimate-modric-v2": ["Recorte Maestro", "Fitas de titânio", "Triângulo do maestro"],
+  "ultimate-vitorioso-v2": ["Recorte monumental", "Monólitos de ouro", "Taça do vencedor"],
   toty: ["Cume lapidado", "Filigrana dourada", "Coroa de pontas"],
   tots: ["Cristal recortado", "Estilhaços de cristal", "Cristal facetado"],
   icon: ["Arco clássico", "Mármore e colunas", "Frontão de templo"],
@@ -131,6 +136,11 @@ export const STUDIO_ORNAMENT_GROUPS = [
       "edition-perfect-five",
       "edition-mvp",
       "edition-legend-form",
+      "edition-ultimate-goleador-v2",
+      "edition-ultimate-participacao-v2",
+      "edition-ultimate-modric-v2",
+      "edition-ultimate-vitorioso-v2",
+      "edition-ultimate-guarda-redes-v2",
     ],
   ],
   [

@@ -1,5 +1,19 @@
 # Coleção especial de cartas
 
+## The Ultimate V2
+
+Cinco edições nativas adicionais, com desenhos próprios, disponíveis no catálogo, nos modelos do Card Lab e nas recompensas de missões/eventos. Todas têm validade permanente; as metas são as configuradas pelo ADMIN, sem atribuição automática por limites inventados nesta expansão. Os projetos `saved:*` existentes mantêm os seus nomes e dados.
+
+| Nome | ID | Identidade |
+| --- | --- | --- |
+| V2 · The Ultimate Goleador | `ultimate-goleador-v2` | Impacto: obsidiana fraturada, plasma âmbar, lâminas assimétricas e reflexos prismáticos |
+| V2 · The Ultimate Participação | `ultimate-participacao-v2` | Eternidade: medalhão de platina, órbitas de continuidade e opala holográfica |
+| V2 · The Ultimate Modric | `ultimate-modric-v2` | Maestro: seda de titânio, fitas iridescentes e curvas fluidas |
+| V2 · The Ultimate Vitorioso | `ultimate-vitorioso-v2` | Ascensão: monólitos de ouro, ónix esmeralda e raios prismáticos |
+| V2 · The Ultimate Guarda-Redes | `ultimate-guarda-redes-v2` | Reflexo: armadura de titânio glacial, placas facetadas, barreira de cristal e luva |
+
+São desenhos SVG/CSS em `js/card-ultimate-designs.js`, com materiais em `css/cards.css`. O tier reconhece-se pelo acabamento metálico e prismático; não há títulos ou nomes de edição dentro das cartas. Os nomes V2 ficam apenas no catálogo e nas fichas. Nome do jogador, OVR e atributos mantêm zonas de leitura protegidas. [Validação e publicação](../reports/ultimate-cards-v2-2026-10-20.md).
+
 [← Cartas e avaliações](cards-and-ratings.md)
 
 Dezanove edições visuais disponíveis em **Administração → Cartas** e na secção **Modelos** do **Card Lab**. O catálogo permite ampliar cada edição e experimentar a fotografia de um jogador. Dentro do Card Lab, a fotografia usada é sempre a do ADMIN autenticado.

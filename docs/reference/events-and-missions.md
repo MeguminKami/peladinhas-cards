@@ -190,6 +190,10 @@ Os percursos têm um [catálogo próprio de 270 modelos](path-mission-catalogue.
 
 ## Apresentação do progresso
 
+Nas missões pessoais (`kind: mission`, objetivo individual), o detalhe apresenta o progresso de todos os participantes: percentagem, contador, estado e destaque para o próprio jogador. Ordena por percentagem descendente, de 100% a 0%, com nomes por ordem alfabética em empate. Inclui quem ainda não começou e quem ainda precisa de desbloquear a missão; as missões compostas permitem abrir os contadores de cada objetivo. Há pesquisa por nome, sem distinção de acentos.
+
+O servidor devolve `participantProgress` com apenas UID, contagens, percentagem e estados públicos; os detalhes completos em `progress` continuam limitados ao próprio jogador fora do acesso admin. Não divulga médias individuais de avaliação, votos nem entregas privadas dos outros jogadores. Objetivo cumprido ou conclusão registada aparece a 100%, mesmo antes de receber a recompensa. Em missões recorrentes, uma conclusão anterior não completa o período seguinte; quem já atingiu o máximo de conclusões permanece concluído. As atualizações em direto, quando ativas, preservam a pesquisa. [Validação de 20/10/2026](../reports/mission-participants-2026-10-20.md).
+
 As recompensas de missões e eventos usam a mesma escala para valores, atributos e nome da carta. Cada tipo de prémio tem um cabeçalho com ícone e duração alinhada; o título da secção e as notas secundárias têm níveis próprios. A secção não repete os tipos de recompensa num resumo adicional. As durações dos atributos e da carta mantêm-se independentes.
 
 Os resumos usam uma ação direta e singular/plural correto: «Joga um jogo como defesa (DEF).», «Ganha 3 jogos seguidos.» ou «Soma um total de 5 golos ou assistências.». As posições apresentam nome e sigla. As regras de período e desbloqueio ficam nos detalhes, sem se repetirem no resumo; os objetivos históricos mantêm «Total de …». Esta revisão de texto é feita na apresentação do navegador e não altera métricas, contagens ou dados guardados.
