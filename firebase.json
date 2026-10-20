@@ -31,11 +31,13 @@
         ".firebase",
         ".env*",
         ".secret.local",
-        "firebase.maintenance.json"
+        "firebase.maintenance.json",
+        "firebase.read-budget.json"
       ]
     }
   ],
   "emulators": {
+    "auth": { "port": 9099 },
     "firestore": {
       "port": 8085
     },

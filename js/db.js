@@ -270,7 +270,7 @@ export const weeklyCardPhotos = (weekId) =>
   list("weeklyCardPhotos", where("weekId", "==", weekId));
 export { prepareWeeklyCardPhoto } from "./photo-upload.js";
 
-export const openEvents = async () => (await callAdmin("listEvents", {})).data;
+export const openEvents = async () => (await callAdmin("listEvents", { summaries: true })).data;
 export const eventDetails = async (eventId) =>
   (await callAdmin("getEvent", { eventId })).data;
 

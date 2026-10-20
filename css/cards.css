@@ -159,6 +159,50 @@ a.football-card:hover {
 .card-rating > span:last-child {
   font-size: calc(var(--card-width) * 0.065);
 }
+.card-rating[data-rating-layout="compact"],
+.card-rating[data-rating-layout="sidecar"] {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: center;
+  align-items: center;
+  column-gap: calc(var(--card-width) * 0.012);
+  row-gap: calc(var(--card-width) * 0.005);
+  text-align: center;
+}
+.card-rating[data-rating-layout="compact"] > strong {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.card-rating[data-rating-layout="compact"] > span:first-of-type {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.card-rating[data-rating-layout="compact"] > small {
+  grid-column: 1;
+  grid-row: 3;
+  margin: 0;
+}
+.card-rating[data-rating-layout="compact"] > span:last-child {
+  grid-column: 2;
+  grid-row: 3;
+}
+.card-rating[data-rating-layout="sidecar"] > strong {
+  grid-column: 1;
+  grid-row: 1 / 4;
+}
+.card-rating[data-rating-layout="sidecar"] > span:first-of-type {
+  grid-column: 2;
+  grid-row: 1;
+}
+.card-rating[data-rating-layout="sidecar"] > small {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0;
+}
+.card-rating[data-rating-layout="sidecar"] > span:last-child {
+  grid-column: 2;
+  grid-row: 3;
+}
 .card-photo {
   position: absolute;
   top: 7%;

@@ -4,6 +4,10 @@
 
 ## Escolher pelo tipo de alteração
 
+Para redução de leituras: `npm.cmd run test:read-safety` verifica isolamento, snapshots offline, deduplicação e bloqueio de rede real. `npm.cmd run test:reads` compara o commit `056c32e` com o código atual, num emulador demo dedicado (Firestore 8090), contando documentos lidos pelo SDK e verificando resultados equivalentes. Os ficheiros de medição ficam em `test-results/read-budget-*.json`, ignorados pelo Git. Este teste apaga os dados do projeto demo entre cenários; nunca apontar para produção nem para um emulador com dados de trabalho a preservar.
+
+Os testes de browser usam `tests/browser-sandbox.mjs`: um pedido a Google APIs, Functions, Realtime Database ou Storage reais é bloqueado e faz o teste falhar ao fechar o browser. O CDN estático `gstatic.com` continua permitido. As suites backend exigem projeto `demo-` e `FIRESTORE_EMULATOR_HOST` antes da inicialização do Admin SDK; executar diretamente sem esses valores falha. Os comandos npm de emuladores usam configuração CLI isolada, sem tokens herdados e sem debug do ambiente. Consultar [desenvolvimento](development.md) para fixtures/emuladores e [diagnósticos](firestore-read-diagnostics.md) para recolhas explícitas.
+
 Estatísticas: `node --test tests/statistics.test.js` verifica recortes, médias, amostras, filtros, GR não aplicável e CSV; faz parte de `npm.cmd test`. `npm.cmd run test:statistics` verifica a interface modular em quatro larguras/temas, teclado, persistência, tabela com deslocação local e os painéis expandidos. [Referência funcional](../reference/statistics.md).
 
 Construtor de metas: `npm.cmd run test:event-goals` verifica adicionar/recolher, editar/remover/reordenar, tipos de resultados/estrelas/histórico, IDs estáveis, revisão e persistência em quatro larguras e temas. Os comandos `test:event-creation`, `test:event-combined` e `test:event-totals` são aliases compatíveis para este fluxo unificado. `npm.cmd run test:event-scopes` verifica os âmbitos. Os cálculos e os 23 totais estão em `tests/events.test.js`; a preservação autoritativa e as regressões antigas estão em `tests/events.backend.test.js`.

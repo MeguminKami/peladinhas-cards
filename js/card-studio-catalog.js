@@ -1,4 +1,6 @@
 export const STUDIO_FONTS = {
+  original: ["Original do modelo", null],
+  peladinhas: ["Peladinhas Sans", '"Peladinhas Sans", system-ui, sans-serif'],
   dinRegular: [
     "DIN Pro Condensed Regular",
     '"DIN Pro Condensed Regular", "DIN Pro Condensed", "Arial Narrow", sans-serif',

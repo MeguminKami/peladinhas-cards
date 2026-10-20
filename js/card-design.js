@@ -64,14 +64,15 @@ export const DESIGN_FIELDS = [
   ],
   ["statsY", "Stats · vertical (%)", 50, 90, 68],
   ["statsSize", "Tamanho dos atributos (%)", 60, 140, 100],
-  ["ratingX", "OVR · horizontal (%)", 0, 60, 9],
-  ["ratingY", "OVR · vertical (%)", 0, 60, 9],
+  ["ratingX", "OVR + posição + país · horizontal (%)", 0, 60, 9],
+  ["ratingY", "OVR + posição + país · vertical (%)", 0, 60, 9],
   ["ornamentOpacity", "Detalhes / ornamentos (%)", 0, 100, 100],
   ["borderOpacity", "Moldura (%)", 0, 100, 100],
   ["playstyleSize", "Tamanho dos playstyles (%)", 8, 25, 16],
   ["playstyleY", "Playstyles · vertical (%)", 10, 75, 30],
 ];
 export const DESIGN_CHOICES = {
+  ratingLayout: ["original", "compact", "sidecar"],
   lighting: ["original", "on", "off"],
   symbol: ["none", ...Object.keys(SPECIAL_CARD_DESIGNS)],
   preserveOriginal: ["yes", "no"],
@@ -109,6 +110,7 @@ export const DESIGN_CHOICES = {
   showRating: ["yes", "no"],
   showPlaystyles: ["yes", "no"],
 };
+const nativeTypography = new WeakMap();
 export function validCardDesign(value) {
   return (
     value &&
@@ -201,6 +203,21 @@ export function applyCardDesign(card, design = {}) {
   const caption = card.querySelector(".card-caption"),
     stats = card.querySelector(".card-stats"),
     rating = card.querySelector(".card-rating");
+  // Read the native theme before applying editor sizes. Store proportions so
+  // resizing the preview and rendering saved cards keep the same typography.
+  let nativeType = nativeTypography.get(card);
+  if (!nativeType) {
+    const nativeWidth = parseFloat(getComputedStyle(card).width);
+    nativeType = new Map();
+    for (const el of card.querySelectorAll(
+      ".card-caption h3,.card-stats b,.card-stats small,.card-rating strong,.card-rating > small,.card-rating > span",
+    ))
+      nativeType.set(
+        el,
+        parseFloat(getComputedStyle(el).fontSize) / nativeWidth,
+      );
+    nativeTypography.set(card, nativeType);
+  }
   caption.style.top = `${d.nameY}%`;
   card.style.setProperty(
     "--name-background",
@@ -218,6 +235,9 @@ export function applyCardDesign(card, design = {}) {
   stats.style.gridTemplateColumns = `repeat(${d.statsColumns},minmax(0,1fr))`;
   rating.style.left = `${d.ratingX}%`;
   rating.style.top = `${d.ratingY}%`;
+  rating.dataset.ratingLayout = d.ratingLayout || "original";
+  rating.style.width =
+    { compact: "26%", sidecar: "32%" }[d.ratingLayout] || "22%";
   card
     .querySelectorAll(
       ".card-ornament,.special-ornament,.rare-rim-detail,.collection-art",
@@ -248,7 +268,7 @@ export function applyCardDesign(card, design = {}) {
     ["labelsFont", ".card-stats small,.card-rating span"],
     ["positionFont", ".card-rating > small"],
   ]) {
-    if (STUDIO_FONTS[d[key]])
+    if (STUDIO_FONTS[d[key]]?.[1])
       card.querySelectorAll(selector).forEach((el) => {
         el.style.fontFamily = STUDIO_FONTS[d[key]][1];
         if (
@@ -269,6 +289,25 @@ export function applyCardDesign(card, design = {}) {
     `calc(var(--card-width) * ${(0.065 * d.positionSize) / 100})`;
   card.querySelector(".card-rating > span:last-child").style.fontSize =
     `calc(var(--card-width) * ${(0.065 * d.countrySize) / 100})`;
+  for (const [font, size, selector] of [
+    ["nameFont", "nameSize", ".card-caption h3"],
+    ["ratingFont", "ratingSize", ".card-rating strong"],
+    ["statsFont", "statsSize", ".card-stats b"],
+    [
+      "labelsFont",
+      "labelsSize",
+      ".card-stats small,.card-rating > span:not(:last-child)",
+    ],
+    ["positionFont", "positionSize", ".card-rating > small"],
+    ["labelsFont", "countrySize", ".card-rating > span:last-child"],
+  ]) {
+    if (d[font] !== "original") continue;
+    card.querySelectorAll(selector).forEach((el) => {
+      const ratio = nativeType.get(el);
+      if (Number.isFinite(ratio))
+        el.style.fontSize = `calc(var(--card-width) * ${(ratio * d[size]) / 100})`;
+    });
+  }
   const badge = card.querySelector(".special-motif");
   if (badge) positionCardSymbol(badge, d);
   const surface = card.querySelector(".card-surface");

@@ -1,3 +1,4 @@
+import { auditAuth } from "./firestore-audit-cache.mjs";
 // Read-only production audit. Never writes Firestore documents or prints tokens.
 import { createRequire } from "node:module";
 import { firebaseConfig } from "../js/config.js";
@@ -18,7 +19,7 @@ import {
 import { balanceMatches } from "../js/team-balance.js";
 import { applyEventRewards } from "../js/event-rules.js";
 const require = createRequire(import.meta.url);
-const auth = require("firebase-tools/lib/auth.js");
+const auth = auditAuth;
 const account = auth.getGlobalDefaultAccount();
 if (!account) throw Error("Sem sessão Firebase disponível.");
 const token = await auth.getAccessToken(

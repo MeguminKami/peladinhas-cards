@@ -5,7 +5,7 @@ import { usesLifetimeObjective, objectiveTargetLimit } from "../js/event-totals.
 import { isGoalList } from "../js/event-goals.js";
 import { CARD_POLICY } from "../js/card-achievements.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp, Filter } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { cardWeek } from "../js/card-week.js";
 import { votersFor } from "../js/event-rules.js";
@@ -839,18 +839,18 @@ export function managedEvents(rebuild) {
     });
     return { ok: true };
   }
-  async function details(request, user) {
+  async function details(request, user, context = null) {
     const id = request.data?.eventId;
     if (!validEventId(id)) fail("Evento inválido.");
     const ref = db().doc(`events/${id}`),
-      snap = await ref.get();
+      snap = context?.events?.get(id) || await ref.get();
     if (!snap.exists) return null;
     const event = snap.data();
     if (event.status === "draft" && user.role !== "admin")
       throw new HttpsError("permission-denied", "Evento indisponível.");
     const completionLedger =
       event.kind === "mission"
-        ? rows(await db().collection("eventRewards").get())
+        ? rows(await (context ? context.read("rewards", () => db().collection("eventRewards").get()) : db().collection("eventRewards").get()))
         : [];
     if (
       user.role !== "admin" &&
@@ -872,7 +872,7 @@ export function managedEvents(rebuild) {
       result.unlockedAt = unlocked ? unlocked.toISOString() : null;
     }
     if (event.method === "objective") {
-      const games = rows(await objectiveGames(null, usesRatingObjective(event.objective)));
+      const games = rows(await (context ? context.read("objectiveGames", () => objectiveGames(null, context.includeRatings)) : objectiveGames(null, usesRatingObjective(event.objective))));
       result.progress = eventRanking(
         event,
         [],
@@ -891,9 +891,10 @@ export function managedEvents(rebuild) {
         result.progress = result.progress.filter(
           (row) => row.uid === request.auth.uid,
         );
-      const claims = rows(
-        await db().collection("eventRewards").where("eventId", "==", id).get(),
-      ).filter((r) => r.uid === request.auth.uid && !r.revokedAt);
+      const claims = rows(context
+        ? await context.read("rewards", () => db().collection("eventRewards").get())
+        : await db().collection("eventRewards").where("eventId", "==", id).get()
+      ).filter((r) => r.eventId === id && r.uid === request.auth.uid && !r.revokedAt);
       result.claimedPeriods = claims.map((r) => r.periodKey).filter(Boolean);
       result.myRewards = claims.map((r) => ({
         pending: !!r.pending,
@@ -912,9 +913,9 @@ export function managedEvents(rebuild) {
         result.claimNotice=!available ? "As recompensas estão temporariamente pausadas." : eligible && allocation?.reduced && allocation.overflow==="reject" ? "O limite de recompensas está atingido." : result.claimMode==="deferred" ? "Podes concluir a missão e aguardar orçamento para a entrega." : "";
       }
     }
-    if (user.role === "admin") {
+    if (user.role === "admin" && !context?.summaryOnly) {
       const [rewards, votes, auditRows, ledger] = await Promise.all([
-        ref.collection("private").doc("rewards").get(),
+        Promise.resolve(previewRewards),
         ref.collection("votes").get(),
         ref.collection("audit").orderBy("createdAt", "desc").get(),
         db().collection("eventRewards").where("eventId", "==", id).get(),
@@ -1027,7 +1028,7 @@ export function managedEvents(rebuild) {
     };
   }
   async function scheduled() {
-    const ledger = rows(await db().collection("eventRewards").get());
+    const ledger = rows(await db().collection("eventRewards").where("expiresAt", "<=", Timestamp.fromMillis(Date.now())).get());
     const expired = ledger.filter(
       (r) =>
         r.schemaVersion === 2 &&
@@ -1039,8 +1040,12 @@ export function managedEvents(rebuild) {
       await db()
         .doc(`eventRewards/${reward.id}`)
         .update({ expirationProcessed: true });
-    const events = rows(await db().collection("events").get());
-    const games = rows(await objectiveGames());
+    const events = rows(await db().collection("events").where(Filter.or(
+      Filter.where("status", "in", ["open", "scheduled"]),
+      Filter.where("rewardsApplied", "==", false),
+    )).get());
+    const races = events.filter(e => e.schemaVersion === 2 && e.kind !== "mission" && e.method === "objective" && ["open", "scheduled"].includes(e.status) && +asDate(e.startsAt) <= Date.now());
+    const games = races.length ? rows(await objectiveGames(null, races.some(e => usesRatingObjective(e.objective)))) : [];
     const issues=[];
     for (const event of events.filter((e) => e.schemaVersion === 2)) {
       try {

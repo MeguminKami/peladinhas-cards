@@ -46,7 +46,12 @@ const names = {
   "legend-form": ["Coroa de vértices", "Coroa e losangos", "Coroa ornamentada"],
 };
 for (const [id, design] of Object.entries(SPECIAL_CARD_DESIGNS)) {
-  if (id.startsWith("path-")) names[id] = [`Recorte ${design.name}`, `Percurso ${design.name}`, `Símbolo ${design.name}`];
+  if (id.startsWith("path-"))
+    names[id] = [
+      `Recorte ${design.name}`,
+      `Percurso ${design.name}`,
+      `Símbolo ${design.name}`,
+    ];
 }
 export const STUDIO_SHAPES = {
   original: "Original",
@@ -138,4 +143,19 @@ export const STUDIO_ORNAMENT_GROUPS = [
       "edition-carnival",
     ],
   ],
+  [
+    "Percursos pessoais",
+    Object.keys(STUDIO_ORNAMENTS).filter((id) =>
+      id.startsWith("edition-path-"),
+    ),
+  ],
 ];
+// A new edition must remain selectable even before it gets a curated category.
+const groupedOrnaments = new Set(
+  STUDIO_ORNAMENT_GROUPS.flatMap(([, ids]) => ids),
+);
+const remainingOrnaments = Object.keys(STUDIO_ORNAMENTS).filter(
+  (id) => !groupedOrnaments.has(id),
+);
+if (remainingOrnaments.length)
+  STUDIO_ORNAMENT_GROUPS.push(["Outras edições", remainingOrnaments]);

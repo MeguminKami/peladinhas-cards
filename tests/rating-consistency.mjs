@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname } from "node:path";
 import assert from "node:assert/strict";
-import { chromium } from "playwright";
+import { chromium } from "./browser-sandbox.mjs";
 const root = resolve(".");
 const server = createServer((req, res) => {
   const path = resolve(root, decodeURIComponent(req.url.split("?")[0]).replace(/^\//, "") || "index.html");

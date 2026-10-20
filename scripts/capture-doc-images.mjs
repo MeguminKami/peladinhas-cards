@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve, dirname, extname, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright";
+import { chromium } from "../tests/browser-sandbox.mjs";
 import { seedDocumentation } from "./documentation-fixtures.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const output = resolve(root, "docs/media");

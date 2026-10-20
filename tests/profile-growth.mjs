@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 import assert from "node:assert/strict";
-import { chromium, webkit } from "playwright";
+import { chromium, webkit } from "./browser-sandbox.mjs";
 import { seedDocumentation } from "../scripts/documentation-fixtures.mjs";
 const root = resolve(".");
 const server = createServer((req, res) => {

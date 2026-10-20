@@ -2,7 +2,7 @@
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 import assert from "node:assert/strict";
-import { chromium, webkit } from "playwright";
+import { chromium, webkit } from "./browser-sandbox.mjs";
 import { seedDocumentation } from "../scripts/documentation-fixtures.mjs";
 const root = resolve(".");
 const server = createServer((req, res) => {
@@ -97,6 +97,22 @@ try {
   );
   await page.locator('[data-studio-tab="models"]').click();
   assert.equal(await page.locator('[data-studio-tab="data"]').count(), 0);
+  const typography = () => {
+    const card = document.querySelector("#card-preview .football-card");
+    const width = card.getBoundingClientRect().width;
+    return [
+      ...card.querySelectorAll(
+        ".card-caption h3,.card-rating strong,.card-rating > small,.card-rating > span,.card-stats b,.card-stats small",
+      ),
+    ].map((el) => {
+      const style = getComputedStyle(el);
+      return [
+        style.fontFamily,
+        style.fontWeight,
+        Math.round((parseFloat(style.fontSize) / width) * 10000),
+      ];
+    });
+  };
   for (const id of catalog.CATALOG_THEMES) {
     await page.locator('[data-studio-edition="' + id + '"]').click();
     assert.equal(
@@ -104,6 +120,17 @@ try {
       "yes",
     );
     assert.equal(await page.locator("#card-preview .lab-designed").count(), 0);
+    const before = await page.evaluate(typography);
+    await page.evaluate(() => {
+      const input = document.querySelector('[data-studio-property="nameY"]');
+      input.value = "63";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.deepEqual(
+      await page.evaluate(typography),
+      before,
+      `Typography changed while editing ${id}`,
+    );
   }
   await page.locator('[data-studio-edition="toty"]').click();
   await page.locator("#save-theme").click();
@@ -123,6 +150,23 @@ try {
     true,
   );
   await page.locator('[data-studio-tab="composition"]').click();
+  await page.locator('[data-rating-preset="right"]').click();
+  assert.equal(await page.locator('[name="ratingX"]').inputValue(), "11");
+  assert.equal(await page.locator('[name="ratingY"]').inputValue(), "12");
+  assert.equal(
+    await page
+      .locator('[data-rating-preset="right"]')
+      .getAttribute("aria-pressed"),
+    "true",
+  );
+  await page.locator("#lab-undo").click();
+  await page.locator("#lab-redo").click();
+  assert.equal(await page.locator('[name="ratingX"]').inputValue(), "11");
+  await page.locator("#lab-undo").click();
+  assert.equal(
+    await page.locator('[name="preserveOriginal"]').inputValue(),
+    "yes",
+  );
   await page.locator('[data-studio-property="nameY"]').fill("63");
   await page.locator('[data-studio-property="nameY"]').dispatchEvent("input");
   assert.equal(
@@ -160,9 +204,61 @@ try {
   await page.waitForFunction(
     () => window.__testState.cardThemes?.[0]?.design.symbol === "sniper",
   );
+  const savedTypography = await page.evaluate(async () => {
+    const { applyCardTemplate } = await import("/js/card-design.js");
+    const { card } = await import("/js/cards.js");
+    const template = window.__testState.cardThemes[0];
+    const probe = document.createElement("div");
+    probe.style.cssText =
+      "position:absolute;visibility:hidden;pointer-events:none";
+    probe.innerHTML = card(window.__testState.users[0], {
+      theme: template.baseTheme,
+      preview: true,
+    });
+    document.body.append(probe);
+    const element = probe.firstElementChild;
+    applyCardTemplate(element, template);
+    const read = () => {
+      const width = element.getBoundingClientRect().width;
+      return [
+        ...element.querySelectorAll(
+          ".card-caption h3,.card-rating strong,.card-rating > small,.card-rating > span,.card-stats b,.card-stats small",
+        ),
+      ].map((el) => {
+        const style = getComputedStyle(el);
+        return [
+          style.fontFamily,
+          style.fontWeight,
+          Math.round((parseFloat(style.fontSize) / width) * 10000),
+        ];
+      });
+    };
+    const result = read();
+    applyCardTemplate(element, template);
+    const repeated = read();
+    probe.remove();
+    return { result, repeated };
+  });
+  assert.deepEqual(savedTypography.result, await page.evaluate(typography));
+  assert.deepEqual(savedTypography.repeated, savedTypography.result);
   await page.clock.runFor(6500);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: width < 500 ? 844 : 1000 });
+    await page.locator("#studio-center").focus();
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => {
+      const top = document
+        .querySelector(".studio-layout")
+        .getBoundingClientRect().top;
+      return (
+        Math.abs(
+          top -
+            document.querySelector("#header").getBoundingClientRect().bottom -
+            12,
+        ) < 2
+      );
+    });
     for (const tab of [
       "models",
       "composition",
@@ -183,7 +279,12 @@ try {
           .getBoundingClientRect();
         return {
           overflow: document.documentElement.scrollWidth > innerWidth,
-          scroll: document.documentElement.scrollHeight > innerHeight + 2,
+          headerBottom: document
+            .querySelector("#header")
+            .getBoundingClientRect().bottom,
+          bottomNavHeight:
+            document.querySelector(".bottom-nav")?.getBoundingClientRect()
+              .height || 0,
           card: { top: card.top, bottom: card.bottom },
           inspector: { top: inspector.top, bottom: inspector.bottom },
           height: innerHeight,
@@ -194,9 +295,10 @@ try {
         false,
         JSON.stringify({ width, tab, geometry }),
       );
-      assert.equal(
-        geometry.scroll,
-        false,
+      assert.ok(
+        geometry.inspector.top >= geometry.headerBottom &&
+          geometry.inspector.bottom <=
+            geometry.height - geometry.bottomNavHeight,
         JSON.stringify({ width, tab, geometry }),
       );
       assert.ok(
@@ -206,7 +308,61 @@ try {
     }
     await page.locator('[data-studio-tab="colors"]').click();
     await page.screenshot({ path: output + "/workbench-" + width + ".png" });
+    await page.locator('[data-studio-tab="composition"]').click();
+    await page
+      .locator('[data-rating-preset="original"]')
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({ path: output + "/presets-" + width + ".png" });
+    for (const [arrangement, x, y] of [
+      ["original", 10, 12],
+      ["up", 10, 11],
+      ["topLeft", 9, 11],
+      ["topRight", 11, 11],
+      ["left", 9, 12],
+      ["right", 11, 12],
+      ["bottomLeft", 9, 13],
+      ["down", 10, 13],
+      ["bottomRight", 11, 13],
+    ]) {
+      await page.locator(`[data-rating-preset="${arrangement}"]`).click();
+      const block = await page
+        .locator("#card-preview .card-rating")
+        .evaluate((rating) => {
+          const rect = (el) => {
+            const box = el.getBoundingClientRect();
+            return { x: box.x, y: box.y, right: box.right, bottom: box.bottom };
+          };
+          return {
+            layout: rating.dataset.ratingLayout,
+            x: rating.style.left,
+            y: rating.style.top,
+            position: rect(rating.querySelector("small")),
+            country: rect(rating.lastElementChild),
+            number: rect(rating.querySelector("strong")),
+          };
+        });
+      assert.equal(block.layout, "original");
+      assert.equal(block.x, `${x}%`);
+      assert.equal(block.y, `${y}%`);
+      assert.ok(block.number.bottom <= block.position.y + 1);
+      assert.ok(block.position.bottom <= block.country.y + 1);
+      const center = (box) => (box.x + box.right) / 2;
+      assert.ok(Math.abs(center(block.number) - center(block.position)) < 1);
+      assert.ok(Math.abs(center(block.number) - center(block.country)) < 1);
+      if (["original", "bottomRight"].includes(arrangement))
+        await page.screenshot({
+          path: `${output}/rating-${arrangement}-${width}.png`,
+        });
+    }
+    await page.locator('[data-studio-tab="text"]').click();
+    await page.screenshot({ path: output + "/typography-" + width + ".png" });
   }
+  await page.locator("#save-theme").click();
+  await page.waitForFunction(
+    () =>
+      window.__testState.cardThemes?.[0]?.design.ratingX === 11 &&
+      window.__testState.cardThemes?.[0]?.design.ratingY === 13,
+  );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.locator('[data-studio-tab="models"]').click();
   await page.locator("#studio-model-search").fill("inexistente");

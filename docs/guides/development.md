@@ -25,7 +25,7 @@ flowchart TB
     C --> D["Corrigir e validar"]
 ```
 
-> **Frontend local não significa Firebase emulado.** O servidor usa a configuração de `js/config.js`. Para explorar sem dados reais, usar os [testes com fixtures](testing.md).
+> **O arranque local usa fixtures por defeito.** `npm.cmd run dev` substitui autenticação, base e inicialização Firebase por dados locais. Não faz leituras Firestore. Para integração, usar os emuladores indicados abaixo.
 
 | Guardar no Git                           | Manter local                                                     |
 | :--------------------------------------- | :--------------------------------------------------------------- |
@@ -57,7 +57,19 @@ Em macOS/Linux, usa `npm` em vez de `npm.cmd`. Um servidor HTTP é necessário; 
 
 A configuração pública da Web App está em [`js/config.js`](../../js/config.js). A instalação existente aponta para **`pedalinhas-cards`**; a grafia do ID não é igual à do nome da aplicação. `.firebaserc` é a associação local e os scripts de publicação usam o ID da configuração explicitamente.
 
-Servir o frontend localmente **não muda o Firebase para emuladores**. A aplicação usa o projeto configurado. Para explorar a interface sem dados reais, usa os testes Playwright e as fixtures locais, descritos no [guia de testes](testing.md).
+O servidor escolhe o modo sem alterar `js/config.js`:
+
+| Comando | Dados e serviços |
+| --- | --- |
+| `npm.cmd run dev` | Fixtures locais; sem Firebase real. |
+| `npm.cmd run emulators:dev`, seguido de `npm.cmd run dev:emulator` noutro terminal | Projeto `demo-peladinhas-development`: Auth 9099, Firestore 8085, Functions 5001 e Storage 9199, todos em `127.0.0.1`. |
+| `npm.cmd run dev:production` | Escolha explícita de serviços reais e consumo real. Não usar para validar alterações visuais. |
+
+Um emulador indisponível provoca erro local, sem fallback para produção. A integração exige um projeto `demo-`; pode ser necessário criar dados e contas no emulador. Um servidor genérico em localhost, sem modo explícito, é bloqueado antes da utilização Firebase. A versão publicada continua a usar a configuração real. Usar um perfil de browser separado e remover service workers antigos ao mudar de modo.
+
+As fixtures de apoio são servidas por uma lista restrita; testes, Functions e credenciais continuam privados. O wrapper dos emuladores usa configuração CLI isolada, retira tokens do ambiente e desliga logs de depuração. Os testes Admin usam uma credencial sintética gerada localmente, válida apenas para o emulador.
+
+Para diagnósticos reais, consultar [recolhas e redução de leituras](firestore-read-diagnostics.md). Sem `--live`, as auditorias reutilizam snapshots locais e não abrem o armazenamento de credenciais.
 
 Para uma instalação independente:
 

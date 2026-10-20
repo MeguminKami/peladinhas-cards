@@ -1,3 +1,4 @@
+import { auditAuth } from "./firestore-audit-cache.mjs";
 // Read-only difficulty calibration. Prints aggregates, never identities or credentials.
 import { createRequire } from "node:module";
 import { firebaseConfig } from "../js/config.js";
@@ -7,7 +8,7 @@ import { pathHistoricalSummary, pathReviewDeadline } from "../js/path-window.js"
 import { readFile, writeFile } from "node:fs/promises";
 import { PATH_DIFFICULTY_REVISION } from "../js/path-difficulty.js";
 const require = createRequire(import.meta.url);
-const auth = require("firebase-tools/lib/auth.js");
+const auth = auditAuth;
 const account = auth.getGlobalDefaultAccount();
 if (!account) throw Error("Sem sessão Firebase disponível.");
 const token = await auth.getAccessToken(
