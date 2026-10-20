@@ -1,5 +1,10 @@
 // Shared, deterministic rules. Only the server creates offers and settles attempts.
-import { pathMissionTemplates, pickDiversePathOffers, pathObjectiveRequirements, pathObjectiveLines } from "./path-missions.js";
+import {
+  pathMissionTemplates,
+  pickDiversePathOffers,
+  pathObjectiveRequirements,
+  pathObjectiveLines,
+} from "./path-missions.js";
 import { PATH_DIFFICULTY_REVISION } from "./path-difficulty.js";
 import {
   ATTRIBUTES,
@@ -486,6 +491,7 @@ export function createPathOffers(
   );
 }
 const criterionNames = {
+  overall: "Desempenho geral",
   attack: "Ataque",
   passing: "Passe",
   physical: "Físico",
@@ -494,7 +500,8 @@ const criterionNames = {
   attitude: "Atitude",
 };
 export function pathObjectiveText(objective) {
-  if (objective.kind === "conditions") return pathObjectiveLines(objective).join(" · ");
+  if (objective.kind === "conditions")
+    return pathObjectiveLines(objective).join(" · ");
   const value = String(objective.target).replace(".", ",");
   if (objective.kind === "wins") return "Vence o próximo jogo";
   if (objective.kind === "goals")
@@ -531,7 +538,8 @@ export function nextPathGame(games, uid, acceptedAt, excluded = []) {
 // A stale aggregate or too little feedback is a waiting state, never a defeat.
 export function evaluatePathMission(objective, game, summary, uid) {
   pathObjectiveRequirements(objective);
-  if (objective.kind === "conditions") return evaluatePathConditions(objective, game, summary, uid);
+  if (objective.kind === "conditions")
+    return evaluatePathConditions(objective, game, summary, uid);
   if (!game || game.status !== "closed")
     return {
       status: "waiting",
@@ -631,6 +639,10 @@ export function evaluatePathConditions(objective, game, summary, uid) {
     return { status: "waiting", reason: "À espera do fecho do jogo." };
   if (
     !participants(game).includes(uid) ||
+    conditions.some(
+      (row) =>
+        row.metric === "position" && game.positions?.[uid] !== row.target,
+    ) ||
     (goalkeeper && game.positions?.[uid] !== "GR") ||
     (goalkeeper && summary?.players?.[uid]?.goalkeepingEligible === false)
   )
@@ -656,7 +668,21 @@ export function evaluatePathConditions(objective, game, summary, uid) {
     : "teamB";
   const performance =
     game.pathPerformance?.[uid] || matchPerformance(uid, game);
+  if (
+    ![game.score?.teamA, game.score?.teamB].every(
+      (value) => Number.isSafeInteger(value) && value >= 0,
+    )
+  )
+    return {
+      status: "waiting",
+      reason: "À espera de um resultado válido do jogo.",
+    };
   const values = {
+    games: 1,
+    nonLoss: matchOutcome(uid, game) >= 0 ? 1 : 0,
+    draw: matchOutcome(uid, game) === 0 ? 1 : 0,
+    loss: matchOutcome(uid, game) < 0 ? 1 : 0,
+    cleanSheet: game.score?.[own === "teamA" ? "teamB" : "teamA"] === 0 ? 1 : 0,
     position: game.positions?.[uid],
     goals: performance.goals || 0,
     assists: performance.assists || 0,
@@ -667,9 +693,14 @@ export function evaluatePathConditions(objective, game, summary, uid) {
   };
   const conditionResults = conditions.map((condition) => {
     const actual =
-      condition.metric === "rating"
-        ? summary.players[uid][condition.criterion]
-        : values[condition.metric];
+      condition.metric === "ratingMean"
+        ? condition.criteria.reduce(
+            (sum, key) => sum + summary.players[uid][key],
+            0,
+          ) / condition.criteria.length
+        : condition.metric === "rating"
+          ? summary.players[uid][condition.criterion]
+          : values[condition.metric];
     const valid =
       condition.metric === "position"
         ? actual === condition.target
@@ -684,7 +715,9 @@ export function evaluatePathConditions(objective, game, summary, uid) {
                 ? actual === condition.target
                 : condition.metric === "conceded"
                   ? actual <= condition.target
-                  : actual >= condition.target
+                  : condition.comparison === "gt"
+                    ? actual > condition.target
+                    : actual >= condition.target
             )
           ? "success"
           : "failure",
@@ -701,6 +734,12 @@ export function evaluatePathConditions(objective, game, summary, uid) {
         row.metric === "rating"
           ? criterionNames[row.criterion]
           : {
+              ratingMean: "Média dos critérios",
+              games: "Participação",
+              nonLoss: "Sem perder",
+              draw: "Empate",
+              loss: "Derrota",
+              cleanSheet: "Sem sofrer golos",
               goals: "Golos",
               assists: "Assistências",
               contributions: "Contribuições",
@@ -711,7 +750,8 @@ export function evaluatePathConditions(objective, game, summary, uid) {
             }[row.metric];
       if (row.metric === "position") return `${label}: ${row.actual}`;
       if (row.metric === "win") return `Vitória: ${row.actual ? "sim" : "não"}`;
-      return `${label}: ${row.actual === null ? "por validar" : String(row.actual).replace(".", ",")}${row.metric === "rating" ? "★" : ""} (${row.metric === "conceded" ? "máximo" : "mínimo"} ${String(row.target).replace(".", ",")}${row.metric === "rating" ? "★" : ""})`;
+      const stars = ["rating", "ratingMean"].includes(row.metric) ? "★" : "";
+      return `${label}: ${row.actual === null ? "por validar" : String(row.actual).replace(".", ",")}${stars} (${row.metric === "conceded" ? "máximo" : row.comparison === "gt" ? "mais de" : "mínimo"} ${String(row.target).replace(".", ",")}${stars})`;
     })
     .join(" · ");
   return { status, reason, conditionResults };
@@ -800,13 +840,24 @@ export function pathRewardPreview(node, rewards, uid) {
   );
 }
 export function pathResultAwards(state = {}) {
-  const latest=state.lastResult;
+  const latest = state.lastResult;
   if (!latest) return [];
-  const awards=new Map();
-  for(const row of [...(state.history || []),latest]) {
-    if (row.id !== latest.id && (!latest.settledAt || row.settledAt !== latest.settledAt)) continue;
-    for(const reward of [...(row.rewards || []),row.reward].filter(Boolean)) {
-      if (reward.specialId?.startsWith("path-") && pathRoute(reward.specialId.slice(5))) awards.set(reward.specialId,{id:row.id,specialId:reward.specialId});
+  const awards = new Map();
+  for (const row of [...(state.history || []), latest]) {
+    if (
+      row.id !== latest.id &&
+      (!latest.settledAt || row.settledAt !== latest.settledAt)
+    )
+      continue;
+    for (const reward of [...(row.rewards || []), row.reward].filter(Boolean)) {
+      if (
+        reward.specialId?.startsWith("path-") &&
+        pathRoute(reward.specialId.slice(5))
+      )
+        awards.set(reward.specialId, {
+          id: row.id,
+          specialId: reward.specialId,
+        });
     }
   }
   return [...awards.values()];

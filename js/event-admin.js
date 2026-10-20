@@ -1,3 +1,4 @@
+import { objectiveDescription } from "./mission-objective-preview.js";
 import { mountGoalBuilder } from "./event-goal-builder.js";
 import { goalOptions, goalSelection, storedGoalMetric } from "./event-goal-options.js";
 import { isGoalList, objectiveGoals } from "./event-goals.js";
@@ -25,7 +26,6 @@ import {
   isCombinedObjective,
   usesRatingObjective,
   validRatingObjective,
-  objectiveSummary,
   medal,
   positionLabel,
   validEventReward,
@@ -71,7 +71,7 @@ const objectiveOptions = (stars, selected) => options(goalChoices.filter(choice 
 const creationRules = (event) => {
   const combined = isCombinedObjective(event.objective);
   const o = (combined ? event.objective.ratings : event.objective) || {};
-  if (isGoalList(event.objective)) return `<ul class="event-rule-list">${event.objective.goals.map((goal,i)=>`<li>${icon(eventIcon({objective:goal}))}<div><strong>Meta ${i+1}</strong><p>${esc(objectiveSummary({...event,objective:goal}))}</p></div></li>`).join("")}</ul>`;
+  if (isGoalList(event.objective)) return `<ul class="event-rule-list">${event.objective.goals.map((goal,i)=>`<li>${icon(eventIcon({objective:goal}))}<div><strong>Meta ${i+1}</strong><p>${esc(objectiveDescription({...event,objective:goal}))}</p></div></li>`).join("")}</ul>`;
   const entries = [];
   const add = (symbol, title, text) =>
     entries.push(
@@ -79,7 +79,7 @@ const creationRules = (event) => {
     );
   if (event.method === "objective" && combined) {
     add("check", "Conclusão", usesLifetimeObjective(event.objective) ? "Cumpre ambas as metas. Cada uma usa o histórico ou período indicado." : "Cumpre as duas metas no mesmo período. Podem ser cumpridas em jogos diferentes.");
-    add("goals", "Resultados", objectiveSummary({...event, objective:event.objective.results}));
+    add("goals", "Resultados", objectiveDescription({...event, objective:event.objective.results}));
   }
   if (event.method === "objective" && isRatingObjective(o)) {
     const goals = {
@@ -124,7 +124,7 @@ const creationRules = (event) => {
         "Conta a melhor sequência. Um jogo abaixo do mínimo ou por avaliar interrompe-a.",
       );
   } else if (event.method === "objective") {
-    add(eventIcon(event), "Meta", objectiveSummary(event));
+    add(eventIcon(event), "Meta", objectiveDescription(event));
   } else if (event.method === "vote") {
     add("vote", "Votação", "Os participantes escolhem os vencedores.");
     add("players", "Escolhas por votante", String(event.votesPerUser || 1));

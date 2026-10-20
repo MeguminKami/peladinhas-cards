@@ -149,6 +149,17 @@ export function pathWindowResult(objective, game, summary, uid, now, evaluate) {
     };
   const requirements = pathObjectiveRequirements(objective);
   if (
+    requirements.conditions?.some(
+      (row) =>
+        row.metric === "position" && game.positions?.[uid] !== row.target,
+    )
+  )
+    return {
+      status: "cancelled",
+      reason:
+        "Tentativa cancelada: posição de jogo diferente da exigida. O progresso foi preservado.",
+    };
+  if (
     objective.kind === "conditions" &&
     requirements.goalkeeper &&
     game.positions?.[uid] !== "GR"

@@ -1,5 +1,5 @@
 import { ATTRIBUTES } from "../js/utils.js";
-import { challengeRules } from "../js/event-objective-view.js";
+import { challengeRules, goalCriteria } from "../js/event-objective-view.js";
 import { rewardBreakdown } from "../js/reward-presentation.js";
 import { missionObjectivePreview } from "../js/mission-objective-preview.js";
 import {
@@ -801,16 +801,49 @@ test("player challenges sort by descending rarity and preserve ties", () => {
   );
 });
 
+test("objective copy uses direct Portuguese, recorded positions and correct singular/plural", () => {
+  const describe = (metric,target=1,countFrom="challenge") => missionObjectivePreview({objective:{metric,target,countFrom}}).text;
+  for (const [metric,role] of [["totalDefenderGames","defesa (DEF)"],["totalMidfielderGames","médio (MED)"],["totalStrikerGames","avançado (AV)"],["totalWingerGames","ala (ALA)"],["totalGoalkeeperGames","guarda-redes (GR)"]]) {
+    assert.equal(describe(metric),`Joga um jogo como ${role}.`);
+    assert.equal(describe(metric,3),`Joga 3 jogos como ${role}.`);
+    assert.match(describe(metric,3,"history"),/^Total de 3 jogos como/);
+  }
+  assert.equal(describe("totalGoals"),"Marca um golo.");
+  assert.equal(describe("totalAssists"),"Faz uma assistência.");
+  assert.equal(describe("totalWins"),"Ganha um jogo.");
+  assert.equal(describe("totalContributions",5),"Soma um total de 5 golos ou assistências.");
+  assert.equal(describe("totalAssistingGames",3),"Faz assistências em 3 jogos.");
+  assert.equal(describe("unbeatenWins"),"Ganha um jogo.");
+  assert.equal(describe("winStreak",3),"Ganha 3 jogos seguidos.");
+  assert.equal(describe("totalGoalkeeperCleanSheets"),"Termina um jogo como guarda-redes (GR) sem sofrer golos.");
+});
+
 test("mission previews preserve action, strict thresholds, individual criteria and recent windows", () => {
   const describe = (changes={}) => missionObjectivePreview({objective:{metric:"ratingGames",target:2,threshold:4,comparison:"gte",combine:"mean",attributes:["overall","attack","passing","defense","physical","attitude"],...changes}});
   assert.deepEqual(missionObjectivePreview({objective:{metric:"goals",target:14}}),{text:"Marca 14 golos.",criteria:""});
-  assert.equal(describe().text,"Conclui 2 jogos com média de pelo menos 4 ★.");
+  assert.equal(describe().text,"Joga 2 jogos com média de pelo menos 4 ★.");
   assert.equal(describe().criteria,"6 critérios · média conjunta");
   assert.match(describe({combine:"all"}).text,/em cada critério/);
-  assert.equal(describe({metric:"ratingAverage",comparison:"gt",threshold:4.5,target:3}).text,"Média superior a 4,5 ★ nos últimos 3 jogos.");
-  assert.equal(describe({metric:"ratingStreak"}).text,"Conclui 2 jogos seguidos com média de pelo menos 4 ★.");
-  assert.equal(describe({metric:"ratingWins",target:1,attributes:["goalkeeping"]}).text,"Ganha 1 jogo com média de pelo menos 4 ★.");
-  assert.equal(describe({attributes:["goalkeeping"]}).criteria,"Baliza");
+  assert.equal(describe({metric:"ratingAverage",comparison:"gt",threshold:4.5,target:3}).text,"Obtém uma média superior a 4,5 ★ nos últimos 3 jogos.");
+  assert.equal(describe({metric:"ratingStreak"}).text,"Joga 2 jogos seguidos com média de pelo menos 4 ★.");
+  assert.equal(describe({metric:"ratingWins",target:1,attributes:["goalkeeping"]}).text,"Ganha um jogo com média de pelo menos 4 ★.");
+  assert.equal(describe({attributes:["goalkeeping"]}).criteria,"Guarda-redes");
+});
+
+test("goal criteria separate voting, timing, averages, streaks and goalkeeper eligibility into semantic rows",()=> {
+  const objective={metric:"ratingAverage",target:3,threshold:4,combine:"all",attributes:["attack","passing"],minRatings:3};
+  const average=goalCriteria({objective});
+  assert.match(average,/<dl class="goal-rule-rows">/);
+  assert.match(average,/Média de pelo menos 4 ★ em cada critério/);
+  assert.match(average,/Cada jogo tem o mesmo peso/);
+  assert.match(average,/Todos precisam dos votos mínimos/);
+  assert.match(average,/após o início do desafio e o desbloqueio/);
+  const historical=goalCriteria({objective:{...objective,metric:"totalRatingGames",comparison:"gt",attributes:["goalkeeping"]}});
+  assert.match(historical,/Mais de 4 ★/);
+  assert.match(historical,/Histórico completo/);
+  assert.match(historical,/Não foi à baliza/);
+  assert.doesNotMatch(historical,/Peso dos jogos|após o início/);
+  assert.match(goalCriteria({objective:{...objective,metric:"ratingStreak"}}),/abaixo do mínimo ou sem votos suficientes interrompe/);
 });
 
 test("structured challenge instructions keep thresholds, required votes and conditions without duplicate paragraphs",()=> {

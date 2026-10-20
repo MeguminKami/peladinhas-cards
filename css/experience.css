@@ -1616,7 +1616,7 @@ p {
 .challenge-goal-list { display:grid; gap:20px; padding-left:24px; }
 .challenge-goal-list li > strong { font-size:.95rem; }
 .challenge-goal-list p { font-size:.85rem; }
-.challenge-goal-list details { margin-top:8px; font-size:.8rem; }
+.challenge-goal-list details { margin-top:8px; }
 @media(max-width:600px) {
   .event-goal-summary { gap:8px; padding:4px; }
   .event-goal-summary > svg { display:none; }

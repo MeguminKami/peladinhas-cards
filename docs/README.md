@@ -62,7 +62,7 @@ flowchart TB
 
 ## Alterações e operação atuais
 
-- [Catálogo de missões dos percursos](reference/path-mission-catalogue.md): 120 modelos, objetivos combinados e sorteio com menos repetição; implementação local, com [validação e publicação seletiva](reports/path-variety-2026-10-19.md). Metas provisórias; ainda sem deploy.
+- [Catálogo de missões dos percursos](reference/path-mission-catalogue.md): 270 modelos, objetivos combinados e sorteio com menos repetição; implementação local, com [validação e publicação seletiva](reports/path-expansion-2026-10-20.md). Metas provisórias; ainda sem deploy.
 - [Escolhe o teu caminho!](reference/player-paths.md): percursos pessoais, missões para o próximo jogo e cartas permanentes; [interface compacta e validação](reports/path-interface-2026-10-19.md).
 - [Update de Escolhe o teu caminho!](reports/path-update-2026-10-18.md): caminho ativo, fusões desbloqueáveis, reroll diário global, sete votos por critério e dificuldade final desde +10; implementação local concluída, com [validação e publicação seletiva](reports/path-update-2026-10-18.md).
 - [Card Lab](reference/card-lab.md): ferramentas, paletas, luz, traçado e projetos.

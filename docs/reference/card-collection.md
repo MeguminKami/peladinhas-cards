@@ -44,4 +44,4 @@ Verificação: `npm.cmd run test:card-collection` testa nomes, materiais distint
 
 ## Identidades dos percursos
 
-As 15 cartas `path-*` pertencem ao sistema de [percursos pessoais](player-paths.md), com nomes, silhuetas e materiais definidos em `js/path-card-designs.js`. A antevisão explica o nó necessário e as recompensas mostram o nome da carta quando esse nó a entrega. Os 120 modelos de missão variam objetivos, não criam novas identidades de carta. A raridade visual da proposta e a carta permanente conquistada têm funções distintas; consultar o [catálogo de missões](path-mission-catalogue.md).
+As 15 cartas `path-*` pertencem ao sistema de [percursos pessoais](player-paths.md), com nomes, silhuetas e materiais definidos em `js/path-card-designs.js`. A antevisão explica o nó necessário e as recompensas mostram o nome da carta quando esse nó a entrega. Os 270 modelos de missão variam objetivos, não criam novas identidades de carta. A raridade visual da proposta e a carta permanente conquistada têm funções distintas; consultar o [catálogo de missões](path-mission-catalogue.md).

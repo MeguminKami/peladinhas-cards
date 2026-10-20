@@ -2671,12 +2671,14 @@ td small {
 .event-reward-markers > span { display: inline-flex; align-items: center; gap: 6px; }
 .event-reward-markers .ui-icon { width: 16px; height: 16px; color: var(--accent); }
 .event-reward-showcase { padding-top: 20px; border-top: 1px solid var(--border); }
+.event-reward-showcase > h2 { display:flex; align-items:center; gap:10px; margin:0; font-size:1.125rem; line-height:1.5; }
+.event-reward-showcase > h2 .ui-icon { width:20px; height:20px; flex-shrink:0; color:var(--rarity-ink,var(--accent)); }
 .event-reward-grid { display: grid; gap: 20px; margin-top: 16px; }
 .event-reward-prize { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; min-width: 0; }
 .event-reward-copy { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
-.event-reward-copy h3 { margin: 0 0 8px; }
-.event-reward-copy p { color: var(--text-secondary); font-size: .85rem; line-height: 1.6; }
-.event-reward-copy small { display: block; font-size: .75rem; line-height: 1.6; }
+.event-reward-copy h3 { margin: 0 0 12px; font-size:.95rem; line-height:1.6; }
+.event-reward-copy p { line-height: 1.6; }
+.event-reward-copy small { display: block; margin-top:16px; color:var(--text-secondary); font-size: .85rem; line-height: 1.6; }
 .event-reward-card { display: flex; justify-content: center; margin-inline: auto; padding: 12px; max-width: 100%; filter: drop-shadow(0 8px 22px #c6a24e22); }
 .event-reward-card .football-card { max-width: 100%; }
 @media(max-width: 640px) { .event-reward-card { flex-basis: 100%; } }

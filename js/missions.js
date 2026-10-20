@@ -1,4 +1,4 @@
-import { missionObjectivePreview } from "./mission-objective-preview.js";
+import { missionObjectivePreview, objectiveDescription } from "./mission-objective-preview.js";
 import { pathMissionEntry, pathMissionSpotlight } from "./paths.js";
 import { groupActivities, activityCategory } from "./activity-categories.js";
 import { policyAt } from "./system-policy.js";
@@ -10,7 +10,6 @@ import {
 import { difficultyLabel } from "./labels.js";
 import {
   periodWindow,
-  objectiveSummary,
   eventEndMillis,
   missionUnlocked,
 } from "./event-model.js";
@@ -126,7 +125,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
               combinedState: detail.progress?.find(row => row.uid === user.uid)?.ratingState,
               eventDescription: event.description || "",
               rarity: eventRarityId(event),
-              description: `${objectiveSummary(event)} · ${difficultyLabel(event.difficulty)}`,
+              description: `${objectiveDescription(event)} · ${difficultyLabel(event.difficulty)}`,
               done: Math.min(progress, event.objective.target),
               total: event.objective.target,
               href: `#/event/${event.id}`,
@@ -148,7 +147,7 @@ export async function refreshMissionsForCurrentUser(user, league) {
               combinedState: detail.progress?.find(row => row.uid === user.uid)?.ratingState,
               eventDescription: event.description || "",
               rarity: eventRarityId(event),
-              description: objectiveSummary(event),
+              description: objectiveDescription(event),
               done: Math.min(progress, event.objective.target),
               total: event.objective.target,
               href: `#/event/${event.id}`,

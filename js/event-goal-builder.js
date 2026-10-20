@@ -39,6 +39,12 @@ export function mountGoalBuilder(root, {objective, pane, readLeaf, writeLeaf, ch
     const article=[...root.querySelectorAll("[data-goal]")].find(el=>el.dataset.goal===active);
     const preview=missionObjectivePreview({objective:goal});
     article.querySelector(".event-goal-summary strong").textContent=preview.text;
+    const copy=article.querySelector(".event-goal-summary > span:nth-child(2)");
+    let criteria=copy.querySelector(":scope > span");
+    if(preview.criteria) {
+      if(!criteria) { criteria=document.createElement("span");copy.append(criteria); }
+      criteria.textContent=preview.criteria;
+    } else criteria?.remove();
     article.querySelector(".event-goal-symbol").innerHTML=icon(eventIcon({objective:goal}));
   };
   root.addEventListener("input",updateSummary);

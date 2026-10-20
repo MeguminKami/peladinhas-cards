@@ -192,6 +192,45 @@ try {
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
     await page.locator(".mission").screenshot({path:`${output}/mission-progress-${width}.png`});
   }
+  await page.evaluate(async()=>{
+    const {mountGoalBuilder}=await import("/js/event-goal-builder.js");
+    document.querySelector("#main").innerHTML='<div class="event-goal-builder content-stack"></div>';
+    mountGoalBuilder(document.querySelector(".event-goal-builder"),{
+      objective:{metric:"all",target:100,goals:["totalStrikerGames","totalMidfielderGames","totalDefenderGames"].map((metric,i)=>({id:String(i),metric,target:1,countFrom:"challenge"}))},
+      pane:document.createElement("div"),readLeaf:()=>({}),writeLeaf:()=>{},changed:()=>{},
+    });
+  });
+  assert.match(await page.locator(".event-goal-summary").last().innerText(),/Joga um jogo como defesa \(DEF\)\./);
+  assert.doesNotMatch(await page.locator(".event-goal-builder").innerText(),/Atinge|após o desbloqueio/);
+  for(const width of [1440,768,390,320]){
+    await page.setViewportSize({width,height:1100});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+    await page.locator(".event-goal-builder").screenshot({path:`${output}/position-copy-${width}.png`});
+  }
+  await page.evaluate(async()=>{
+    const {challengeRules}=await import("/js/event-objective-view.js");
+    document.querySelector("#main").innerHTML='<section class="panel event-rarity-surface" data-rarity="gold" style="max-width:760px;margin-inline:auto">'+challengeRules({method:"objective",kind:"mission",objective:{metric:"all",target:100,goals:[{id:"average",metric:"ratingAverage",target:3,threshold:4,comparison:"gte",combine:"all",attributes:["attack","passing","defense","physical"],minRatings:3}]}})+'</section>';
+  });
+  const summary=page.locator(".goal-rule-details summary");
+  await summary.focus();await page.keyboard.press("Enter");
+  assert.ok(await summary.evaluate(el=>getComputedStyle(el).outlineStyle!=="none"));
+  await summary.evaluate(el=>el.blur());
+  if(await page.locator(".toast").count()) await page.locator(".toast").last().waitFor({state:"hidden"});
+  assert.equal(await page.locator(".goal-rule-details").getAttribute("open"),"");
+  assert.equal(await page.locator(".goal-rule-rows > div").count(),8);
+  assert.equal(await page.locator(".goal-rule-tags li").count(),4);
+  assert.match(await page.locator(".goal-rule-rows").innerText(),/3 por critério, em cada jogo/);
+  for(const width of [1440,768,390,320]){
+    await page.setViewportSize({width,height:1800});
+    for(const theme of ["club","volt","champions","ultimate"]){
+      await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+    }
+    await page.evaluate(()=>document.documentElement.dataset.theme="club");
+    await page.locator(".challenge-rules").screenshot({path:`${output}/criteria-${width}.png`});
+  }
+  await summary.focus();await page.keyboard.press("Enter");
+  assert.equal(await page.locator(".goal-rule-details").getAttribute("open"),null);
   assert.deepEqual(errors,[]);
   console.log("Goal builder: add/collapse, all types, edit/reorder/remove, stable IDs, review/save, keyboard and four widths/themes passed.");
 }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

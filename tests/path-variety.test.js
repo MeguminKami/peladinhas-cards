@@ -75,39 +75,165 @@ const summary = (rows = votes(), revisions = []) =>
 const resolve = (obj, rows = votes(), at = deadline, match = game) =>
   pathWindowResult(obj, match, summary(rows), "a", at, evaluatePathMission);
 
-test("difficulty audit separates teams, players, closed windows and missing evidence",()=>{
-  const rows=[{game,summary:summary()},
-    {game:{...game,status:"open"},summary:summary()},
-    {game:{...game,deleting:true},summary:summary()},
-    {game:{...game,closedAt:"2030-01-01"},summary:summary()}];
-  const audit=analyzeGoalDifficulty(rows,deadline+1);
-  assert.equal(audit.statistics.games,1);
-  assert.equal(audit.statistics.participations,8);
-  assert.equal(audit.statistics.teamGoals.count,2);
-  assert.equal(audit.statistics.teamGoals.median,2);
-  assert.equal(audit.statistics.contributions.histogram[3],1);
-  assert.equal(audit.statistics.thresholds.conceded.find(row=>row.target===1).met,1);
-  const keeper=audit.missions.find(row=>row.templateId==="goalkeeping:solid"&&row.stage===0&&row.difficulty===0);
-  assert.equal(keeper.cancelled,7);
-  assert.equal(keeper.eligible,1);
-  const pending=analyzeGoalDifficulty([{game,summary:summary()}],deadline-1);
-  const ratings=pending.missions.find(row=>row.templateId==="shooting:quality");
-  assert.equal(ratings.windowPending,8);
-  assert.equal(ratings.successPercent,null);
-  const missing=analyzeGoalDifficulty([{game,summary:null}],deadline+1).missions.find(row=>row.templateId==="shooting:quality");
-  assert.equal(missing.waiting,8);
-  assert.equal(missing.eligible,0);
+test("next-game extensions: mean is not AND, strict boundaries, overall votes, all positions and no historical counters", () => {
+  const aggregate = summary();
+  aggregate.players.a.attack = 4;
+  aggregate.players.a.passing = 3;
+  const mean = objective({
+    metric: "ratingMean",
+    criteria: ["attack", "passing"],
+    target: 3.5,
+  });
+  assert.equal(
+    evaluatePathMission(mean, game, aggregate, "a").status,
+    "success",
+  );
+  assert.equal(
+    evaluatePathMission(
+      objective({ ...mean.conditions[0], comparison: "gt" }),
+      game,
+      aggregate,
+      "a",
+    ).status,
+    "failure",
+  );
+  aggregate.players.a.passing = 3.1;
+  assert.equal(
+    evaluatePathMission(
+      objective({ ...mean.conditions[0], comparison: "gt" }),
+      game,
+      aggregate,
+      "a",
+    ).status,
+    "success",
+  );
+  aggregate.players.a.ratingCounts.passing = 6;
+  assert.equal(
+    pathWindowResult(mean, game, aggregate, "a", deadline, evaluatePathMission)
+      .status,
+    "cancelled",
+  );
+  aggregate.players.a.overall = 4;
+  aggregate.players.a.ratingCounts.overall = 7;
+  assert.equal(
+    evaluatePathMission(objective(rating("overall", 4)), game, aggregate, "a")
+      .status,
+    "success",
+  );
+  assert.equal(
+    evaluatePathMission(
+      objective({ ...rating("overall", 4), comparison: "gt" }),
+      game,
+      aggregate,
+      "a",
+    ).status,
+    "failure",
+  );
+  for (const position of ["GR", "DEF", "MED", "ALA", "AV"]) {
+    const obj = objective(
+      { metric: "position", target: position },
+      { metric: "games", target: 1 },
+    );
+    const match = { ...game, positions: { a: position } };
+    assert.equal(
+      evaluatePathMission(obj, match, aggregate, "a").status,
+      "success",
+    );
+    assert.equal(
+      pathWindowResult(
+        obj,
+        { ...match, positions: { a: "OTHER" } },
+        aggregate,
+        "a",
+        deadline,
+        evaluatePathMission,
+      ).status,
+      "cancelled",
+    );
+  }
+  for (const [metric, score] of [
+    ["draw", { teamA: 2, teamB: 2 }],
+    ["loss", { teamA: 1, teamB: 2 }],
+    ["nonLoss", { teamA: 2, teamB: 2 }],
+    ["cleanSheet", { teamA: 1, teamB: 0 }],
+  ]) {
+    const obj = objective({ metric, target: 1 });
+    assert.equal(
+      evaluatePathMission(obj, { ...game, score }, null, "a").status,
+      "success",
+    );
+    assert.equal(
+      evaluatePathMission(obj, { ...game, score: null }, null, "a").status,
+      "waiting",
+    );
+    assert.equal(
+      evaluatePathMission(obj, { ...game, status: "open", score }, null, "a")
+        .status,
+      "waiting",
+    );
+  }
+  assert.deepEqual(
+    normalizePathConditions(
+      objective(
+        { ...rating("attack", 4), comparison: "gt" },
+        rating("attack", 4),
+      ),
+    ),
+    [{ metric: "rating", criterion: "attack", target: 4, comparison: "gt" }],
+  );
+});
+
+test("difficulty audit separates teams, players, closed windows and missing evidence", () => {
+  const rows = [
+    { game, summary: summary() },
+    { game: { ...game, status: "open" }, summary: summary() },
+    { game: { ...game, deleting: true }, summary: summary() },
+    { game: { ...game, closedAt: "2030-01-01" }, summary: summary() },
+  ];
+  const audit = analyzeGoalDifficulty(rows, deadline + 1);
+  assert.equal(audit.statistics.games, 1);
+  assert.equal(audit.statistics.participations, 8);
+  assert.equal(audit.statistics.teamGoals.count, 2);
+  assert.equal(audit.statistics.teamGoals.median, 2);
+  assert.equal(audit.statistics.contributions.histogram[3], 1);
+  assert.equal(
+    audit.statistics.thresholds.conceded.find((row) => row.target === 1).met,
+    1,
+  );
+  const keeper = audit.missions.find(
+    (row) =>
+      row.templateId === "goalkeeping:solid" &&
+      row.stage === 0 &&
+      row.difficulty === 0,
+  );
+  assert.equal(keeper.cancelled, 7);
+  assert.equal(keeper.eligible, 1);
+  const pending = analyzeGoalDifficulty(
+    [{ game, summary: summary() }],
+    deadline - 1,
+  );
+  const ratings = pending.missions.find(
+    (row) => row.templateId === "shooting:quality",
+  );
+  assert.equal(ratings.windowPending, 8);
+  assert.equal(ratings.successPercent, null);
+  const missing = analyzeGoalDifficulty(
+    [{ game, summary: null }],
+    deadline + 1,
+  ).missions.find((row) => row.templateId === "shooting:quality");
+  assert.equal(missing.waiting, 8);
+  assert.equal(missing.eligible, 0);
   assert.ok(!JSON.stringify(audit).includes("v4-game"));
 });
 
-test("v4 catalogue: 120 templates, 6-8 per phase/level, diverse families and mandatory goalkeeper evidence", () => {
+test("expanded catalogue: 270 templates, diverse families and mandatory goalkeeper evidence", () => {
   let count = 0;
   for (const route of routes) {
     count += pathMissionTemplates(route.id).length;
     for (const stage of [0, 1, 2])
       for (const level of [0, 1, 2]) {
         const templates = pathMissionTemplates(route.id, stage, level);
-        assert.ok(templates.length >= 6 && templates.length <= 8, route.id);
+        assert.ok(templates.length >= 17 && templates.length <= 18, route.id);
         assert.ok(
           new Set(templates.map((row) => row.family)).size >= 3,
           route.id,
@@ -151,7 +277,7 @@ test("v4 catalogue: 120 templates, 6-8 per phase/level, diverse families and man
         }
       }
   }
-  assert.equal(count, 120);
+  assert.equal(count, 270);
   assert.equal(
     pathMissionTemplates("shooting", 2, 2).find((row) =>
       row.templateId.endsWith(":goals"),
@@ -209,7 +335,7 @@ test("v4 normalization rejects unknown types, canonicalizes order, strongest bou
     { metric: "goals", target: -1 },
     rating("invented"),
     rating("attack", 6),
-    { metric: "position", target: "AV" },
+    { metric: "position", target: "UNKNOWN" },
   ])
     assert.throws(() => normalizePathConditions(objective(bad)));
   assert.throws(() => pathUsesRatings({ kind: "unknown" }));
@@ -226,15 +352,36 @@ test("v4 every catalogue condition is evaluated, including all three criteria an
           difficulty,
         )) {
           const match = {
-            ...game,
+            ...structuredClone(game),
             score: { teamA: 30, teamB: 0 },
             pathPerformance: { a: { goals: 10, assists: 10 } },
           };
           const aggregate = summary();
+          for (const key of [
+            "overall",
+            "attack",
+            "passing",
+            "physical",
+            "defense",
+            "goalkeeping",
+            "attitude",
+          ]) {
+            aggregate.players.a[key] = 5;
+            aggregate.players.a.ratingCounts[key] = 7;
+          }
+          for (const condition of template.objective.conditions) {
+            if (condition.metric === "position")
+              match.positions.a = condition.target;
+            if (condition.metric === "draw")
+              match.score = { teamA: 30, teamB: 30 };
+            if (condition.metric === "loss")
+              match.score = { teamA: 30, teamB: 31 };
+          }
           for (const row of template.objective.conditions.filter(
             (row) => row.metric === "rating",
           ))
-            aggregate.players.a[row.criterion] = row.target;
+            aggregate.players.a[row.criterion] =
+              row.target + (row.comparison === "gt" ? 0.01 : 0);
           assert.equal(
             evaluatePathMission(template.objective, match, aggregate, "a")
               .status,
@@ -248,7 +395,19 @@ test("v4 every catalogue condition is evaluated, including all three criteria an
               target = condition.target;
             if (metric === "rating")
               ratings.players.a[condition.criterion] = target - 0.25;
-            if (metric === "position") changed.positions.a = "AV";
+            if (metric === "ratingMean")
+              for (const key of condition.criteria)
+                ratings.players.a[key] = target - 0.25;
+            if (metric === "position")
+              changed.positions.a = target === "AV" ? "DEF" : "AV";
+            if (metric === "games")
+              changed.teamA.starters = changed.teamA.starters.filter(
+                (uid) => uid !== "a",
+              );
+            if (metric === "nonLoss") changed.score = { teamA: 0, teamB: 1 };
+            if (metric === "draw" || metric === "loss")
+              changed.score = { teamA: 1, teamB: 0 };
+            if (metric === "cleanSheet") changed.score.teamB = 1;
             if (metric === "goals" || metric === "assists")
               changed.pathPerformance.a[metric] = target - 1;
             if (metric === "contributions")
@@ -259,7 +418,7 @@ test("v4 every catalogue condition is evaluated, including all three criteria an
             assert.equal(
               evaluatePathMission(template.objective, changed, ratings, "a")
                 .status,
-              metric === "position" ? "cancelled" : "failure",
+              ["position", "games"].includes(metric) ? "cancelled" : "failure",
               `${template.templateId}:${metric}`,
             );
           }
@@ -273,7 +432,8 @@ test("v4 seeded offers: three families, no equivalent/dominated choices, stable 
       const node = pathNode(
         route.id.startsWith("fusion-") ? route.id : `${route.id}-0-0`,
       );
-      const seenModels = new Set(), slotFamilies = [new Set(), new Set(), new Set()];
+      const seenModels = new Set(),
+        slotFamilies = [new Set(), new Set(), new Set()];
       for (let seed = 1; seed <= 160; seed++) {
         const offers = createPathOffers(
           node,
@@ -302,8 +462,11 @@ test("v4 seeded offers: three families, no equivalent/dominated choices, stable 
           }
         }
       }
-      assert.equal(seenModels.size, 8, `${route.id}: all models reachable`);
-      assert.ok(slotFamilies.every((families) => families.size > 1), `${route.id}: no fixed family slot`);
+      assert.equal(seenModels.size, 18, `${route.id}: all models reachable`);
+      assert.ok(
+        slotFamilies.every((families) => families.size > 1),
+        `${route.id}: no fixed family slot`,
+      );
     }
   assert.equal(
     createPathOffers(pathNode("pace-0-0"), () => 0.999)[2].advance,

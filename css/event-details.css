@@ -60,6 +60,33 @@
   align-content: center;
   font-weight: 600;
 }
+.goal-rule-details summary {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:44px;
+  padding-block:8px;
+  font-size:.875rem;
+  font-weight:600;
+  cursor:pointer;
+  list-style:none;
+}
+.goal-rule-details summary::-webkit-details-marker { display:none; }
+.goal-rule-details summary > svg { width:18px; height:18px; flex-shrink:0; color:var(--rarity-ink,var(--accent)); }
+.goal-rule-details summary > svg:last-child { margin-left:auto; transform:rotate(90deg); transition:transform 160ms ease; }
+.goal-rule-details[open] summary > svg:last-child { transform:rotate(-90deg); }
+.goal-rule-rows { margin:4px 0 0; }
+.goal-rule-rows > div { display:grid; grid-template-columns:minmax(140px,.6fr) minmax(0,1fr); gap:16px; padding:14px 0; border-top:1px solid var(--border); }
+.goal-rule-rows dt { display:flex; align-items:flex-start; gap:10px; font-size:.85rem; font-weight:600; line-height:1.6; color:var(--text-secondary); }
+.goal-rule-rows dt > svg { flex:0 0 18px; width:18px; height:18px; margin-top:2px; color:var(--rarity-ink,var(--accent)); }
+.goal-rule-rows dd { margin:0; min-width:0; font-size:.9rem; line-height:1.6; overflow-wrap:anywhere; }
+.goal-rule-tags { display:flex; flex-wrap:wrap; gap:6px; list-style:none; padding:0; margin:0; }
+.goal-rule-tags li { padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--bg-surface); }
+@media(max-width:600px) {
+  .goal-rule-rows > div { grid-template-columns:minmax(0,1fr); gap:6px; }
+  .goal-rule-rows dd { padding-left:28px; }
+}
+@media(prefers-reduced-motion:reduce) { .goal-rule-details summary > svg:last-child { transition:none; } }
 .challenge-conditions ul {
   padding-left: 20px;
   margin: 8px 0 0;
@@ -71,20 +98,21 @@
 }
 .reward-breakdown {
   display: grid;
-  gap: 20px;
+  gap: 16px;
   min-width: 0;
   margin-top: 12px;
   text-align: left;
+  font-size: .95rem;
+  line-height: 1.6;
 }
 .reward-breakdown section {
   min-width: 0;
 }
 .reward-section-heading {
-  display: flex;
+  display: grid;
+  grid-template-columns:minmax(0,1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 8px 12px;
   margin-bottom: 12px;
 }
 .reward-breakdown h4 {
@@ -92,8 +120,12 @@
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: 0.85rem;
+  min-width:0;
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
+.reward-breakdown .pill { font-size:.85rem; font-weight:500; line-height:1.5; }
 .reward-breakdown h4 .ui-icon {
   color: var(--accent);
   width: 18px;
@@ -102,19 +134,20 @@
 }
 .reward-breakdown .reward-all-stats {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   margin: 0;
-  padding: 12px 0;
+  padding: 0;
   line-height: 1.5;
 }
 .reward-all-stats strong {
-  font-size: 1.8rem;
+  font-size: inherit;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 .reward-all-stats span {
-  font-size: 0.85rem;
+  font-size: inherit;
+  color: var(--text-primary);
 }
 .reward-stat-list {
   display: grid;
@@ -133,7 +166,7 @@
   min-width: 0;
 }
 .reward-stat-list dt {
-  font-size: 0.85rem;
+  font-size: inherit;
   overflow-wrap: anywhere;
 }
 .reward-stat-list dd {
@@ -144,19 +177,14 @@
   white-space: nowrap;
 }
 .reward-special-section {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
 .reward-special-section h4 {
-  flex-basis: 100%;
   color: var(--text-secondary);
 }
 .reward-special-section > strong {
-  font-size: 0.95rem;
+  font-size: inherit;
   overflow-wrap: anywhere;
 }
 .configured-reward-list {
@@ -170,7 +198,7 @@
 }
 .configured-reward-list h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: .95rem;
 }
 .challenge-rules :focus-visible {
   outline: 2px solid var(--accent);

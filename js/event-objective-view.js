@@ -1,15 +1,44 @@
 import { missionObjectivePreview } from "./mission-objective-preview.js";
-import { isCombinedObjective, usesRatingObjective } from "./event-model.js";
-import { isLifetimeObjective, usesLifetimeObjective } from "./event-totals.js";
+import { isCombinedObjective, usesRatingObjective, isRatingObjective } from "./event-model.js";
+import { isLifetimeObjective, usesLifetimeObjective, TOTAL_OBJECTIVES } from "./event-totals.js";
 import { FEEDBACK, formatDateTime } from "./utils.js";
 import { icon, eventIcon } from "./icons.js";
 import { esc } from "./ui.js";
 import { isGoalList } from "./event-goals.js";
-import { objectiveSummary } from "./event-model.js";
+
+export function goalCriteria(event) {
+  const o = event.objective, metric = TOTAL_OBJECTIVES[o.metric]?.metric || o.metric;
+  const rows = [];
+  const row = (symbol,label,value) => rows.push(`<div><dt>${icon(symbol)}<span>${esc(label)}</span></dt><dd>${value}</dd></div>`);
+  if (isRatingObjective(o)) {
+    const threshold = Number(o.threshold).toLocaleString("pt-PT");
+    const limit = o.comparison === "gt" ? `Mais de ${threshold} ★` : `Pelo menos ${threshold} ★`;
+    const evaluation = metric === "ratingAverage"
+      ? `Média ${o.comparison === "gt" ? "superior a" : "de pelo menos"} ${threshold} ★${o.combine === "mean" ? " entre os critérios" : " em cada critério"}`
+      : `${limit}${o.combine === "mean" ? " na média conjunta" : " em cada critério"}`;
+    row("ratingAverage","Avaliação",esc(evaluation));
+    row("filter","Critérios",`<ul class="goal-rule-tags">${(o.attributes || []).map(key=>`<li>${esc((FEEDBACK.find(([id])=>id===key)?.[1] || key).replace("colectivo","coletivo"))}</li>`).join("")}</ul>`);
+    row("players","Votos mínimos",`<strong>${esc(o.minRatings ?? 3)}</strong> por critério, em cada jogo`);
+    row("games","Jogos",esc(metric === "ratingAverage" ? (o.target===1 ? "O último jogo" : `Os últimos ${o.target} jogos`) : metric === "ratingStreak" ? "Consecutivos" : "Não precisam de ser consecutivos"));
+  }
+  row("lock","Contagem",esc(isLifetimeObjective(o) ? "Histórico completo, incluindo jogos anteriores ao desafio." : "Jogos encerrados após o início do desafio e o desbloqueio desta meta."));
+  if (metric === "ratingAverage") {
+    row("info","Jogos por avaliar","Ficam na janela dos últimos jogos. Todos precisam dos votos mínimos.");
+    row("ratingAverage","Peso dos jogos","Cada jogo tem o mesmo peso na média.");
+    row("check","Verificação","A média exigida tem de estar cumprida quando o objetivo é verificado.");
+  } else if (metric === "ratingStreak") {
+    row("ratingStreak","Sequência","Conta a melhor sequência. Um jogo abaixo do mínimo ou sem votos suficientes interrompe-a.");
+  } else if (isRatingObjective(o)) {
+    row("check","Validação","Um jogo só conta quando todos os critérios têm votos suficientes.");
+  }
+  if(o.attributes?.includes("goalkeeping")) row("info","Guarda-redes","Só conta se jogaste à baliza. A opção «Não foi à baliza» exclui esta avaliação.");
+  return `<dl class="goal-rule-rows">${rows.join("")}</dl>`;
+}
+
 export function challengeRules(event) {
   if(event.method==="objective" && isGoalList(event.objective)) return `<section class="challenge-rules"><h2>Cumpre todas as metas</h2><ol class="challenge-goal-list">${event.objective.goals.map(goal=>{
     const preview=missionObjectivePreview({...event,objective:goal});
-    return `<li><strong>${esc(preview.text)}</strong>${preview.criteria?`<p>${esc(preview.criteria)}</p>`:""}<details><summary>Critérios desta meta</summary><p>${esc(objectiveSummary({...event,objective:goal}))}</p></details></li>`;
+    return `<li><strong>${esc(preview.text)}</strong>${preview.criteria?`<p>${esc(preview.criteria)}</p>`:""}<details class="goal-rule-details"><summary>${icon("info")}<span>Critérios desta meta</span>${icon("arrow")}</summary>${goalCriteria({...event,objective:goal})}</details></li>`;
   }).join("")}</ol>${event.rules?`<p>${esc(event.rules)}</p>`:""}</section>`;
   const facts = [],
     conditions = [];

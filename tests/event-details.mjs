@@ -51,10 +51,7 @@ try {
   await context.route("**/js/db.js", (r) =>
     r.fulfill({
       contentType: "text/javascript",
-      body: readFileSync("tests/fixtures/db.js", "utf8").replace(
-        "'../../js/utils.js'",
-        "'./utils.js'",
-      ),
+      body: readFileSync("tests/fixtures/db.js", "utf8").replaceAll('"../../js/', '"./').replaceAll("'../../js/", "'./"),
     }),
   );
   await context.route("**/js/auth.js", (r) =>
@@ -65,7 +62,7 @@ try {
   );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("http://127.0.0.1:5225");
-  await page.getByRole("heading", { name: "No topo da liga" }).waitFor();
+  await page.locator(".dashboard-greeting").waitFor();
   const navigate = async (hash) => {
     await page.evaluate((value) => (location.hash = value), hash);
     await page.waitForTimeout(250);
@@ -86,7 +83,7 @@ try {
         boosts: mixed
           ? { pace: 2, passing: 1 }
           : Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 1])),
-        statDuration: mixed ? "permanent" : "weekly",
+        statDuration: mixed ? "permanent" : "monthly",
         specialId: "in-form",
         cardTheme: { name: "Homem da Noite" },
       };
@@ -156,7 +153,7 @@ try {
     };
   });
   for (const width of [1440, 768, 390, 320]) {
-    await page.setViewportSize({ width, height: 1000 });
+    await page.setViewportSize({ width, height: 1800 });
     for (const mode of [
       "rating",
       "average",
@@ -182,6 +179,15 @@ try {
         1,
       );
       if (mode === "rating") {
+        assert.equal(await page.locator(".event-reward-showcase > .event-reward-markers").count(),0);
+        const sizes=await page.locator(".event-reward-copy").first().evaluate(el=>[".reward-all-stats strong",".reward-all-stats span",".reward-breakdown h4",".reward-special-section > strong"].map(selector=>getComputedStyle(el.querySelector(selector)).fontSize));
+        assert.equal(new Set(sizes).size,1,"reward values and labels share one type scale");
+        for(const theme of ["club","volt","champions","ultimate"]){
+          await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
+          assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+        }
+        await page.evaluate(()=>document.documentElement.dataset.theme="club");
+        await page.locator(".event-reward-copy").first().screenshot({path:`test-results/event-rewards-${width}.png`});
         assert.equal(await page.locator(".challenge-criteria li").count(), 6);
         assert.equal(
           (await page.locator(".challenge-rules").textContent()).match(

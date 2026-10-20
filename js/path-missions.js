@@ -1,6 +1,7 @@
 // Shared v4 catalogue. Only trusted server code turns these templates into offers.
 import { PATH_GOAL_TARGETS } from "./path-difficulty.js";
 const names = {
+  overall: "Desempenho geral",
   attack: "Ataque",
   passing: "Passe",
   physical: "Físico",
@@ -10,12 +11,18 @@ const names = {
 };
 const metricOrder = [
   "position",
+  "games",
+  "nonLoss",
+  "draw",
+  "loss",
+  "cleanSheet",
   "goals",
   "assists",
   "contributions",
   "win",
   "teamGoals",
   "conceded",
+  "ratingMean",
   "rating",
 ];
 const c = (metric, target, criterion) => ({
@@ -288,7 +295,7 @@ const catalogue = {
 };
 
 const conditionKey = (condition) =>
-  `${condition.metric}:${condition.criterion || ""}`;
+  `${condition.metric}:${condition.criterion || condition.criteria?.join(",") || ""}`;
 export function normalizePathConditions(objective) {
   if (
     objective?.kind !== "conditions" ||
@@ -302,26 +309,50 @@ export function normalizePathConditions(objective) {
     const { metric, criterion, target } = condition;
     if (
       !metricOrder.includes(metric) ||
-      (metric === "rating"
-        ? !names[criterion] ||
+      (metric !== "ratingMean" && condition.criteria !== undefined) ||
+      (metric === "ratingMean" && criterion !== undefined) ||
+      (condition.comparison === "gt" && target === 5) ||
+      (["rating", "ratingMean"].includes(metric)
+        ? (metric === "rating"
+            ? !names[criterion]
+            : !Array.isArray(condition.criteria) ||
+              condition.criteria.length < 2 ||
+              condition.criteria.length > 7 ||
+              new Set(condition.criteria).size !== condition.criteria.length ||
+              condition.criteria.some((key) => !names[key])) ||
           !Number.isFinite(target) ||
           target <= 0 ||
           target > 5
         : criterion !== undefined ||
           (metric === "position"
-            ? target !== "GR"
+            ? !["GR", "DEF", "MED", "ALA", "AV"].includes(target)
             : !Number.isSafeInteger(target) ||
               target < (metric === "conceded" ? 0 : 1) ||
               target > 100 ||
-              (metric === "win" && target !== 1)))
+              ([
+                "win",
+                "games",
+                "nonLoss",
+                "draw",
+                "loss",
+                "cleanSheet",
+              ].includes(metric) &&
+                target !== 1))) ||
+      (condition.comparison !== undefined &&
+        (!["rating", "ratingMean"].includes(metric) ||
+          !["gte", "gt"].includes(condition.comparison)))
     )
       throw Error("Condição de missão inválida.");
-    const key = conditionKey(condition),
-      prior = unique.get(key);
     const value = c(metric, target, criterion);
+    if (metric === "ratingMean")
+      value.criteria = [...condition.criteria].sort();
+    if (condition.comparison === "gt") value.comparison = "gt";
+    const key = conditionKey(value),
+      prior = unique.get(key);
     if (
       !prior ||
-      (metric === "conceded" ? target < prior.target : target > prior.target)
+      (metric === "conceded" ? target < prior.target : target > prior.target) ||
+      (target === prior.target && value.comparison === "gt")
     )
       unique.set(key, value);
   }
@@ -345,11 +376,22 @@ export function pathObjectiveRequirements(objective) {
   if (objective?.kind === "conditions") {
     const conditions = normalizePathConditions(objective);
     return {
-      criteria: conditions
-        .filter((row) => row.metric === "rating")
-        .map((row) => row.criterion),
+      criteria: [
+        ...new Set(
+          conditions.flatMap((row) =>
+            row.metric === "rating"
+              ? [row.criterion]
+              : row.metric === "ratingMean"
+                ? row.criteria
+                : [],
+          ),
+        ),
+      ],
       goalkeeper: conditions.some(
-        (row) => row.metric === "position" || row.criterion === "goalkeeping",
+        (row) =>
+          (row.metric === "position" && row.target === "GR") ||
+          row.criterion === "goalkeeping" ||
+          row.criteria?.includes("goalkeeping"),
       ),
       conditions,
     };
@@ -371,7 +413,18 @@ function familyFor(conditions) {
   const metrics = conditions
     .filter((row) => row.metric !== "position")
     .map((row) => row.metric);
-  const ratings = metrics.filter((metric) => metric === "rating").length;
+  const ratings = metrics.filter((metric) =>
+    ["rating", "ratingMean"].includes(metric),
+  ).length;
+  for (const metric of [
+    "games",
+    "nonLoss",
+    "draw",
+    "loss",
+    "cleanSheet",
+    "ratingMean",
+  ])
+    if (metrics.includes(metric)) return metric;
   if (metrics.includes("conceded")) return "solidity";
   if (metrics.includes("win"))
     return ratings
@@ -398,12 +451,97 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
     ![0, 1, 2].includes(difficulty)
   )
     throw Error("Catálogo de missões inválido.");
-  return catalogue[routeId]
+  const primary =
+    {
+      pace: "physical",
+      shooting: "attack",
+      passing: "passing",
+      dribbling: "attack",
+      defending: "defense",
+      physical: "physical",
+      goalkeeping: "goalkeeping",
+      stamina: "physical",
+      vision: "passing",
+      positioning: "defense",
+      teamwork: "attitude",
+      composure: "attitude",
+      "fusion-attack": "attack",
+      "fusion-wall": "defense",
+      "fusion-engine": "physical",
+    }[routeId] || "attitude";
+  const secondary = primary === "passing" ? "attitude" : "passing";
+  const position = ["goalkeeping", "fusion-wall"].includes(routeId)
+    ? "GR"
+    : {
+        shooting: "AV",
+        dribbling: "ALA",
+        pace: "ALA",
+        defending: "DEF",
+        physical: "DEF",
+        positioning: "DEF",
+      }[routeId] || "MED";
+  const anchor = () => [
+    r(primary),
+    ...(routeId === "shooting" ? [g()] : []),
+    ...(routeId === "fusion-wall" ? [r("goalkeeping")] : []),
+  ];
+  const mean = () => ({
+    metric: "ratingMean",
+    target: 3.5,
+    criteria: [primary, secondary],
+  });
+  const extra = [
+    entry(
+      "next-position",
+      "Cumprir o papel",
+      c("games", 1),
+      c("position", position),
+      ...anchor(),
+    ),
+    entry("next-unbeaten", "Somar sem perder", c("nonLoss", 1), ...anchor()),
+    entry("next-draw", "Equilíbrio com qualidade", c("draw", 1), ...anchor()),
+    entry(
+      "next-resilience",
+      "Qualidade na adversidade",
+      c("loss", 1),
+      ...anchor(),
+    ),
+    entry("next-mean", "Equilíbrio de qualidades", mean(), ...anchor()),
+    entry("next-overall", "Exibição completa", r("overall", 3.5), ...anchor()),
+    entry(
+      "next-strict",
+      "Superar a fasquia",
+      { ...r(primary, 3.5), comparison: "gt" },
+      ...(routeId === "shooting" ? [g()] : []),
+      ...(routeId === "fusion-wall" ? [r("goalkeeping")] : []),
+    ),
+    entry(
+      "next-clean",
+      "Não dar espaço ao golo",
+      c("cleanSheet", 1),
+      ...anchor(),
+    ),
+    entry(
+      "next-team-mean",
+      "Qualidade ao serviço da equipa",
+      team(),
+      mean(),
+      ...anchor(),
+    ),
+    entry(
+      "next-overall-action",
+      "Participação decisiva",
+      contribution(),
+      r("overall", 3.5),
+      ...anchor(),
+    ),
+  ];
+  return [...catalogue[routeId], ...extra]
     .filter((template) => difficulty === 0 || template.id !== "victory")
     .map((template) => {
       const conditions = template.conditions.map((condition) => {
         const { metric, target, criterion } = condition;
-        if (metric === "rating") {
+        if (["rating", "ratingMean"].includes(metric)) {
           const solo = template.conditions.length === 1;
           const adjusted = solo
             ? (criterion === "attitude"
@@ -424,19 +562,30 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
                   target + (difficulty - 1) * 0.25 + stage * 0.25,
                 ),
               );
-          return r(criterion, adjusted);
+          return { ...condition, target: adjusted };
         }
         if (metric === "goals")
-          return g(template.conditions.length===1?PATH_GOAL_TARGETS.goals[stage][difficulty]:Math.max(target,PATH_GOAL_TARGETS.mixedGoals[stage][difficulty]));
+          return g(
+            template.conditions.length === 1
+              ? PATH_GOAL_TARGETS.goals[stage][difficulty]
+              : Math.max(
+                  target,
+                  PATH_GOAL_TARGETS.mixedGoals[stage][difficulty],
+                ),
+          );
         if (metric === "assists" && template.conditions.length === 1)
           return a(PATH_GOAL_TARGETS.assists[stage][difficulty]);
         if (metric === "contributions")
           return contribution(
-            Math.max(target, PATH_GOAL_TARGETS.contributions[stage][difficulty]),
+            Math.max(
+              target,
+              PATH_GOAL_TARGETS.contributions[stage][difficulty],
+            ),
           );
         if (metric === "conceded")
           return solidTarget(PATH_GOAL_TARGETS.conceded[stage][difficulty]);
-        if (metric === "teamGoals") return c(metric, PATH_GOAL_TARGETS.teamGoals[stage][difficulty]);
+        if (metric === "teamGoals")
+          return c(metric, PATH_GOAL_TARGETS.teamGoals[stage][difficulty]);
         return { ...condition };
       });
       if (["goalkeeping", "fusion-wall"].includes(routeId))
@@ -472,6 +621,12 @@ export function pathConditionsImply(harder, easier) {
     const own = source.find(
       (row) => conditionKey(row) === conditionKey(condition),
     );
+    if (own && ["rating", "ratingMean"].includes(condition.metric))
+      return (
+        own.target > condition.target ||
+        (own.target === condition.target &&
+          (condition.comparison !== "gt" || own.comparison === "gt"))
+      );
     if (condition.metric === "contributions") {
       const total = source
         .filter((row) => ["goals", "assists"].includes(row.metric))
@@ -563,11 +718,20 @@ export function pathObjectiveLines(objective) {
     .sort(
       (a, b) => metricOrder.indexOf(a.metric) - metricOrder.indexOf(b.metric),
     )
-    .map(({ metric, target, criterion }) => {
+    .map(({ metric, target, criterion, criteria, comparison }) => {
       const value = String(target).replace(".", ",");
-      if (metric === "position") return "Joga na posição GR";
+      if (metric === "position") return `Joga na posição ${target}`;
+      if (metric === "games") return "Participa no jogo";
+      if (metric === "nonLoss") return "Termina o jogo sem perder";
+      if (metric === "draw") return "Termina o jogo empatado";
+      if (metric === "loss")
+        return "Mesmo com derrota, cumpre os restantes requisitos";
+      if (metric === "cleanSheet")
+        return "A tua equipa termina sem sofrer golos";
+      if (metric === "ratingMean")
+        return `Obtém média ${comparison === "gt" ? "superior a" : "de pelo menos"} ${value}★ entre ${criteria.map((key) => names[key]).join(" e ")}`;
       if (metric === "rating")
-        return `Obtém pelo menos ${value}★ em ${names[criterion]}`;
+        return `Obtém ${comparison === "gt" ? "mais de" : "pelo menos"} ${value}★ em ${names[criterion]}`;
       if (metric === "win") return "Vence o jogo";
       if (metric === "goals")
         return `Marca pelo menos ${target} ${target === 1 ? "golo" : "golos"}`;

@@ -186,9 +186,15 @@ As páginas de detalhe separam meta, critérios, requisitos mínimos e condiçõ
 
 ## Escolhe o teu caminho: próximo jogo
 
-Os percursos têm um [catálogo próprio de 120 modelos](path-mission-catalogue.md) e não usam os períodos, sequências ou recolhas das missões criadas no editor de eventos. Cada tentativa vale apenas para o próximo jogo; condições compostas usam **E** e o avanço de 25/50/100%, ou raro de 150/200%, preenche nós de 100%. O boost é entregue ao completar o nó, não por simplesmente escolher uma missão. A [referência dos percursos](player-paths.md) descreve os limites próprios, raridades, fusões, sete votos/48 horas, cancelamentos e compatibilidade. O resumo da missão escolhida e a composição compacta usam o tema da sua raridade, com objetivo explícito **No próximo jogo** e recompensa integrada.
+Os percursos têm um [catálogo próprio de 270 modelos](path-mission-catalogue.md) e não usam os períodos, sequências ou recolhas das missões criadas no editor de eventos. Cada tentativa vale apenas para o próximo jogo; condições compostas usam **E** e o avanço de 25/50/100%, ou raro de 150/200%, preenche nós de 100%. O boost é entregue ao completar o nó, não por simplesmente escolher uma missão. A [referência dos percursos](player-paths.md) descreve os limites próprios, raridades, fusões, sete votos/48 horas, cancelamentos e compatibilidade. O resumo da missão escolhida e a composição compacta usam o tema da sua raridade, com objetivo explícito **No próximo jogo** e recompensa integrada.
 
 ## Apresentação do progresso
+
+As recompensas de missões e eventos usam a mesma escala para valores, atributos e nome da carta. Cada tipo de prémio tem um cabeçalho com ícone e duração alinhada; o título da secção e as notas secundárias têm níveis próprios. A secção não repete os tipos de recompensa num resumo adicional. As durações dos atributos e da carta mantêm-se independentes.
+
+Os resumos usam uma ação direta e singular/plural correto: «Joga um jogo como defesa (DEF).», «Ganha 3 jogos seguidos.» ou «Soma um total de 5 golos ou assistências.». As posições apresentam nome e sigla. As regras de período e desbloqueio ficam nos detalhes, sem se repetirem no resumo; os objetivos históricos mantêm «Total de …». Esta revisão de texto é feita na apresentação do navegador e não altera métricas, contagens ou dados guardados.
+
+«Critérios desta meta» apresenta linhas com ícones e rótulos: avaliação, critérios selecionados, votos mínimos, jogos e início da contagem. Médias recentes acrescentam jogos por avaliar, peso dos jogos e momento de verificação; sequências e participação à baliza têm as suas regras próprias. O bloco abre por rato, toque ou teclado, com separadores entre linhas e disposição empilhada no telemóvel.
 
 Na lista de missões e no detalhe, cada objetivo mostra diretamente o que é pedido, o contador atual/alvo e uma barra com a cor da raridade. Os desafios com vários objetivos apresentam uma barra por objetivo, sem repetir uma barra global nem rótulos como «Meta 1» ou «todas as metas». Esta apresentação não altera o cálculo nem o progresso guardado.
 

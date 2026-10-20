@@ -128,58 +128,62 @@ test("v4 backend: opening freezes full objective and recent family; compound num
   );
 });
 
-test("v4 backend: historical ratings settle mixed conditions; insufficient sample overrides sporting failure", async () => {
-  for (const sufficient of [true, false]) {
-    const uid = await player(),
-      gid = `mixed-${uid}`,
-      state = emptyPathState(uid),
-      selected = offer("shooting", "quality");
-    const closedAt = Timestamp.fromMillis(Date.now() - 49 * 3600000),
-      submittedAt = Timestamp.fromMillis(Date.now() - 48.5 * 3600000);
-    const voters = Array.from({ length: 7 }, (_, i) => `${uid}-v${i}`);
-    const game = {
-      status: "closed",
-      scheduledAt: Timestamp.fromMillis(Date.now() - 50 * 3600000),
-      closedAt,
-      teamA: { starters: [uid, ...voters.slice(0, 3)], bench: [] },
-      teamB: { starters: voters.slice(3), bench: [] },
-      score: { teamA: 1, teamB: 0 },
-      positions: { [uid]: "AV" },
-      performance: {
-        teamA: { goals: sufficient ? [uid] : [voters[0]], assists: [] },
-        teamB: { goals: [], assists: [] },
-      },
-    };
-    state.nodes["shooting-0-0"] = { progress: 25 };
-    state.pending = [
-      {
-        id: randomUUID(),
-        nodeId: "shooting-0-0",
-        offer: selected,
-        gameId: gid,
-        acceptedAt: new Date(Date.now() - 51 * 3600000).toISOString(),
-        frozenAt: new Date(Date.now() - 50 * 3600000).toISOString(),
-        windowVersion: 3,
-      },
-    ];
-    await db.doc(`games/${gid}`).set(game);
-    await db.doc(`pathStates/${uid}`).set(state);
-    for (const raterId of voters.slice(0, sufficient ? 7 : 6))
-      await db
-        .doc(`games/${gid}/feedback/${raterId}`)
-        .set({
+test("v4 backend: historical ratings settle old, mean, overall and strict conditions; insufficient samples cancel", async () => {
+  for (const template of [
+    "quality",
+    "next-mean",
+    "next-overall",
+    "next-strict",
+  ])
+    for (const sufficient of [true, false]) {
+      const uid = await player(),
+        gid = `mixed-${uid}`,
+        state = emptyPathState(uid),
+        selected = offer("shooting", template);
+      const closedAt = Timestamp.fromMillis(Date.now() - 49 * 3600000),
+        submittedAt = Timestamp.fromMillis(Date.now() - 48.5 * 3600000);
+      const voters = Array.from({ length: 7 }, (_, i) => `${uid}-v${i}`);
+      const game = {
+        status: "closed",
+        scheduledAt: Timestamp.fromMillis(Date.now() - 50 * 3600000),
+        closedAt,
+        teamA: { starters: [uid, ...voters.slice(0, 3)], bench: [] },
+        teamB: { starters: voters.slice(3), bench: [] },
+        score: { teamA: 1, teamB: 0 },
+        positions: { [uid]: "AV" },
+        performance: {
+          teamA: { goals: sufficient ? [uid] : [voters[0]], assists: [] },
+          teamB: { goals: [], assists: [] },
+        },
+      };
+      state.nodes["shooting-0-0"] = { progress: 25 };
+      state.pending = [
+        {
+          id: randomUUID(),
+          nodeId: "shooting-0-0",
+          offer: selected,
+          gameId: gid,
+          acceptedAt: new Date(Date.now() - 51 * 3600000).toISOString(),
+          frozenAt: new Date(Date.now() - 50 * 3600000).toISOString(),
+          windowVersion: 3,
+        },
+      ];
+      await db.doc(`games/${gid}`).set(game);
+      await db.doc(`pathStates/${uid}`).set(state);
+      for (const raterId of voters.slice(0, sufficient ? 7 : 6))
+        await db.doc(`games/${gid}/feedback/${raterId}`).set({
           raterId,
           targetId: uid,
           submitted: true,
           submittedAt,
           updatedAt: submittedAt,
-          ratings: { attack: 4 },
+          ratings: { attack: 4, passing: 4, overall: 4 },
         });
-    const result = await call(uid, "sync");
-    assert.equal(
-      result.lastResult.status,
-      sufficient ? "success" : "cancelled",
-    );
-    assert.equal(result.nodes["shooting-0-0"].progress, sufficient ? 75 : 25);
-  }
+      const result = await call(uid, "sync");
+      assert.equal(
+        result.lastResult.status,
+        sufficient ? "success" : "cancelled",
+      );
+      assert.equal(result.nodes["shooting-0-0"].progress, sufficient ? 75 : 25);
+    }
 });

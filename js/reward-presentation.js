@@ -21,7 +21,7 @@ export function rewardBreakdown(reward = {}) {
     ? `<section class="reward-stat-section"><div class="reward-section-heading"><h4>${icon("rewardStats")}Bónus de atributos</h4><span class="pill">${esc(statDuration)}</span></div>${equal ? `<p class="reward-all-stats"><strong>+${number(reward.boosts[boosts[0][0]])}</strong><span>em todos os ${ATTRIBUTES.length} atributos</span></p>` : `<dl class="reward-stat-list">${boosts.map(([key, label]) => `<div><dt>${esc(label)}</dt><dd>+${number(reward.boosts[key])}</dd></div>`).join("")}</dl>`}</section>`
     : "";
   const special = reward.specialId
-    ? `<section class="reward-special-section"><h4>${icon("rewardCard")}Carta especial</h4><strong>${esc(reward.cardTheme?.name || themeName(reward.specialId))}</strong><span class="pill">${esc(cardDuration)}</span></section>`
+    ? `<section class="reward-special-section"><div class="reward-section-heading"><h4>${icon("rewardCard")}Carta especial</h4><span class="pill">${esc(cardDuration)}</span></div><strong>${esc(reward.cardTheme?.name || themeName(reward.specialId))}</strong></section>`
     : "";
   return `<div class="reward-breakdown">${stats}${special}${!stats && !special ? '<p class="muted">Sem recompensa.</p>' : ""}</div>`;
 }

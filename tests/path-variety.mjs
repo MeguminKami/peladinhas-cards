@@ -57,7 +57,7 @@ try {
       body:
         readFileSync("tests/fixtures/db.js", "utf8")
           .replace("export const list = async (path) =>", "export const list = async (path) => path === 'pathStates' ? (window.__reviewStates || []) :")
-          .replace("'../../js/utils.js'", "'./utils.js'")
+          .replaceAll('"../../js/', '"./').replaceAll("'../../js/", "'./")
           .replace(
             'displayName: "Pedro"',
             'displayName: "Alexandre João da Conceição"',
@@ -106,7 +106,7 @@ try {
       activePath: "goalkeeping",
       selectedNode: "goalkeeping-0-0",
     };
-    state.offers["goalkeeping-0-0"] = ["solid-pass", "pass", "attitude"].map(
+    state.offers["goalkeeping-0-0"] = ["solid-pass", "next-mean", "next-overall"].map(
       (id, i) => ({
         ...pathMissionTemplates("goalkeeping", 0, i).find(
           (row) => row.templateId === "goalkeeping:" + id,
