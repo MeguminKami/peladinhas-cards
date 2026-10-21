@@ -19,6 +19,23 @@ import {
   Timestamp,
 } from "firebase/firestore";
 let env;
+test("home revisions expose only global and own tokens; materialized caches stay server-only", async () => {
+  await env.withSecurityRulesDisabled(async c => {
+    for (const id of ["global", "joao", "pedro"]) await setDoc(doc(c.firestore(), `homeSignals/${id}`), { version: "v1" });
+    await setDoc(doc(c.firestore(), "homeCache/player-joao"), { payload: "private" });
+    await setDoc(doc(c.firestore(), "eventSignals/test"), { version: "v1" });
+  });
+  const own = env.authenticatedContext("joao").firestore();
+  await assertSucceeds(getDoc(doc(own, "homeSignals/global")));
+  await assertSucceeds(getDoc(doc(own, "homeSignals/joao")));
+  await assertFails(getDoc(doc(own, "homeSignals/pedro")));
+  await assertFails(getDocs(collection(own, "homeSignals")));
+  await assertFails(setDoc(doc(own, "homeSignals/joao"), { version: "forged" }));
+  await assertFails(getDoc(doc(own, "homeCache/player-joao")));
+  await assertSucceeds(getDoc(doc(own, "eventSignals/test")));
+  await assertFails(setDoc(doc(own, "eventSignals/test"), { version: "forged" }));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "homeSignals/global")));
+});
 test("password recovery approvals remain private and server-only", async () => {
   await env.withSecurityRulesDisabled(async c => {
     await setDoc(doc(c.firestore(), "passwordRecoveries/joao"), {status:"authorized", codeHash:"private"});

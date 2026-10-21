@@ -10,6 +10,8 @@
 
 </div>
 
+[Início atualizado e recuperação horária com menos leituras — 21/10/2026](reports/home-read-cache-2026-10-21.md) · [Funcionamento](reference/home-data.md).
+
 ## Por onde começar
 
 [Diagnóstico de permissões nas avaliações da app](reports/feedback-mobile-access-2026-10-19.md).

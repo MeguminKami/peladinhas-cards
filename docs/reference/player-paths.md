@@ -114,7 +114,7 @@ Os cálculos futuros das cartas abertas usam o novo teto. Não foi executado rec
 - `games/{gid}/pathVoteRevisions`: versões privadas dos votos, inacessíveis pelo navegador, incluindo administradores.
 - `pathGameLinks/{gid}/players/{uid}`: associação duradoura para revisão e proteção contra reutilização.
 
-O cliente não escreve jogos, feedback, progresso, propostas ou entregas diretamente. Callables verificam identidade, capacidades, políticas, transições e dados. Triggers, a tarefa de cinco minutos e a atualização explícita retomam apuramentos pendentes.
+O cliente não escreve jogos, feedback, progresso, propostas ou entregas diretamente. Callables verificam identidade, capacidades, políticas, transições e dados. Triggers, a recuperação horária com checkpoint e a atualização explícita retomam apuramentos pendentes. A página visível reage a versões pequenas e aos prazos conhecidos; consultar a [gestão de leituras e atualizações](home-data.md).
 
 Consultar [testes e publicação da atualização anterior](../reports/path-update-2026-10-18.md) e o [deploy seletivo da variedade v4](../reports/path-variety-2026-10-19.md). Para a v4, publicar Functions consumidoras e frontend; não houve alterações de regras ou índices nesta atualização. Se a atualização anterior também estiver por publicar, os seus requisitos continuam aplicáveis.
 

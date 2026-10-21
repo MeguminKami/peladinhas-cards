@@ -99,6 +99,8 @@ O frontend Firebase usa SDK web por importação remota; o servidor usa as depen
 
 ## Módulos
 
+O início usa `getHome`, um contexto partilhado e resultados pessoais em cache. `js/league-model.js` e `js/mission-model.js` partilham os cálculos com o carregamento completo; `js/revision-updates.js` observa versões apenas em páginas visíveis. As tarefas horárias de eventos, percursos, coleção e lembretes verificam alterações/prazos antes de enumerar coleções. [Estrutura, segurança e manutenção](home-data.md).
+
 | Área                      | Entradas principais                                                                       |
 | :------------------------ | :---------------------------------------------------------------------------------------- |
 | Navegação e sessão        | `js/app.js`, `navigation.js`, `auth.js`, `role-perspective.js`                            |

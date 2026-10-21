@@ -1739,7 +1739,7 @@ test("escolha da carta: coleção própria, normal e seleção independente dos 
   );
   await ensureHistory.run({ auth: { uid }, data: {} });
   assert.equal((await ref.get()).data().selectedCardId, "sniper");
-  t.mock.timers.setTime(new Date("2026-10-28T12:00:00Z").getTime());
+  t.mock.timers.setTime(new Date("2026-10-28T18:00:00Z").getTime());
   await choose("mvp");
   await ensureHistory.run({ auth: { uid }, data: {} });
   assert.equal((await ref.get()).data().locked, true);

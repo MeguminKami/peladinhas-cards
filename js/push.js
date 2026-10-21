@@ -23,6 +23,7 @@ let uid = null,
   recoveryFlight,
   panelState = "";
 let homePromptClose = null;
+let resumeNotifications = () => {};
 const homePromptSeen = new Set();
 export const PUSH_RECHECK_MS = 10000;
 const callDevice = (data) =>
@@ -442,6 +443,7 @@ export async function syncPushIdentity(account, onSnapshot) {
   requestedUid = null;
   unsubscribe();
   unsubscribe = () => {};
+  resumeNotifications = () => {};
   uid = account;
   enabled = false;
   registrationPending = true;
@@ -454,7 +456,10 @@ export async function syncPushIdentity(account, onSnapshot) {
   if (previous && previous.uid !== account) await detachPushForLogout();
   if (generation !== epoch) return;
   if (account && typeof DB.watchNotifications === "function") {
-    unsubscribe = DB.watchNotifications(
+    resumeNotifications = () => {
+      unsubscribe(); unsubscribe = () => {};
+      if (generation !== epoch || document.visibilityState !== "visible") return;
+      unsubscribe = DB.watchNotifications(
       account,
       (items) => {
         if (generation !== epoch) return;
@@ -466,7 +471,9 @@ export async function syncPushIdentity(account, onSnapshot) {
         snapshotCallback?.(items);
       },
       () => {},
-    );
+      );
+    };
+    resumeNotifications();
   }
   if (account) {
     monitor = setInterval(() => {
@@ -600,6 +607,7 @@ window.addEventListener("online", () => {
 });
 window.addEventListener("offline", updatePanels);
 document.addEventListener("visibilitychange", () => {
+  resumeNotifications();
   if (document.visibilityState === "visible")
     recoverPushConnection().catch(() => {});
 });

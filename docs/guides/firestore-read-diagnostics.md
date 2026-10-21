@@ -1,5 +1,7 @@
 # Diagnósticos sem repetir leituras Firestore
 
+O funcionamento atual do início e dos checkpoints está na [referência de dados](../reference/home-data.md). A [medição local de 21/10/2026](../reports/home-read-cache-2026-10-21.md) distingue pedidos com cache, aquecimento, listeners e publicação ainda por executar.
+
 [← Documentação](../README.md) · [Desenvolvimento local](development.md) · [Resultados de 19/10/2026](../reports/firestore-read-reduction-2026-10-19.md)
 
 As sete auditorias abaixo usam `scripts/firestore-audit-cache.mjs`. Por defeito, analisam exclusivamente um snapshot local. Uma resposta ausente interrompe a análise sem contactar Google APIs. Não há recolha automática nem abertura de credenciais no modo offline.

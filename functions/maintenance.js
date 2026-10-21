@@ -945,7 +945,7 @@ export function maintenanceFunctions({
   const systemHeartbeat = policySchedule(
     "systemHeartbeat",
     {
-      schedule: "every 5 minutes",
+      schedule: "0 * * * *",
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
     },

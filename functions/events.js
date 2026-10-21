@@ -1,4 +1,5 @@
 import { grant } from "./event-management.js";
+import { nextHomeBoundary } from "../js/data-boundary.js";
 import { createReadContext } from "./read-context.js";
 import { policyAt, canManage } from "../js/system-policy.js";
 import { policyCall, policySchedule, policyWritten, policyCreated, recordTaskFailure } from "./policy-runtime.js";
@@ -442,35 +443,27 @@ export function eventFunctions(rebuild) {
   });
   const closeEvents = policySchedule("closeEvents",
     {
-      schedule: "every 5 minutes",
+      schedule: "0 * * * *",
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
     },
     async () => {
-      const {issues=[]}=await managed.scheduled();
+      const {issues=[], events=[], futureRewards=[]}=await managed.scheduled();
       const tryClose=async id=>{try{await close(id);}catch(error){await recordTaskFailure(id,error,issues);}};
-      const expired = await db()
-        .collection("events")
-        .where("status", "==", "open")
-        .get();
-      for (const event of expired.docs)
+      for (const event of events)
         if (
-          event.data().schemaVersion !== 2 &&
-          event.data().endsAt.toMillis() <= Date.now()
+          event.schemaVersion !== 2 && event.status === "open" &&
+          event.endsAt.toMillis() <= Date.now()
         )
           await tryClose(event.id);
-      const pending = await db()
-        .collection("events")
-        .where("rewardsApplied", "==", false)
-        .get();
-      for (const event of pending.docs)
+      for (const event of events)
         if (
-          event.data().schemaVersion !== 2 &&
-          event.data().status === "closed" &&
-          event.data().rewardsApplied === false
+          event.schemaVersion !== 2 &&
+          event.status === "closed" &&
+          event.rewardsApplied === false
         )
           await tryClose(event.id);
-      return {ok:!issues.length,issues};
+      return {ok:!issues.length,issues,nextAt:nextHomeBoundary([events,futureRewards])};
     },
   );
   return {

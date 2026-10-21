@@ -36,6 +36,8 @@ Os scripts `deploy:*` verificam sintaxe e um conjunto de testes de lógica antes
 
 ## Casos com código partilhado
 
+- **Cache do início e recuperação horária:** publicar `npm.cmd run deploy:home-cache` e depois `npm.cmd run deploy:frontend`. O primeiro usa seletores explícitos de 21 funções e `firestore:rules`; consultar os [consumidores e a validação](../reports/home-read-cache-2026-10-21.md). A cache é criada quando necessária, sem recálculo da liga nem alteração de semanas fechadas.
+
 - **Card Lab:** novos campos ou opções em `js/card-design.js` precisam de frontend e de `saveTheme`, que valida o mesmo esquema no servidor. CSS e mudanças visuais de paletas não exigem publicar Functions.
 - **Avaliações e evolução:** `js/utils.js` e os módulos de cálculo/coleção são partilhados. Identificar os consumidores efetivos dos módulos alterados antes de preparar os seletores; o [relatório do update](../reports/path-update-2026-10-18.md) conserva o âmbito histórico daquela alteração, não uma lista universal para qualquer correção.
 - **Push:** atualizar a chave privada no Secret Manager exige republicar `pushDeviceAction` e `onNotificationPush`. Atualizar apenas o frontend não ativa a nova versão do segredo nas funções.

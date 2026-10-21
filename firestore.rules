@@ -2,6 +2,14 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signedIn() { return request.auth != null; }
+  match /homeSignals/{uid} {
+   allow get: if active() && (uid == 'global' || uid == request.auth.uid);
+   allow list, write: if false;
+  }
+  match /eventSignals/{id} {
+   allow get: if active();
+   allow list, write: if false;
+  }
   function freshTokens() { let path=/databases/$(database)/documents/users/$(request.auth.uid); return !exists(path) || request.auth.token.get('auth_time',0)>=get(path).data.get('tokensValidAfter',0); }
   function active() { return signedIn() && freshTokens() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.disabled == false; }
   function owner(uid) { return signedIn() && freshTokens() && request.auth.uid == uid; }

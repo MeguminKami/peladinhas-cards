@@ -1,3 +1,6 @@
+import { pathMissionEntry, pathReviewText } from "./path-entry.js";
+import { startRevisionUpdates } from "./revision-updates.js";
+export { pathMissionEntry };
 import { PATH_CARD_EDITIONS } from "./path-card-designs.js";
 import { pathObjectiveLines, pathObjectiveRequirements } from "./path-missions.js";
 import { pathReviewDeadline, pathUsesRatings } from "./path-window.js";
@@ -31,99 +34,9 @@ const missionTitle = (offer) => esc(offer.title || pathObjectiveText(offer.objec
 const missionConditions = (offer) => offer.objective.kind === "conditions"
   ? `<ul class="path-mission-conditions" aria-label="Condições da missão">${pathObjectiveLines(offer.objective).map((line) => `<li>${esc(line)}</li>`).join("")}</ul>` : "";
 
-export function pathMissionEntry(
-  state,
-  { rewards = [], uid = state?.uid } = {},
-) {
-  const active = state?.active || state?.pending?.[0],
-    result = state?.lastResult;
-  const node = pathNode(active?.nodeId);
-  const discovery = PATH_FUSIONS.find(
-    (fusion) =>
-      !(state?.unifiedFusions || []).includes(fusion.id) &&
-      fusion.routes.some((id) =>
-        [0, 1].some((lane) => state?.nodes?.[`${id}-4-${lane}`]?.completedAt),
-      ),
-  );
-  const minutes = active?.reviewDeadline
-    ? Math.max(0, Math.ceil((active.reviewDeadline - Date.now()) / 60000))
-    : 0;
-  const frozen = !!(active?.frozenAt || active?.gameId);
-  const stateText = frozen
-    ? active.reviewDeadline
-      ? minutes
-        ? `Em avaliação · faltam ${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`
-        : "Prazo terminado · A apurar"
-      : "Escolha bloqueada · Missão associada a um jogo"
-    : active
-      ? `Missão preparada para o próximo jogo${state?.pending?.length ? ` · ${state.pending.length} em avaliação` : ""}`
-      : discovery
-        ? `Nova possibilidade: ${discovery.label}`
-        : result?.reward?.specialId
-          ? `Carta permanente conquistada: ${PATH_CARD_EDITIONS[result.reward.specialId]?.name || "A tua assinatura"}`
-          : "Os teus progressos ficam guardados em cada percurso.";
-  return {
-    id: "player-path",
-    type: "PLAYER_PATH",
-    icon: "path",
-    href: "#/missions/path",
-    mission:
-      active && node
-        ? {
-            nodeId: node.id,
-            nodeNumber: node.tier + 1,
-            nodeLabel: node.label,
-            routeLabel: pathRoute(node.route).label,
-            offer: active.offer,
-            boosts: pathRewardPreview(node, rewards, uid),
-            cardName:
-              node.specialId ||
-              (active.offer.legacyFinalEligible &&
-                (node.tier === 9 ||
-                  (node.style === "fusion" && node.tier === 0)))
-                ? pathRoute(node.route).cardName
-                : null,
-            counts: frozen ? active.ratingCounts || {} : null,
-            rated: pathUsesRatings(active.offer.objective),
-            criteria: pathObjectiveRequirements(active.offer.objective)
-              .criteria,
-          }
-        : null,
-    title: active
-      ? pathObjectiveText(active.offer.objective)
-      : result?.status === "failure"
-        ? "Novo jogo. Nova oportunidade."
-        : "Escolhe o teu próximo desafio",
-    description: active
-      ? `${pathNode(active.nodeId)?.label || "O teu percurso"} · ${active.waitingReason || "No próximo jogo em que participares."}`
-      : "Explora o teu caminho, conquista atributos e desbloqueia cartas permanentes.",
-    done: state?.nodes?.[active?.nodeId || result?.nodeId]?.progress || 0,
-    total: 100,
-    stateText,
-    stateIcon: frozen
-      ? active.reviewDeadline
-        ? "ratingAverage"
-        : "lock"
-      : result?.reward?.specialId
-        ? "gift"
-        : "path",
-    started:
-      !!state?.activePath ||
-      !!state?.selectedNode ||
-      !!active ||
-      Object.keys(state?.nodes || {}).length > 0,
-    routeLabel:
-      pathRoute(
-        pathVisibleRoute(
-          state || {},
-          pathNode(active?.nodeId || state?.selectedNode)?.route ||
-            state?.activePath,
-        ),
-      )?.label || "A tua próxima especialização",
-  };
-}
 export function pathMissionSpotlight(entry) {
   const progress = Math.min(100, Math.max(0, entry.done || 0));
+  const reviewText = entry.reviewDeadline ? pathReviewText(entry.reviewDeadline) : entry.stateText;
   if (entry.mission) {
     const mission = entry.mission;
     const lines =
@@ -135,7 +48,7 @@ export function pathMissionSpotlight(entry) {
 <div class="path-chosen-objective"><div class="path-spotlight-copy"><p class="path-chosen-node">${esc(mission.routeLabel)} <span>· Nó ${String(mission.nodeNumber).padStart(2, "0")} · ${esc(mission.nodeLabel.split(" · ")[0])}</span></p>
 ${missionScope(!!mission.counts)}<h2>${esc(lines.length === 1 ? lines[0] : mission.offer.title || "A tua missão")}</h2>
 ${lines.length > 1 ? `<ul class="path-mission-conditions">${lines.map((line) => `<li>${esc(line)}</li>`).join("")}</ul>` : ""}
-${mission.counts ? `<p class="path-chosen-review">${icon(entry.stateIcon || "lock")}${esc(entry.stateText)}</p>${mission.rated ? `<p class="path-spotlight-votes">${mission.criteria.map((key) => `${esc({ attack: "Ataque", passing: "Passe", physical: "Físico", defense: "Defesa", goalkeeping: "GR", attitude: "Atitude" }[key])}: <b>${mission.counts[key] || 0}/7 votos</b>`).join(" · ")}</p>` : ""}` : ""}</div>
+${mission.counts ? `<p class="path-chosen-review">${icon(entry.stateIcon || "lock")}<span${entry.reviewDeadline ? ` data-path-review="${entry.reviewDeadline}"` : ""}>${esc(reviewText)}</span></p>${mission.rated ? `<p class="path-spotlight-votes">${mission.criteria.map((key) => `${esc({ attack: "Ataque", passing: "Passe", physical: "Físico", defense: "Defesa", goalkeeping: "GR", attitude: "Atitude" }[key])}: <b>${mission.counts[key] || 0}/7 votos</b>`).join(" · ")}</p>` : ""}` : ""}</div>
 <div class="path-chosen-advance"><strong>+${mission.offer.advance}<small>%</small></strong><span>avanço se cumprires</span></div></div>
 <div class="path-chosen-outcome"><div class="path-chosen-progress"><span class="path-chosen-label">PROGRESSO DO NÓ <b>${progress}%</b></span><span class="path-spotlight-meter" role="progressbar" aria-label="Progresso atual do nó" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="--progress:${progress}%"></i></span><small>O avanço extra passa ao nó seguinte.</small></div>
 <div class="path-chosen-prize"><span class="path-chosen-label">RECOMPENSA DO NÓ (AOS 100%)</span><div class="path-chosen-rewards">${pathRewardMarkup(mission.boosts, mission.cardName)}</div></div></div>
@@ -181,13 +94,14 @@ export async function pathsPage(ctx, requestedNodeId) {
     animateResult = false,
     editingPrepared = false;
   let lastPoll = Date.now();
+  const observeChanges = typeof DB.watchHomeSignals === "function";
   const clock = setInterval(() => {
     if (disposed) return;
     document.querySelectorAll("[data-path-deadline]").forEach((el) => {
       el.textContent = remainingTime(Number(el.dataset.pathDeadline));
     });
     if (
-      !document.hidden &&
+      !observeChanges && !document.hidden &&
       !document.querySelector("[role=dialog]") &&
       !inFlight &&
       (state.pending || []).length &&
@@ -201,6 +115,16 @@ export async function pathsPage(ctx, requestedNodeId) {
     disposed = true;
     clearInterval(clock);
   });
+  if (observeChanges) ctx.cleanup(startRevisionUpdates({
+    subscribe: (changed, error) => DB.watchHomeSignals(ctx.user.uid, changed, error), ignoreInitial: true,
+    isCurrent: () => !disposed && (location.hash === "#/missions/path" || location.hash.startsWith("#/missions/path/")),
+    validUntil: Math.min(...[state.active, ...(state.pending || [])].map(attempt => attempt?.reviewDeadline).filter(deadline => deadline > Date.now())),
+    refresh: async () => {
+      if (document.querySelector("[role=dialog]") || inFlight) throw Error("Aguardar a interação em curso");
+      await action(null, "sync", {}, true);
+      return { validUntil: Math.min(...[state.active, ...(state.pending || [])].map(attempt => attempt?.reviewDeadline).filter(deadline => deadline > Date.now())) };
+    },
+  }));
   function remainingTime(deadline) {
     const minutes = Math.max(0, Math.ceil((deadline - Date.now()) / 60000));
     return minutes

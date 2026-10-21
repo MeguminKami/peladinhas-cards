@@ -1098,7 +1098,8 @@ export function managedEvents(rebuild) {
         );
       } catch(error) {await recordTaskFailure(event.id,error,issues);}
     }
-    return {issues};
+    const futureReward = await db().collection("eventRewards").where("expiresAt", ">", Timestamp.fromMillis(Date.now())).orderBy("expiresAt").limit(1).get();
+    return { issues, events, futureRewards: rows(futureReward) };
   }
   return { action, vote, details, claim, scheduled };
 }

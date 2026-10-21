@@ -1,4 +1,5 @@
 import { policySchedule, policyWritten, policyCall, auditSystem } from "./policy-runtime.js";
+import { nextNotificationDeadline } from "../js/notification-deadline.js";
 import { policyAt, isQuietHour, canManage, budgetWindow } from "../js/system-policy.js";
 import { gameFeedbackProgress } from "../js/game-feedback-status.js";
 import { HttpsError } from "firebase-functions/v2/https";
@@ -334,13 +335,13 @@ export function notificationFunctions(notify) {
   );
   const scheduledNotifications = policySchedule("scheduledNotifications",
     {
-      schedule: "every 15 minutes",
+      schedule: "0 * * * *",
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
       retryCount: 3,
     },
     async () => {
-      if (!policyAt().notifications.enabled || isQuietHour(policyAt().notifications)) return;
+      if (!policyAt().notifications.enabled || isQuietHour(policyAt().notifications)) return { ok: true, nextAt: Date.now() + 3600000 };
       const now = new Date(),
         today = dayFormat.format(now);
       const [year, month, dayOfMonth] = today.split("-").map(Number);
@@ -399,6 +400,9 @@ export function notificationFunctions(notify) {
       );
       for (const event of events)
         await eventNotices(event.id, event, users, games, now);
+      // Recheck the next morning, day boundary or feedback reminder deadline;
+      // do not reread every game's feedback in every quiet hour.
+      return { ok: true, nextAt: nextNotificationDeadline(games, events, { now: +now, feedbackHours: policyAt().notifications.feedbackHours }) };
     },
   );
   return { onGameNotifications, onEventNotifications, scheduledNotifications, ratingSubmissionStatus, sendRatingReminders };

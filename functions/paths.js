@@ -1,4 +1,5 @@
 import { pathGameCoreSignature } from "./path-game-signature.js";
+import { nextHomeBoundary } from "../js/data-boundary.js";
 import {
   pathHistoricalSummary,
   pathWindowResult,
@@ -673,6 +674,7 @@ export function pathFunctions(rebuildPlayer) {
       }
     }
     if (failures.length) throw Error(failures.join("; "));
+    return { ok: true, nextAt: nextHomeBoundary(states.docs.map(doc => doc.data())) };
   }
   return {
     syncGame: (gameId) => sweep({ gameId }),
@@ -686,7 +688,7 @@ export function pathFunctions(rebuildPlayer) {
     ),
     settlePaths: policySchedule(
       "settlePaths",
-      { schedule: "every 5 minutes", timeZone: "Europe/Lisbon" },
+      { schedule: "0 * * * *", timeZone: "Europe/Lisbon" },
       () => sweep(),
     ),
   };

@@ -9,6 +9,7 @@ import {
 } from "firebase-functions/v2/firestore";
 import { policyAt, setPolicyProvider, canManage } from "../js/system-policy.js";
 import { cardWeek } from "../js/card-week.js";
+import { runChangedMaintenance } from "./maintenance-gate.js";
 const context = new AsyncLocalStorage();
 setPolicyProvider(() => context.getStore()?.document || null);
 const db = () => getFirestore();
@@ -42,6 +43,7 @@ export const endpointCapability = (name) =>
                 ? "operations"
                 : null;
 const reads = new Set([
+  "getHome",
   "getPath",
   "getEvent",
   "listEvents",
@@ -316,7 +318,10 @@ export function policySchedule(name, options, handler) {
           return { current: true };
       }
       try {
-        return await runTracked(name, () => handler(event), cycleKey);
+        return await runTracked(name, () =>
+          ["closeEvents", "settlePaths", "refreshCardCollection", "scheduledNotifications"].includes(name) && (event?.scheduleTime || event?.incremental)
+            ? runChangedMaintenance(name, () => handler(event))
+            : handler(event), cycleKey);
       } catch (error) {
         if (error.code === "aborted") return { running: true };
         throw error;

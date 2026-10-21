@@ -1,4 +1,6 @@
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
+import { homeFunctions } from "./home-cache.js";
+import { nextHomeBoundary } from "../js/data-boundary.js";
 import { passwordRecoveryFunctions } from "./password-recovery.js";
 import { maintenanceFunctions } from "./maintenance.js";
 import { pathFunctions } from "./paths.js";
@@ -988,7 +990,7 @@ async function publishWeeklyCard(uid, snapshot, cycle) {
   });
 }
 export const closeCardWeek = policySchedule("closeCardWeek",
-  { schedule: "every 15 minutes", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  { schedule: "0 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
     if(cardWeek().phase!=="closed") return;
     const users = data(await db.collection("users").get()).filter(
@@ -998,7 +1000,7 @@ export const closeCardWeek = policySchedule("closeCardWeek",
   },
 );
 export const openCardWeek = policySchedule("openCardWeek",
-  { schedule: "every 15 minutes", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  { schedule: "0 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
     if(cardWeek().phase!=="open") return;
     const users = data(await db.collection("users").get()).filter(
@@ -1035,7 +1037,8 @@ export const refreshCardCollection = policySchedule("refreshCardCollection",
       await refreshPlayerCollection(user.uid, context);
     await settleCollectionPeriods(context);
     await ensureFuttiesVote(context);
-    await closeEvents.run({});
+    await closeEvents.run({ incremental: true });
+    return { ok: true, nextAt: nextHomeBoundary(context) };
   },
 );
 export const selectWeeklyCard = policyCall("selectWeeklyCard",async (request) => {
@@ -1449,6 +1452,12 @@ export const {
   listEvents,
   claimMission,
 } = eventFunctions(buildHistory);
+
+export const { getHome, onHomeSource, onHomeFeedback, onHomeVote } = homeFunctions(listEvents, {
+  loadEvent: (request, eventId) => getEvent.run({ ...request, data: { eventId } }),
+  settleEvents: () => closeEvents.run({ incremental: true }),
+  settlePath: request => pathEndpoints.pathAction.run({ ...request, data: { action: "sync" } }),
+});
 
 const pathEndpoints = pathFunctions(buildHistory);
 export const { getPath, pathAction, onPathGame, onPathSummary, settlePaths } = pathEndpoints;

@@ -4,6 +4,8 @@
 
 ## Escolher pelo tipo de alteração
 
+Para a cache do início: `npm.cmd run test:home-cache` verifica versões, prazos e navegação com fixtures; `npm.cmd run test:home-cache:backend` verifica isolamento, invalidação, autorização e leituras num emulador demo. A medição com 20 jogadores e os seletores de publicação estão no [relatório de 21/10/2026](../reports/home-read-cache-2026-10-21.md).
+
 Para redução de leituras: `npm.cmd run test:read-safety` verifica isolamento, snapshots offline, deduplicação e bloqueio de rede real. `npm.cmd run test:reads` compara o commit `056c32e` com o código atual, num emulador demo dedicado (Firestore 8090), contando documentos lidos pelo SDK e verificando resultados equivalentes. Os ficheiros de medição ficam em `test-results/read-budget-*.json`, ignorados pelo Git. Este teste apaga os dados do projeto demo entre cenários; nunca apontar para produção nem para um emulador com dados de trabalho a preservar.
 
 Os testes de browser usam `tests/browser-sandbox.mjs`: um pedido a Google APIs, Functions, Realtime Database ou Storage reais é bloqueado e faz o teste falhar ao fechar o browser. O CDN estático `gstatic.com` continua permitido. As suites backend exigem projeto `demo-` e `FIRESTORE_EMULATOR_HOST` antes da inicialização do Admin SDK; executar diretamente sem esses valores falha. Os comandos npm de emuladores usam configuração CLI isolada, sem tokens herdados e sem debug do ambiente. Consultar [desenvolvimento](development.md) para fixtures/emuladores e [diagnósticos](firestore-read-diagnostics.md) para recolhas explícitas.

@@ -13,7 +13,7 @@ import {
 export function homeCardPanel(player, league) {
   if (!player)
     return `<section class="panel my-card-panel"><h2>A minha carta</h2><p>O teu perfil está em preparação.</p>${linkButton("#/profile", "Ver perfil", "secondary")}</section>`;
-  const games = league.games.filter((game) =>
+  const games = (league.personalGames || league.games).filter((game) =>
     participants(game).includes(player.uid),
   );
   const recent = games

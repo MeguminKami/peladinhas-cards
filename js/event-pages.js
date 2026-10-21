@@ -1,5 +1,6 @@
 import { personalMissionBoard, bindPersonalMissionBoard } from "./mission-participants.js";
 import { startLivePoll } from "./live-poll.js";
+import { startRevisionUpdates } from "./revision-updates.js";
 import { challengeRules } from "./event-objective-view.js";
 import { rewardBreakdown, configuredRewards } from "./reward-presentation.js";
 import {
@@ -193,7 +194,11 @@ export async function managedEventPage(ctx, event) {
   ) {
     let previous = JSON.stringify(event.ranking || []);
     let previousParticipants = JSON.stringify(event.participantProgress || []);
-    polling = startLivePoll(async (isCurrent) => {
+    const observe = task => typeof DB.watchEventSignals === "function"
+      ? startRevisionUpdates({ subscribe: (changed, error) => DB.watchEventSignals(event.id, changed, error), refresh: task, ignoreInitial: true,
+          validUntil: eventEndMillis(event), isCurrent: () => location.hash === `#/event/${event.id}` })
+      : startLivePoll(task, { isCurrent: () => location.hash === `#/event/${event.id}` });
+    polling = observe(async (isCurrent) => {
       try {
         const fresh = await DB.eventDetails(event.id);
         if (!isCurrent()) return;
@@ -232,7 +237,7 @@ export async function managedEventPage(ctx, event) {
           board.innerHTML = `<h2>Classificação em direto</h2>${event.method === "vote" ? `<p>${fresh.totalVotes || 0} votos</p>` : ""}<div class="table-wrap"><table class="event-ranking-table"><thead><tr><th>${event.kind === "mission" ? "Conclusão" : "Posição"}</th><th>Jogador</th><th>${event.method === "vote" ? "Votos" : "Progresso"}</th><th>Recompensa</th></tr></thead><tbody>${rankRows(fresh.ranking || [])}</tbody></table></div>`;
         }
       } catch {}
-    }, { isCurrent: () => location.hash === `#/event/${event.id}` });
+    });
     ctx.cleanup?.(polling);
   }
   const vote = document.querySelector("#event-vote-form");

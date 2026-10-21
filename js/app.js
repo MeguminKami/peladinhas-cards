@@ -36,6 +36,8 @@ import { ticketsPage } from "./tickets.js";
 import { bindThemePicker } from "./themes.js";
 import { startAuth, currentUser, loadProfile, logout } from "./auth.js";
 import { loadLeague } from "./data.js";
+import { startRevisionUpdates } from "./revision-updates.js";
+import { pathReviewText } from "./path-entry.js";
 import { refreshMissionsForCurrentUser, missionList, compareMissionPriority } from "./missions.js";
 import {
   refreshNotifications,
@@ -114,6 +116,13 @@ const ctx = {
         /^#\/(admin|statistics|game)(\/|$)/.test(location.hash),
       );
     bindImages();
+    if (document.querySelector("#main [data-path-review]")) {
+      const clock = setInterval(() => {
+        if (document.hidden) return;
+        document.querySelectorAll("#main [data-path-review]").forEach(element => { element.textContent = pathReviewText(Number(element.dataset.pathReview)); });
+      }, 60000);
+      this.cleanup(() => clearInterval(clock));
+    }
     if (
       this.user &&
       this.realUser?.role === "admin" &&
@@ -156,7 +165,7 @@ const ctx = {
     this.detailCache.clear();
     return this.updateData();
   },
-  updateData() {
+  updateData({ homeOnly = !location.hash || location.hash === "#/" || location.hash === "#" } = {}) {
     if (this.refreshTask) return this.refreshTask;
     const owner = currentUser?.uid;
     const session = authSession;
@@ -186,11 +195,26 @@ const ctx = {
         this.league = null;
         return;
       }
-      const league = await loadLeague();
+      let snapshot;
+      if (homeOnly && typeof DB.getHome === "function") {
+        try { snapshot = await DB.getHome(); }
+        catch (error) {
+          // Rolling deployments may briefly serve the previous backend.
+          if (!["functions/not-found", "functions/unimplemented"].includes(error.code)) throw error;
+          this.homeUnavailable = true;
+        }
+      }
+      if (snapshot) { setPolicyDocument(snapshot.policyDocument); await Firebase.configureAppCheck?.(policyAt()); this.realUser = snapshot.user; this.user = perspectiveUser(snapshot.user); }
+      const league = snapshot?.league || await loadLeague();
       if (currentUser?.uid !== owner || authSession !== session) return;
-      const missions = await refreshMissionsForCurrentUser(this.user, league);
+      const missions = snapshot?.missions || await refreshMissionsForCurrentUser(this.user, league);
       if (currentUser?.uid !== owner || authSession !== session) return;
+      // A slow home response must never replace the full model of a page the
+      // player opened while that request was still running.
+      if (snapshot && location.hash && !["#/", "#"].includes(location.hash)) return;
       this.league = league;
+      this.leagueKind = snapshot ? "home" : "full";
+      this.homeSnapshot = snapshot || null;
       this.missions = missions;
       this.loadedAt = Date.now();
       header();
@@ -316,6 +340,35 @@ function home() {
   bindPushSettings(main);
   ctx.cleanup(bindInstallSpotlight(main));
   ctx.cleanup(mountHomePodium(main.querySelector("#home-podium"), players));
+  if (ctx.homeSnapshot && typeof DB.watchHomeSignals === "function") {
+    const owner = currentUser.uid, session = authSession;
+    ctx.cleanup(startRevisionUpdates({
+      versions: ctx.homeSnapshot.versions, validUntil: ctx.homeSnapshot.validUntil,
+      isCurrent: () => currentUser?.uid === owner && authSession === session && (!location.hash || location.hash === "#/" || location.hash === "#"),
+      subscribe: (changed, error) => DB.watchHomeSignals(owner, changed, error),
+      refresh: async valid => {
+        let snapshot;
+        try { snapshot = await DB.getHome(); }
+        catch (error) {
+          if (!valid()) return;
+          if (error.code === "functions/unauthenticated") return logout();
+          if (error.code === "functions/permission-denied") {
+            await ctx.updateData({ homeOnly: false });
+            if (valid()) await route({ cachedOnly: true });
+            return;
+          }
+          throw error;
+        }
+        if (!valid()) return;
+        setPolicyDocument(snapshot.policyDocument);
+        ctx.realUser = snapshot.user; ctx.user = perspectiveUser(snapshot.user);
+        ctx.league = snapshot.league; ctx.missions = snapshot.missions;
+        ctx.homeSnapshot = snapshot; ctx.leagueKind = "home"; ctx.loadedAt = Date.now();
+        await route({ cachedOnly: true });
+        return snapshot;
+      },
+    }));
+  }
 }
 function playersPage() {
   ctx.render(
@@ -440,10 +493,12 @@ async function route({ cachedOnly = false } = {}) {
     authPage(ctx);
     return;
   }
-  const cached = ctx.league && ctx.realUser?.uid === currentUser.uid;
+  const homeOnly = !location.hash || location.hash === "#/" || location.hash === "#";
+  const useHome = homeOnly && typeof DB.getHome === "function" && !ctx.homeUnavailable;
+  const cached = ctx.league && ctx.realUser?.uid === currentUser.uid && (useHome ? ctx.leagueKind === "home" : ctx.leagueKind !== "home");
   if (!cached) setMain(skeleton());
   try {
-    if (!cached) await ctx.updateData();
+    if (!cached) await ctx.updateData({ homeOnly });
     else {
       ctx.user = perspectiveUser(ctx.realUser);
       if (!cachedOnly && Date.now() - ctx.loadedAt > 30000) {
@@ -476,6 +531,10 @@ async function route({ cachedOnly = false } = {}) {
       }
     }
     if (turn !== routeNumber) return;
+    if ((!homeOnly && ctx.leagueKind === "home") || (useHome && !ctx.homeUnavailable && ctx.leagueKind !== "home")) {
+      await ctx.updateData({ homeOnly });
+      if (turn !== routeNumber) return;
+    }
     if (!ctx.user) {
       ctx.render(
         empty(
@@ -489,7 +548,7 @@ async function route({ cachedOnly = false } = {}) {
       return;
     }
     header();
-    if (!ctx.user.disabled) ensureOwnHistory();
+    if (!ctx.user.disabled && !homeOnly) ensureOwnHistory();
     if (ctx.user.disabled)
       return ctx.render(
         empty("Conta desativada", "Contacta o apoio da liga.", "", "shield"),
@@ -615,6 +674,8 @@ if (configured)
       ctx.refreshTask = null;
       ctx.detailCache.clear();
       ctx.league = null;
+      ctx.homeSnapshot = null;
+      ctx.homeUnavailable = false;
       ctx.realUser = null;
       ctx.user = null;
       ctx.missions = [];

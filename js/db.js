@@ -40,6 +40,23 @@ export const read = async (path) => {
   return s.exists() ? { ...s.data(), id: s.id } : null;
 };
 export const users = () => list("users");
+export const getHome = async () => {
+  for (let attempt = 0; ; attempt++) {
+    try { return (await callAdmin("getHome", {}, { timeout: 125000 })).data; }
+    catch (error) {
+      if (error.code !== "functions/unavailable" || attempt >= 2) throw error;
+      await new Promise(resolve => setTimeout(resolve, 800 * (attempt + 1)));
+    }
+  }
+};
+export const watchHomeSignals = (uid, callback, error) => {
+  const stops = ["global", uid].map((id, index) => onSnapshot(doc(db, "homeSignals", id), snapshot => callback(index, snapshot.data()?.version || "initial"), error));
+  return () => stops.forEach(stop => stop());
+};
+export const watchEventSignals = (eventId, callback, error) => {
+  const stops = ["homeSignals/global", `eventSignals/${eventId}`].map((path, index) => onSnapshot(doc(db, path), snapshot => callback(index, snapshot.data()?.version || "initial"), error));
+  return () => stops.forEach(stop => stop());
+};
 export const games = () => list("games");
 export const tickets = (user) =>
   list(
