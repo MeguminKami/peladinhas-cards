@@ -53,7 +53,8 @@ export function cardWeek(date = new Date()) {
   // effective instant. Other settings still use policyAt(the actual time).
   const opening=day=>policyAt(lisbonTime(day,23)).cycle.openHour;
   if (+date < +lisbonTime(start,opening(start))) start = new Date(+start - 7 * DAY);
-  const {openHour,closeHour}=policyAt(lisbonTime(start,23)).cycle;
+  const {openHour}=policyAt(lisbonTime(start,23)).cycle;
+  const closeHour=policyAt(lisbonTime(new Date(+start+6*DAY),23)).cycle.closeHour;
   const opensAt = lisbonTime(start, openHour),
     closesAt = lisbonTime(new Date(+start + 6 * DAY), closeHour),
     nextOpensAt = lisbonTime(new Date(+start + 7 * DAY), opening(new Date(+start + 7 * DAY)));
@@ -74,10 +75,16 @@ export function cardWeekBounds(id) {
       ((jan4.getUTCDay() + 6) % 7) * DAY +
       ((week - 1) * 7 + 3) * DAY,
   );
-  const {openHour,closeHour}=policyAt(lisbonTime(start,23)).cycle;
+  const {openHour}=policyAt(lisbonTime(start,23)).cycle;
+  const closeHour=policyAt(lisbonTime(new Date(+start+6*DAY),23)).cycle.closeHour;
   return {
     opensAt: lisbonTime(start, openHour),
     closesAt: lisbonTime(new Date(+start + 6 * DAY), closeHour),
     nextOpensAt: lisbonTime(new Date(+start + 7 * DAY), policyAt(lisbonTime(new Date(+start + 7*DAY),23)).cycle.openHour),
   };
+}
+export function canReopenWeeklyCard(snapshot, cycle) {
+  const millis=value=>value?.toMillis?.() ?? +new Date(value);
+  return !!snapshot?.locked && snapshot.weekId===cycle.weekId && cycle.phase==="open" &&
+    millis(snapshot.closesAt)<+cycle.closesAt;
 }

@@ -47,7 +47,7 @@ Um rascunho não determina esta exclusão. Uma nota de zero é uma avaliação v
 flowchart TB
     classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;
     A["Quinta · 12:00<br/>Abre o ciclo"] --> B["Jogos e evolução"]
-    B --> C["Quarta · 12:00<br/>Fecha e guarda a carta"]
+    B --> C["Quarta · 18:00<br/>Fecha e guarda a carta"]
     C --> D["Pausa"]
     D --> A
 ```
@@ -87,7 +87,7 @@ O ranking semanal considera o ciclo e exige pelo menos duas avaliações recebid
 
 ## Ciclo semanal
 
-O ciclo abre à quinta-feira às 12:00 e fecha à quarta-feira às 12:00, em Lisboa. A pausa dura até à quinta-feira seguinte às 12:00. A conversão respeita inverno/verão e não depende do fuso do dispositivo.
+Desde 21/10/2026, o ciclo abre à quinta-feira às 12:00 e fecha à quarta-feira às 18:00, em Lisboa. A pausa dura até à quinta-feira seguinte às 12:00. A conversão respeita inverno/verão e não depende do fuso do dispositivo. Os ciclos anteriores mantêm o fecho histórico às 12:00. Uma carta da semana corrente bloqueada pelo horário anterior é reaberta durante a extensão, ao atualizar o histórico, e volta a fechar às 18:00; semanas passadas não são reescritas. Configurações explícitas posteriores podem definir outro calendário. [Transição e validação](../reports/weekly-close-18-2026-10-21.md).
 
 As cartas na página principal e na lista de jogadores mostram apenas setas verdes ou vermelhas para a evolução de OVR e atributos face à semana anterior. Só no perfil são mostradas as diferenças numéricas: OVR, os 12 atributos e um resumo de quantos subiram ou desceram. Sem carta da semana anterior, não se inventa uma variação.
 

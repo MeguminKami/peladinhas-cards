@@ -147,23 +147,21 @@ const chapters = [
 ];
 export const PATH_FUSIONS = [
   {
-    id: "fusion-attack",
-    label: "Atacante completo",
-    routes: ["shooting", "passing"],
-    cardName: "Dupla Ameaça",
+    id: "fusion-keeper", label: "Dono da Área", position: "GR", icon: "cleanSheets",
+    routes: ["goalkeeping", "positioning"], cardName: "Dono da Área",
   },
   {
-    id: "fusion-wall",
-    label: "Fortaleza",
-    routes: ["defending", "goalkeeping"],
-    cardName: "Fortaleza",
+    id: "fusion-central", label: "Central Dominante", position: "DEF", icon: "shield",
+    routes: ["defending", "physical"], cardName: "Central Dominante",
   },
   {
-    id: "fusion-engine",
-    label: "Motor criativo",
-    routes: ["stamina", "vision"],
-    cardName: "Dínamo",
+    id: "fusion-winger", label: "Desequilibrador", position: "ALA", icon: "ratingStreak",
+    routes: ["pace", "dribbling"], cardName: "Desequilibrador",
   },
+  { id: "fusion-maestro", label: "Maestro", position: "MED", icon: "ratingAverage",
+    routes: ["passing", "vision"], cardName: "Maestro" },
+  { id: "fusion-predator", label: "Predador Completo", position: "AV", icon: "ball",
+    routes: ["shooting", "dribbling"], cardName: "Predador Completo" },
 ];
 export const PATH_NODES = [
   ...PATH_ROUTES.flatMap((route) =>
@@ -525,7 +523,7 @@ export function createPathOffers(
     return pathMissionTemplates(node.route, stage, difficulty).map(
       (template) => ({
         ...template,
-        objective: pathRareObjective(template.objective, advance),
+        objective: pathRareObjective(template.objective, advance, node.route),
         id: String(difficulty),
         difficulty,
         proposalVersion: 4,

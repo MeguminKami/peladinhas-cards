@@ -1,6 +1,6 @@
 # Diagnósticos sem repetir leituras Firestore
 
-[← Documentação](../README.md) · [Plano](../plans/firestore-read-reduction.md) · [Resultados de 19/10/2026](../reports/firestore-read-reduction-2026-10-19.md)
+[← Documentação](../README.md) · [Desenvolvimento local](development.md) · [Resultados de 19/10/2026](../reports/firestore-read-reduction-2026-10-19.md)
 
 As sete auditorias abaixo usam `scripts/firestore-audit-cache.mjs`. Por defeito, analisam exclusivamente um snapshot local. Uma resposta ausente interrompe a análise sem contactar Google APIs. Não há recolha automática nem abertura de credenciais no modo offline.
 

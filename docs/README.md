@@ -18,7 +18,13 @@
 
 [Autoavaliação sem GR: correção histórica e validação](reports/goalkeeping-optout-2026-10-19.md).
 
-[Calibrar missões com estatísticas novas](guides/path-calibration.md) · [Análise de golos de 19/10/2026](reports/path-goal-calibration-2026-10-19.md).
+[QuestETC — atualizar missões, raridades e alvos](../QuestETC.md) · [Procedimento técnico](guides/path-calibration.md) · [Análise de golos de 19/10/2026](reports/path-goal-calibration-2026-10-19.md).
+
+[Ultimate ETC: dificuldade superior à Ícone — 21/10/2026](reports/path-ultimate-2026-10-21.md).
+
+[Cinco fusões por posição: missões, cartas e publicação — 21/10/2026](reports/path-position-fusions-2026-10-21.md).
+
+[Fecho semanal à quarta-feira às 18h e reabertura da semana corrente](reports/weekly-close-18-2026-10-21.md).
 
 | Quero trabalhar no projeto                           | Quero perceber o produto                                 | Quero publicar                                  |
 | :--------------------------------------------------- | :------------------------------------------------------- | :---------------------------------------------- |
@@ -50,7 +56,7 @@ flowchart TB
 
 ## Desenvolvimento e operação
 
-[Plano de redução das leituras do Firestore](plans/firestore-read-reduction.md): isolamento do desenvolvimento, diagnósticos reutilizáveis e otimização de missões, recálculos e automações. Implementação local de 19/10/2026, sem publicação. [Resultados medidos e estimativas](reports/firestore-read-reduction-2026-10-19.md) · [Procedimento de diagnósticos](guides/firestore-read-diagnostics.md).
+[Redução das leituras do Firestore](reports/firestore-read-reduction-2026-10-19.md): isolamento do desenvolvimento, diagnósticos reutilizáveis e otimização de missões, recálculos e automações. Implementação local de 19/10/2026, sem publicação. [Procedimento de diagnósticos](guides/firestore-read-diagnostics.md).
 
 | Documento                                      | Encontrar aqui                                         |
 | :--------------------------------------------- | :----------------------------------------------------- |
@@ -64,7 +70,7 @@ flowchart TB
 
 ## Alterações e operação atuais
 
-- [Catálogo de missões dos percursos](reference/path-mission-catalogue.md): 270 modelos, objetivos combinados e sorteio com menos repetição; implementação local, com [validação e publicação seletiva](reports/path-expansion-2026-10-20.md). Metas provisórias; ainda sem deploy.
+- [Catálogo de missões dos percursos](reference/path-mission-catalogue.md): 255 modelos, objetivos combinados e sorteio com menos repetição; implementação local, com [validação e publicação seletiva](reports/path-expansion-2026-10-20.md). Metas provisórias; ainda sem deploy.
 - [Escolhe o teu caminho!](reference/player-paths.md): percursos pessoais, missões para o próximo jogo e cartas permanentes; [interface compacta e validação](reports/path-interface-2026-10-19.md).
 - [Update de Escolhe o teu caminho!](reports/path-update-2026-10-18.md): caminho ativo, fusões desbloqueáveis, reroll diário global, sete votos por critério e dificuldade final desde +10; implementação local concluída, com [validação e publicação seletiva](reports/path-update-2026-10-18.md).
 - [Card Lab](reference/card-lab.md): ferramentas, paletas, luz, traçado e projetos.

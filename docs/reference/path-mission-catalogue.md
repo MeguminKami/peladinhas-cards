@@ -1,8 +1,8 @@
 # Catálogo de missões dos percursos
 
-Referência do código local em 20 de outubro de 2026. [Funcionamento](player-paths.md) · [Validação](../reports/path-expansion-2026-10-20.md).
+Referência do código local em 21 de outubro de 2026. [Funcionamento](player-paths.md) · [Cinco fusões e validação atual](../reports/path-position-fusions-2026-10-21.md).
 
-São **225 modelos**: 15 por cada um dos 12 atributos e das três fusões. Este inventário foi extraído de [path-missions.js](../../js/path-missions.js). Novas propostas são v4; a correção de 20/10 atualiza objetivos defensivos desajustados e exigências de derrota/empate em propostas sem jogo associado. Tentativas congeladas e concluídas conservam as suas metas. Os parâmetros de golos foram revistos com dois jogos reais, incluindo combinações e corte das avaliações às 48 horas; continuam provisórios. [Revisão periódica](../guides/path-calibration.md).
+São **255 modelos**: 15 por cada um dos 12 atributos e das cinco fusões. Este inventário foi extraído de [path-missions.js](../../js/path-missions.js). Novas propostas são v4; a correção de 20/10 atualiza objetivos defensivos desajustados e exigências de derrota/empate em propostas sem jogo associado. Tentativas congeladas e concluídas conservam as suas metas. Os parâmetros de golos foram revistos com dois jogos reais, incluindo combinações e corte das avaliações às 48 horas; continuam provisórios. [Revisão periódica](../guides/path-calibration.md).
 
 ## Como ler
 
@@ -10,7 +10,7 @@ Cada missão vale para o **próximo jogo** do jogador; todas as condições se l
 
 Golos, assistências, resultado e posição são registos do jogo. As avaliações disponíveis são Ataque, Passe, Físico, Defesa, Guarda-redes, Atitude e Desempenho geral. Velocidade, Drible, Resistência, Posicionamento e Compostura recorrem a indicadores aproximados; não há registos de sprints, dribles, minutos, distância ou decisões sob pressão.
 
-A posição GR é obrigatória em Guarda-redes e Fortaleza. Qualquer avaliação na missão exige sete votos válidos por critério no corte das 48 horas; missões sem avaliações apuram no fecho. Falta de amostra ou participação GR não elegível cancela sem perder progresso.
+A posição GR é obrigatória em Guarda-redes e Dono da Área. As cinco fusões mantêm sempre duas avaliações complementares por missão. Qualquer avaliação na missão exige sete votos válidos por critério no corte das 48 horas; missões sem avaliações apuram no fecho. Falta de amostra ou participação GR não elegível cancela sem perder progresso.
 
 ## Velocidade
 
@@ -252,65 +252,102 @@ A posição GR é obrigatória em Guarda-redes e Fortaleza. Qualquer avaliação
 | Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Atitude e Passe **e** Obtém pelo menos 3,5★ em Atitude |
 | Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,5★ em Desempenho geral |
 
-## Atacante completo
+## Dono da Área
 
 | Modelo | Família | Objetivo no próximo jogo |
 | --- | --- | --- |
-| Dupla qualidade | combined-rating | Obtém pelo menos 3,5★ em Ataque **e** Obtém pelo menos 3,5★ em Passe |
-| Marcar e servir | score-and-assist | Marca pelo menos 1 golo **e** Faz pelo menos 1 assistência |
-| Golo construído | action-quality | Marca pelo menos 1 golo **e** Obtém pelo menos 3,25★ em Passe |
-| Criar com ameaça | action-quality | Faz pelo menos 1 assistência **e** Obtém pelo menos 3,25★ em Ataque |
-| Produção completa | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3★ em Ataque **e** Obtém pelo menos 3★ em Passe |
-| Dupla vencedora | result-quality | Vence o jogo **e** Obtém pelo menos 3★ em Ataque **e** Obtém pelo menos 3★ em Passe |
-| Golo e criação coletiva | team-quality | Marca pelo menos 1 golo **e** A tua equipa marca pelo menos 7 golos **e** Obtém pelo menos 3★ em Passe |
-| Assistir e finalizar | action-quality | Marca pelo menos 1 golo **e** Faz pelo menos 1 assistência **e** Obtém pelo menos 3★ em Ataque |
-| Cumprir o papel | games | Joga na posição MED **e** Obtém pelo menos 3,25★ em Ataque |
-| Somar sem perder | nonLoss | Termina o jogo sem perder **e** Obtém pelo menos 3,25★ em Ataque |
-| Equilíbrio de qualidades | ratingMean | Obtém média de pelo menos 3,5★ entre Ataque e Passe **e** Obtém pelo menos 3,25★ em Ataque |
-| Exibição completa | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Desempenho geral |
-| Superar a fasquia | rating | Obtém mais de 3,5★ em Ataque |
-| Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Ataque e Passe **e** Obtém pelo menos 3,25★ em Ataque |
-| Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Desempenho geral |
-
-## Fortaleza
-
-| Modelo | Família | Objetivo no próximo jogo |
-| --- | --- | --- |
-| Dupla muralha | combined-rating | Joga na posição GR **e** Obtém pelo menos 3,5★ em Defesa **e** Obtém pelo menos 3,5★ em Guarda-redes |
-| Bloco protegido | solidity | Joga na posição GR **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa |
-| Fortaleza vencedora | result-quality | Joga na posição GR **e** Vence o jogo **e** Obtém pelo menos 3★ em Defesa **e** Obtém pelo menos 3★ em Guarda-redes |
-| Segurança coletiva | solidity | Joga na posição GR **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3★ em Defesa **e** Obtém pelo menos 3★ em Guarda-redes |
-| Organizar e distribuir | combined-rating | Joga na posição GR **e** Obtém pelo menos 3★ em Defesa **e** Obtém pelo menos 3★ em Guarda-redes **e** Obtém pelo menos 3★ em Passe |
-| Comando coletivo | combined-rating | Joga na posição GR **e** Obtém pelo menos 3,75★ em Atitude **e** Obtém pelo menos 3★ em Defesa **e** Obtém pelo menos 3★ em Guarda-redes |
-| Solidez para ganhar | solidity | Joga na posição GR **e** Vence o jogo **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3★ em Defesa |
-| Saída protegida | solidity | Joga na posição GR **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3★ em Defesa **e** Obtém pelo menos 3★ em Passe |
+| Dominar a área | combined-rating | Joga na posição GR **e** Obtém pelo menos 3,5★ em Defesa **e** Obtém pelo menos 3,5★ em Guarda-redes |
+| Área protegida | solidity | Joga na posição GR **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
+| Última palavra | result-quality | Joga na posição GR **e** Vence o jogo **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
+| Saída segura | combined-rating | Joga na posição GR **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes **e** Obtém pelo menos 3,25★ em Passe |
+| Comandar a linha | combined-rating | Joga na posição GR **e** Obtém pelo menos 4★ em Atitude **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
+| Lançar o contra-ataque | action-quality | Joga na posição GR **e** Faz pelo menos 1 assistência **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
+| Antecipar e distribuir | solidity | Joga na posição GR **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes **e** Obtém pelo menos 3,25★ em Passe |
+| Fechar a vitória | solidity | Joga na posição GR **e** Vence o jogo **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
 | Cumprir o papel | games | Joga na posição GR **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
 | Somar sem perder | nonLoss | Joga na posição GR **e** Termina o jogo sem perder **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
-| Equilíbrio de qualidades | ratingMean | Joga na posição GR **e** Obtém média de pelo menos 3,5★ entre Defesa e Passe **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
+| Equilíbrio de qualidades | ratingMean | Joga na posição GR **e** Obtém média de pelo menos 3,5★ entre Defesa e Guarda-redes **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
 | Exibição completa | combined-rating | Joga na posição GR **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes **e** Obtém pelo menos 3,5★ em Desempenho geral |
-| Superar a fasquia | combined-rating | Joga na posição GR **e** Obtém mais de 3,5★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
-| Qualidade ao serviço da equipa | ratingMean | Joga na posição GR **e** A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Defesa e Passe **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
+| Superar a fasquia | combined-rating | Joga na posição GR **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém mais de 3,5★ em Guarda-redes |
+| Qualidade ao serviço da equipa | ratingMean | Joga na posição GR **e** A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Defesa e Guarda-redes **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes |
 | Participação decisiva | action-quality | Joga na posição GR **e** Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Guarda-redes **e** Obtém pelo menos 3,5★ em Desempenho geral |
 
-## Motor criativo
+## Central Dominante
 
 | Modelo | Família | Objetivo no próximo jogo |
 | --- | --- | --- |
-| Motor com visão | combined-rating | Obtém pelo menos 3,5★ em Passe **e** Obtém pelo menos 3,5★ em Físico |
-| Fôlego criativo | action-quality | Faz pelo menos 1 assistência **e** Obtém pelo menos 3,25★ em Físico |
-| Produção em movimento | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3★ em Passe **e** Obtém pelo menos 3★ em Físico |
-| Motor vencedor | result-quality | Vence o jogo **e** Obtém pelo menos 3★ em Passe **e** Obtém pelo menos 3★ em Físico |
-| Criar para ganhar | result-quality | Faz pelo menos 1 assistência **e** Vence o jogo **e** Obtém pelo menos 3★ em Físico |
-| Criar em conjunto | team-quality | Faz pelo menos 1 assistência **e** A tua equipa marca pelo menos 7 golos **e** Obtém pelo menos 3★ em Físico |
-| Energia com critério | combined-rating | Obtém pelo menos 3,75★ em Atitude **e** Obtém pelo menos 3★ em Passe **e** Obtém pelo menos 3★ em Físico |
-| Ligação entre setores | combined-rating | Obtém pelo menos 3★ em Defesa **e** Obtém pelo menos 3★ em Passe **e** Obtém pelo menos 3★ em Físico |
-| Cumprir o papel | games | Joga na posição MED **e** Obtém pelo menos 3,25★ em Físico |
-| Somar sem perder | nonLoss | Termina o jogo sem perder **e** Obtém pelo menos 3,25★ em Físico |
-| Equilíbrio de qualidades | ratingMean | Obtém média de pelo menos 3,5★ entre Passe e Físico **e** Obtém pelo menos 3,25★ em Físico |
-| Exibição completa | combined-rating | Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
-| Superar a fasquia | rating | Obtém mais de 3,5★ em Físico |
-| Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Passe e Físico **e** Obtém pelo menos 3,25★ em Físico |
-| Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
+| Impor respeito | combined-rating | Obtém pelo menos 3,5★ em Defesa **e** Obtém pelo menos 3,5★ em Físico |
+| Duelo ganho | solidity | A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Segurar os três pontos | result-quality | Vence o jogo **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Construção sem medo | combined-rating | Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Passe **e** Obtém pelo menos 3,25★ em Físico |
+| Liderar o bloco | combined-rating | Obtém pelo menos 4★ em Atitude **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Decidir nas duas áreas | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Recuperar e sair | solidity | A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Passe **e** Obtém pelo menos 3,25★ em Físico |
+| Vitória de aço | solidity | Vence o jogo **e** A tua equipa sofre no máximo 7 golos **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Cumprir o papel | games | Joga na posição DEF **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Somar sem perder | nonLoss | Termina o jogo sem perder **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Equilíbrio de qualidades | ratingMean | Obtém média de pelo menos 3,5★ entre Defesa e Físico **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Exibição completa | combined-rating | Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
+| Superar a fasquia | combined-rating | Obtém mais de 3,5★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Defesa e Físico **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Físico |
+| Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
 
+## Desequilibrador
 
-As propostas novas de 150% e 200% usam o mesmo pequeno degrau adicional sobre 100%: +0,25 estrela num requisito de avaliação (prioritário), ou +1 numa meta numérica ofensiva quando não há avaliações. Só muda um requisito; limites defensivos e posições mantêm-se. No teto, mais de 4,75 estrelas passa a pelo menos 5, nunca mais de 5. As duas raridades têm o mesmo degrau; propostas já reveladas e tentativas existentes não são agravadas.
+| Modelo | Família | Objetivo no próximo jogo |
+| --- | --- | --- |
+| Rasgar a linha | combined-rating | Obtém pelo menos 3,5★ em Ataque **e** Obtém pelo menos 3,5★ em Físico |
+| Mudança de velocidade | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Diagonal de golo | action-quality | Marca pelo menos 1 golo **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Ganhar a linha e servir | action-quality | Faz pelo menos 1 assistência **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Ala decisivo | result-quality | Vence o jogo **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Acelerar a combinação | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Passe **e** Obtém pelo menos 3,25★ em Físico |
+| Abrir a defesa | team-quality | A tua equipa marca pelo menos 7 golos **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Ousadia com critério | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 4★ em Atitude **e** Obtém pelo menos 3,25★ em Físico |
+| Cumprir o papel | games | Joga na posição ALA **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Somar sem perder | nonLoss | Termina o jogo sem perder **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Equilíbrio de qualidades | ratingMean | Obtém média de pelo menos 3,5★ entre Ataque e Físico **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Exibição completa | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
+| Superar a fasquia | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém mais de 3,5★ em Físico |
+| Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Ataque e Físico **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
+
+## Maestro
+
+| Modelo | Família | Objetivo no próximo jogo |
+| --- | --- | --- |
+| Ler antes de receber | combined-rating | Obtém pelo menos 4★ em Atitude **e** Obtém pelo menos 3,5★ em Passe |
+| O último passe | action-quality | Faz pelo menos 1 assistência **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| No centro da decisão | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Ditar a vitória | result-quality | Vence o jogo **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Controlar os dois momentos | combined-rating | Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Defesa **e** Obtém pelo menos 3,25★ em Passe |
+| Fazer jogar a equipa | team-quality | A tua equipa marca pelo menos 7 golos **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Encontrar a abertura | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Passe e chegada | action-quality | Marca pelo menos 1 golo **e** Faz pelo menos 1 assistência **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Cumprir o papel | games | Joga na posição MED **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Somar sem perder | nonLoss | Termina o jogo sem perder **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Equilíbrio de qualidades | ratingMean | Obtém média de pelo menos 3,5★ entre Atitude e Passe **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Exibição completa | combined-rating | Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Passe |
+| Superar a fasquia | combined-rating | Obtém pelo menos 3,5★ em Atitude **e** Obtém mais de 3,5★ em Passe |
+| Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Atitude e Passe **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,25★ em Passe |
+| Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,5★ em Atitude **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Passe |
+
+## Predador Completo
+
+| Modelo | Família | Objetivo no próximo jogo |
+| --- | --- | --- |
+| Criar o próprio espaço | combined-rating | Obtém pelo menos 3,5★ em Ataque **e** Obtém pelo menos 3,5★ em Físico |
+| Instinto e desequilíbrio | action-quality | Marca pelo menos 2 golos **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Atrair e decidir | action-quality | Marca pelo menos 1 golo **e** Faz pelo menos 1 assistência **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Ameaça constante | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Assinar a vitória | result-quality | Marca pelo menos 1 golo **e** Vence o jogo **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Romper o bloco | team-quality | Marca pelo menos 1 golo **e** A tua equipa marca pelo menos 7 golos **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Frieza no último toque | action-quality | Marca pelo menos 1 golo **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 4★ em Atitude **e** Obtém pelo menos 3,25★ em Físico |
+| Decidir em combinação | action-quality | Faz pelo menos 1 assistência **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Passe **e** Obtém pelo menos 3,25★ em Físico |
+| Cumprir o papel | games | Joga na posição AV **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Somar sem perder | nonLoss | Termina o jogo sem perder **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Equilíbrio de qualidades | ratingMean | Obtém média de pelo menos 3,5★ entre Ataque e Físico **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Exibição completa | combined-rating | Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |
+| Superar a fasquia | combined-rating | Obtém mais de 3,5★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Qualidade ao serviço da equipa | ratingMean | A tua equipa marca pelo menos 7 golos **e** Obtém média de pelo menos 3,5★ entre Ataque e Físico **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,25★ em Físico |
+| Participação decisiva | action-quality | Soma pelo menos 3 entre golos e assistências **e** Obtém pelo menos 3,25★ em Ataque **e** Obtém pelo menos 3,5★ em Desempenho geral **e** Obtém pelo menos 3,25★ em Físico |

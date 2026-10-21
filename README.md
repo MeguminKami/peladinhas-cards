@@ -228,7 +228,7 @@ Os objetivos podem ser individuais ou coletivos, com prazo, periodicidade e limi
 
 ### Escolhe o teu caminho!
 
-São 12 especializações e três fusões, com [270 modelos de missão](docs/reference/path-mission-catalogue.md) para o **próximo jogo**. O resumo mostra a missão escolhida, o nó, o progresso, o avanço possível e a recompensa; sem escolha, mantém a apresentação simples. No percurso, o objetivo fica destacado num bloco compacto com a raridade da missão, recompensas integradas e ações claras. **+100% de avanço** e **+1 no atributo** representam coisas diferentes: o ponto é entregue ao completar o nó. [Funcionamento e regras](docs/reference/player-paths.md) · [Validação local](docs/reports/path-interface-2026-10-19.md).
+São 12 especializações e cinco fusões, com [255 modelos de missão](docs/reference/path-mission-catalogue.md) para o **próximo jogo**. O resumo mostra a missão escolhida, o nó, o progresso, o avanço possível e a recompensa; sem escolha, mantém a apresentação simples. No percurso, o objetivo fica destacado num bloco compacto com a raridade da missão, recompensas integradas e ações claras. **+100% de avanço** e **+1 no atributo** representam coisas diferentes: o ponto é entregue ao completar o nó. [Funcionamento e regras](docs/reference/player-paths.md) · [Validação local](docs/reports/path-interface-2026-10-19.md).
 
 ## 08 · Eventos e competições
 

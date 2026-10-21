@@ -1,3 +1,4 @@
+import { FUSION_CARD_EDITIONS } from "./path-fusion-designs.js";
 // Native vector editions: no downloaded artwork or extra rendering dependencies.
 const finals = [
   ["pace", "Rasante", "M61 37 72 15h9l-6 13h14L68 46l5-14Z"],
@@ -20,21 +21,7 @@ const finals = [
   ],
   ["teamwork", "Elo", "M74 21q-15-14-15 5t15 5m2-10q15-14 15 5t-15 5M67 26h16"],
   ["composure", "Imperturbável", "M58 32q8-18 17 0t17 0M61 41h28M75 13v8"],
-  [
-    "fusion-attack",
-    "Dupla Ameaça",
-    "m60 16 13 13-13 13Zm30 0L77 29l13 13ZM73 29h4",
-  ],
-  [
-    "fusion-wall",
-    "Fortaleza",
-    "M59 16h32v19L75 46 59 35ZM67 36V23h16v13M75 23v13",
-  ],
-  [
-    "fusion-engine",
-    "Dínamo",
-    "m75 12 4 10 11 7-11 7-4 10-4-10-11-7 11-7ZM75 22v14",
-  ],
+
 ];
 // Each composition is authored for its own concept; no modulo/recolour template.
 // Concept sheets: docs/plans/path-reward-card-concepts.md.
@@ -123,30 +110,9 @@ const concepts = {
       "28,0 72,0 89,7 98,23 100,65 94,82 78,94 50,100 22,94 6,82 0,65 2,23 11,7",
     art: '<path d="M7 22Q50 3 93 22M12 26Q50 10 88 26M5 70q18-6 45 0t45 0M7 77q18-6 43 0t43 0M12 84q16-5 38 0t38 0M22 91q14-4 28 0t28 0"/><g class="collection-fine"><circle cx="50" cy="22" r="9"/><circle cx="50" cy="22" r="13"/><path d="M8 49h17M75 49h17"/></g>',
   },
-  "fusion-attack": {
-    concept:
-      "A garra do remate encontra a rede de passe: duas ameaças numa identidade.",
-    material: "Metal ofensivo e vidro técnico",
-    outline:
-      "13,0 37,9 50,3 63,9 87,0 100,18 96,79 80,92 61,94 50,100 39,94 20,92 4,79 0,18",
-    art: '<path class="collection-solid" d="M4 15 27 8 11 37ZM4 47l19 29-11-4 6 15-14-9ZM94 15h-9v63h9Z"/><path d="M9 24 18 42l-8-5 10 25M89 78V22L72 12M77 23v51M65 15l24 20M65 38l24 20M65 61l24 20M20 85l30 11 30-11"/><path class="collection-fine" d="M22 49Q50 20 79 50M22 49q29 36 57 1"/><circle cx="50" cy="49" r="7"/>',
-  },
-  "fusion-wall": {
-    concept: "Muralha e baliza unem duas linhas de proteção.",
-    material: "Pedra azul, aço e rede clara",
-    outline:
-      "8,0 24,0 24,7 35,7 35,2 65,2 65,7 76,7 76,0 92,0 100,17 96,80 80,93 50,100 20,93 4,80 0,17",
-    art: '<path class="collection-solid" d="M5 11h19v67L5 74ZM76 11h19v63L76 78ZM21 83h58L50 97Z"/><path d="M11 76V20h11M89 76V20H78M24 79V34Q50 8 76 34v45M31 78V38Q50 18 69 38v40M38 31v47m12-51v51m12-47v47M31 44h38M31 56h38M31 68h38"/><path class="collection-fine" d="M6 30h17M6 44h17M6 58h17M77 30h17M77 44h17M77 58h17M24 87l26 8 26-8"/>',
-  },
-  "fusion-engine": {
-    concept: "Um rotor distribui energia por uma rede de decisões.",
-    material: "Cobre de circuito e núcleo violeta",
-    outline:
-      "50,0 61,6 75,3 83,12 96,15 100,29 96,43 100,57 96,76 86,87 72,91 62,97 50,100 38,97 28,91 14,87 4,76 0,57 4,43 0,29 4,15 17,12 25,3 39,6",
-    art: '<path class="collection-solid" d="M49 8 65 14 52 30ZM84 20 92 35 69 37ZM94 60 83 77 70 55ZM64 88 45 95 50 71ZM20 83 8 67 31 63ZM7 40 14 22 32 43Z"/><circle cx="50" cy="50" r="37"/><circle cx="50" cy="50" r="28" stroke-dasharray="3 6"/><path class="collection-fine" d="M18 14 26 27M82 14 74 27M97 50H80M20 50H3M28 85l9-15M72 85 63 70M37 9l5 17M63 9l-5 17"/>',
-  },
+
 };
-export const PATH_CARD_EDITIONS = Object.fromEntries(
+const specialistEditions = Object.fromEntries(
   finals.map(([id, name, motif]) => [
     `path-${id}`,
     {
@@ -157,3 +123,5 @@ export const PATH_CARD_EDITIONS = Object.fromEntries(
     },
   ]),
 );
+
+export const PATH_CARD_EDITIONS = {...specialistEditions,...FUSION_CARD_EDITIONS};

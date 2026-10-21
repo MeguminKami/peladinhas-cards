@@ -308,7 +308,7 @@ export function policySchedule(name, options, handler) {
           (name === "openCardWeek" && cycle.phase !== "open")
         )
           return { waiting: true };
-        cycleKey = `${cycle.weekId}:${cycle.phase}`;
+        cycleKey = `${cycle.weekId}:${cycle.phase}:${cycle.closesAt.toISOString()}`;
         if (
           (await db().doc(`systemJobs/${name}`).get()).data()?.cycleKey ===
           cycleKey

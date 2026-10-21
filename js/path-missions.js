@@ -208,91 +208,69 @@ const catalogue = {
       r("passing", 3),
     ),
   ],
-  "fusion-attack": [
-    entry("base", "Dupla qualidade", r("attack", 3.5), r("passing", 3.5)),
-    entry("serve", "Marcar e servir", g(), a()),
-    entry("goal-pass", "Golo construído", g(), r("passing")),
-    entry("assist-attack", "Criar com ameaça", a(), r("attack")),
-    entry(
-      "contribute",
-      "Produção completa",
-      contribution(2),
-      r("attack", 3),
-      r("passing", 3),
-    ),
-    entry("win", "Dupla vencedora", win(), r("attack", 3), r("passing", 3)),
-    entry("team", "Golo e criação coletiva", g(), r("passing", 3), team()),
-    entry("complete", "Assistir e finalizar", g(), a(), r("attack", 3)),
-  ],
-  "fusion-wall": [
-    entry("base", "Dupla muralha", r("defense", 3.5), r("goalkeeping", 3.5)),
-    entry("solid", "Bloco protegido", solid(), r("defense")),
-    entry(
-      "win",
-      "Fortaleza vencedora",
-      win(),
-      r("defense", 3),
-      r("goalkeeping", 3),
-    ),
-    entry(
-      "solid-keeper",
-      "Segurança coletiva",
-      solid(),
-      r("defense", 3),
-      r("goalkeeping", 3),
-    ),
-    entry(
-      "pass",
-      "Organizar e distribuir",
-      r("defense", 3),
-      r("goalkeeping", 3),
-      r("passing", 3),
-    ),
-    entry(
-      "attitude",
-      "Comando coletivo",
-      r("defense", 3),
-      r("goalkeeping", 3),
-      r("attitude", 3.75),
-    ),
-    entry("solid-win", "Solidez para ganhar", win(), solid(), r("defense", 3)),
-    entry(
-      "solid-pass",
-      "Saída protegida",
-      solid(),
-      r("defense", 3),
-      r("passing", 3),
-    ),
-  ],
-  "fusion-engine": [
-    entry("base", "Motor com visão", r("physical", 3.5), r("passing", 3.5)),
-    entry("assist", "Fôlego criativo", a(), r("physical")),
-    entry(
-      "contribute",
-      "Produção em movimento",
-      contribution(),
-      r("physical", 3),
-      r("passing", 3),
-    ),
-    entry("win", "Motor vencedor", win(), r("physical", 3), r("passing", 3)),
-    entry("assist-win", "Criar para ganhar", win(), a(), r("physical", 3)),
-    entry("team", "Criar em conjunto", a(), r("physical", 3), team()),
-    entry(
-      "attitude",
-      "Energia com critério",
-      r("physical", 3),
-      r("passing", 3),
-      r("attitude", 3.75),
-    ),
-    entry(
-      "defend",
-      "Ligação entre setores",
-      r("physical", 3),
-      r("passing", 3),
-      r("defense", 3),
-    ),
-  ],
+
 };
+// Two observable qualities per fusion. Positioning/vision/dribbling use proxies,
+// never invented match counters. Every fusion model retains both quality anchors.
+const fusionCriteria = {
+  "fusion-keeper": ["goalkeeping", "defense"],
+  "fusion-central": ["defense", "physical"],
+  "fusion-winger": ["physical", "attack"],
+  "fusion-maestro": ["passing", "attitude"],
+  "fusion-predator": ["attack", "physical"],
+};
+Object.assign(catalogue, {
+  "fusion-keeper": [
+    entry("base", "Dominar a área", r("goalkeeping",3.5), r("defense",3.5)),
+    entry("solid", "Área protegida", solid()),
+    entry("win", "Última palavra", win()),
+    entry("pass", "Saída segura", r("passing")),
+    entry("attitude", "Comandar a linha", attitude()),
+    entry("assist", "Lançar o contra-ataque", a()),
+    entry("solid-pass", "Antecipar e distribuir", solid(),r("passing")),
+    entry("solid-win", "Fechar a vitória", win(),solid()),
+  ],
+  "fusion-central": [
+    entry("base", "Impor respeito", r("defense",3.5),r("physical",3.5)),
+    entry("solid", "Duelo ganho", solid()),
+    entry("win", "Segurar os três pontos", win()),
+    entry("pass", "Construção sem medo", r("passing")),
+    entry("attitude", "Liderar o bloco", attitude()),
+    entry("contribute", "Decidir nas duas áreas", contribution()),
+    entry("solid-pass", "Recuperar e sair", solid(),r("passing")),
+    entry("solid-win", "Vitória de aço", win(),solid()),
+  ],
+  "fusion-winger": [
+    entry("base", "Rasgar a linha", r("physical",3.5),r("attack",3.5)),
+    entry("contribute", "Mudança de velocidade", contribution()),
+    entry("goals", "Diagonal de golo", g()),
+    entry("assist", "Ganhar a linha e servir", a()),
+    entry("win", "Ala decisivo", win()),
+    entry("pass", "Acelerar a combinação", r("passing")),
+    entry("team", "Abrir a defesa", team()),
+    entry("attitude", "Ousadia com critério", attitude()),
+  ],
+  "fusion-maestro": [
+    entry("base", "Ler antes de receber", r("passing",3.5),attitude()),
+    entry("assists", "O último passe", a()),
+    entry("contribute", "No centro da decisão", contribution()),
+    entry("win", "Ditar a vitória", win()),
+    entry("defend", "Controlar os dois momentos", r("defense")),
+    entry("team", "Fazer jogar a equipa", team()),
+    entry("attack", "Encontrar a abertura", r("attack")),
+    entry("serve", "Passe e chegada", g(),a()),
+  ],
+  "fusion-predator": [
+    entry("base", "Criar o próprio espaço", r("attack",3.5),r("physical",3.5)),
+    entry("goals", "Instinto e desequilíbrio", g(2)),
+    entry("serve", "Atrair e decidir", g(),a()),
+    entry("contribute", "Ameaça constante", contribution()),
+    entry("win", "Assinar a vitória", win(),g()),
+    entry("team", "Romper o bloco", g(),team()),
+    entry("attitude", "Frieza no último toque", g(),attitude()),
+    entry("pass", "Decidir em combinação", a(),r("passing")),
+  ],
+});
 
 const conditionKey = (condition) =>
   `${condition.metric}:${condition.criterion || condition.criteria?.join(",") || ""}`;
@@ -465,12 +443,10 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
       positioning: "defense",
       teamwork: "attitude",
       composure: "attitude",
-      "fusion-attack": "attack",
-      "fusion-wall": "defense",
-      "fusion-engine": "physical",
+      ...Object.fromEntries(Object.entries(fusionCriteria).map(([id,criteria])=>[id,criteria[0]])),
     }[routeId] || "attitude";
-  const secondary = primary === "passing" ? "attitude" : "passing";
-  const position = ["goalkeeping", "fusion-wall"].includes(routeId)
+  const secondary = fusionCriteria[routeId]?.[1] || (primary === "passing" ? "attitude" : "passing");
+  const position = ["goalkeeping", "fusion-keeper"].includes(routeId)
     ? "GR"
     : {
         shooting: "AV",
@@ -479,11 +455,12 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
         defending: "DEF",
         physical: "DEF",
         positioning: "DEF",
+        "fusion-central":"DEF", "fusion-winger":"ALA", "fusion-maestro":"MED", "fusion-predator":"AV",
       }[routeId] || "MED";
   const anchor = () => [
     r(primary),
     ...(routeId === "shooting" ? [g()] : []),
-    ...(routeId === "fusion-wall" ? [r("goalkeeping")] : []),
+    ...(fusionCriteria[routeId] ? [r(secondary)] : []),
   ];
   const mean = () => ({
     metric: "ratingMean",
@@ -506,7 +483,7 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
       "Superar a fasquia",
       { ...r(primary, 3.5), comparison: "gt" },
       ...(routeId === "shooting" ? [g()] : []),
-      ...(routeId === "fusion-wall" ? [r("goalkeeping")] : []),
+      ...(fusionCriteria[routeId] ? [r(secondary)] : []),
     ),
     entry(
       "next-team-mean",
@@ -526,10 +503,13 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
   return [...catalogue[routeId], ...extra]
     .filter((template) => difficulty === 0 || template.id !== "victory")
     .map((template) => {
-      const conditions = template.conditions.map((condition) => {
+      const rawConditions = [...template.conditions];
+      for (const criterion of fusionCriteria[routeId] || [])
+        if (!rawConditions.some(row=>row.metric==="rating" && row.criterion===criterion)) rawConditions.push(r(criterion));
+      const conditions = rawConditions.map((condition) => {
         const { metric, target, criterion } = condition;
         if (["rating", "ratingMean"].includes(metric)) {
-          const solo = template.conditions.length === 1;
+          const solo = rawConditions.length === 1;
           const adjusted = solo
             ? (criterion === "attitude"
                 ? [
@@ -553,14 +533,14 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
         }
         if (metric === "goals")
           return g(
-            template.conditions.length === 1
+            rawConditions.length === 1
               ? PATH_GOAL_TARGETS.goals[stage][difficulty]
               : Math.max(
                   target,
                   PATH_GOAL_TARGETS.mixedGoals[stage][difficulty],
                 ),
           );
-        if (metric === "assists" && template.conditions.length === 1)
+        if (metric === "assists" && rawConditions.length === 1)
           return a(PATH_GOAL_TARGETS.assists[stage][difficulty]);
         if (metric === "contributions")
           return contribution(
@@ -575,7 +555,7 @@ export function pathMissionTemplates(routeId, stage = 0, difficulty = 0) {
           return c(metric, PATH_GOAL_TARGETS.teamGoals[stage][difficulty]);
         return { ...condition };
       });
-      if (["goalkeeping", "fusion-wall"].includes(routeId))
+      if (["goalkeeping", "fusion-keeper"].includes(routeId))
         conditions.unshift(keeper());
       const objective = {
         kind: "conditions",

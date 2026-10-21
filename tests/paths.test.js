@@ -55,14 +55,44 @@ test("twelve independent specializations reach fifteen / twenty-five nodes witho
   PATH_NODES.forEach((node) => visit(node));
 });
 test("fusion requires either fifth-stage branch in both areas; no fusion gates a specialist", () => {
-  const fusion = pathNode(PATH_FUSIONS[0].id),
+  const fusion = pathNode("fusion-predator"),
     state = emptyPathState("a");
   state.nodes["shooting-4-1"] = { completedAt: "now" };
   assert.equal(nodeAvailable(fusion, state), false);
-  state.nodes["passing-4-0"] = { completedAt: "now" };
+  state.nodes["dribbling-4-0"] = { completedAt: "now" };
   assert.equal(nodeAvailable(fusion, state), true);
   assert.ok(PATH_CARD_EDITIONS[pathNode(`${fusion.id}-4`).specialId]);
   assert.equal(activityCategory({ type: "PLAYER_PATH" }), "path");
+});
+test("five positional fusions use the top two default OVR attributes, correct gates and final rewards", async () => {
+  const {DEFAULT_OVR_WEIGHTS}=await import("../js/utils.js");
+  const {CARD_POLICY}=await import("../js/card-achievements.js");
+  assert.equal(PATH_FUSIONS.length,5);
+  for(const fusion of PATH_FUSIONS){
+    const top=Object.entries(DEFAULT_OVR_WEIGHTS.positions[fusion.position]).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([key])=>key).sort();
+    assert.deepEqual([...fusion.routes].sort(),top);
+    const state=emptyPathState("a"),root=pathNode(fusion.id);
+    state.nodes[`${fusion.routes[0]}-4-1`]={completedAt:"now",progress:100};
+    assert.equal(nodeAvailable(root,state),false);
+    state.nodes[`${fusion.routes[1]}-4-0`]={completedAt:"now",progress:100};
+    assert.equal(nodeAvailable(root,state),true);
+    assert.equal(unifyPathState(state,fusion.id).activePath,fusion.id);
+    const final=pathNode(`${fusion.id}-4`);
+    assert.deepEqual(final.rewardKeys,fusion.routes);
+    assert.equal(final.specialId,`path-${fusion.id}`);
+    assert.equal(CARD_POLICY[final.specialId].duration,"permanent");
+  }
+  for(const id of ["fusion-attack","fusion-wall","fusion-engine"]){
+    assert.equal(pathNode(id),undefined);
+    assert.equal(PATH_CARD_EDITIONS[`path-${id}`],undefined);
+    assert.equal(CARD_POLICY[`path-${id}`],undefined);
+  }
+  const shared=emptyPathState("a");
+  for(const route of ["pace","shooting","dribbling"])shared.nodes[`${route}-4-0`]={completedAt:"now",progress:100};
+  const both=unifyPathState(unifyPathState(shared,"fusion-winger"),"fusion-predator");
+  assert.deepEqual(both.unifiedFusions,["fusion-winger","fusion-predator"]);
+  assert.equal(pathVisibleRoute(both,"fusion-winger"),"fusion-winger");
+  assert.equal(pathVisibleRoute(both,"fusion-predator"),"fusion-predator");
 });
 test("three offers have increasing progress, meaningful metrics and deterministic injectable randomness", () => {
   for (const node of PATH_NODES) {
@@ -397,33 +427,33 @@ test("one trio never offers an identical objective for two progress amounts", ()
 test("fusion activation unifies navigation while preserving original progress and choices", () => {
   const state = emptyPathState("a");
   state.nodes["shooting-4-0"] = { completedAt: "now", progress: 100 };
-  assert.throws(() => unifyPathState(state, "fusion-attack"), /marco 5/);
-  state.nodes["passing-4-0"] = { completedAt: "now", progress: 100 };
+  assert.throws(() => unifyPathState(state, "fusion-predator"), /marco 5/);
+  state.nodes["dribbling-4-0"] = { completedAt: "now", progress: 100 };
   state.offers["shooting-0-0"] = [{ id: "saved" }];
-  const next = unifyPathState(state, "fusion-attack");
-  assert.equal(next.activePath, "fusion-attack");
-  assert.equal(pathVisibleRoute(next, "shooting"), "fusion-attack");
-  assert.equal(pathVisibleRoute(next, "passing"), "fusion-attack");
+  const next = unifyPathState(state, "fusion-predator");
+  assert.equal(next.activePath, "fusion-predator");
+  assert.equal(pathVisibleRoute(next, "shooting"), "fusion-predator");
+  assert.equal(pathVisibleRoute(next, "dribbling"), "fusion-predator");
   assert.deepEqual(next.nodes, state.nodes);
   assert.deepEqual(next.offers, state.offers);
   assert.equal(next.unifiedFusions.length, 1);
-  assert.equal(unifyPathState(next, "fusion-attack").unifiedFusions.length, 1);
+  assert.equal(unifyPathState(next, "fusion-predator").unifiedFusions.length, 1);
   assert.equal(
-    PATH_NODES.filter((node) => node.route === "fusion-attack").length,
+    PATH_NODES.filter((node) => node.route === "fusion-predator").length,
     5,
   );
-  next.nodes["fusion-attack"] = { progress: 75 };
+  next.nodes["fusion-predator"] = { progress: 75 };
   const settled = settlePathState(
     next,
-    { id: "fusion-200", nodeId: "fusion-attack", offer: { advance: 200 } },
+    { id: "fusion-200", nodeId: "fusion-predator", offer: { advance: 200 } },
     { status: "success" },
     "now",
   );
   assert.deepEqual(settled.lastResult.completedNodeIds, [
-    "fusion-attack",
-    "fusion-attack-1",
+    "fusion-predator",
+    "fusion-predator-1",
   ]);
-  assert.equal(settled.nodes["fusion-attack-2"].progress, 75);
+  assert.equal(settled.nodes["fusion-predator-2"].progress, 75);
 });
 test("old proposals preserve their targets and bound attempts migrate without being overwritten", () => {
   const state = emptyPathState("a");
@@ -447,12 +477,12 @@ test("old proposals preserve their targets and bound attempts migrate without be
   assert.equal(next.pending[0].offer.objective.minRatings, 7);
   assert.equal(next.pending[0].legacyOfferSnapshot.objective.minRatings, 2);
 });
-test("all fifteen permanent reward cards have individually authored concepts, silhouettes and compositions", () => {
+test("all seventeen permanent reward cards have individually authored concepts, silhouettes and compositions", () => {
   const editions = Object.values(PATH_CARD_EDITIONS);
-  assert.equal(editions.length, 15);
-  assert.equal(new Set(editions.map((edition) => edition.outline)).size, 15);
-  assert.equal(new Set(editions.map((edition) => edition.art)).size, 15);
-  assert.equal(new Set(editions.map((edition) => edition.concept)).size, 15);
+  assert.equal(editions.length, 17);
+  assert.equal(new Set(editions.map((edition) => edition.outline)).size, 17);
+  assert.equal(new Set(editions.map((edition) => edition.art)).size, 17);
+  assert.equal(new Set(editions.map((edition) => edition.concept)).size, 17);
   assert.ok(editions.every((edition) => edition.material && edition.motif));
 });
 

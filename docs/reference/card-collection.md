@@ -58,4 +58,6 @@ Verificação: `npm.cmd run test:card-collection` testa nomes, materiais distint
 
 ## Identidades dos percursos
 
-As 15 cartas `path-*` pertencem ao sistema de [percursos pessoais](player-paths.md), com nomes, silhuetas e materiais definidos em `js/path-card-designs.js`. A antevisão explica o nó necessário e as recompensas mostram o nome da carta quando esse nó a entrega. Os 270 modelos de missão variam objetivos, não criam novas identidades de carta. A raridade visual da proposta e a carta permanente conquistada têm funções distintas; consultar o [catálogo de missões](path-mission-catalogue.md).
+As 17 cartas `path-*` pertencem ao sistema de [percursos pessoais](player-paths.md), com nomes, silhuetas e materiais definidos em `js/path-card-designs.js`. A antevisão explica o nó necessário e as recompensas mostram o nome da carta quando esse nó a entrega. Os 255 modelos de missão variam objetivos, não criam novas identidades de carta. A raridade visual da proposta e a carta permanente conquistada têm funções distintas; consultar o [catálogo de missões](path-mission-catalogue.md).
+
+As cinco fusões por posição têm composições próprias em [path-fusion-designs.js](../../js/path-fusion-designs.js): Dono da Área, Central Dominante, Desequilibrador, Maestro e Predador Completo. Substituem as três fusões anteriores antes de existirem conquistas, conforme informação do responsável. [Operação, conceitos e validação](../reports/path-position-fusions-2026-10-21.md).

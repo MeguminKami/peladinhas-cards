@@ -5,8 +5,9 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import "../functions/index.js";
 import { pathFunctions } from "../functions/paths.js";
 import { gameFlowFunctions } from "../functions/game-flow.js";
-import { emptyPathState } from "../js/path-model.js";
+import { emptyPathState, PATH_FUSIONS } from "../js/path-model.js";
 import { pathMissionTemplates } from "../js/path-missions.js";
+import { pathRareObjective } from "../js/path-difficulty.js";
 
 const db = getFirestore();
 test.before(async () => {
@@ -26,6 +27,45 @@ const player = async () => {
   await db.doc(`users/${uid}`).set({ uid, role: "admin", disabled: false });
   return uid;
 };
+test("five fusions: both prerequisites, final paired boosts, permanent signature and idempotent delivery", async () => {
+  for(const fusion of PATH_FUSIONS){
+    const uid=await player(),state=emptyPathState(uid),gid=`fusion-final-${uid}`;
+    const nodeId=`${fusion.id}-4`,selected={...pathMissionTemplates(fusion.id,0,1).find(row=>row.templateId===`${fusion.id}:base`),id:"1",proposalVersion:4,difficulty:1,advance:100,rarity:"elite"};
+    await assert.rejects(call(uid,"unify",{routeId:fusion.id}),/marco 5/);
+    for(const route of fusion.routes)state.nodes[`${route}-4-0`]={completedAt:"2026-10-01",progress:100};
+    await db.doc(`pathStates/${uid}`).set(state);
+    assert.equal((await call(uid,"unify",{routeId:fusion.id})).activePath,fusion.id);
+    for(let tier=0;tier<4;tier++)state.nodes[tier?`${fusion.id}-${tier}`:fusion.id]={completedAt:"2026-10-01",progress:100};
+    const closedAt=Timestamp.fromMillis(Date.now()-49*3600000),submittedAt=Timestamp.fromMillis(Date.now()-48.5*3600000);
+    const voters=Array.from({length:7},(_,i)=>`${uid}-v${i}`);
+    await db.doc(`games/${gid}`).set({status:"closed",scheduledAt:Timestamp.fromMillis(Date.now()-50*3600000),closedAt,teamA:{starters:[uid,...voters.slice(0,3)],bench:[]},teamB:{starters:voters.slice(3),bench:[]},score:{teamA:7,teamB:5},positions:{[uid]:fusion.position},performance:{teamA:{goals:[],assists:[]},teamB:{goals:[],assists:[]}}});
+    state.pending=[{id:randomUUID(),nodeId,offer:selected,gameId:gid,acceptedAt:new Date(Date.now()-51*3600000).toISOString(),frozenAt:new Date(Date.now()-50*3600000).toISOString(),windowVersion:3}];
+    await db.doc(`pathStates/${uid}`).set(state);
+    for(const raterId of voters)await db.doc(`games/${gid}/feedback/${raterId}`).set({raterId,targetId:uid,submitted:true,submittedAt,updatedAt:submittedAt,ratings:{overall:5,attack:5,physical:5,passing:5,attitude:5,defense:5,goalkeeping:5}});
+    const settled=await call(uid,"sync");
+    assert.equal(settled.lastResult.status,"success",`${fusion.id}: ${settled.lastResult.reason}`);
+    assert.equal(settled.lastResult.reward.specialId,`path-${fusion.id}`);
+    assert.deepEqual(settled.lastResult.reward.boosts,Object.fromEntries(fusion.routes.map(key=>[key,1])));
+    assert.equal(settled.lastResult.reward.cardDuration,"permanent");
+    assert.equal((await db.collection("eventRewards").where("uid","==",uid).get()).size,1);
+    await call(uid,"sync");
+    assert.equal((await db.collection("eventRewards").where("uid","==",uid).get()).size,1);
+  }
+});
+test("previously revealed 200% offer keeps its original objective after the new Ultimate calibration", async () => {
+  const uid = await player();
+  await call(uid,"offers",{nodeId:"shooting-0-0"});
+  const state = (await db.doc(`pathStates/${uid}`).get()).data();
+  const template = pathMissionTemplates("shooting",0,2).find(row=>row.templateId==="shooting:goals");
+  const previous = {...template,id:"2",proposalVersion:4,difficulty:2,advance:200,rarity:"ultimate",calibrationRevision:"2026-10-20-rare-step",objective:pathRareObjective(template.objective,150,"shooting")};
+  state.offers["shooting-0-0"][2]=previous;
+  await db.doc(`pathStates/${uid}`).set(state);
+  const refreshed = await call(uid,"offers",{nodeId:"shooting-0-0"});
+  assert.deepEqual(refreshed.offers["shooting-0-0"][2],previous);
+  assert.notDeepEqual(pathRareObjective(template.objective,200,"shooting"),previous.objective);
+  const accepted = await call(uid,"accept",{nodeId:"shooting-0-0",offerId:"2"});
+  assert.deepEqual(accepted.active.offer,previous);
+});
 const offer = (route, id) => ({
   ...pathMissionTemplates(route, 0, 1).find(
     (row) => row.templateId === `${route}:${id}`,

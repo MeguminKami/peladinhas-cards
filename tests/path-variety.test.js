@@ -31,13 +31,17 @@ import {
 
 const routes = [...PATH_ROUTES, ...PATH_FUSIONS];
 
-test("rare missions add exactly one small step to every model and stage", () => {
+test("Icon adds one step; Ultimate is strictly harder for every route, model and stage", () => {
   for (const route of routes) for (const stage of [0, 1, 2]) {
     for (const template of pathMissionTemplates(route.id, stage, 2)) {
       const original = structuredClone(template.objective);
       assert.equal(pathRareObjective(template.objective, 100), template.objective);
-      const rare = pathRareObjective(template.objective, 150);
-      assert.deepEqual(rare, pathRareObjective(template.objective, 200));
+      const rare = pathRareObjective(template.objective, 150, route.id);
+      const ultimate = pathRareObjective(template.objective, 200, route.id);
+      assert.ok(pathConditionsImply(ultimate, rare),template.templateId+": Ultimate preserves Icon requirements");
+      assert.ok(!pathConditionsImply(rare, ultimate),template.templateId+": Ultimate adds a strict requirement");
+      assert.ok(ultimate.conditions.every(row=>!["rating","ratingMean"].includes(row.metric)||row.target<=5));
+      assert.doesNotThrow(()=>normalizePathConditions(ultimate));
       assert.deepEqual(template.objective, original);
       const changes = rare.conditions.filter((row, index) =>
         row.target !== original.conditions[index].target);
@@ -55,9 +59,26 @@ test("rare missions add exactly one small step to every model and stage", () => 
         Object.fromEntries(PATH_ROUTES.map(row => [row.id, stage * 5])))[2];
       const base = pathMissionTemplates(route.id, stage, 2).find(row => row.templateId === offer.templateId);
       assert.equal(offer.advance, advance);
-      assert.deepEqual(offer.objective, pathRareObjective(base.objective, advance));
+      assert.deepEqual(offer.objective, pathRareObjective(base.objective, advance, route.id));
     }
   }
+});
+test("Ultimate route signatures add actions, quality or defensive solidity without weakening Icon", () => {
+  const build = (route, conditions, advance=200) => pathRareObjective({kind:"conditions",minRatings:7,conditions},advance,route);
+  const scorer = build("shooting",[{metric:"goals",target:3}]);
+  assert.deepEqual(scorer.conditions,[{metric:"goals",target:4},{metric:"assists",target:1}]);
+  const match = {...game,pathPerformance:{a:{goals:4,assists:0}}};
+  assert.equal(evaluatePathMission(build("shooting",[{metric:"goals",target:3}],150),match,{},"a").status,"success");
+  assert.equal(evaluatePathMission(scorer,match,{},"a").status,"failure");
+  assert.equal(evaluatePathMission(scorer,{...match,pathPerformance:{a:{goals:4,assists:1}}},{},"a").status,"success");
+  const creator = build("fusion-predator",[{metric:"goals",target:2},{metric:"assists",target:1}]);
+  assert.equal(creator.conditions.find(row=>row.metric==="assists").target,2);
+  const wall = build("fusion-keeper",[{metric:"position",target:"GR"},{metric:"conceded",target:6},{metric:"rating",criterion:"goalkeeping",target:3.5}]);
+  assert.equal(wall.conditions.find(row=>row.metric==="conceded").target,5);
+  const ceiling = build("composure",[{metric:"rating",criterion:"attitude",target:4.75,comparison:"gt"}]);
+  assert.deepEqual(ceiling.conditions[0],{metric:"rating",criterion:"attitude",target:5,comparison:"gte"});
+  assert.equal(ceiling.conditions[1].metric,"contributions");
+  assert.ok(!pathConditionsImply(build("composure",[{metric:"rating",criterion:"attitude",target:4.75,comparison:"gt"}],150),ceiling));
 });
 const randomFor = (seed) => () =>
   (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
@@ -256,7 +277,7 @@ test("difficulty audit separates teams, players, closed windows and missing evid
   assert.ok(!JSON.stringify(audit).includes("v4-game"));
 });
 
-test("expanded catalogue: 225 templates, diverse families and mandatory goalkeeper evidence", () => {
+test("expanded catalogue: 255 templates, diverse families and mandatory goalkeeper evidence", () => {
   let count = 0;
   for (const route of routes) {
     count += pathMissionTemplates(route.id).length;
@@ -287,13 +308,13 @@ test("expanded catalogue: 225 templates, diverse families and mandatory goalkeep
               (line) => !line.includes("undefined"),
             ),
           );
-          if (["goalkeeping", "fusion-wall"].includes(route.id))
+          if (["goalkeeping", "fusion-keeper"].includes(route.id))
             assert.ok(
               requirements.conditions.some(
                 (c) => c.metric === "position" && c.target === "GR",
               ),
             );
-          if (route.id === "fusion-wall") {
+          if (route.id === "fusion-keeper") {
             assert.ok(requirements.criteria.includes("defense"));
             assert.ok(
               requirements.criteria.includes("goalkeeping") ||
@@ -307,7 +328,7 @@ test("expanded catalogue: 225 templates, diverse families and mandatory goalkeep
         }
       }
   }
-  assert.equal(count, 225);
+  assert.equal(count, 255);
   assert.equal(
     pathMissionTemplates("shooting", 2, 2).find((row) =>
       row.templateId.endsWith(":goals"),
@@ -412,6 +433,9 @@ test("v4 every catalogue condition is evaluated, including all three criteria an
           ))
             aggregate.players.a[row.criterion] =
               row.target + (row.comparison === "gt" ? 0.01 : 0);
+          for (const row of template.objective.conditions.filter(row=>row.metric==="ratingMean"))
+            for (const criterion of row.criteria)
+              aggregate.players.a[criterion]=Math.max(aggregate.players.a[criterion],row.target+(row.comparison==="gt"?0.01:0));
           assert.equal(
             evaluatePathMission(template.objective, match, aggregate, "a")
               .status,

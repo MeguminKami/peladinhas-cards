@@ -95,7 +95,7 @@ try {
   await page
     .locator(".path-mission-spotlight")
     .screenshot({ path: "test-results/paths/mission-entry.png" });
-  await page.locator('a[href="#/missions/path"]').first().click();
+  await page.locator('a[href^="#/missions/path"]').first().click();
   await page.locator(".path-hero h1").waitFor();
   await page.getByRole("button", { name: "Revelar as três missões" }).click();
   await page.locator(".path-proposal").nth(2).waitFor();
@@ -196,7 +196,11 @@ try {
   }
   await page.getByRole("button", { name: "Escolher missão" }).nth(2).click();
   await page.locator(".path-active").waitFor();
-  assert.match(await page.locator(".path-active").innerText(), /Marca 3 golos/);
+  const activeLines=await page.evaluate(async()=>{
+    const {pathObjectiveLines}=await import("/js/path-missions.js");
+    return pathObjectiveLines(window.__pathState.active.offer.objective);
+  });
+  for(const line of activeLines)assert.ok((await page.locator(".path-active").innerText()).includes(line));
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 960 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
@@ -382,39 +386,39 @@ try {
   await page.locator(".path-discovery").waitFor();
   assert.match(
     await page.locator(".path-discovery").innerText(),
-    /marco 5 em Passe/,
+    /marco 5 em Drible/,
   );
-  await page.locator('.path-discovery [data-path-route="passing"]').click();
+  await page.locator('.path-discovery [data-path-route="dribbling"]').click();
   await page.evaluate(() => {
-    window.__pathState.nodes["passing-4-0"] = {
+    window.__pathState.nodes["dribbling-4-0"] = {
       progress: 100,
       completedAt: "2026-10-18",
     };
   });
   await page.locator("[data-path-refresh]").click();
-  await page.locator('[data-path-unify="fusion-attack"]').click();
+  await page.locator('[data-path-unify="fusion-predator"]').click();
   await page.locator(".path-focus").waitFor();
   assert.equal(await page.locator(".path-focus button").count(), 3);
   assert.equal(await page.locator(".path-map-row").count(), 5);
   await page.locator("[data-path-picker]").click();
   assert.equal(
     await page
-      .locator('[data-picker-route="shooting"],[data-picker-route="passing"]')
+      .locator('[data-picker-route="shooting"],[data-picker-route="dribbling"]')
       .count(),
     0,
   );
   assert.equal(
-    await page.locator('[data-picker-route="fusion-attack"]').count(),
+    await page.locator('[data-picker-route="fusion-predator"]').count(),
     1,
   );
   await page.keyboard.press("Escape");
-  await page.locator('.path-focus [data-path-route="passing"]').click();
+  await page.locator('.path-focus [data-path-route="dribbling"]').click();
   await page.evaluate(() => {
-    window.__pathState.nodes["passing-0-0"] = { progress: 75 };
+    window.__pathState.nodes["dribbling-0-0"] = { progress: 75 };
     window.__pathState.pending = [
       {
         id: "review-preview",
-        nodeId: "passing-0-0",
+        nodeId: "dribbling-0-0",
         gameId: "closed-preview",
         frozenAt: new Date().toISOString(),
         windowVersion: 3,
@@ -470,8 +474,8 @@ try {
       .locator(".path-pending")
       .screenshot({ path: `test-results/paths/review-${width}.png` });
   }
-  await page.locator('.path-focus [data-path-route="fusion-attack"]').click();
-  assert.match(await page.locator(".path-final-card").innerText(), /marco 5 em Finalização e Passe.*5 nós.*100%/);
+  await page.locator('.path-focus [data-path-route="fusion-predator"]').click();
+  assert.match(await page.locator(".path-final-card").innerText(), /marco 5 em Finalização e Drible.*5 nós.*100%/);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({
@@ -484,7 +488,7 @@ try {
     location.hash = "#/missions";
   });
   await page.locator(".path-mission-spotlight").waitFor();
-  await page.locator('a[href="#/missions/path"]').first().click();
+  await page.locator('.path-mission-spotlight[href^="#/missions/path"]').click();
   await page.locator(".path-workspace").waitFor();
   assert.equal(await page.getByRole("dialog").count(), 0);
   await page.locator("[data-path-next-route]").click();

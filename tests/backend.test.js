@@ -1,4 +1,5 @@
 import { cardWeek } from "../js/card-week.js";
+import { registeredJobs } from "../functions/policy-runtime.js";
 import { CARD_CRITERIA } from "../functions/card-unlock-rules.js";
 import { getStorage } from "firebase-admin/storage";
 import { defaultPhotoDesign } from "../js/card-photo.js";
@@ -185,6 +186,33 @@ test("tickets: autoria, acesso, notificações e fecho irreversível", async () 
   await call("ticket-admin2", { action: "close", id: second.id });
 });
 const all = (v) => Object.fromEntries(ATTRIBUTES.map(([k]) => [k, v]));
+test("18h: current premature lock reopens for photo and calculations; past weeks stay immutable", async t => {
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-21T13:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const uid="close-18-transition",cycle=cardWeek();
+  await db.doc(`users/${uid}`).set({uid,role:"admin",disabled:false,displayName:"Antes",primaryPosition:"ALA"});
+  await db.doc(`initialRatings/${uid}`).set({uid,ratings20:all(10),completed:true,createdAt:Timestamp.now(),updatedAt:Timestamp.now()});
+  await ensureHistory.run({auth:{uid},data:{}});
+  const ref=db.doc(`users/${uid}/cardHistory/${cycle.weekId}`);
+  await ref.update({locked:true,lockedAt:Timestamp.now(),closesAt:Timestamp.fromDate(new Date("2026-10-21T11:00:00Z"))});
+  const oldRef=db.doc(`users/${uid}/cardHistory/2026-W41`);
+  await oldRef.set({weekId:"2026-W41",locked:true,ovr:42,marker:"preserve"});
+  await db.doc(`users/${uid}`).update({displayName:"Depois"});
+  await saveWeeklyCardPhoto.run({auth:{uid},data:{uid,weekId:cycle.weekId,reset:true}});
+  const reopened=(await ref.get()).data();
+  assert.equal(reopened.locked,false);
+  assert.equal(reopened.appearance.displayName,"Depois");
+  assert.equal(reopened.closesAt.toDate().toISOString(),"2026-10-21T17:00:00.000Z");
+  assert.equal((await db.doc(`weeklyCards/${uid}`).get()).data().phase,"open");
+  assert.deepEqual((await oldRef.get()).data(),{weekId:"2026-W41",locked:true,ovr:42,marker:"preserve"});
+  t.mock.timers.setTime(new Date("2026-10-21T17:00:00Z").getTime());
+  await db.doc("systemJobs/closeCardWeek").set({status:"succeeded",cycleKey:`${cycle.weekId}:closed`});
+  await registeredJobs().get("closeCardWeek").run({});
+  assert.equal((await ref.get()).data().locked,true);
+  assert.equal((await db.doc("systemJobs/closeCardWeek").get()).data().cycleKey,`${cycle.weekId}:closed:2026-10-21T17:00:00.000Z`);
+  assert.deepEqual(await registeredJobs().get("closeCardWeek").run({}),{current:true});
+  await assert.rejects(saveWeeklyCardPhoto.run({auth:{uid},data:{uid,weekId:cycle.weekId,reset:true}}),/fechada/);
+});
 const event = (after, before) => ({
   params: { uid: "joao", gid: "match" },
   data: { after, before: before || { data: () => undefined } },

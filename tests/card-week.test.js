@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cardWeek, cardWeekBounds } from "../js/card-week.js";
+import { cardWeek, cardWeekBounds, canReopenWeeklyCard } from "../js/card-week.js";
 import { validCardDesign } from "../js/card-design.js";
-test("ciclo: quarta 12h fecha e quinta 12h abre, em Lisboa", () => {
+test("ciclo histórico anterior a 21/10: quarta 12h fecha e quinta 12h abre, em Lisboa", () => {
   const before = cardWeek(new Date("2026-10-14T10:59:59Z"));
   const closed = cardWeek(new Date("2026-10-14T11:00:00Z"));
   assert.equal(before.phase, "open");
@@ -24,11 +24,25 @@ test("ciclo: quarta 12h fecha e quinta 12h abre, em Lisboa", () => {
 test("horário de inverno/verão e mudança de ano não alteram as horas locais", () => {
   const summer = cardWeekBounds("2026-W43");
   assert.equal(summer.opensAt.toISOString(), "2026-10-22T11:00:00.000Z");
-  assert.equal(summer.closesAt.toISOString(), "2026-10-28T12:00:00.000Z");
+  assert.equal(summer.closesAt.toISOString(), "2026-10-28T18:00:00.000Z");
   const spring = cardWeekBounds("2026-W13");
   assert.equal(spring.opensAt.toISOString(), "2026-03-26T12:00:00.000Z");
   assert.equal(spring.closesAt.toISOString(), "2026-04-01T11:00:00.000Z");
   assert.equal(cardWeek(new Date("2021-01-01T12:00:00Z")).weekId, "2020-W53");
+});
+test("from 21 October, Wednesday stays editable until 18h Lisbon; opening and old weeks stay unchanged", () => {
+  const cycle=cardWeek(new Date("2026-10-21T16:59:59Z"));
+  assert.equal(cycle.phase,"open");
+  assert.equal(cycle.closesAt.toISOString(),"2026-10-21T17:00:00.000Z");
+  assert.equal(cardWeek(new Date("2026-10-21T17:00:00Z")).phase,"closed");
+  assert.equal(cardWeek(new Date("2026-10-28T17:59:59Z")).phase,"open");
+  assert.equal(cardWeek(new Date("2026-10-28T18:00:00Z")).phase,"closed");
+  assert.equal(cardWeek(new Date("2026-10-22T11:00:00Z")).phase,"open");
+  const old={weekId:cycle.weekId,locked:true,closesAt:new Date("2026-10-21T11:00:00Z")};
+  assert.ok(canReopenWeeklyCard(old,cycle));
+  assert.ok(!canReopenWeeklyCard({...old,weekId:"2026-W41"},cycle));
+  assert.ok(!canReopenWeeklyCard({...old,closesAt:cycle.closesAt},cycle));
+  assert.ok(!canReopenWeeklyCard(old,cardWeek(new Date("2026-10-21T17:00:00Z"))));
 });
 test("composições só aceitam controlos conhecidos dentro dos limites", () => {
   assert.ok(

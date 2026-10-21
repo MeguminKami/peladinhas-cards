@@ -1499,10 +1499,13 @@ a.football-card:hover {
 .football-card.path-positioning { --card-a:#8b556f; --card-b:#291c35; --card-edge:#f4c3d4; --edition-light:#ffe6ed; --edition-flare:#cda4d9; }
 .football-card.path-teamwork { --card-a:#217f82; --card-b:#0d2831; --card-edge:#a0e7db; --edition-light:#dcfff8; --edition-flare:#79d7cb; }
 .football-card.path-composure { --card-a:#685f97; --card-b:#211d39; --card-edge:#d8d1ff; --edition-light:#eee8ff; --edition-flare:#afa3ef; }
-.football-card.path-fusion-attack { --card-a:#a04936; --card-b:#331523; --card-edge:#ffcc8f; --edition-light:#fff0cf; --edition-flare:#f28b62; }
-.football-card.path-fusion-wall { --card-a:#3e697b; --card-b:#0c2330; --card-edge:#dce8ce; --edition-light:#edfff1; --edition-flare:#82cac1; }
-.football-card.path-fusion-engine { --card-a:#765280; --card-b:#281d32; --card-edge:#ecd3ac; --edition-light:#ffe9cc; --edition-flare:#d4a0b8; }
-/* Authored materials accompany the fifteen different silhouettes and artworks. */
+/* Fusion signatures: independent silhouettes, materials and portrait-safe borders. */
+.football-card.path-fusion-keeper { --card-a:#31597b; --card-b:#081b2b; --card-edge:#d9e9f1; --edition-light:#f1fbff; --edition-flare:#9ecddd; --collection-material:repeating-linear-gradient(90deg,#c5e6ff06 0 1px,transparent 1px 6px),radial-gradient(ellipse at 50% 12%,#668a9a66,transparent 58%),linear-gradient(170deg,#31597b,#081b2b 75%); --path-reveal-from:translateY(24px) scale(.96); }
+.football-card.path-fusion-central { --card-a:#285a48; --card-b:#0d211d; --card-edge:#d9c18c; --edition-light:#f4e8c7; --edition-flare:#6eaa8e; --collection-material:repeating-linear-gradient(125deg,#ffffff06 0 1px,transparent 1px 5px),linear-gradient(100deg,#0d211d,#285a48 43%,#183b2e 60%,#0d211d); --path-reveal-from:translateY(-18px) scale(1.06); }
+.football-card.path-fusion-winger { --card-a:#265b70; --card-b:#101c30; --card-edge:#ff9d89; --edition-light:#ffe3cd; --edition-flare:#65d9e8; --collection-material:repeating-linear-gradient(145deg,#9df3ff09 0 1px,transparent 1px 7px),linear-gradient(115deg,#101c30,#265b70 49%,#193647 51%,#101c30); --path-reveal-from:translateX(-32px) rotate(-9deg); }
+.football-card.path-fusion-maestro { --card-a:#4b4f8c; --card-b:#1a1e39; --card-edge:#e4d9c5; --edition-light:#fff7e5; --edition-flare:#b1b5ee; --collection-material:radial-gradient(ellipse at 50% 12%,#bab4d94d,transparent 56%),repeating-linear-gradient(0deg,#e4d9c507 0 1px,transparent 1px 15px),linear-gradient(145deg,#4b4f8c,#1a1e39 76%); --path-reveal-from:scale(.92) rotate(4deg); }
+.football-card.path-fusion-predator { --card-a:#644029; --card-b:#1c1721; --card-edge:#f4c17b; --edition-light:#fff0cc; --edition-flare:#e98762; --collection-material:linear-gradient(120deg,#f4c17b14,transparent 32% 70%,#e987621c),linear-gradient(155deg,#644029,#1c1721 64%); --path-reveal-from:scale(1.12) rotate(-3deg); }
+/* Authored materials accompany the specialist silhouettes and artworks. */
 .football-card.path-pace { --collection-material:repeating-linear-gradient(138deg,#d4f5a209 0 2px,transparent 2px 7px),linear-gradient(115deg,#102217,#426f38 38%,#0b2119); --path-reveal-from:translateX(-48px) rotate(-12deg) scale(.94); }
 .football-card.path-shooting { --collection-material:repeating-linear-gradient(90deg,#ffffff05 0 1px,transparent 1px 4px),linear-gradient(145deg,#2a1023,#923f48 42%,#260e15); --path-reveal-from:scale(1.18) rotate(-5deg); }
 .football-card.path-passing { --collection-material:repeating-linear-gradient(0deg,#a4e4ff0a 0 1px,transparent 1px 17px),repeating-linear-gradient(90deg,#a4e4ff0a 0 1px,transparent 1px 17px),radial-gradient(ellipse at 50% 20%,#225d9c,#0c1535); --path-reveal-from:translateY(38px) rotate(-5deg); }
@@ -1515,9 +1518,6 @@ a.football-card:hover {
 .football-card.path-positioning { --collection-material:repeating-radial-gradient(ellipse at 60% 35%,#f4c3d40b 0 1px,transparent 1px 19px),linear-gradient(150deg,#8b556f,#291c35); --path-reveal-from:rotate(-22deg) scale(.93); }
 .football-card.path-teamwork { --collection-material:repeating-linear-gradient(45deg,#a0e7db09 0 1px,transparent 1px 5px),linear-gradient(90deg,#0d2831,#217f82 50%,#0d2831); --path-reveal-from:translateX(30px) rotate(3deg) scale(.95); }
 .football-card.path-composure { --collection-material:radial-gradient(ellipse at 50% 10%,#d8d1ff26,transparent 60%),linear-gradient(180deg,#685f97,#211d39); --path-reveal-from:rotate(-5deg); --path-reveal-duration:750ms; }
-.football-card.path-fusion-attack { --collection-material:linear-gradient(110deg,#923f48cc 0 47%,#ffcc8f44 48% 49%,#225d9c99 50% 100%),linear-gradient(#4e2330,#1b1023); --path-reveal-from:translate(-30px,24px) rotate(-14deg); }
-.football-card.path-fusion-wall { --collection-material:repeating-linear-gradient(0deg,#dce8ce0a 0 1px,transparent 1px 32px),linear-gradient(90deg,#0c2330,#3e697b 50%,#0c2330); --path-reveal-from:translateY(-26px) rotate(-5deg) scale(.97); }
-.football-card.path-fusion-engine { --collection-material:repeating-conic-gradient(from 20deg at 50% 35%,#ecd3ac09 0 5deg,transparent 5deg 30deg),radial-gradient(ellipse at 50% 35%,#765280,#281d32 70%); --path-reveal-from:rotate(16deg) scale(.88); }
 .football-card.apogee {
   --card-a: #123fc2;
   --card-b: #030b2d;

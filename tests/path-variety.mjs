@@ -278,6 +278,31 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     if ([1440, 320].includes(width)) await page.screenshot({ path: `test-results/path-variety/admin-${width}.png`, fullPage: true });
   }
+  await page.evaluate(async()=>{
+    const {PATH_FUSIONS}=await import("/js/path-model.js");
+    const {FUSION_CARD_EDITIONS}=await import("/js/path-fusion-designs.js");
+    const {card,bindImages}=await import("/js/cards.js");
+    const {ATTRIBUTES}=await import("/js/utils.js");
+    window.__fusionProofIds=PATH_FUSIONS.map(fusion=>`path-${fusion.id}`);
+    const player={uid:"fusion-proof",displayName:"JOÃO SILVA",countryCode:"PT",hasCard:true,ovr:94,photoURL:"/assets/default-avatar.svg",stats:Object.fromEntries(ATTRIBUTES.map(([key])=>[key,92]))};
+    document.querySelector("#main").innerHTML=`<div class="fusion-proof" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:24px">${PATH_FUSIONS.map(fusion=>`<section data-fusion-proof="${fusion.id}" style="min-width:0;display:grid;justify-items:center;gap:16px"><h2 style="font-size:1rem;text-align:center">${FUSION_CARD_EDITIONS[`path-${fusion.id}`].name}</h2>${card({...player,primaryPosition:fusion.position},{theme:`path-${fusion.id}`,preview:true,size:"md"})}</section>`).join("")}</div>`;
+    bindImages();
+  });
+  for(const width of [1440,768,390,320]){
+    await page.setViewportSize({width,height:1600});
+    for(const theme of ["club","volt","champions","ultimate"]){
+      await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+    }
+    await page.evaluate(()=>document.documentElement.dataset.theme="club");
+    for(const id of ["fusion-keeper","fusion-central","fusion-winger","fusion-maestro","fusion-predator"]){
+      const tile=page.locator(`[data-fusion-proof="${id}"] .football-card`);
+      assert.ok(await tile.locator(".collection-art path").count()>0);
+      assert.ok(!(await tile.innerText()).includes("Dono da Área"));
+      await tile.screenshot({path:`test-results/path-variety/${id}-${width}.png`,style:"#header,.mobile-nav,.bottom-nav,.toast{visibility:hidden!important}"});
+    }
+    await page.locator(".fusion-proof").screenshot({path:`test-results/path-variety/fusions-${width}.png`,style:"#header,.mobile-nav,.bottom-nav,.toast{visibility:hidden!important}"});
+  }
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
     "V4 UI passed: conditions, numeric/mixed copy, prepared/pending, per-criterion counts, keyboard, reduced motion, 4 themes and 1440/768/390/320 widths.",

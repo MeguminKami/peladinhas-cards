@@ -186,7 +186,7 @@ As páginas de detalhe separam meta, critérios, requisitos mínimos e condiçõ
 
 ## Escolhe o teu caminho: próximo jogo
 
-Os percursos têm um [catálogo próprio de 270 modelos](path-mission-catalogue.md) e não usam os períodos, sequências ou recolhas das missões criadas no editor de eventos. Cada tentativa vale apenas para o próximo jogo; condições compostas usam **E** e o avanço de 25/50/100%, ou raro de 150/200%, preenche nós de 100%. O boost é entregue ao completar o nó, não por simplesmente escolher uma missão. A [referência dos percursos](player-paths.md) descreve os limites próprios, raridades, fusões, sete votos/48 horas, cancelamentos e compatibilidade. O resumo da missão escolhida e a composição compacta usam o tema da sua raridade, com objetivo explícito **No próximo jogo** e recompensa integrada.
+Os percursos têm um [catálogo próprio de 255 modelos](path-mission-catalogue.md) e não usam os períodos, sequências ou recolhas das missões criadas no editor de eventos. Cada tentativa vale apenas para o próximo jogo; condições compostas usam **E** e o avanço de 25/50/100%, ou raro de 150/200%, preenche nós de 100%. O boost é entregue ao completar o nó, não por simplesmente escolher uma missão. A [referência dos percursos](player-paths.md) descreve os limites próprios, raridades, fusões, sete votos/48 horas, cancelamentos e compatibilidade. O resumo da missão escolhida e a composição compacta usam o tema da sua raridade, com objetivo explícito **No próximo jogo** e recompensa integrada.
 
 ## Apresentação do progresso
 

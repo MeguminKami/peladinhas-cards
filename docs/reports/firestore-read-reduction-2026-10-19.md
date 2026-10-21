@@ -1,6 +1,6 @@
 # Redução de leituras Firestore — 19–20/10/2026
 
-[← Documentação](../README.md) · [Plano e pendências](../plans/firestore-read-reduction.md) · [Desenvolvimento](../guides/development.md) · [Diagnósticos](../guides/firestore-read-diagnostics.md)
+[← Documentação](../README.md) · [Desenvolvimento](../guides/development.md) · [Diagnósticos](../guides/firestore-read-diagnostics.md)
 
 Estado: implementação iniciada em 19/10 e validação concluída em 20/10/2026, em fixtures/emulador. **Sem deploy, alteração de dados reais ou confirmação de redução em produção.** A janela cloud referida no plano foi recolhida antes desta implementação; não é uma medição posterior.
 

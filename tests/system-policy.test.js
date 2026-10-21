@@ -21,6 +21,14 @@ import { cardWeek } from "../js/card-week.js";
 import { leaguePeriod } from "../js/card-achievements.js";
 import { ratingEditDeadline } from "../js/rating-window.js";
 const config = () => structuredClone(DEFAULT_POLICY);
+test("18h baseline extends legacy policy without modifying its timeline or future explicit settings", () => {
+  const doc={timeline:[{version:1,effectiveAt:"2026-10-01",config:config()},{version:2,effectiveAt:"2026-10-22",patch:{cycle:{closeHour:20}}}]};
+  assert.equal(policyAt(new Date("2026-10-20"),doc).cycle.closeHour,12);
+  assert.equal(policyAt(new Date("2026-10-21T13:00Z"),doc).cycle.closeHour,18);
+  assert.equal(policyAt(new Date("2026-10-23"),doc).cycle.closeHour,20);
+  assert.equal(doc.timeline.length,2);
+  assert.equal(policyVersion(new Date("2026-10-21T13:00Z"),doc),1);
+});
 test("compressed policy history reconstructs every revision and preserves future activation", () => {
   const document = {
     timeline: [

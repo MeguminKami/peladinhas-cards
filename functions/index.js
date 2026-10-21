@@ -27,7 +27,7 @@ import { defaultOvrPresets } from "../js/ovr-presets.js";
 import { validPhotoDesign } from "../js/card-photo.js";
 import { getStorage } from "firebase-admin/storage";
 import { randomUUID } from "node:crypto";
-import { cardWeek, cardWeekBounds } from "../js/card-week.js";
+import { cardWeek, cardWeekBounds, canReopenWeeklyCard } from "../js/card-week.js";
 import {
   teamBalance,
   balanceMatches,
@@ -530,6 +530,10 @@ async function buildHistory(uid, shared = null) {
     const snapshot = await tx.get(activeRef);
     if (!snapshot.exists) return null;
     const value = snapshot.data();
+    if (canReopenWeeklyCard(value, cycle)) {
+      tx.update(activeRef, {locked:false,lockedAt:FieldValue.delete()});
+      return null;
+    }
     if (value.locked || cycle.phase === "closed") {
       if (!value.locked)
         tx.update(activeRef, {
@@ -1338,7 +1342,7 @@ export const saveWeeklyCardPhoto = policyCall("saveWeeklyCardPhoto",async (reque
     if (!user.exists || user.data().disabled)
       throw new HttpsError("not-found", "Jogador não encontrado.");
     if (
-      history.data()?.locked ||
+      (history.data()?.locked && !canReopenWeeklyCard(history.data(), cardWeek())) ||
       cardWeek().phase !== "open" ||
       cardWeek().weekId !== weekId
     )

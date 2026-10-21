@@ -183,6 +183,9 @@ export const DEFAULT_POLICY = Object.freeze(
 let browserDocument = null;
 let provider = () => browserDocument;
 const compiledPolicies = new WeakMap();
+// Versioned baseline: retain earlier weeks, extend the cycle ending 21/10 onward.
+const calendarBaseline = {effectiveAt:"2026-10-21T00:00:00Z",patch:{cycle:{closeHour:18}},calendarBaseline:true};
+const emptyPolicyDocument = Object.freeze({});
 export function normalizePolicy(value = {}) {
   return Object.fromEntries(
     POLICY_FIELDS.map(([section, , fields]) => [
@@ -197,10 +200,11 @@ export function normalizePolicy(value = {}) {
   );
 }
 function compile(document) {
-  if (!document || typeof document !== "object") return [];
+  if (!document || typeof document !== "object") document = emptyPolicyDocument;
   if (compiledPolicies.has(document)) return compiledPolicies.get(document);
   let config = DEFAULT_POLICY;
-  const entries = [...(document.timeline || [])]
+  let version = 0;
+  const entries = [...(document.timeline || []), calendarBaseline]
     .sort((a, b) => +new Date(a.effectiveAt) - +new Date(b.effectiveAt))
     .map((row) => {
       config = row.config
@@ -213,7 +217,8 @@ function compile(document) {
               ]),
             ),
           );
-      return { ...row, config };
+      if (!row.calendarBaseline) version = row.version;
+      return { ...row, version, config };
     });
   compiledPolicies.set(document, entries);
   return entries;
