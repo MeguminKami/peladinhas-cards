@@ -10,7 +10,7 @@ Cada missão vale para o **próximo jogo** do jogador; todas as condições se l
 
 Golos, assistências, resultado e posição são registos do jogo. As avaliações disponíveis são Ataque, Passe, Físico, Defesa, Guarda-redes, Atitude e Desempenho geral. Velocidade, Drible, Resistência, Posicionamento e Compostura recorrem a indicadores aproximados; não há registos de sprints, dribles, minutos, distância ou decisões sob pressão.
 
-A posição GR é obrigatória em Guarda-redes e Dono da Área. As cinco fusões mantêm sempre duas avaliações complementares por missão. Qualquer avaliação na missão exige sete votos válidos por critério no corte das 48 horas; missões sem avaliações apuram no fecho. Falta de amostra ou participação GR não elegível cancela sem perder progresso.
+A posição GR é obrigatória em Guarda-redes e Dono da Área. As cinco fusões mantêm sempre duas avaliações complementares por missão. Qualquer avaliação na missão exige sete votos válidos por critério no corte das 48 horas; pode concluir antes com sete votos reais por critério e sucesso garantido assumindo duas estrelas nos votos em falta. Missões sem avaliações apuram no fecho. Falta de amostra ou participação GR não elegível cancela sem perder progresso. [Regras de apuramento e compatibilidade](player-paths.md#avaliações-48-horas-e-sete-votos).
 
 ## Velocidade
 

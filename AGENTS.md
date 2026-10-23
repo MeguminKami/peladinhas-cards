@@ -1,5 +1,13 @@
 # Instruções do projeto
 
+## Leituras da base de dados e serviços cloud
+
+- Antes de fazer pedidos de leitura à base de dados real, pedir autorização explícita ao utilizador e aguardar a resposta. Explicar por que a leitura é necessária, que dados/coleções serão consultados e a estimativa ou o limite de leituras. Se não for possível estimar, indicar essa incerteza e propor uma consulta limitada.
+- Esta regra inclui acessos diretos e indiretos: SDK, REST, scripts, auditorias, callables e testes ou navegação que possam consultar o Firebase real. Pedidos ao Storage real também exigem autorização prévia, com explicação dos ficheiros ou metadados a consultar.
+- Preferir código, documentação, snapshots locais, fixtures e emuladores. Desenvolvimento e testes devem usar dados locais; não recorrer automaticamente à cloud se esses dados forem insuficientes ou se um teste falhar.
+- Uma autorização vale apenas para o âmbito e o limite aprovados. Não aumentar o consumo nem consultar outros dados sem nova autorização. Uma instrução explícita já dada para essa leitura dispensa perguntar novamente dentro do mesmo âmbito.
+- Ler ficheiros locais e usar emuladores locais não exige esta autorização. Indicar quando uma conclusão não pode ser confirmada sem consultar dados reais.
+
 ## Direção de arte e qualidade da interface
 
 - Não colocar títulos, nomes de edição, nomes de tier ou rótulos como «THE ULTIMATE» e «V2» no topo nem no interior das cartas. O nome da edição pertence ao catálogo ou à ficha, fora da carta. Dentro da carta, preservar a identidade do jogador, OVR, posição, atributos e símbolos gráficos. O tier deve reconhecer-se pelo desenho, materiais e acabamento, sem títulos acrescentados.

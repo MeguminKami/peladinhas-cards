@@ -3,12 +3,19 @@ export function gameRatingFixture(state, name, input) {
   if (state.ratingAdminFail)
     throw Error("Não foi possível consultar as avaliações.");
   const game = state.games.find((row) => row.id === input.gameId);
+  if(name === "ratingWaiverAction") {
+    game.ratingWaivers ||= {};
+    if(input.waive) game.ratingWaivers[input.uid]=[{at:new Date().toISOString()}];
+    else game.ratingWaivers[input.uid]=[];
+    return {ok:true};
+  }
   state.ratingReminders ||= [];
   const users = gameFeedbackProgress(game, state.feedback).map((progress) => {
     const user = state.users.find((row) => row.uid === progress.uid);
     const sent = state.ratingReminders.includes(progress.uid);
     return {
       ...progress,
+      canWaive: !!progress.pending || progress.waiverActive,
       name: user.displayName,
       username: user.username,
       disabled: !!user.disabled,

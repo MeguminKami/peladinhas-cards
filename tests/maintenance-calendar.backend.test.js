@@ -1,0 +1,25 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {getFirestore} from "firebase-admin/firestore";
+import {policyAt} from "../js/system-policy.js";
+if(process.env.GCLOUD_PROJECT?.startsWith("demo-")) process.env.GCLOUD_PROJECT+=`-calendar-${process.pid}`;
+const {maintenanceAction}=await import("../functions/index.js");
+const db=getFirestore();
+test("admin calendar publication validates the configured weekday and minute, then persists a future revision",async t=>{
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-22T10:00Z")});
+  const uid="calendar-admin";
+  await db.doc(`users/${uid}`).set({uid,role:"admin",disabled:false});
+  const config=structuredClone(policyAt());
+  Object.assign(config.cycle,{openDay:5,openHour:18,openMinute:15,closeDay:2,closeHour:21,closeMinute:45});
+  const call=effectiveAt=>maintenanceAction.run({auth:{uid,token:{auth_time:Math.floor(Date.now()/1000)}},data:{action:"publish",config,expectedRevision:0,reason:"Novo calendário semanal",effectiveAt}});
+  await assert.rejects(call(null),/novo dia e hora/);
+  await assert.rejects(call("2026-10-29T18:15Z"),/novo dia e hora/);
+  await assert.rejects(call("2026-10-30T18:14Z"),/novo dia e hora/);
+  await assert.rejects(call("2026-10-30T18:15:30Z"),/novo dia e hora/);
+  assert.equal((await call("2026-10-30T18:15Z")).revision,1);
+  const document=(await db.doc("settings/system").get()).data();
+  assert.equal(policyAt(new Date("2026-10-30T18:14:59Z"),document).cycle.openDay,4);
+  const active=policyAt(new Date("2026-10-30T18:15Z"),document);
+  assert.equal(active.cycle.openDay,5);assert.equal(active.cycle.openMinute,15);
+  assert.equal(active.cycle.closeDay,2);assert.equal(active.cycle.closeMinute,45);
+});

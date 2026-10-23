@@ -1,3 +1,4 @@
+import { ratingQuorum, ratingQuorumCount } from "./rating-quorum.js";
 // Immutable game attempts and historical votes. No browser clock decides results.
 import { pathObjectiveRequirements } from "./path-missions.js";
 import { pathNode } from "./path-model.js";
@@ -114,6 +115,12 @@ export function pathHistoricalSummary(game, votes, revisions, cutoff) {
           {
             ...calculateGameAggregate(own),
             goalkeepingEligible: eligible,
+            // Exact integer sums avoid reconstructing a total from a rounded mean.
+            ratingSums: Object.fromEntries(FEEDBACK.map(([key]) => [key,
+              own.reduce((sum, vote) => sum + (Number.isFinite(vote.ratings?.[key]) ? vote.ratings[key] : 0), 0),
+            ])),
+            selfGoalkeepingRated: own.some(vote => vote.raterId === uid && Number.isFinite(vote.ratings?.goalkeeping)),
+            ...(game.ratingWaivers ? {ratingQuorumCounts: ratingQuorum(game, historical, uid, eligible, pathMillis(cutoff))} : {}),
             ratingCounts: Object.fromEntries(
               FEEDBACK.map(([key]) => [
                 key,
@@ -172,14 +179,42 @@ export function pathWindowResult(objective, game, summary, uid, now, evaluate) {
   if (!pathUsesRatings(objective))
     return evaluate(objective, game, summary, uid);
   const deadline = pathReviewDeadline(game);
+  const player = summary?.players?.[uid];
+  const criteria = requirements.criteria;
+  if (deadline && now < deadline && player) {
+    const total = new Set(participants(game)).size;
+    // Early settlement assumes two stars for each outstanding vote (league rule).
+    // Waiver credit meets the final quorum only; it cannot supply early real votes.
+    const enough = criteria.every(key =>
+      Number.isInteger(player.ratingCounts?.[key]) && player.ratingCounts[key] >= 7 &&
+      player.ratingCounts[key] <= total && Number.isFinite(player.ratingSums?.[key]),
+    );
+    if (enough && (!requirements.goalkeeper || player.selfGoalkeepingRated)) {
+      const worstPlayer = { ...player };
+      for (const key of criteria) worstPlayer[key] =
+        (player.ratingSums[key] + 2 * (total - player.ratingCounts[key])) / total;
+      const worst = evaluate({ ...objective, minRatings: 7 }, game,
+        { ...summary, players: { ...summary.players, [uid]: worstPlayer } }, uid);
+      if (worst.status === "success") {
+        const actual = evaluate({ ...objective, minRatings: 7 }, game, summary, uid);
+        if (actual.status === "success") return {
+          ...actual,
+          reason: `Sucesso antecipado garantido. ${actual.reason}`,
+          earlySettlement: true,
+          missingVoteStars: 2,
+          evaluatedAt: now,
+          guaranteedRatings: Object.fromEntries(criteria.map(key => [key, worstPlayer[key]])),
+          reviewDeadline: deadline,
+        };
+      }
+    }
+  }
   if (!deadline || now < deadline)
     return {
       status: "waiting",
-      reason: "Avaliações em curso. Apuramento no fim das 48 horas.",
+      reason: "Avaliações em curso. Entrega antecipada com sete votos por critério e sucesso garantido; caso contrário, apuramento às 48 horas.",
       reviewDeadline: deadline,
     };
-  const player = summary?.players?.[uid];
-  const criteria = requirements.criteria;
   if (
     objective.kind === "conditions" &&
     requirements.goalkeeper &&
@@ -195,7 +230,7 @@ export function pathWindowResult(objective, game, summary, uid, now, evaluate) {
     criteria.some(
       (key) =>
         !Number.isFinite(player?.[key]) ||
-        (player?.ratingCounts?.[key] || 0) < 7,
+        ratingQuorumCount(player,key,0) < 7,
     )
   )
     return {

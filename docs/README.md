@@ -10,9 +10,25 @@
 
 </div>
 
+[Novos critérios das cartas e mínimo de sete avaliações — 21/10/2026](reports/card-criteria-2026-10-21.md).
+
 [Início atualizado e recuperação horária com menos leituras — 21/10/2026](reports/home-read-cache-2026-10-21.md) · [Funcionamento](reference/home-data.md).
 
 ## Por onde começar
+
+[Manutenção por páginas, horários semanais e histórico de alterações — 22/10/2026](reports/maintenance-pages-2026-10-22.md).
+
+[Missões concluídas: destaque e resgate na própria caixa — 22/10/2026](reports/mission-completion-2026-10-22.md).
+
+[Anular votos em falta: mínimos sem alterar médias — 22/10/2026](reports/rating-waivers-2026-10-22.md).
+
+[Performance: jogos entre fechos semanais — 22/10/2026](reports/performance-week-2026-10-22.md).
+
+[Sucata: carta base até 49 OVR — 22/10/2026](reports/scrap-card-2026-10-22.md).
+
+[Ultimate 20: cores, contraste e validação em desktop/telemóvel](reports/ultimate-theme-2026-10-21.md).
+
+[Avaliações processadas apenas quando há alterações, hora a hora](reference/feedback-processing.md) · [Validação de 21/10/2026](reports/feedback-hourly-2026-10-21.md).
 
 [Diagnóstico de permissões nas avaliações da app](reports/feedback-mobile-access-2026-10-19.md).
 

@@ -39,6 +39,37 @@ const payload = () => ({
   tieBreak: "uid",
 });
 
+test("closed one-off mission claims use the saved result and deliver only once", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="closed-mission-admin",uid="closed-mission-member",other="closed-mission-other";
+  for(const id of [owner,uid,other]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  const {id}=await eventAction.run({auth:{uid:owner},data:{action:"create",...payload(),
+    kind:"mission",method:"objective",scope:"individual",winnerCount:1,positions:[prize(5)],
+    audience:{mode:"selected",memberIds:[uid,other]},objective:{metric:"games",target:1},
+    cadence:"once",maxRepeats:1}});
+  t.mock.timers.setTime(new Date("2026-10-26T12:00:00Z").getTime());
+  const ref=db.doc(`events/${id}`);
+  await ref.update({status:"closed",rewardsApplied:true,closedAt:Timestamp.fromDate(new Date("2026-10-24T00:00:00Z")),
+    ranking:[{uid,position:1,progress:1,eligible:true},{uid:other,position:2,progress:0,eligible:false}],winners:[]});
+  const detail=await getEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal(detail.claimMode,"ready");
+  assert.equal(detail.progress[0].eligible,true);
+  await assert.rejects(claimMission.run({auth:{uid:other},data:{eventId:id,eligible:true,progress:999}}));
+  await assert.rejects(claimMission.run({auth:{uid:owner},data:{eventId:id}}));
+  await Promise.all([1,2].map(()=>claimMission.run({auth:{uid},data:{eventId:id}})));
+  const rewards=await db.collection("eventRewards").where("eventId","==",id).get();
+  assert.equal(rewards.size,1);
+  assert.equal(rewards.docs[0].data().periodKey,"once");
+  assert.equal((await ref.get()).data().winners[0].uid,uid);
+  assert.equal((await getEvent.run({auth:{uid},data:{eventId:id}})).claimMode,"blocked");
+  await ref.update({status:"cancelled"});
+  await assert.rejects(claimMission.run({auth:{uid},data:{eventId:id}}));
+  await ref.update({status:"closed",cadence:"weekly"});
+  await assert.rejects(claimMission.run({auth:{uid},data:{eventId:id}}));
+});
+
 test("goal builder edits preserve counts, window, participants and delivered rewards", async (t) => {
   if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
   t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});t.after(()=>t.mock.timers.reset());
@@ -729,7 +760,8 @@ test("ADMIN edits published and ended missions without resetting status or award
     openNow: true,
   });
   assert.equal((await db.doc(`events/${id}`).get()).data().status, "closed");
-  await assert.rejects(claim());
+  assert.equal((await claim()).reward.specialId, "mvp");
+  assert.equal((await db.collection("eventRewards").where("eventId", "==", id).get()).size, awards.size);
   const cancelled = await call("create", {
     ...mission,
     title: "Para cancelar",

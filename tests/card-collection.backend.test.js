@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { ensureHistory, selectWeeklyCard } from "../functions/index.js";
+import { ensureHistory, selectWeeklyCard, onFeedback, processFeedback } from "../functions/index.js";
 import {
   refreshPlayerCollection,
   collectionContext,
@@ -18,6 +18,37 @@ const db = getFirestore();
 const all = (value) =>
   Object.fromEntries(ATTRIBUTES.map(([key]) => [key, value]));
 
+test("Melhor em Campo exige sete votos e 4,5; uma nota superior sem amostra não bloqueia a conquista", async t => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-18T14:00:00Z") });
+  const uid = "mvp-seven", opponent = "mvp-six";
+  const raters = Array.from({ length: 7 }, (_, i) => `mvp-rater-${i}`);
+  const when = Timestamp.fromDate(new Date("2026-10-17T12:00:00Z"));
+  for (const id of [uid, opponent, ...raters]) {
+    await db.doc(`users/${id}`).set({ uid: id, role: "member", disabled: false, primaryPosition: "MED" });
+    await db.doc(`initialRatings/${id}`).set({ uid: id, ratings20: all(12), completed: true, createdAt: when });
+  }
+  const gameId = "mvp-seven-game";
+  await db.doc(`games/${gameId}`).set({ title: "Sete votos", status: "closed", scheduledAt: when, closedAt: when,
+    teamA: { starters: [uid, ...raters.slice(0, 3)], bench: [] }, teamB: { starters: [opponent, ...raters.slice(3)], bench: [] }, score: { teamA: 3, teamB: 2 } });
+  for (const targetId of [uid, opponent]) for (const [i, raterId] of raters.slice(0, 6).entries())
+    await db.doc(`games/${gameId}/feedback/${raterId}_${targetId}`).set({ raterId, targetId, submitted: true, createdAt: when, submittedAt: when,
+      ratings: Object.fromEntries(FEEDBACK.map(([key]) => [key, key === "goalkeeping" ? null : targetId === opponent ? 5 : i < 3 ? 4 : 5])) });
+  const trigger = async () => onFeedback.run({ params: { gid: gameId }, data: { before: { data: () => undefined }, after: await db.doc(`games/${gameId}/feedback/${raters[0]}_${uid}`).get() } });
+  await trigger();
+  await processFeedback.run({});
+  assert.equal((await db.doc(`gameSummaries/${gameId}`).get()).data().players[uid].mvp, false);
+  await db.doc(`games/${gameId}/feedback/${uid}_${uid}`).set({ raterId: uid, targetId: uid, submitted: true, createdAt: when, submittedAt: when,
+    ratings: Object.fromEntries(FEEDBACK.map(([key]) => [key, key === "goalkeeping" ? null : 5])) });
+  await trigger();
+  await processFeedback.run({});
+  const summary = (await db.doc(`gameSummaries/${gameId}`).get()).data().players;
+  assert.equal(summary[uid].count, 7); assert.equal(summary[uid].mvp, true); assert.equal(summary[opponent].mvp, false);
+  await db.doc(`gameSummaries/${gameId}`).update({ [`players.${uid}.mvp`]: false });
+  const context = await collectionContext();
+  assert.equal(context.summaries.find(row => row.id === gameId).players[uid].mvp, true, "resumos anteriores também usam o novo limiar durante o recálculo");
+  assert.ok((await db.doc(`cardCollections/${uid}`).get()).data().awards.some(award => award.id === "mvp"));
+});
+
 test("self non-keeper repairs stale summaries idempotently and collection fallback excludes goalkeeper votes",async()=>{
   const gid="keeper-stale-repair",uid="keeper.optout",peer="keeper.external";
   const when=Timestamp.fromDate(new Date("2026-10-15T12:00Z"));
@@ -26,7 +57,7 @@ test("self non-keeper repairs stale summaries idempotently and collection fallba
     ratings:{...Object.fromEntries(FEEDBACK.map(([key])=>[key,4])),goalkeeping:raterId===uid?null:5}});
   const stale={goalkeeping:5,attack:4,count:2,evaluatedAt:when.toDate().toISOString(),ratingCounts:{goalkeeping:1,attack:2}};
   await db.doc(`gameSummaries/${gid}`).set({players:{[uid]:stale},status:"closed",sentinel:"preserve"});
-  const context=await collectionContext();
+  const context=await collectionContext(new Date(), { repair: true });
   const computed=context.summaries?.find(row=>row.id===gid)?.players?.[uid];
   assert.equal(computed.goalkeeping,null);
   assert.equal(computed.goalkeepingEligible,false);
@@ -49,7 +80,7 @@ test("coleção permanente, expiração e seleção normal são autoritativas e 
   t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-23T12:00Z") });
   t.after(() => t.mock.timers.reset());
   const uid = "collection-owner",
-    others = ["collection-voter1", "collection-voter2"];
+    others = Array.from({ length: 6 }, (_, i) => `collection-voter${i + 1}`);
   for (const id of [uid, ...others])
     await db.doc(`users/${id}`).set({
       uid: id,
@@ -68,7 +99,7 @@ test("coleção permanente, expiração e seleção normal são autoritativas e 
     await db.doc(`games/${gameId}`).set({
       status: "closed",
       teamA: { starters: [uid], bench: [] },
-      teamB: { starters: others, bench: [] },
+      teamB: { starters: others.slice(0, 5), bench: others.slice(5) },
       score: { teamA: 8, teamB: 4 },
       closedAt: Timestamp.fromDate(new Date(`2026-09-0${i + 1}T12:00Z`)),
     });
@@ -87,6 +118,8 @@ test("coleção permanente, expiração e seleção normal são autoritativas e 
         ),
       });
   }
+  await collectionContext(); // Queue imported legacy fixtures, as the first page visit would.
+  await processFeedback.run({});
   await ensureHistory.run({ auth: { uid }, data: {} });
   const context = await collectionContext();
   const projected = collectionPlayer(context, uid);
@@ -179,7 +212,7 @@ test("prémios por posição fecham uma vez e a votação FUTTIES só inclui can
   }));
   context.summaries = context.games.map((game) => ({
     id: game.id,
-    players: { [uid]: { count: 3, overall: 4.5, attack: 4.5, attitude: 4.5 } },
+    players: { [uid]: { count: 7, overall: 4.5, attack: 4.5, attitude: 4.5 } },
   }));
   await db.doc("cardPeriodAwards/2026-E5").delete();
   await settleCollectionPeriods(context);

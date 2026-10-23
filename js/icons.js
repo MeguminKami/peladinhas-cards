@@ -1,5 +1,6 @@
 import { TOTAL_OBJECTIVES } from "./event-totals.js";
 const paths = {
+  ban: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M5 5l14 14",
   search: "M15 15l6 6 M17 9a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
   filter: "M3 5h18 M6 12h12 M9 19h6 M8 2v6 M16 9v6 M11 16v6",
   info: "M12 17v-5 M12 8h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0",
@@ -9,6 +10,9 @@ const paths = {
   publish: "M12 16V3 m-5 5 5-5 5 5 M4 15v6h16v-6",
   path: "M12 21v-7M12 14 5 8M12 14l7-6M5 8V3M19 8V3M2 3h6M16 3h6M9 21h6 M9 14h6",
   gift: "M3 8h18v4H3Z M5 12v9h14v-9 M12 8v13 M12 8H8a3 3 0 1 1 3-3l1 3Z M12 8h4a3 3 0 1 0-3-3l-1 3Z",
+  clock: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M12 6v6l4 2",
+  settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M9 3l-.6 2.2-2 .9-2-.6L2 9.8l1.5 1.6v2.3L2 15.3l2.5 4.3 2-.6 2 .9L9 22h6l.6-2.1 2-.9 2 .6 2.5-4.3-1.5-1.6v-2.3l1.5-1.6-2.5-4.3-2 .6-2-.9L15 3Z",
+  download: "M12 3v12 m-5-5 5 5 5-5 M4 16v5h16v-5",
   preview: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
   refresh: "M20 4v6h-6 M4 20v-6h6 M5 9a7 7 0 0 1 12-4l3 5 M4 14l3 5a7 7 0 0 0 12-4",
   studioModels: "M6 3h12v18H6Z M3 6v12 M21 6v12 M9 7h6 M9 11h6 M9 16h3",

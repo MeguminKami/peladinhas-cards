@@ -25,7 +25,7 @@ const call = (action, data = {}, uid = root) =>
   });
 const read = (section, uid = root) =>
   maintenanceRead.run({ auth: { uid }, data: { section } });
-const config = () => structuredClone(DEFAULT_POLICY);
+const config = () => ({...structuredClone(DEFAULT_POLICY),cycle:{...DEFAULT_POLICY.cycle,closeHour:policyAt().cycle.closeHour}});
 test("maintenance: persisted policies, authority, transactions, budgets, deferral, permissions and recovery diagnostics", async (t) => {
   await db.doc("settings/system").delete();
   for (const collection of ["eventRewards"]) {

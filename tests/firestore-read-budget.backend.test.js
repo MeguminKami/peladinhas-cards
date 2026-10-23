@@ -31,6 +31,9 @@ test("read budgets: shared mission summaries and participant rebuilds preserve r
       batch.set(db.doc(`games/budget-game-${n}/feedback/${raterId}_${targetId}`), {submitted:true,raterId,targetId,ratings:Object.fromEntries(FEEDBACK.map(([k])=>[k,4])),submittedAt:when,updatedAt:when});
     await batch.commit();
   }
+  // Imported fixtures have no live write triggers: queue their legacy summaries
+  // before measuring the hourly publication, including the complete batch cost.
+  if (!baseline) await (await import("../functions/card-collection.js")).collectionContext();
   // Measure SDK reads, including transaction attempts. This is not a cloud bill.
   let active = null;
   const record = (snap, path) => {
@@ -67,7 +70,10 @@ test("read budgets: shared mission summaries and participant rebuilds preserve r
     try {await work();return active;} finally {active=null;}
   };
   const vote = await db.doc(`games/budget-game-0/feedback/${ids[0]}_${ids[0]}`).get();
-  const feedback = await measure(() => endpoints.onFeedback.run({params:{gid:"budget-game-0"},data:{after:vote,before:{data:()=>undefined}}}));
+  const feedback = await measure(async () => {
+    await endpoints.onFeedback.run({params:{gid:"budget-game-0"},data:{after:vote,before:{data:()=>undefined}}});
+    if (endpoints.processFeedback) await endpoints.processFeedback.run({});
+  });
   const fingerprint = [];
   for(const uid of ids) {const value=(await db.doc(`weeklyCards/${uid}`).get()).data();assert.ok(value);fingerprint.push({uid,ovr:value.ovr,stats:value.stats,specials:value.specials.map(s=>s.id)});}
   const { cardWeek } = await import("../js/card-week.js");

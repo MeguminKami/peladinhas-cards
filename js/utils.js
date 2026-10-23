@@ -1,5 +1,6 @@
 import { policyAt } from "./system-policy.js";
 import { cardWeek } from "./card-week.js";
+import { performanceWeek } from "./performance-week.js";
 import {
   COLLECTION_EDITIONS,
   COLLECTION_THEME_IDS,
@@ -61,6 +62,7 @@ export const COUNTRIES = [
 ];
 export const THEMES = [
   ...ACTIVE_COLLECTION_IDS,
+  "scrap",
   "bronze-common",
   "bronze-rare",
   "silver-common",
@@ -88,7 +90,7 @@ export function informTheme(baseCard, ovr = 0) {
   const base = /^(bronze|silver|gold)-(common|rare)$/.test(baseCard || "")
     ? baseCard
     : calculateBaseCard(ovr);
-  return `in-form-${base.split("-")[0]}`;
+  return `in-form-${base === "scrap" ? "bronze" : base.split("-")[0]}`;
 }
 export const CATALOG_THEMES = Object.freeze([
   ...new Set([
@@ -98,6 +100,7 @@ export const CATALOG_THEMES = Object.freeze([
   ]),
 ]);
 const THEME_NAMES = {
+  scrap: "Sucata",
   toty: "Apogeu · TOTY",
   tots: "Equipa da Época · TOTS",
   "fut-birthday": "Carnaval · FUT BIRTHDAY",
@@ -573,7 +576,7 @@ export function calculateOverall(stats, settings, position, inactivity) {
   return calculateOverallDetails(stats, settings, position, inactivity).ovr;
 }
 export function calculateBaseCard(o) {
-  return o < 60
+  return o < 50 ? "scrap" : o < 60
     ? "bronze-common"
     : o < 65
       ? "bronze-rare"
@@ -707,13 +710,13 @@ export function isoWeekEnd(weekId) {
   return new Date(monday - (local - monday) - 1);
 }
 export function calculateWeeklyTopPlayers(players, date = new Date()) {
-  const cycle = cardWeek(date);
+  const period = performanceWeek(date);
   return players
     .map((p) => {
       const games = (p.aggregates || []).filter(
         (g) =>
-          +asDate(g.date) >= +cycle.opensAt &&
-          +asDate(g.date) < +cycle.closesAt &&
+          +asDate(g.date) >= +period.startsAt &&
+          +asDate(g.date) < +period.endsAt &&
           g.count >= 2,
       );
       return {

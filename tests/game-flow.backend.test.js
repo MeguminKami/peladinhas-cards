@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { correctRating } from "../functions/index.js";
+import { correctRating, processFeedback } from "../functions/index.js";
 import {
   gameFlowFunctions,
   validateGameInput,
@@ -243,6 +243,10 @@ test("game flow: atomic freeze, singleton opening, immediate numeric settlement 
   assert.ok(
     journal.docs.every((doc) => doc.data().recordedAt instanceof Timestamp),
   );
+  const unpublished = await path("sync");
+  assert.equal(unpublished.pending[0].ratingCounts.passing, 7, "explicit settlement checks original votes even before hourly summary publication");
+  assert.equal(unpublished.pending.length, 1, "seven 4-star votes out of eight cannot guarantee a 4-star result");
+  await processFeedback.run({});
   const waiting = await path("sync");
   assert.equal(waiting.pending.length, 1);
   assert.equal(waiting.pending[0].ratingCounts.passing, 7);
@@ -518,29 +522,29 @@ test("fusion flow: milestones gate activation, origins remain intact and final c
   const paths = pathFunctions(async () => {});
   const call = (action, data = {}) =>
     paths.pathAction.run({ auth: { uid }, data: { action, ...data } });
-  await assert.rejects(call("unify", { routeId: "fusion-attack" }), /marco 5/);
+  await assert.rejects(call("unify", { routeId: "fusion-predator" }), /marco 5/);
   const state = emptyPathState(uid);
   state.nodes["shooting-4-0"] = { progress: 100, completedAt: "2026-10-01" };
-  state.nodes["passing-4-0"] = { progress: 100, completedAt: "2026-10-01" };
+  state.nodes["dribbling-4-0"] = { progress: 100, completedAt: "2026-10-01" };
   state.offers["shooting-0-0"] = createPathOffers(
     pathNode("shooting-0-0"),
     () => 0,
   );
   await db.doc(`pathStates/${uid}`).set(state);
-  const unified = await call("unify", { routeId: "fusion-attack" });
-  assert.equal(pathVisibleRoute(unified, "shooting"), "fusion-attack");
+  const unified = await call("unify", { routeId: "fusion-predator" });
+  assert.equal(pathVisibleRoute(unified, "shooting"), "fusion-predator");
   assert.deepEqual(
     unified.offers["shooting-0-0"],
     state.offers["shooting-0-0"],
   );
-  assert.equal(unified.activePath, "fusion-attack");
+  assert.equal(unified.activePath, "fusion-predator");
   await assert.rejects(
-    call("offers", { nodeId: "fusion-attack-4" }),
+    call("offers", { nodeId: "fusion-predator-4" }),
     /disponível/,
   );
   const pending = {
     id: `fusion-final-${suffix}`,
-    nodeId: "fusion-attack-4",
+    nodeId: "fusion-predator-4",
     gameId: gid,
     frozenAt: "2026-10-01",
     windowVersion: 3,
@@ -557,7 +561,7 @@ test("fusion flow: milestones gate activation, origins remain intact and final c
   };
   await db
     .doc(`pathStates/${uid}`)
-    .update({ pending: [pending], "nodes.fusion-attack-4": { progress: 75 } });
+    .update({ pending: [pending], "nodes.fusion-predator-4": { progress: 75 } });
   await db
     .doc(`eventRewards/fusion-prior-${suffix}`)
     .set({
@@ -565,7 +569,7 @@ test("fusion flow: milestones gate activation, origins remain intact and final c
       source: "path",
       reward: {
         statDuration: "permanent",
-        boosts: { shooting: 15, passing: 15 },
+        boosts: { shooting: 15, dribbling: 15 },
       },
     });
   const voters = Array.from(
@@ -588,10 +592,10 @@ test("fusion flow: milestones gate activation, origins remain intact and final c
       .doc(`games/${gid}/feedback/${raterId}_${uid}`)
       .set({ raterId, targetId: uid, submitted: true, ratings, updatedAt });
   const result = await call("sync");
-  assert.equal(result.lastResult.reward.specialId, "path-fusion-attack");
+  assert.equal(result.lastResult.reward.specialId, "path-fusion-predator");
   assert.deepEqual(result.lastResult.reward.boosts, {
     shooting: 0,
-    passing: 0,
+    dribbling: 0,
   });
   await call("sync");
   assert.equal(

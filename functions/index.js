@@ -1,5 +1,8 @@
+import { ratingQuorum, ratingWaiverTimes } from "../js/rating-quorum.js";
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
+import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
 import { homeFunctions } from "./home-cache.js";
+import { markCardMvps } from "./card-unlock-rules.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
 import { passwordRecoveryFunctions } from "./password-recovery.js";
 import { maintenanceFunctions } from "./maintenance.js";
@@ -408,6 +411,7 @@ async function aggregateGame(gid) {
         (v) =>
           v.targetId === uid &&
           v.submitted &&
+          v.ratings && typeof v.ratings === "object" &&
           participants(g).includes(v.raterId),
       );
       const a = calculateGameAggregate(own);
@@ -418,6 +422,7 @@ async function aggregateGame(gid) {
         evaluatedAt: new Date(
           Math.max(
             +(asDate(g.closedAt || g.scheduledAt) || 0),
+            ...ratingWaiverTimes(g),
             ...own.map(
               (vote) =>
                 +(
@@ -428,6 +433,7 @@ async function aggregateGame(gid) {
             ),
           ),
         ).toISOString(),
+        ...(g.ratingWaivers ? {ratingQuorumCounts: ratingQuorum(g, votes, uid, a.goalkeeping !== null)} : {}),
         ratingCounts: Object.fromEntries(
           FEEDBACK.map(([key]) => [
             key,
@@ -442,18 +448,13 @@ async function aggregateGame(gid) {
         ),
       };
     }
-    const best = Math.max(0, ...Object.values(ps).map((a) => a.overall || 0));
-    for (const uid of Object.keys(ps))
-      ps[uid].mvp =
-        ps[uid].count >= 3 &&
-        ps[uid].overall >= 4.8 &&
-        ps[uid].overall === best;
+    markCardMvps(ps);
     const ref = db.doc(`gameSummaries/${gid}`);
     const previous = await tx.get(ref);
     const next = {
       status: g.status,
-      scheduledAt: g.scheduledAt,
-      closedAt: g.closedAt,
+      scheduledAt: g.scheduledAt || g.closedAt || null,
+      closedAt: g.closedAt || null,
       teamA: g.teamA,
       teamB: g.teamB,
       players: ps,
@@ -508,9 +509,6 @@ async function buildHistory(uid, shared = null) {
   const games = data(gameSnaps).filter(
     (g) =>
       g.status === "closed" && !g.deleting && participants(g).includes(uid),
-  );
-  const feedback = await Promise.all(
-    games.map((g) => context.reads.read(`feedback:${g.id}`, () => db.collection(`games/${g.id}/feedback`).get())),
   );
   const cycle = cardWeek(now),
     cutoff = cycle.phase === "closed" ? cycle.closesAt : now;
@@ -573,24 +571,8 @@ async function buildHistory(uid, shared = null) {
     for (let i = 0; i < games.length; i++) {
       const g = games[i];
       if (+g.closedAt.toDate() > +cutoff) continue;
-      const feedbackRows = data(feedback[i]).filter(
-        (f) =>
-          f.submitted &&
-          participants(g).includes(f.raterId) &&
-          (f.submittedAt || f.updatedAt || f.createdAt) &&
-          +(f.submittedAt || f.updatedAt || f.createdAt).toDate() <= +cutoff,
-      );
-      const own = feedbackRows.filter((f) => f.targetId === uid);
-
-      const aggregate = calculateGameAggregate(own);
-      const max = Math.max(
-        ...participants(g).map(
-          (id) =>
-            calculateGameAggregate(
-              feedbackRows.filter((f) => f.targetId === id),
-            ).overall || 0,
-        ),
-      );
+      const players = context.summaries.find(summary => summary.id === g.id)?.players || {};
+      const aggregate = players[uid] || {};
       aggregates.push({
         ...aggregate,
         ...matchPerformance(uid, g),
@@ -599,22 +581,12 @@ async function buildHistory(uid, shared = null) {
         ...matchEvolutionContext(
           uid,
           g,
-          Object.fromEntries(
-            participants(g).map((id) => [
-              id,
-              calculateGameAggregate(
-                feedbackRows.filter((f) => f.targetId === id),
-              ),
-            ]),
-          ),
+          players,
           balanceRows.find((b) => b.id === g.id && balanceMatches(g, b)),
         ),
         gameId: g.id,
-        count: own.length,
-        mvp:
-          own.length >= 3 &&
-          aggregate.overall >= 4.8 &&
-          aggregate.overall === max,
+        count: aggregate.count || 0,
+        mvp: aggregate.mvp === true,
         date: g.closedAt.toDate(),
       });
     }
@@ -765,17 +737,18 @@ export const onInitialRating = policyWritten(
 );
 export const onFeedback = policyWritten(
   "games/{gid}/feedback/{id}",
-  async (event) => {
-    const value = event.data.after.data() || event.data.before.data();
-    if (!value || (!value.submitted && !event.data.before.data()?.submitted))
-      return;
-    await coalesceWork(`feedback:${event.params.gid}`, async () => {
-      await aggregateGame(event.params.gid);
-      const g = (await db.doc(`games/${event.params.gid}`).get()).data();
-      await buildHistories(participants(g || {}));
-    });
-  },
+  enqueueFeedbackEvent,
 );
+export const processFeedback = policySchedule("processFeedback", {
+  schedule: "0 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540,
+}, () => drainFeedbackQueue({
+  aggregate: async gid => {
+    await aggregateGame(gid);
+    const game = (await db.doc(`games/${gid}`).get()).data();
+    return participants(game || {});
+  },
+  rebuild: buildHistories,
+}));
 // Store only the rendering fields, once per participant and match week.
 async function captureGameCards(gid) {
   const ref = db.doc(`games/${gid}`);
@@ -901,7 +874,7 @@ export const onGame = policyWritten("games/{gid}", async (event) => {
         Object.fromEntries(
           Object.entries(value).filter(
             ([key]) =>
-              !["teamNames", "playerCards", "cardWeekId", "updatedAt"].includes(
+              !["teamNames", "playerCards", "cardWeekId", "updatedAt", "ratingWaivers"].includes(
                 key,
               ),
           ),
@@ -1461,7 +1434,7 @@ export const { getHome, onHomeSource, onHomeFeedback, onHomeVote } = homeFunctio
 
 const pathEndpoints = pathFunctions(buildHistory);
 export const { getPath, pathAction, onPathGame, onPathSummary, settlePaths } = pathEndpoints;
-export const { gameAction, feedbackAction } = gameFlowFunctions(pathEndpoints.syncGame);
+export const { gameAction, feedbackAction, ratingWaiverAction } = gameFlowFunctions(pathEndpoints.syncGame);
 
 export const {
   onGameNotifications,

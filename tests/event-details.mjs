@@ -269,6 +269,31 @@ try {
     assert.deepEqual(await page.locator("[data-participant-uid]").evaluateAll(rows=>rows.map(row=>row.dataset.participantUid)),["carlos","joao","pedro","zero","locked"]);
     assert.match(await page.locator('[data-participant-uid="pedro"]').innerText(),/40%/);
   }
+  await page.evaluate(async()=>{
+    const {managedEventPage}=await import("/js/event-pages.js");
+    window.__renderClosedMission=async(mode="ready")=>managedEventPage({
+      user:{uid:"jonas",role:"member"},league:{users:[{uid:"jonas",displayName:"Jonas"}],players:[]},
+      render:html=>document.querySelector("#main").innerHTML=html,
+    },{id:"closed-night",schemaVersion:2,title:"Revelação de um jogo noturno",kind:"mission",method:"objective",scope:"individual",
+      status:"closed",startsAt:"2026-10-01",endsAt:"2026-10-15",cadence:"once",maxRepeats:1,participantIds:["jonas"],
+      objective:{metric:"games",target:1},progress:[{uid:"jonas",progress:1,eligible:true}],
+      participantProgress:[{uid:"jonas",progress:1,target:1,percent:100,completed:true}],
+      claimMode:mode,claimedPeriods:[],rewardPreview:[],myRewards:[],winners:[],ranking:[]});
+    await window.__renderClosedMission();
+  });
+  for(const width of [1440,768,390,320]){
+    await page.setViewportSize({width,height:1200});
+    assert.equal(await page.locator("#claim-mission").isEnabled(),true);
+    assert.match(await page.locator(".mission-progress-panel").innerText(),/Podes receber a recompensa/);
+    await page.locator("#claim-mission").focus();
+    assert.equal(await page.locator("#claim-mission").evaluate(el=>el===document.activeElement),true);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+    await page.screenshot({path:`test-results/closed-mission-${width}.png`,fullPage:true});
+  }
+  await page.evaluate(()=>window.__renderClosedMission("blocked"));
+  assert.equal(await page.locator("#claim-mission").count(),0);
+  await page.evaluate(()=>window.__renderClosedMission("deferred"));
+  assert.equal(await page.getByRole("button",{name:"Concluir e aguardar"}).isEnabled(),true);
   assert.deepEqual(errors, []);
   console.log(
     "Event details: six objective/method variants, all/mixed rewards, separate duration, configured rewards and 1440/768/390/320px passed.",

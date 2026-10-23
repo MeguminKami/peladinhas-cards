@@ -6,7 +6,7 @@ A área **Administração → Manutenção** centraliza regras globais e ferrame
 
 | Área           | Operações disponíveis                                                                                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Regras         | Rascunho privado, validação, simulação, publicação imediata ou agendada e cancelamento de agendamento.                                   |
+| Páginas da aplicação | Início e cartas, Jogos, Avaliações, Missões e caminhos, Eventos e votações, Jogadores, App e notificações. Rascunho conjunto, simulação e publicação. |
 | Recompensas    | Consulta de entregas, pendências, revogações e exportação.                                                                           |
 | Automatizações | Estado das tarefas, falhas, limites de pedidos e execução manual das tarefas existentes.                                                 |
 | Diagnóstico    | Inconsistências, referências órfãs, cartas em falta e sinais de votação a rever; pré-visualização e recálculo por jogador, jogo ou liga. |
@@ -23,9 +23,19 @@ Os valores iniciais estão em `js/system-policy.js`. Não é necessário criar d
 - **Progressão:** velocidade, ganhos/perdas máximos e inatividade. Os jogos usam a versão em vigor na respetiva data. Alterar hoje uma regra não reinterpreta jogos antigos. Recalcular usa o motor existente e preserva cartas fechadas.
 - **Disponibilidade:** apenas consulta com aviso público, registos, jogos, avaliações, missões, eventos/votações e recebimento de recompensas. Os bloqueios são aplicados no servidor e nas regras das escritas diretas. Os administradores mantêm acesso às operações de recuperação.
 - **Automatizações:** cartas semanais, desafios/expirações, coleções, lembretes e limpeza. Execuções têm estado, bloqueio de concorrência e registo de falhas. Desafios com erro são assinalados individualmente, permitindo processar os restantes.
-- **Calendário:** hora de abertura à quinta-feira e fecho à quarta-feira, em Lisboa; meses por época/ano de coleção. Alterações de horário exigem agendamento numa abertura futura. Alterações às coleções exigem uma fronteira futura comum dos períodos atuais. Os dias fixos preservam a identidade das semanas existentes.
+- **Calendário:** dia da semana, hora e minutos de abertura e fecho das cartas, em Lisboa; meses por época/ano de coleção. A compatibilidade mantém quinta-feira às 12h e quarta-feira às 18h desde 21/10/2026, preservando o fecho histórico anterior às 12h. Alterações exigem publicação numa nova abertura futura; o botão «Usar próxima abertura» preenche esse instante. Alterações às coleções exigem uma fronteira futura comum dos períodos atuais. Os IDs continuam a usar semanas ISO e as cartas fechadas não são reabertas pelas novas definições. No salto de primavera, um horário recorrente inexistente avança para depois da mudança da hora; no outono usa-se a ocorrência mais tardia.
 - **Notificações:** interruptor global, silêncio dos lembretes, quantidade diária, intervalo e atraso do primeiro lembrete pós-jogo. O silêncio e quotas referem-se aos lembretes; mensagens operacionais não são apresentadas como lembretes.
 - **Proteção:** limites por operação/utilizador/minuto e limite total; App Check opcional para alterações callable; retenção de notificações lidas e estados antigos. A chave pública reCAPTCHA é configurada e testada antes de exigir App Check.
+
+## Consultar os tetos de stats
+
+Em **Início e cartas**, abrir **Tetos de stats e recompensas** para comparar jogos, missões, eventos e ETC. Missões e eventos também apresentam este resumo na sua página de configuração. Os valores seguem o formulário em edição; quando diferem, o resumo indica também o valor ativo. Alterar o rascunho não altera os pagamentos antes da publicação e entrada em vigor.
+
+Distinguir a escala final 0–99, os ganhos/perdas por jogo, os bónus temporários acumulados, a soma por prémio temporário, os permanentes acumulados e os orçamentos por origem/período. O ETC tem teto permanente próprio de +15 por atributo e +25 a GR, independente do teto permanente partilhado por missões e eventos. Os orçamentos gerais também se aplicam ao ETC com contabilização própria. Zero nos orçamentos significa sem teto de orçamento, não ausência de limites por atributo.
+
+### Rever o calendário antes de publicar
+
+O resumo distingue o calendário ativo, a proposta por publicar e agendamentos futuros existentes. A sugestão automática de entrada em vigor acompanha alterações posteriores à abertura. Uma data preenchida manualmente é preservada e validada antes da confirmação; deve coincidir com uma abertura futura do novo horário, com mais de um minuto de antecedência. O botão «Usar próxima abertura» volta a ativar a sugestão automática. O sucesso distingue configuração agendada de configuração aplicada agora. A semana atual e cartas fechadas são preservadas.
 
 ## Persistência e segurança
 
@@ -72,7 +82,9 @@ npm.cmd run build:hosting
 
 Os testes de manutenção usam Firestore, Authentication e Storage locais; nunca devem apontar para produção. O teste visual cobre 1440, 768, 390 e 320 px. O relatório datado distingue emuladores, interface e configuração cloud.
 
-Para obter os seletores exatos de todas as funções afetadas pelos módulos partilhados:
+Para publicar a reorganização por páginas e o calendário configurável de 22/10/2026, usar `npm.cmd run deploy:maintenance-pages` e depois `npm.cmd run deploy:frontend`. O primeiro script enumera as 58 funções consumidoras dos módulos partilhados; não publica regras ou índices. [Validação e âmbito](../reports/maintenance-pages-2026-10-22.md).
+
+Para obter os seletores da instalação inicial completa da manutenção, incluindo regras e índices:
 
 ```powershell
 node scripts/maintenance-release.mjs

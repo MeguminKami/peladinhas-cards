@@ -1,3 +1,4 @@
+import { ratingQuorumCount } from "./rating-quorum.js";
 // Shared, deterministic rules. Only the server creates offers and settles attempts.
 import {
   pathMissionTemplates,
@@ -646,7 +647,7 @@ export function evaluatePathMission(objective, game, summary, uid) {
     criteria.some(
       (key) =>
         !Number.isFinite(player[key]) ||
-        (player.ratingCounts?.[key] || 0) < objective.minRatings,
+        ratingQuorumCount(player,key,0) < objective.minRatings,
     )
   )
     return {

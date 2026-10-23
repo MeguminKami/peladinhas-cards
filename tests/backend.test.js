@@ -15,7 +15,7 @@ import {
   onGameNotifications,
   onEventNotifications,
   scheduledNotifications,
-  onFeedback,
+  onFeedback, processFeedback,
   deleteGame,
   rebuildHistory,
   adminMessage,
@@ -311,10 +311,11 @@ test("integração: 3 votos oficiais, agregados anónimos, MVP, histórico e adm
       submittedAt: now,
     });
     await onFeedback.run(event(await r.get()));
+    await processFeedback.run({});
   }
   const aggregate = (await db.doc("gameSummaries/match").get()).data();
   assert.equal(aggregate.players.joao.count, 3);
-  assert.equal(aggregate.players.joao.mvp, true);
+  assert.equal(aggregate.players.joao.mvp, false, "três votos já não bastam para Melhor em Campo");
   assert.equal(aggregate.players.joao.goalkeeping, null);
   await assert.rejects(
     correctRating.run({
@@ -610,6 +611,7 @@ test("equilíbrio do jogo: referência fixa, impacto nas cartas e limpeza ao rea
     submittedAt: Timestamp.now(),
   });
   await onFeedback.run({ ...event(await vote.get()), params: { gid } });
+  await processFeedback.run({});
   const card = (
     await db.doc(`users/balance-low/cardHistory/${cardWeek().weekId}`).get()
   ).data();
@@ -823,6 +825,7 @@ test("evolução relativa: resumo público e histórico concordam; voto num cole
     before = await vote.get();
   await vote.update({ ratings: dimensions(1), updatedAt: stamp });
   await onFeedback.run({ ...event(await vote.get(), before), params: { gid } });
+  await processFeedback.run({});
   assert.ok((await current()).stats.pace > expected.pace);
   assert.deepEqual(
     (await db.doc(`gameBalances/${gid}`).get()).data(),
@@ -1916,6 +1919,7 @@ test("goalkeeper self N/A is authoritative in summaries and administrative corre
       updatedAt: now,
     });
     await onFeedback.run({ ...event(await ref.get()), params: { gid } });
+    await processFeedback.run({});
   }
   const summary = (await db.doc("gameSummaries/" + gid).get()).data().players[
     "keeper-target"

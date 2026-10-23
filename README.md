@@ -127,7 +127,9 @@ O jogador pode editar o próprio perfil. As ações de avaliação e gestão apr
 
 A carta traduz os dados do perfil e as avaliações numa identidade visual comum à liga. O **OVR** é a classificação geral: combina os 12 atributos com pesos próprios para a posição principal.
 
-<img src="docs/media/card-rarities.png" width="100%" alt="Galeria das seis raridades base: bronze comum e rara, prata comum e rara, ouro comum e rara." />
+Sucata é a carta base para OVR até 49: chapa oxidada, bordos lascados e fita adesiva. Bronze comum começa nos 50 OVR. As cartas especiais conquistadas mantêm-se.
+
+<img src="docs/media/card-rarities.png" width="100%" alt="Galeria dos sete tipos base: Sucata, bronze comum e rara, prata comum e rara, ouro comum e rara." />
 
 | Elemento                 | Como funciona                                                              |
 | :----------------------- | :------------------------------------------------------------------------- |
@@ -211,7 +213,7 @@ Os indicadores resumem a atividade da comunidade. A tabela permite comparar e or
 | Jogos e forma. | Vitórias, empates e derrotas.         | Golos e assistências.                  |
 | OVR e posição. | Taxa de vitória e diferença de golos. | Golos marcados e sofridos pela equipa. |
 
-O **ranking semanal** destaca o desempenho do ciclo. Exige avaliações suficientes para a forma semanal e utiliza o OVR como desempate ou referência quando faltam dados.
+O **ranking semanal** e o pódio Performance consideram os jogos entre dois fechos semanais, incluindo o intervalo anterior à abertura das cartas. Exige avaliações suficientes para a forma semanal e utiliza o OVR como desempate ou referência quando faltam dados.
 
 ## 07 · Missões
 

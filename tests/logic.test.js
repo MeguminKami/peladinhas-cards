@@ -160,8 +160,8 @@ test("raridades nas fronteiras", () => {
       calculateBaseCard,
     ),
     [
-      "bronze-common",
-      "bronze-common",
+      "scrap",
+      "scrap",
       "bronze-common",
       "bronze-common",
       "bronze-rare",

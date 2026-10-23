@@ -29,6 +29,9 @@ import {
 } from "../js/event-model.js";
 const db = () => getFirestore();
 const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+// A one-off mission keeps its authoritative result after closing.
+const closedMission = (event) => event?.kind === "mission" &&
+  event.method === "objective" && event.status === "closed" && event.cadence === "once";
 // Read both collections in the same transaction when granting rewards.
 async function objectiveGames(tx = null, includeRatings = true) {
   const read = (path) => tx ? tx.get(db().collection(path)) : db().collection(path).get();
@@ -872,8 +875,8 @@ export function managedEvents(rebuild) {
       result.unlockedAt = unlocked ? unlocked.toISOString() : null;
     }
     if (event.method === "objective") {
-      const games = rows(await (context ? context.read("objectiveGames", () => objectiveGames(null, context.includeRatings)) : objectiveGames(null, usesRatingObjective(event.objective))));
-      result.progress = eventRanking(
+      const games = closedMission(event) ? [] : rows(await (context ? context.read("objectiveGames", () => objectiveGames(null, context.includeRatings)) : objectiveGames(null, usesRatingObjective(event.objective))));
+      result.progress = closedMission(event) ? (event.ranking || []) : eventRanking(
         event,
         [],
         games,
@@ -923,10 +926,10 @@ export function managedEvents(rebuild) {
       if(event.kind==="mission") {
         const allocation=previewRewards.data()?.positions?.[0] ? rewardBudget(previewRewards.data().positions[0],completionLedger.filter(row=>row.uid===request.auth.uid),"mission") : null;
         const eligible=!!result.progress.find(row=>row.uid===request.auth.uid)?.eligible;
-        const active=event.status==="open" && +asDate(event.startsAt)<=Date.now() && eventEndMillis(event)>Date.now();
+        const active=closedMission(event) || event.status==="open" && +asDate(event.startsAt)<=Date.now() && eventEndMillis(event)>Date.now();
         const claimed=claims.some(row=>row.periodKey===periodWindow(event).key) || claims.length>=event.maxRepeats;
         const available=features.mode==="normal" && features.claims && features.missions;
-        result.claimMode=!active || claimed || !available || !eligible || !allocation ? "blocked" : allocation.reduced && allocation.overflow==="defer" ? "deferred" : allocation.reduced && allocation.overflow==="reject" ? "blocked" : "ready";
+        result.claimMode=!active || !event.participantIds.includes(request.auth.uid) || claimed || !available || !eligible || !allocation ? "blocked" : allocation.reduced && allocation.overflow==="defer" ? "deferred" : allocation.reduced && allocation.overflow==="reject" ? "blocked" : "ready";
         result.claimable=result.claimMode==="ready";
         result.claimNotice=!available ? "As recompensas estão temporariamente pausadas." : eligible && allocation?.reduced && allocation.overflow==="reject" ? "O limite de recompensas está atingido." : result.claimMode==="deferred" ? "Podes concluir a missão e aguardar orçamento para a entrega." : "";
       }
@@ -968,7 +971,7 @@ export function managedEvents(rebuild) {
     await db().runTransaction(async (tx) => {
       const ref = db().doc(`events/${id}`),
         snap = await tx.get(ref),
-        games = await objectiveGames(tx, usesRatingObjective(snap.data()?.objective)),
+        games = closedMission(snap.data()) ? null : await objectiveGames(tx, usesRatingObjective(snap.data()?.objective)),
         rewards = await tx.get(ref.collection("private").doc("rewards")),
         ledgerSnap = await tx.get(db().collection("eventRewards"));
       const event = snap.data(),
@@ -976,9 +979,9 @@ export function managedEvents(rebuild) {
       if (
         !event ||
         event.kind !== "mission" ||
-        event.status !== "open" ||
+        (!closedMission(event) && event.status !== "open") ||
         +asDate(event.startsAt) > Date.now() ||
-        eventEndMillis(event) <= Date.now() ||
+        (!closedMission(event) && eventEndMillis(event) <= Date.now()) ||
         !event.participantIds.includes(uid)
       )
         throw new HttpsError("permission-denied", "Missão indisponível.");
@@ -998,14 +1001,14 @@ export function managedEvents(rebuild) {
       }
       if (own.length >= event.maxRepeats)
         fail("Limite de conclusões atingido.");
-      const row = eventRanking(
+      const row = (closedMission(event) ? (event.ranking || []) : eventRanking(
         event,
         [],
         rows(games),
         [],
         new Date(),
         ledger,
-      ).find((r) => r.uid === uid);
+      )).find((r) => r.uid === uid);
       if (!row?.eligible) fail("Ainda não cumpriste o objetivo desta missão.");
       const key = `${id}_mission_${uid}_${window.key}`;
       awarded = grant(
@@ -1022,6 +1025,12 @@ export function managedEvents(rebuild) {
       tx.update(db().doc(`eventRewards/${key}`), {
         periodKey: window.key,
         completedAt: Timestamp.fromDate(new Date()),
+      });
+      if (closedMission(event)) tx.update(ref, {
+        winners: [...(event.winners || []).filter(winner => winner.uid !== uid), {
+          ...row, uids: [uid], label: `${row.position}.º lugar`,
+          reward: awarded.reward, expiresAt: asDate(awarded.expiresAt).toISOString(), deliveries: 1,
+        }],
       });
       audit(tx, ref, uid, "mission-completed", {
         uid,

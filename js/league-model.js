@@ -141,6 +141,7 @@ export function assembleLeague({
             })()
           : {}),
       };
+      if (player.hasCard && Number.isFinite(player.ovr) && player.ovr < 50) player.cardType = "scrap";
       const earnedCards =
         collections.find((row) => row.uid === u.uid || row.id === u.uid)
           ?.awards || [];

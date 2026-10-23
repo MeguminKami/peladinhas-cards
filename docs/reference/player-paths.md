@@ -40,11 +40,15 @@ Só pode existir um jogo aberto na liga. Rascunhos são ilimitados; jogos fechad
 
 Uma participação acrescentada depois da abertura só pode congelar uma preparação que já existia antes dela. Preparações posteriores não contam retroativamente. Um jogo já usado não é reutilizado, incluindo quando o histórico compacto deixa de o mostrar; o índice privado `pathGameLinks` preserva essa associação.
 
-No fecho, objetivos sem avaliações apuram imediatamente, incluindo combinações de golos, assistências, contribuições, vitória e golos da equipa. O servidor guarda os dados numéricos da tentativa e um hash dos dados completos do jogo. As contribuições individuais são compactas, evitando copiar extensas listas de marcadores para cada jogador. Qualquer avaliação na combinação faz a tentativa aguardar as 48 horas.
+No fecho, objetivos sem avaliações apuram imediatamente, incluindo combinações de golos, assistências, contribuições, vitória e golos da equipa. O servidor guarda os dados numéricos da tentativa e um hash dos dados completos do jogo. As contribuições individuais são compactas, evitando copiar extensas listas de marcadores para cada jogador. Combinações com avaliações seguem a janela abaixo, com possibilidade de sucesso antecipado.
 
 ## Avaliações: 48 horas e sete votos
 
-Uma missão que inclua avaliações aguarda **48 horas desde `closedAt`**, mesmo se já tiver sete votos. A interface mostra tempo restante e votos em cada critério. O relógio do navegador só apresenta a contagem; o servidor decide.
+Uma missão que inclua avaliações tem um prazo máximo de **48 horas desde `closedAt`**. Na verificação horária, pode concluir antes se tiver **sete avaliações reais válidas em cada critério** e cumprir todas as condições mesmo atribuindo **duas estrelas a todos os votos em falta**. O denominador é o total de participantes distintos, incluindo o próprio jogador e suplentes. N/A e dispensas não reduzem esse denominador da projeção; créditos de dispensa não substituem os sete votos reais na antecipação. GR exige também autoavaliação numérica de GR antes de antecipar, pois uma autoavaliação N/A ainda em falta poderia invalidar a participação.
+
+A prova aplica-se a cada mínimo individual, à média entre critérios e às comparações estritas, além das condições numéricas do jogo. Por exemplo, sete notas 5 entre dez participantes projetam 4,1★; oito notas com média 4,5 projetam 4,0★. Só se entrega sucesso antecipado, nunca falha ou cancelamento antecipados por falta de amostra. A interface mostra tempo restante e votos; o relógio do navegador só apresenta a contagem, o servidor decide.
+
+As duas estrelas são uma hipótese da regra de entrega, não um mínimo imposto às avaliações reais. A média atual também tem de cumprir a missão. Se depois chegarem notas inferiores a duas estrelas, o resultado já entregue mantém-se definitivo. O resultado regista `missingVoteStars: 2` para distinguir esta regra de entregas anteriores calculadas com zero; resultados históricos não são reescritos.
 
 | Situação no instante das 48 horas | Resultado |
 | --- | --- |
@@ -58,7 +62,9 @@ Nas propostas v4, não jogar a GR cancela sem penalização uma missão que exij
 
 `feedbackAction` escreve o voto e uma revisão completa imutável na mesma transação, com timestamp de commit do servidor. A correção administrativa também usa esse registo. A primeira edição de um voto anterior ao histórico conserva uma baseline da versão antiga.
 
-O apuramento reconstrói a última versão de cada voto até ao corte, não o agregado atual. Edições ou submissões posteriores podem continuar a contar para o resto da aplicação, mas não mudam esta tentativa. Um processamento atrasado é idempotente e mantém o mesmo corte. Depois do prazo, a interface mostra **A apurar resultado** até à resposta do servidor.
+Antes do prazo, o apuramento usa os votos originais atuais, filtrados e deduplicados, sem depender da publicação do resumo horário; não lê o registo de revisões nessa fase. Sem sucesso antecipado, às 48 horas reconstrói a última versão de cada voto até ao corte original, não o agregado atual. Edições ou submissões posteriores à entrega podem continuar a contar para o resto da aplicação, mas não mudam esta tentativa. Um processamento atrasado é idempotente e mantém o corte das 48 horas. Depois do prazo, a interface mostra **A apurar resultado** até à resposta do servidor.
+
+A regra de antecipação também se aplica às tentativas já pendentes (janela v3, propostas v3/v4), sem mudar metas, avanço, associação ao jogo ou prazo original. Não exige migração cloud nem reabre resultados entregues ou semanas fechadas. A tarefa `settlePaths` verifica de hora a hora; os triggers e ações de sincronização existentes também podem apurar uma tentativa.
 
 Após fechar o jogo, pode preparar-se outra missão num nó disponível, enquanto as anteriores ficam imutáveis em avaliação. Os nós que uma tentativa pode afetar, incluindo eventual excedente, ficam reservados. A falta de votos não obriga a gastar um reroll para continuar.
 

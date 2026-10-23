@@ -47,3 +47,5 @@ Os resultados são comprimidos com gzip. Acima de 850 000 bytes em base64, o ser
 Ao alterar cálculos ou a estrutura dos resultados, incrementar `HOME_CACHE_VERSION` em `functions/home-cache.js` e publicar `getHome` com os consumidores efetivamente alterados. Nunca expor o contexto comprimido diretamente ao cliente. Os documentos são criados quando necessários; não é preciso recalcular a liga nem modificar semanas fechadas para introduzir esta cache.
 
 Depois da publicação, comparar janelas equivalentes de utilização no console. Separar aquecimento, alterações reais, listeners, tarefas e navegação; a medição local de documentos pelo SDK não substitui a faturação cloud.
+
+O pódio Performance recebe os agregados de todos os jogadores desde o último fecho semanal, incluindo os jogos anteriores à abertura das cartas. O período é contínuo entre fechos, segundo o calendário configurado. [Cálculo e validação](../reports/performance-week-2026-10-22.md).

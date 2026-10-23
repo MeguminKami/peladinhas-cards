@@ -1,3 +1,4 @@
+import { ratingQuorum, ratingQuorumCount, ratingWaiverTimes } from "../js/rating-quorum.js";
 import { policyAt } from "../js/system-policy.js";
 import { createReadContext } from "./read-context.js";
 import { sameData } from "./equal-data.js";
@@ -5,7 +6,7 @@ import {
   evaluateCardAchievements,
   periodCardAwards,
 } from "./card-unlock-rules.js";
-import { CARD_CRITERIA } from "./card-unlock-rules.js";
+import { CARD_CRITERIA, markCardMvps } from "./card-unlock-rules.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import {
   mergeCardAchievements,
@@ -14,6 +15,7 @@ import {
   leaguePeriod,
   qualifiedCardGame,
   cardExpiry,
+  CARD_MINIMUM_RATINGS,
 } from "../js/card-achievements.js";
 import {
   ATTRIBUTES,
@@ -38,7 +40,7 @@ import { balanceMatches } from "../js/team-balance.js";
 const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 const dateValue = (value) => +asDate(value);
 
-export async function collectionContext(date = new Date()) {
+export async function collectionContext(date = new Date(), { repair = false } = {}) {
   const db = getFirestore();
   const reads = createReadContext();
   const [
@@ -66,7 +68,7 @@ export async function collectionContext(date = new Date()) {
   )) {
     const summary = summaryRows.find((row) => row.id === game.id);
     if (
-      participants(game).every(
+      summary && participants(game).every(
         (uid) =>
           summary?.players?.[uid]?.ratingCounts &&
           typeof summary.players[uid].goalkeepingEligible === "boolean" &&
@@ -74,8 +76,19 @@ export async function collectionContext(date = new Date()) {
             (summary.players[uid].goalkeeping === null && summary.players[uid].ratingCounts.goalkeeping === 0)) &&
           summary?.players?.[uid]?.evaluatedAt,
       )
-    )
+    ) {
+      markCardMvps(summary.players);
       continue;
+    }
+    // Reading a page never scans historical feedback. Incomplete legacy
+    // summaries are queued once and repaired by the hourly worker instead.
+    if (!repair) {
+      await db.doc(`feedbackWork/${game.id}`).create({
+        token: "summary-repair", pending: true, updatedAt: FieldValue.serverTimestamp(),
+      }).catch(error => { if (error.code !== 6 && error.code !== "already-exists") throw error; });
+      if (summary?.players) markCardMvps(summary.players);
+      continue;
+    }
     const feedback = rows(
       await reads.read(`feedback:${game.id}`, () => db.collection(`games/${game.id}/feedback`).get()),
     ).filter(
@@ -99,6 +112,7 @@ export async function collectionContext(date = new Date()) {
             evaluatedAt: new Date(
               Math.max(
                 dateValue(game.closedAt || game.scheduledAt),
+                ...ratingWaiverTimes(game),
                 ...votes.map(
                   (vote) =>
                     dateValue(
@@ -107,6 +121,7 @@ export async function collectionContext(date = new Date()) {
                 ),
               ),
             ).toISOString(),
+            ...(game.ratingWaivers ? {ratingQuorumCounts: ratingQuorum(game, feedback, uid, goalkeepingEligible)} : {}),
             ratingCounts: Object.fromEntries(
               FEEDBACK.map(([key]) => [
                 key,
@@ -118,13 +133,7 @@ export async function collectionContext(date = new Date()) {
         ];
       }),
     );
-    const best = Math.max(
-      0,
-      ...Object.values(players).map((player) => player.overall || 0),
-    );
-    for (const player of Object.values(players))
-      player.mvp =
-        player.count >= 3 && player.overall >= 4.8 && player.overall === best;
+    markCardMvps(players);
     if (summary) summary.players = players;
     else summaryRows.push({ id: game.id, players });
   }
@@ -399,7 +408,7 @@ export async function ensureFuttiesVote(context = null) {
           +row.date >= +period.startsAt &&
           +row.date < +period.endsAt &&
           Number.isFinite(row.attitude) &&
-          (row.ratingCounts?.attitude ?? row.count) >= 3,
+          ratingQuorumCount(row,"attitude") >= CARD_MINIMUM_RATINGS,
       );
       return (
         games.length >= 4 && average(games.map((row) => row.attitude)) >= 4.3

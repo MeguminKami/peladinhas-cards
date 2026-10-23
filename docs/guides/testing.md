@@ -4,6 +4,12 @@
 
 ## Escolher pelo tipo de alteração
 
+Manutenção por páginas: `npm.cmd run test:maintenance-pages` verifica o esquema, o calendário e o formulário com fixtures. `npm.cmd run test:maintenance-calendar:backend` verifica publicação/ativação do dia e minuto no emulador Firestore. [Âmbito e publicação](../reports/maintenance-pages-2026-10-22.md).
+
+Conclusão e resgate de missões: `npm.cmd run test:mission-completion` verifica o modelo partilhado e o botão na lista em quatro temas/larguras, incluindo erro, repetição do clique, cache antiga e recompensa em espera. Usa fixtures locais. [Comportamento e publicação](../reports/mission-completion-2026-10-22.md).
+
+Tema Ultimate: `node tests/ultimate-theme.mjs` verifica as sete raridades, contraste de texto/ações, início, missões e estatísticas em desktop e telemóvel, foco, teclado e persistência. Usa fixtures locais e bloqueia serviços reais. [Âmbito e resultados](../reports/ultimate-theme-2026-10-21.md).
+
 Para a cache do início: `npm.cmd run test:home-cache` verifica versões, prazos e navegação com fixtures; `npm.cmd run test:home-cache:backend` verifica isolamento, invalidação, autorização e leituras num emulador demo. A medição com 20 jogadores e os seletores de publicação estão no [relatório de 21/10/2026](../reports/home-read-cache-2026-10-21.md).
 
 Para redução de leituras: `npm.cmd run test:read-safety` verifica isolamento, snapshots offline, deduplicação e bloqueio de rede real. `npm.cmd run test:reads` compara o commit `056c32e` com o código atual, num emulador demo dedicado (Firestore 8090), contando documentos lidos pelo SDK e verificando resultados equivalentes. Os ficheiros de medição ficam em `test-results/read-budget-*.json`, ignorados pelo Git. Este teste apaga os dados do projeto demo entre cenários; nunca apontar para produção nem para um emulador com dados de trabalho a preservar.
@@ -141,3 +147,7 @@ O [relatório de interface](../reports/path-interface-2026-10-19.md) e o [relat�
 Usar `npm.cmd run test:paths:variety:ui` para as interações afetadas. Rever missão de meta única e composta, propostas antigas, preparação a 0%/75%, fase congelada/em avaliação, atributos com limite atingido, fusão com duas recompensas, carta final e remoção da escolha. O resumo só deve mostrar detalhes quando existe tentativa e a ligação deve abrir o nó correto, mesmo após explorar outro percurso.
 
 Na composição, confirmar **A tua missão · No próximo jogo**, tema da raridade, objetivo legível, recompensa sem caixa, par atributo/valor com tipografia uniforme e avisos **Se falhares** / **Podes mudar**. Verificar também setas entre nós, limites de texto/valores, 1440/768/390/320 px, quatro temas, foco, teclado e redução de movimento. Os scripts ad hoc e as capturas em `test-results/` são evidência local, não uma suite portátil garantida após exportação. Não repetir suites sem relação com a alteração; resultados datados no [relatório de interface](../reports/path-interface-2026-10-19.md).
+
+Dispensas de votos: `npm.cmd run test:rating-waivers` cobre mínimos sem alterar médias e a gestão no modal. `tests/rating-waiver.backend.test.js` exige emulador demo local. [Referência](../reports/rating-waivers-2026-10-22.md).
+
+Carta Sucata: `npm.cmd run test:scrap-card` verifica as fronteiras, compatibilidade, desenho nos quatro temas e larguras móveis. `tests/scrap-card.backend.test.js` exige emulador demo local. [Regras e publicação](../reports/scrap-card-2026-10-22.md).

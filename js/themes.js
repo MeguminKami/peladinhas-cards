@@ -28,8 +28,8 @@ export const INTERFACE_THEMES = [
     id: "ultimate",
     name: "Ultimate 20",
     description:
-      "Cinzento e rosa nos principais; preto e dourado nos detalhes. Inspiração no menu UT do FIFA 20.",
-    colors: ["#b0b2bc", "#ef4b91", "#17181e", "#d8b56d"],
+      "Cinzento de estádio, grafite, coral e ciano. A energia dos menus FUT 20, com raridades bem definidas.",
+    colors: ["#949a9e", "#ff4b62", "#252e35", "#42dce0"],
   },
 ];
 let current = "club";

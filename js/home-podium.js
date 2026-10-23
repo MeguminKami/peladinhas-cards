@@ -5,7 +5,7 @@ import { empty } from "./ui.js";
 
 const modes = [
   { id: "ovr", label: "OVR", icon: "rewardCard", title: "A elite da liga.", description: "Os três OVR mais altos. As cartas que todos querem alcançar." },
-  { id: "performance", label: "Performance", icon: "streak", title: "Em campo, deram tudo.", description: "As melhores médias nos jogos desta semana, segundo as avaliações da comunidade." },
+  { id: "performance", label: "Performance", icon: "streak", title: "Em campo, deram tudo.", description: "As melhores médias nos jogos desde o último fecho semanal, segundo as avaliações da comunidade." },
   { id: "growth", label: "Crescimento", icon: "rewardStats", title: "Uma semana. Outro nível.", description: "Quem mais subiu de OVR face à carta da semana passada." },
 ];
 

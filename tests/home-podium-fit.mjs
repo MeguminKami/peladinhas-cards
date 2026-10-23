@@ -88,12 +88,16 @@ try {
         hasCard: true,
         ovr: 88 - i * 3,
         ovrDelta: 3 - i,
+        aggregates:[{date:"2026-10-21T20:00:00Z",count:3,overall:4.5-i*.1,attack:4.5-i*.1}],
         stats: Object.fromEntries(ATTRIBUTES.map(([k]) => [k, 85])),
         cardType: "gold-rare",
       })),
     );
   });
   assert.equal(await page.locator("#home-podium .football-card").count(), 3);
+  await page.locator('[data-podium-mode="performance"]').click();
+  assert.equal(await page.locator("#home-podium .football-card").count(),3,"post-closing games already contribute before card opening");
+  await page.locator('[data-podium-mode="ovr"]').click();
   for (const [width, height] of [
     [1440, 900],
     [1366, 768],
@@ -125,6 +129,14 @@ try {
       false,
     );
     await page.screenshot({ path: output + "/podium-" + width + ".png" });
+  }
+  await page.emulateMedia({reducedMotion:"reduce"});
+  await page.locator('[data-podium-mode="performance"]').click();
+  for(const width of [1440,768,390,320]) {
+    await page.setViewportSize({width,height:1000});
+    assert.equal(await page.locator("#home-podium .football-card").count(),3);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await page.screenshot({path:output+`/performance-${width}.png`});
   }
   assert.deepEqual(errors, []);
 } finally {

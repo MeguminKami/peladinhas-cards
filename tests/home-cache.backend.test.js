@@ -136,6 +136,10 @@ test("home caches isolate personal missions, reuse the league and invalidate onl
     "the podium retains the entire current week, including the owner's games",
   );
 
+  const gapGames = Array.from({length:8},(_,index)=>({gameId:`gap-${index}`,date:"2026-10-14T18:00:00Z",attack:4,count:3}));
+  const gapProjection = homeProjection({...first.league,players:[{...first.league.players[1],aggregates:[{date:"2026-10-13T12:00:00Z"},...gapGames]}]},ids[0]);
+  assert.equal(gapProjection.players[0].aggregates.length,8,"another player's games after closing and before opening remain in the podium payload");
+
   let reads = 0,
     queries = 0,
     queryCollections = [];

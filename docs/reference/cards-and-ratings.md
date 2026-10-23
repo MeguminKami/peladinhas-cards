@@ -37,6 +37,8 @@ flowchart TB
 
 ## Guarda-redes no feedback de jogo
 
+As avaliações de jogo são guardadas imediatamente e os resultados derivados são publicados hora a hora, apenas para jogos alterados. Consultar [processamento das avaliações](feedback-processing.md) para distinguir submissão, publicação, apuramento do ETC e recálculo administrativo.
+
 Quando a autoavaliação **submetida** tem guarda-redes N/A, esse critério fica excluído para o jogador nesse jogo, mesmo que colegas tenham enviado números antes. A média é `null` e a contagem válida dessa dimensão é zero. O formulário dos colegas mostra N/A bloqueado e uma explicação; as restantes dimensões continuam editáveis dentro do respetivo prazo. As regras impedem novas notas numéricas incompatíveis; a correção administrativa de uma resposta de colega conserva N/A.
 
 Um rascunho não determina esta exclusão. Uma nota de zero é uma avaliação válida e distingue-se de N/A. A autoavaliação inicial de 12 atributos não é alterada por esta regra. Depois de publicar uma mudança do cálculo, **Recalcular liga** atualiza agregados existentes e cartas em evolução; não reescreve semanas fechadas.
@@ -83,7 +85,7 @@ A fórmula considera avaliações absolutas e relativas às duas equipas, result
 
 No início, “A minha carta” apresenta OVR, forma recente, jogos, vitórias, golos e assistências. A forma resume as últimas cinco avaliações agregadas de jogo disponíveis; “—” indica ausência de dados, não uma classificação de zero. Os totais de jogos e contribuições vêm de jogos finalizados.
 
-O ranking semanal considera o ciclo e exige pelo menos duas avaliações recebidas para a forma semanal. O OVR serve de desempate e de referência quando faltam avaliações semanais. A página de estatísticas permite comparar a liga e ordenar os jogadores.
+O ranking semanal e o pódio Performance consideram os jogos desde o último fecho semanal até ao seguinte, incluindo jogos anteriores à abertura das cartas. Exigem pelo menos duas avaliações reais por jogo para a forma semanal. O OVR serve de desempate e de referência quando faltam avaliações semanais. A página de estatísticas permite comparar a liga e ordenar os jogadores.
 
 ## Ciclo semanal
 
@@ -103,7 +105,7 @@ A carta **Em forma (In Form)** tem três versões visuais: bronze, prata e ouro.
 
 A [coleção especial](card-collection.md) acrescenta dezanove edições visuais ao catálogo e ao Card Lab, incluindo nove temas inspirados no Ultimate Team. Quinze têm [condições de conquista e validade](card-unlocks.md); quatro designs ficam em reserva.
 
-Há seis raridades base e cartas especiais reconhecidas por performances/recompensas. O Card Lab permite ao ADMIN compor estilos com todos os modelos do catálogo, paletas, camadas, molduras, fontes, efeitos e fotografia. A biblioteca permite reabrir e editar uma composição guardada, guardar alterações mantendo o seu ID ou criar uma cópia. Inclui desfazer/refazer e importação/exportação JSON; importar um projeto inicia uma nova composição. O catálogo dá acesso direto à edição dos modelos guardados e à criação a partir dos modelos padrão.
+Há sete tipos base e cartas especiais reconhecidas por performances/recompensas. O Card Lab permite ao ADMIN compor estilos com todos os modelos do catálogo, paletas, camadas, molduras, fontes, efeitos e fotografia. A biblioteca permite reabrir e editar uma composição guardada, guardar alterações mantendo o seu ID ou criar uma cópia. Inclui desfazer/refazer e importação/exportação JSON; importar um projeto inicia uma nova composição. O catálogo dá acesso direto à edição dos modelos guardados e à criação a partir dos modelos padrão.
 
 A bancada mantém a carta visível e limita o scroll à ferramenta ativa. **Modelos** reúne apenas as cartas do catálogo e **Do zero**; **Composição**, **Cores** (50 paletas), **Materiais**, **Símbolos**, **Texto**, **Foto** e **Projetos** separam as restantes opções. Escolher uma carta preserva a sua aparência original, incluindo ao guardar. As silhuetas, ornamentos e símbolos das edições podem ser combinados, com posição, tamanho e intensidade ajustáveis. DIN Pro Condensed Regular/Medium/Bold e Posterama 1927 Bold usam fontes locais; sem essas fontes instaladas, o navegador usa as alternativas indicadas no catálogo.
 
@@ -119,7 +121,7 @@ As avaliações (autoavaliação, comunidade e pós-jogo) podem ser editadas dur
 
 ## Raridades base
 
-A carta base é Bronze comum para OVR inferior a 60 (incluindo 59) e Bronze rara de 60 a 64. Os restantes limites mantêm-se: Prata comum 65–69, Prata rara 70–74, Ouro comum 75–84 e Ouro rara a partir de 85.
+A carta base é Sucata para OVR de 0 a 49, Bronze comum de 50 a 59 e Bronze rara de 60 a 64. Sucata usa chapa oxidada e remendos, sem títulos no interior; não altera os atributos nem substitui uma carta especial selecionada. Os restantes limites mantêm-se: Prata comum 65–69, Prata rara 70–74, Ouro comum 75–84 e Ouro rara a partir de 85.
 
 ## Autoavaliação pós-jogo
 
@@ -140,3 +142,5 @@ A mesma média é usada no início, forma recente e últimos cinco jogos do perf
 ## Atributos e cartas dos percursos
 
 As [missões dos percursos](player-paths.md) entregam pontos permanentes ao completar nós, com limites próprios de +15 por atributo de campo e +25 em GR. A percentagem de avanço da missão não é uma nota nem um boost de atributo. As 15 cartas finais dos percursos têm IDs `path-*`, com conceitos em `js/path-card-designs.js`; a aparência é cosmética e conserva as conquistas anteriores. A interface distingue o progresso do nó, o avanço se cumprires e o par atributo/valor da recompensa.
+
+[Desenho Sucata, compatibilidade e publicação](../reports/scrap-card-2026-10-22.md).

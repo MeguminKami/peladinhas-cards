@@ -20,7 +20,7 @@ const games = (n, overrides = {}) =>
   Array.from({ length: n }, (_, i) => ({
     gameId: `g${i}`,
     date: new Date(Date.UTC(2026, 8, 1 + i * 2, 12)),
-    count: 3,
+    count: 7,
     overall: 4,
     attack: 4,
     passing: 4,
@@ -39,9 +39,113 @@ const awards = (rows, options = {}) =>
   evaluateCardAchievements(rows, { date: end, ...options });
 const has = (rows, id) => awards(rows).some((row) => row.id === id);
 
-test("qualificação exige três avaliações; dados futuros e sem data não atribuem cartas", () => {
+test("novos limiares respeitam valores exatos, sete votos e requisitos preservados", () => {
+  for (const [id, key, threshold] of [
+    ["playmaker", "passing", 4.4],
+    ["sniper", "attack", 4.4],
+    ["the-wall", "defense", 4.4],
+    ["engine", "physical", 4.6],
+  ]) {
+    assert.ok(has(games(3, { [key]: threshold }), id));
+    assert.equal(has(games(3, { [key]: threshold - 0.01 }), id), false);
+    assert.equal(
+      has(games(3, { [key]: threshold, ratingCounts: { [key]: 6 } }), id),
+      false,
+    );
+  }
+  assert.ok(has(games(1, { mvp: true, overall: 4.5 }), "mvp"));
+  assert.equal(has(games(1, { mvp: true, overall: 4.49 }), "mvp"), false);
+  assert.ok(has(games(2, { goalkeeping: 4.3 }), "safe-hands"));
+  assert.equal(has(games(2, { goalkeeping: 4.29 }), "safe-hands"), false);
+  const hero = {
+    overall: 3.61,
+    goals: 0,
+    assists: 1,
+    outcome: 1,
+    teamOvrGap: 3,
+    teamGoals: 12,
+  };
+  assert.ok(has(games(1, hero), "fut-heroes"));
+  for (const change of [
+    { overall: 3.6 },
+    { outcome: 0 },
+    { teamOvrGap: 2.99 },
+    { assists: 0 },
+  ])
+    assert.equal(has(games(1, { ...hero, ...change }), "fut-heroes"), false);
+  const party = games(5, { overall: 3.5 });
+  party[0].overall = 4;
+  assert.ok(has(party, "fut-birthday"));
+  assert.equal(has(party.slice(0, 4), "fut-birthday"), false);
+  party[2].count = 6;
+  assert.equal(has([...party, ...games(1)], "fut-birthday"), false);
+  assert.ok(
+    has(games(2, { outcome: 1, teamOvrGap: 1.2, overall: 4.2 }), "eclipse"),
+  );
+  assert.equal(
+    has(games(2, { outcome: 1, teamOvrGap: 1.19, overall: 4.2 }), "eclipse"),
+    false,
+  );
+  const versatile = games(4, { overall: 3.6 });
+  versatile.forEach((row, index) => {
+    row.position = index < 2 ? "MED" : "DEF";
+  });
+  assert.ok(has(versatile, "shapeshifters"));
+  const keepers = games(3, { position: "GR", goalkeeping: 4, conceded: 20 });
+  keepers[0].goalkeeping = 3;
+  keepers[2].goalkeeping = 5;
+  assert.ok(has(keepers, "glacial"));
+  const interrupted = games(4, { position: "GR", goalkeeping: 4 });
+  interrupted[1].position = "DEF";
+  assert.equal(has(interrupted, "glacial"), false);
+  keepers[1].ratingCounts = { goalkeeping: 6 };
+  assert.equal(has(keepers, "glacial"), false);
+  for (const [type, months, n] of [
+    ["tots", 2, 6],
+    ["toty", 4, 12],
+  ]) {
+    const period = leaguePeriod(new Date("2026-09-15"), months);
+    assert.equal(
+      periodCardAwards(
+        [
+          {
+            uid: "edge",
+            position: "MED",
+            ovr: 80,
+            aggregates: games(n, { overall: 3.8 }),
+          },
+        ],
+        period,
+        type,
+      ).length,
+      1,
+    );
+    assert.equal(
+      periodCardAwards(
+        [
+          {
+            uid: "below",
+            position: "MED",
+            ovr: 80,
+            aggregates: games(n, { overall: 3.79 }),
+          },
+        ],
+        period,
+        type,
+      ).length,
+      0,
+    );
+  }
+});
+
+test("qualificação exige sete avaliações; dados futuros e sem data não atribuem cartas", () => {
   assert.ok(has(games(2), "in-form"));
   assert.equal(has(games(2, { count: 2 }), "in-form"), false);
+  assert.equal(has(games(2, { count: 6 }), "in-form"), false);
+  assert.equal(
+    has(games(2, { ratingCounts: { overall: 6 } }), "in-form"),
+    false,
+  );
   assert.equal(
     has(games(2, { date: new Date("2027-01-01") }), "in-form"),
     false,
@@ -148,7 +252,7 @@ test("cartas ofensivas refletem jogos com doze golos e percentagens reais", () =
       games(1, { overall: 4.5, goals: 4, assists: 2, teamGoals: 12 }),
       "supernova",
     ),
-    false,
+    true,
   );
   assert.equal(
     has(
@@ -182,7 +286,7 @@ test("cartas ofensivas refletem jogos com doze golos e percentagens reais", () =
       }),
       "fut-heroes",
     ),
-    false,
+    true,
   );
   assert.ok(has(games(3, { goals: 3, attack: 4.3 }), "inferno"));
   assert.equal(has(games(3, { goals: 2, attack: 4.3 }), "inferno"), false);
@@ -199,7 +303,10 @@ test("posições não são inferidas do perfil atual; Glacial exige três jogos 
     has(games(3, { position: "GR", goalkeeping: 4.5, conceded: 3 }), "glacial"),
   );
   assert.equal(
-    has(games(3, { position: "GR", goalkeeping: 4.5, conceded: 4 }), "glacial"),
+    has(
+      games(3, { position: "GR", goalkeeping: 3.99, conceded: 4 }),
+      "glacial",
+    ),
     false,
   );
   assert.equal(
@@ -217,7 +324,7 @@ test("ICON, início promissor, regresso, evolução e sequências têm mérito e
   assert.equal(has(games(15), "icon"), false);
   assert.ok(has(games(3), "otw"));
   assert.equal(has(games(3, { overall: 3.9 }), "otw"), false);
-  const party = games(4);
+  const party = games(5);
   party[0].overall = 4.2;
   assert.ok(has(party, "fut-birthday"));
   assert.equal(has(games(5, { overall: 3.6 }), "fut-birthday"), false);

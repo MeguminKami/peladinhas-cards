@@ -1,5 +1,5 @@
 import { FEEDBACK, calculateWeeklyTopPlayers, asDate } from "./utils.js";
-import { cardWeek } from "./card-week.js";
+import { performanceWeek } from "./performance-week.js";
 import { matchStars } from "./match-stars.js";
 const valid = (value) => Number.isFinite(value) && value >= 0 && value <= 5;
 const format = (value) =>
@@ -80,13 +80,13 @@ export function componentWeeklyTopPlayers(players, date = new Date()) {
       return mean === null ? [] : [{ ...row, overall: mean }];
     }),
   }));
-  const cycle = cardWeek(date);
+  const period = performanceWeek(date);
   return calculateWeeklyTopPlayers(projected, date).map((row) => {
     const player = originals.get(row.uid);
     const games = (player.aggregates || []).filter(
       (game) =>
-        +asDate(game.date) >= +cycle.opensAt &&
-        +asDate(game.date) < +cycle.closesAt &&
+        +asDate(game.date) >= +period.startsAt &&
+        +asDate(game.date) < +period.endsAt &&
         game.count >= 2,
     );
     return {

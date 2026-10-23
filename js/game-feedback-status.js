@@ -1,4 +1,5 @@
 import { participants } from "./utils.js";
+import { hasRatingWaiver } from "./rating-quorum.js";
 
 // The feedback form expects every participant, including the rater themselves.
 export function gameFeedbackProgress(game, feedback) {
@@ -13,14 +14,17 @@ export function gameFeedbackProgress(game, feedback) {
   return targets.map((uid) => {
     const own = [...votes.get(uid).values()];
     const submitted = own.filter((row) => row.submitted === true).length;
+    const waived = hasRatingWaiver(game,uid) ? targets.length - submitted : 0;
     return {
       uid,
       total: targets.length,
       submitted,
-      pending: targets.length - submitted,
+      pending: targets.length - submitted - waived,
+      waived,
+      waiverActive: hasRatingWaiver(game,uid),
       drafts: own.filter((row) => row.submitted !== true).length,
       status:
-        submitted === targets.length
+        waived ? "waived" : submitted === targets.length
           ? "complete"
           : submitted
             ? "partial"

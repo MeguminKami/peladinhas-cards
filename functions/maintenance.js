@@ -342,8 +342,7 @@ export function maintenanceFunctions({
         "Guarda e testa primeiro a chave pública, antes de exigir App Check.",
       );
     if (
-      config.cycle.openHour !== policyAt().cycle.openHour ||
-      config.cycle.closeHour !== policyAt().cycle.closeHour
+      ["openDay","openHour","openMinute","closeDay","closeHour","closeMinute"].some(key => config.cycle[key] !== policyAt().cycle[key])
     ) {
       const parts = Object.fromEntries(
         new Intl.DateTimeFormat("en-GB", {
@@ -358,12 +357,13 @@ export function maintenanceFunctions({
       );
       if (
         +at <= Date.now() + 60000 ||
-        parts.weekday !== "Thu" ||
+        parts.weekday !== ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][config.cycle.openDay] ||
         +parts.hour !== config.cycle.openHour ||
-        +parts.minute !== 0
+        +parts.minute !== config.cycle.openMinute ||
+        at.getUTCSeconds() !== 0 || at.getUTCMilliseconds() !== 0
       )
         invalid(
-          "Alterações ao calendário devem entrar numa quinta-feira à nova hora de abertura, com pelo menos um minuto de antecedência.",
+          "Alterações ao calendário devem entrar no novo dia e hora de abertura, com pelo menos um minuto de antecedência.",
         );
     }
     if (

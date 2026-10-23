@@ -30,44 +30,168 @@
 }
 :root[data-theme="ultimate"] {
   color-scheme: light;
-  --bg-app: #b0b2bc;
-  --bg-surface: #c8cad2;
-  --bg-panel: #bec0ca;
-  --bg-surface-hover: #a3a6b2;
-  --text-primary: #17181e;
-  --text-secondary: #50515f;
-  --text-muted: #626371;
-  --accent: #b91e61;
-  --accent-hover: #9d174f;
-  --accent-deep: #861342;
-  --accent-tint: rgba(239, 75, 145, 0.12);
-  --success: #197844;
-  --warning: #8c651c;
-  --danger: #b52b43;
-  --border: rgba(23, 24, 30, 0.12);
-  --border-strong: rgba(23, 24, 30, 0.24);
+  --bg-app: #949a9e;
+  --bg-surface: #cdd0d1;
+  --bg-panel: #bdc1c3;
+  --bg-surface-hover: #d9dcdd;
+  --text-primary: #182126;
+  --text-secondary: #243039;
+  --text-muted: #243039;
+  --accent: #570d20;
+  --accent-hover: #72122c;
+  --accent-deep: #72122c;
+  --accent-tint: rgba(255, 75, 98, 0.14);
+  --text-on-accent: #ffffff;
+  --on-accent: #ffffff;
+  --success: #07552e;
+  --warning: #674106;
+  --danger: #871d32;
+  --danger-tint: rgba(177, 38, 67, 0.08);
+  --border: rgba(18, 28, 35, 0.22);
+  --border-strong: rgba(18, 28, 35, 0.42);
+  --shadow-sm: 0 6px 20px rgba(18, 28, 35, 0.14);
+  --shadow-md: 0 20px 60px rgba(18, 28, 35, 0.28);
+  --overlay: rgba(31, 19, 39, 0.62);
+  --rating-ink: #674106;
+  --feedback-self-ink: #55237e;
+  --positive-ink: var(--success);
+  --negative-ink: var(--danger);
+  --competition-ink: #674106;
 }
+/* Ultimate keeps its colour in the atmosphere and actions; reading surfaces
+   stay neutral. No animated layout or continuous filter effects. */
+:root[data-theme="ultimate"] body {
+  background:
+    repeating-linear-gradient(128deg, transparent 0 220px, #ffffff07 220px 260px, transparent 260px 470px),
+    linear-gradient(155deg, #b2b7b9 0%, var(--bg-app) 50%, #92989c 100%);
+  background-attachment: fixed;
+}
+:root[data-theme="ultimate"] #header {
+  --text-primary:#f5f7f8;
+  --text-secondary:#d3dde2;
+  --text-muted:#c4d0d8;
+  --accent:#42dce0;
+  --accent-tint:#42dce01a;
+  --bg-surface:#374149;
+  --bg-surface-hover:#414c55;
+  background:#252e35;
+  color:var(--text-primary);
+  border-top:3px solid #ff4b62;
+  border-bottom-color:#45525c;
+  box-shadow:0 4px 20px #16232c26;
+}
+:root[data-theme="ultimate"] .panel { background-color:var(--bg-panel); }
 :root[data-theme="ultimate"] .btn-secondary {
-  background: #17181e;
-  color: #f0d59e;
-  border-color: #a38449;
+  background: #182126;
+  color: #f5dfaa;
+  border-color: #5e4766;
 }
 :root[data-theme="ultimate"] .btn-secondary:hover {
-  background: #292832;
-  border-color: #d8b56d;
+  background: #3a2945;
+  border-color: #9b7430;
 }
-:root[data-theme="ultimate"] .eyebrow {
-  color: #a11957;
+:root[data-theme="ultimate"] .btn-primary {
+  background: #ff4b62;
+  color: #111b21;
+  border-color:#ff4b62;
+  box-shadow:0 3px 10px #18212620;
 }
-:root[data-theme="ultimate"] .btn-primary,
+:root[data-theme="ultimate"] .btn-primary:hover {
+  background: #ff6b7c;
+  border-color:#ff6b7c;
+}
 :root[data-theme="ultimate"] .btn-success {
-  background: #ef4b91;
-  color: #17181e;
+  background: #07552e;
+  color: #ffffff;
 }
-:root[data-theme="ultimate"] .btn-primary:hover,
 :root[data-theme="ultimate"] .btn-success:hover {
-  background: #fa77ad;
+  background: #0b5533;
 }
+:root[data-theme="ultimate"] :is(input, select, textarea) {
+  background-color: var(--bg-surface);
+}
+:root[data-theme="ultimate"] :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+:root[data-theme="ultimate"] ::selection {
+  background: #891b36;
+  color: #ffffff;
+}
+/* Prestige has its own light-surface ink, separate from decorative colour.
+   Football-card palettes remain untouched. */
+:root[data-theme="ultimate"] [data-rarity="bronze"] { --rarity-ink:#693b23; --rarity-rgb:136,80,52; }
+:root[data-theme="ultimate"] [data-rarity="silver"] { --rarity-ink:#354b60; --rarity-rgb:76,97,122; }
+:root[data-theme="ultimate"] [data-rarity="gold"] { --rarity-ink:#674106; --rarity-rgb:128,84,8; }
+:root[data-theme="ultimate"] [data-rarity="special-gold"] { --rarity-ink:#674106; --rarity-rgb:128,80,0; }
+:root[data-theme="ultimate"] [data-rarity="elite"] { --rarity-ink:#592485; --rarity-rgb:112,52,173; }
+:root[data-theme="ultimate"] [data-rarity="icon"] { --rarity-ink:#674106; --rarity-rgb:118,85,24; }
+:root[data-theme="ultimate"] [data-rarity="ultimate"] { --rarity-ink:#00505a; --rarity-rgb:0,105,112; }
+:root[data-theme="ultimate"] .event-rarity-badge[data-rarity="ultimate"] {
+  --rarity-jewel-ink:#674106;
+  --rarity-stars-ink:#a34211;
+}
+:root[data-theme="ultimate"] .event-rarity-badge[data-rarity="elite"] {
+  --rarity-jewel-ink:#a02470;
+  --rarity-stars-ink:#174f7c;
+}
+:root[data-theme="ultimate"] .feedback-team-a {
+  --feedback-team:#1765a0; --feedback-team-tint:#1765a00a; --feedback-team-border:#1765a04d;
+}
+:root[data-theme="ultimate"] .feedback-team-b {
+  --feedback-team:#9a4d12; --feedback-team-tint:#9a4d120a; --feedback-team-border:#9a4d124d;
+}
+:root[data-theme="ultimate"] :is(.feedback-na.is-selected, .feedback-na.is-selected::after, .feedback-avatar i) { color:#ffffff; }
+:root[data-theme="ultimate"] .weekly-section .place-1 { --podium-metal:#674106; }
+:root[data-theme="ultimate"] .weekly-section .place-2 { --podium-metal:#354b60; }
+:root[data-theme="ultimate"] .weekly-section .place-3 { --podium-metal:#693b23; }
+:root[data-theme="ultimate"] .studio-inspector > [data-studio-panel="colors"] { --tool-accent:#72236e; }
+:root[data-theme="ultimate"] .studio-inspector > [data-studio-panel="layers"] { --tool-accent:#674106; }
+:root[data-theme="ultimate"] .studio-inspector > [data-studio-panel="symbols"] { --tool-accent:#174f7c; }
+/* Dark competition tiles preserve luminous prestige colours against graphite,
+   while ordinary menus retain FUT 20's concrete-grey/black reading contrast. */
+:root[data-theme="ultimate"] .event-rarity-surface {
+  color-scheme:dark;
+  --bg-surface:#2b343c;
+  --bg-panel:#303b44;
+  --bg-surface-hover:#374650;
+  --text-primary:#f7f9fa;
+  --text-secondary:#d8e1e7;
+  --text-muted:#b9c7d1;
+  --accent:#48e0e4;
+  --success:#71ebaf;
+  --danger:#ff9baa;
+  --positive-ink:#71ebaf;
+  --negative-ink:#ff9baa;
+  --rating-ink:#f3cb70;
+  --feedback-self-ink:#d9b4ff;
+  --competition-ink:#f3cb70;
+  --text-on-accent:#152028;
+  --on-accent:#152028;
+  --border:#92a8b33b;
+  --border-strong:#a0b7c75e;
+  color:var(--text-primary);
+  background:var(--rarity-pattern),var(--bg-surface);
+}
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="bronze"] { --rarity-ink:#efb48f; --rarity-rgb:239,180,143; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="silver"] { --rarity-ink:#d2dfed; --rarity-rgb:210,223,237; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="gold"] { --rarity-ink:#f3cb70; --rarity-rgb:243,203,112; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="special-gold"] { --rarity-ink:#ffdc70; --rarity-rgb:255,220,112; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="elite"] { --rarity-ink:#d9b4ff; --rarity-rgb:217,180,255; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="icon"] { --rarity-ink:#f6e3aa; --rarity-rgb:246,227,170; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="ultimate"] { --rarity-ink:#69eff0; --rarity-rgb:105,239,240; }
+:root[data-theme="ultimate"] .event-rarity-surface .event-rarity-badge { --rarity-ink:inherit; --rarity-rgb:inherit; --rarity-jewel-ink:inherit; --rarity-stars-ink:inherit; }
+:root[data-theme="ultimate"] .event-rarity-surface .rarity-jewel { stroke:currentColor; fill:currentColor; }
+:root[data-theme="ultimate"] .event-rarity-surface .rarity-stars { fill:currentColor; }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="ultimate"] .progress > span { background:linear-gradient(90deg,#42dce0,#7ac9ff 55%,#f3cb70 82%,#ff8a53); }
+:root[data-theme="ultimate"] .event-rarity-surface[data-rarity="elite"] .progress > span { background:linear-gradient(90deg,#c99bff,#ff96cf 55%,#7ac9ff); }
+:root[data-theme="ultimate"] .weekly-section .podium-pedestal {
+  background:#abb1b5;
+  border-color:#2737404d;
+  border-top-color:var(--podium-metal);
+}
+:root[data-theme="ultimate"] .weekly-section .place-1 .podium-pedestal { background:linear-gradient(180deg,#dac68f,#b5b5a6); }
 .theme-options {
   display: grid;
   gap: 12px;
@@ -947,7 +1071,7 @@ label > :is(input, select, textarea) + small {
 }
 .mission-competition .mission-symbol {
   background: rgba(198, 162, 78, .15);
-  color: #c6a24e;
+  color: var(--competition-ink, #c6a24e);
 }
 .mission-competition-label {
   padding: 4px 9px;
@@ -1411,7 +1535,7 @@ legend {
 .feedback-guide p { color: var(--text-muted); font-size: .83rem; line-height: 1.6; }
 .feedback-scale { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 8px; margin-top: 14px; }
 .feedback-scale span { display: flex; flex-direction: column; gap: 4px; padding: 10px 6px; background: var(--bg-surface); border-radius: 8px; font-size: .7rem; text-align: center; }
-.feedback-scale b { font-size: 1rem; color: #f5cb69; }
+.feedback-scale b { font-size: 1rem; color: var(--rating-ink, #f5cb69); }
 .feedback-team-a { --feedback-team: #65baff; --feedback-team-tint: #65baff12; --feedback-team-border: #65baff50; }
 .feedback-team-b { --feedback-team: #ffb263; --feedback-team-tint: #ffb26312; --feedback-team-border: #ffb26350; }
 .feedback-team-shortcuts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 20px; }
@@ -1453,12 +1577,12 @@ legend {
 .feedback-rating { min-width: 0; }
 
 .feedback-rating-result { display: block; margin-top: 7px; min-height: 18px; font-size: .69rem; font-weight: 650; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.feedback-field:not([data-score=""]):not([data-score="na"]) .feedback-rating-result { color: #f5cb69; }
+.feedback-field:not([data-score=""]):not([data-score="na"]) .feedback-rating-result { color: var(--rating-ink, #f5cb69); }
 .feedback-stars { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 3px; padding: 3px; background: #0002; border: 1px solid var(--border); border-radius: 12px; direction: ltr; }
 .feedback-star { position: relative; display: grid; place-items: center; margin: 0; height: 44px; min-width: 0; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: color .14s ease, background .14s ease; -webkit-tap-highlight-color: transparent; }
 .feedback-star svg { width: 30px; height: 30px; fill: transparent; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; transition: fill .14s ease, transform .14s ease; }
-.feedback-star.is-filled { color: #f5cb69; }
-.feedback-star.is-filled svg { fill: #f5cb69; filter: drop-shadow(0 2px 5px #f5cb6920); }
+.feedback-star.is-filled { color: var(--rating-ink, #f5cb69); }
+.feedback-star.is-filled svg { fill: var(--rating-ink, #f5cb69); filter: drop-shadow(0 2px 5px #f5cb6920); }
 .feedback-star.is-selected { background: #f5cb6910; }
 .feedback-star:has(input:focus-visible) { outline: 2px solid var(--feedback-team); outline-offset: -1px; }
 .feedback-rating-extras { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 5px; }
@@ -2617,15 +2741,15 @@ td small {
 
 .attribute-value { display: inline-flex; align-items: center; gap: 8px; }
 .attribute-change { display: inline-flex; align-items: center; gap: 3px; font-size: .72rem; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.attribute-change.is-positive { color: #22ed80; }
-.attribute-change.is-negative { color: #ff4865; }
+.attribute-change.is-positive { color: var(--positive-ink, #22ed80); }
+.attribute-change.is-negative { color: var(--negative-ink, #ff4865); }
 .attribute-change.is-neutral { color: var(--text-muted); }
 
 .weekly-evolution { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 16px 0; }
 .weekly-evolution-label { flex-basis: 100%; color: var(--text-muted); text-align: center; font-size: .75rem; }
 .weekly-evolution-value { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; font-size: .78rem; font-weight: 750; font-variant-numeric: tabular-nums; }
-.weekly-evolution-value.positive { color: #22ed80; }
-.weekly-evolution-value.negative { color: #ff4865; }
+.weekly-evolution-value.positive { color: var(--positive-ink, #22ed80); }
+.weekly-evolution-value.negative { color: var(--negative-ink, #ff4865); }
 .weekly-evolution-value.neutral, .weekly-evolution-note { color: var(--text-muted); }
 .weekly-evolution-note { font-size: .75rem; text-align: center; }
 

@@ -1,3 +1,4 @@
+import { ratingQuorumCount } from "./rating-quorum.js";
 import { policyAt } from "./system-policy.js";
 import {
   ATTRIBUTES,
@@ -108,7 +109,7 @@ export function ratingObjectiveState(
       Number.isFinite(row[key]) &&
       row[key] >= 0 &&
       row[key] <= 5 &&
-      (row.ratingCounts?.[key] || 0) >= objective.minRatings
+      ratingQuorumCount(row,key,0) >= objective.minRatings
         ? row[key]
         : null,
     );

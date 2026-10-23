@@ -132,6 +132,16 @@ try {
         .isDisabled(),
       true,
     );
+    await dialog.locator('[data-waive="joao"]').click();
+    await dialog.locator('[data-confirm-waiver]').waitFor();
+    await page.screenshot({path:`test-results/game-rating-waiver-${width}.png`,fullPage:true});
+    await dialog.locator('[data-confirm-waiver]').click();
+    await dialog.getByText("Votos em falta anulados",{exact:true}).waitFor();
+    assert.equal(await dialog.locator('[data-remind="joao"]').isDisabled(),true);
+    assert.equal(await dialog.evaluate(el=>el.scrollWidth>el.clientWidth+1),false,"waived status does not overflow");
+    await dialog.locator('[data-waive="joao"]').click();
+    await dialog.locator('[data-confirm-waiver]').click();
+    await dialog.getByText("Parcial",{exact:true}).waitFor();
     await dialog.locator("[data-select-all]").check();
     await dialog
       .getByRole("button", { name: "Lembrar selecionados (2)" })
@@ -179,6 +189,19 @@ try {
   });
   await page.getByRole("button", { name: "Tentar novamente" }).click();
   await page.getByText("Parcial", { exact: true }).waitFor();
+  await page.keyboard.press("Escape");
+  for(const theme of ["volt","champions","ultimate"]) {
+    await page.evaluate(async theme=>(await import('./js/themes.js')).applyTheme(theme),theme);
+    for(const width of [1440,768,390,320]) {
+      await page.setViewportSize({width,height:1000});
+      await page.getByRole("button",{name:"Avalia\u00e7\u00f5es",exact:true}).click();
+      const dialog=page.getByRole("dialog",{name:"Avalia\u00e7\u00f5es do jogo"});
+      await dialog.locator('[data-waive="joao"]').click();
+      assert.equal(await dialog.evaluate(el=>el.scrollWidth>el.clientWidth+1),false);
+      if([1440,390].includes(width)) await page.screenshot({path:`test-results/game-rating-waiver-${theme}-${width}.png`});
+      await page.keyboard.press("Escape");
+    }
+  }
   assert.deepEqual(errors, []);
   console.log(
     "Game rating admin UI: states, group/individual sends, cooldown, retry, keyboard and 1440/768/390/320px passed.",

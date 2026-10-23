@@ -466,6 +466,47 @@ a.football-card:hover {
 }
 
 /* Base editions: matte metal, restrained engraving and a single frame. */
+/* Scrap: oxidised sheet metal, repaired edges, no foil or prestige ornament. */
+.football-card.scrap {
+  --card-a:#454a42;
+  --card-b:#252c28;
+  --card-edge:#906347;
+  --card-text:#f0ecdf;
+  --card-glow:transparent;
+  border-radius:0;
+}
+.football-card.scrap .card-surface {
+  border-radius:0;
+  background:
+    radial-gradient(ellipse at 95% 2%,#94614370,transparent 40%),
+    radial-gradient(ellipse at 0% 90%,#7b4a2d65,transparent 36%),
+    linear-gradient(170deg,#50544a 0%,#373c35 42%,#262d29 67%,#30372f);
+}
+.football-card.scrap .card-surface::before {
+  background:repeating-linear-gradient(2deg,transparent 0 5px,#d6d0b906 5px 6px);
+  opacity:1;
+}
+.football-card.scrap .card-surface::after { display:none; }
+.football-card.scrap .card-frame { border:0; box-shadow:none; }
+.scrap-material { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+.scrap-rust { fill:#965333; }
+.scrap-oxidation { fill:#3f241b; }
+.scrap-flaked-paint { fill:#a7a68d; opacity:.33; }
+.scrap-seam { fill:none; stroke:#a29b7b; stroke-width:.25; opacity:.45; stroke-dasharray:8 2 1 3; }
+.scrap-scratches { fill:none; stroke:#c3baa0; stroke-width:.3; opacity:.48; }
+.scrap-rivets { fill:#73776a; stroke:#252921; stroke-width:.6; }
+.scrap-rivet-slots { fill:none; stroke:#242b25; stroke-width:.4; }
+.scrap-tape-shadow { fill:#101914; opacity:.65; }
+.scrap-tape { fill:#9a9c87; stroke:#b2b39b; stroke-width:.25; }
+.scrap-tape-fibres { fill:none; stroke:#585e51; stroke-width:.35; opacity:.45; }
+.scrap-wire { fill:none; stroke:#b2ad96; stroke-width:.6; }
+.football-card.scrap :is(.card-rating,.card-caption,.card-stats) { color:var(--card-text); }
+.football-card.scrap .card-rating strong { text-shadow:1px 2px 0 #141c16; }
+.football-card.scrap .card-photo img { filter:saturate(.65) contrast(1.05); }
+.football-card.scrap .card-caption { background:#202820c9; padding:3% 0; top:55%; border-block:1px solid #8b82603d; }
+.football-card.scrap .card-caption h3 { color:#f0ecdf; letter-spacing:-.03em; }
+.football-card.scrap .card-stats { border-top:1px dashed #a29b7b73; }
+.football-card.scrap .card-stats small { color:#d1d0bc; opacity:1; }
 .football-card.bronze-common {
   --card-a: #e1b995;
   --card-b: #b7805b;

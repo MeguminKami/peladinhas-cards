@@ -22,32 +22,35 @@ Se o próprio jogador submeter guarda-redes N/A no feedback do jogo, as notas de
 
 ## Condições
 
-Exigem-se pelo menos **três avaliações recebidas por jogo**. Para condições de uma dimensão, são necessárias três avaliações válidas dessa dimensão; N/A não conta como avaliação de guarda-redes.
+Exigem-se pelo menos **sete avaliações recebidas por jogo**. Cada critério usado na conquista também precisa de sete notas válidas; N/A não conta como avaliação de guarda-redes. A carta oficial mantém o seu requisito separado de três avaliações iniciais externas.
 
-| Carta                                            | Condição                                                                                                                                                                                          |
-| :----------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| In Form                                          | Pelo menos 4,0 em cada um dos últimos dois jogos avaliados. O metal acompanha a carta base.                                                                                                       |
-| Melhor em Campo                                  | Melhor média geral do jogo, pelo menos 4,8; empates contam.                                                                                                                                       |
-| Série de ouro                                    | Pelo menos 4,2 em cada um dos últimos três jogos avaliados.                                                                                                                                       |
-| Maestro / Goleador / A muralha / Motor da equipa | Média mínima de 4,7 nos últimos três jogos válidos de Passe / Ataque / Defesa / Físico, respetivamente.                                                                                           |
-| Mãos seguras                                     | Duas classificações de Guarda-redes de pelo menos 4,7 nas últimas três válidas.                                                                                                                   |
-| Forma lendária                                   | Últimos cinco jogos avaliados: média geral de 4,5 e nenhum abaixo de 4,0.                                                                                                                         |
-| Cinco estrelas                                   | 5,0 na mesma dimensão em três jogos avaliados consecutivos.                                                                                                                                       |
-| ICON                                             | Quinze jogos avaliados; média mínima de 4,0 nos últimos dez; duas distinções de Melhor em Campo.                                                                                                  |
-| FUT HEROES                                       | Vitória contra uma equipa com média de OVR inicial pelo menos três pontos superior; três contribuições para golo, participação em pelo menos metade dos golos da equipa e avaliação geral de 4,5. |
-| Carnaval (FUT BIRTHDAY)                          | Nos primeiros cinco jogos: pelo menos quatro avaliados, média geral de 3,7 e um jogo de 4,2.                                                                                                      |
-| ONES TO WATCH                                    | Primeiros três jogos: todos avaliados, média geral de 4,0 e nenhum abaixo de 3,5.                                                                                                                 |
-| FUTURE STARS                                     | Após a carta oficial: cinco jogos avaliados, média geral de 3,8 e ganho de cinco pontos de OVR pela progressão dos jogos, sem bónus de recompensas.                                               |
-| FUTTIES                                          | Vencer a votação de favorito da comunidade. Candidatos com quatro jogos avaliados na época e média de Atitude de 4,3.                                                                             |
-| SHAPESHIFTERS                                    | Dois jogos em cada uma de duas posições registadas, com média geral mínima de 3,8 em ambas.                                                                                                       |
-| Supernova                                        | Seis golos e assistências num jogo, participação em 60% dos golos da equipa e avaliação geral de 4,5.                                                                                             |
-| Aurora                                           | Dois jogos abaixo de 3,0 seguidos de dois com pelo menos 4,0, melhorando a média em um ponto.                                                                                                     |
-| Eclipse                                          | Em seis participações: duas vitórias contra equipas com média de OVR inicial três pontos superior, com avaliação geral de 4,2 nas duas.                                                           |
-| Inferno                                          | Marcar em três participações seguidas, somar oito golos e média de Ataque de 4,3. Ausências não quebram a sequência.                                                                              |
-| Glacial                                          | Últimos três jogos registados como GR: média de Guarda-redes de 4,5, nenhum abaixo de 4,0 e no máximo três golos sofridos em pelo menos dois jogos.                                               |
-| Dinastia                                         | Cinco vitórias nas últimas sete participações, com média geral de 4,0.                                                                                                                            |
-| Equipa da Época (TOTS)                           | Melhor jogador da posição na época, com seis jogos avaliados e média geral de 4,0.                                                                                                                |
-| Apogeu (TOTY)                                    | Melhor jogador da posição no ano da liga, com doze jogos avaliados e média geral de 4,2.                                                                                                          |
+| Carta | Condição |
+| --- | --- |
+| Em forma | Pelo menos 4,0 em cada um dos últimos dois jogos avaliados. |
+| Melhor em campo | Melhor avaliação geral do jogo, pelo menos 4,5 e sete avaliações recebidas. Empates contam. |
+| Série de ouro | Pelo menos 4,2 em cada um dos últimos três jogos avaliados. |
+| Maestro | Média de Passe / Jogo coletivo de pelo menos 4,4 nos últimos três jogos válidos. |
+| Goleador | Média de Ataque / Finalização de pelo menos 4,4 nos últimos três jogos válidos. |
+| A muralha | Média de Defesa de pelo menos 4,4 nos últimos três jogos válidos. |
+| Motor da equipa | Média de Intensidade / Físico de pelo menos 4,6 nos últimos três jogos válidos. |
+| Mãos seguras | Pelo menos duas avaliações de Guarda-redes de 4,3 ou mais nas últimas três válidas. |
+| Forma lendária | Média geral de pelo menos 4,5 nos últimos cinco jogos avaliados, sem nenhum abaixo de 4,0. |
+| Cinco estrelas | 5,0 na mesma dimensão em três jogos avaliados consecutivos. |
+| ICON | Quinze jogos avaliados, média geral mínima de 4,0 nos últimos dez e duas distinções de Melhor em Campo. |
+| FUT HEROES | Vence uma equipa pelo menos três pontos de OVR superior, com nota geral superior a 3,6 e pelo menos um golo ou uma assistência. |
+| Carnaval · FUT BIRTHDAY | As primeiras cinco participações avaliadas, com média geral mínima de 3,6 e pelo menos uma nota geral de 4,0. |
+| ONES TO WATCH | Nos primeiros três jogos, média geral mínima de 4,0, sem nenhum abaixo de 3,5. |
+| FUTURE STARS | Depois da carta oficial, cinco jogos avaliados, média geral mínima de 3,8 e ganho de cinco pontos de OVR pela progressão dos jogos, sem bónus de recompensas. |
+| FUTTIES | Vencer a votação da época, com pelo menos quatro jogos avaliados e média de Atitude mínima de 4,3 para entrar na lista de candidatos. |
+| SHAPESHIFTERS | Dois jogos registados em cada uma de duas posições, com média geral mínima de 3,6 em ambas. |
+| Supernova | Soma pelo menos seis golos e assistências num jogo, com nota geral mínima de 4,5. |
+| Aurora | Depois de dois jogos abaixo de 3,0, dois jogos com pelo menos 4,0 e subida de um ponto na média. |
+| Eclipse | Em seis participações, duas vitórias contra equipas pelo menos 1,2 pontos de OVR superiores, com nota geral mínima de 4,2 nas duas. |
+| Inferno | Marcar em três participações seguidas, somar oito golos e ter média de Ataque / Finalização mínima de 4,3. |
+| Glacial | Três participações consecutivas como guarda-redes, todas com avaliação válida de GR e média desse critério de pelo menos 4,0. |
+| Dinastia | Cinco vitórias nas últimas sete participações, com média geral mínima de 4,0. |
+| Equipa da Época · TOTS | Melhor jogador da posição numa época de dois meses, com seis jogos avaliados e média geral mínima de 3,8. Desempate pela dimensão da posição e OVR. |
+| Apogeu · TOTY | Melhor jogador da posição num ano da liga de quatro meses, com doze jogos avaliados e média geral mínima de 3,8. Desempate pela dimensão da posição e OVR. |
 
 ## Ciclos e dados disponíveis
 
@@ -67,4 +70,4 @@ Testes: `npm.cmd test`, `npm.cmd run test:backend`, `npm.cmd run test:rules`, `n
 
 ## Cartas permanentes dos percursos
 
-Além das conquistas automáticas descritas acima, [Escolhe o teu caminho](player-paths.md) entrega 15 cartas permanentes: nó 15 de cada atributo, nó 25 de GR e quinto nó de cada fusão. Exige completar o nó a 100%; os marcos 5 nas duas origens desbloqueiam a fusão. Estas missões com avaliações usam sete votos e corte de 48 horas, conforme as suas próprias regras, sem substituir o mínimo de três avaliações das conquistas desta página. Propostas antigas mantêm a elegibilidade legada quando aplicável.
+Além das conquistas automáticas descritas acima, [Escolhe o teu caminho](player-paths.md) entrega 17 cartas permanentes: nó 15 de cada atributo, nó 25 de GR e quinto nó de cada fusão. Exige completar o nó a 100%; os marcos 5 nas duas origens desbloqueiam a fusão. Estas missões com avaliações usam sete votos e corte de 48 horas, conforme as suas próprias regras, sem substituir o mínimo de sete avaliações das conquistas desta página. Propostas antigas mantêm a elegibilidade legada quando aplicável.

@@ -444,6 +444,7 @@ try {
     /6\/7 votos/,
   );
   assert.match(await page.locator(".path-pending [data-path-deadline]").innerText(), /47h/);
+  assert.match(await page.locator(".path-pending-attempt").innerText(), /Entrega antecipada com sete votos por critério e sucesso garantido/);
   await page.waitForFunction(() => !document.querySelector(".toast"));
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 960 });

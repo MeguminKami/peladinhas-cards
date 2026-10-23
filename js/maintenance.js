@@ -1,12 +1,15 @@
 import * as DB from "./db.js";
 import { esc, busy, toast, confirmDialog, linkButton } from "./ui.js";
 import { icon } from "./icons.js";
+import { MAINTENANCE_PAGES, WEEKDAYS, pageGroups, policyChanges, policyValue, nextPolicyOpening } from "./maintenance-pages.js";
 import { parseLisbonDateInput } from "./match-time.js";
+import { maintenanceLimits } from "./maintenance-limits.js";
 import {
   POLICY_FIELDS,
   canManage,
   CAPABILITIES,
   normalizePolicy,
+  policyAt,
 } from "./system-policy.js";
 const labels = {
   reduce: "Reduzir ao disponível",
@@ -16,12 +19,12 @@ const labels = {
   readOnly: "Apenas consulta",
 };
 const tabs = [
-  ["config", "settings", "Regras", "lab"],
+  ["config", "settings", "Páginas da aplicação", "settings"],
   ["rewards", "operations", "Recompensas", "gift"],
   ["overview", "operations", "Automatizações", "refresh"],
   ["diagnostics", "operations", "Diagnóstico", "chart"],
   ["access", "access", "Acessos", "shield"],
-  ["history", "audit", "Histórico", "ratings"],
+  ["history", "audit", "Histórico", "clock"],
   ["backups", "operations", "Recuperação", "assets"],
 ];
 const read = async (section, extra = {}) =>
@@ -48,11 +51,36 @@ function download(name, value) {
 function table(headings, rows) {
   return `<div class="table-wrap"><table><thead><tr>${headings.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.join("") || `<tr><td colspan="${headings.length}">Sem registos.</td></tr>`}</tbody></table></div>`;
 }
+const operationLabels = {
+  "rating-waiver":"Votos em falta anulados ou repostos",
+  publish:"Configuração publicada", draft:"Rascunho guardado", simulate:"Simulação de impacto", "cancel-scheduled":"Agendamento cancelado",
+  "run-job":"Execução manual", permissions:"Permissões alteradas", recovery:"Conta recuperada", rebuild:"Recálculo", "task-item-failed":"Falha numa tarefa",
+};
+const jobLabels = {closeCardWeek:"Fechar cartas semanais",openCardWeek:"Abrir nova semana",closeEvents:"Apurar eventos e recompensas",settlePaths:"Apurar missões do ETC",refreshCardCollection:"Atualizar coleção de cartas",scheduledNotifications:"Enviar lembretes",systemHeartbeat:"Verificar estado da liga",systemCleanup:"Limpar dados transitórios",processFeedback:"Atualizar avaliações de jogos"};
+const pageLinks = {
+  cards:[["cards","#/admin/weights","Pesos do OVR"],["cards","#/admin/card-types","Tipos de carta"]],
+  games:[["games","#/admin/games","Gerir jogos e equipas"]],
+  ratings:[["ratings","#/admin/ratings","Consultar e corrigir avaliações"]],
+  missions:[["events","#/admin/events","Criar e editar missões"],["events","#/admin/paths","Gerir percursos do ETC"]],
+  events:[["events","#/admin/events","Gerir eventos e votações"]],
+  players:[["access","#/admin/players","Gerir jogadores e contas"]],
+};
+function versionEntry(row, previous, activeVersion, canEdit) {
+  const before=previous?.config || policyAt(new Date(+new Date(row.effectiveAt)-1),{timeline:[]});
+  const changes=policyChanges(normalizePolicy(row.config),normalizePolicy(before));
+  const status=row.canceledAt ? "Cancelada" : row.version===activeVersion ? "Ativa" : +new Date(row.effectiveAt)>Date.now() ? "Agendada" : "Anterior";
+  return `<article class="maintenance-version"><div class="maintenance-version-head"><span class="maintenance-version-number">V${row.version}</span><div><h4>${esc(row.reason || "Atualização das regras")}</h4><p>${when(row.effectiveAt)} · ${esc(row.actorId || "Administração")}</p></div><span class="pill ${status==="Ativa"?"success":""}">${status}</span></div><details><summary>${changes.length} alterações · Ver antes e depois</summary><dl class="maintenance-change-list">${changes.map(change=>`<div><dt>${esc(change.label)}</dt><dd><span>${esc(policyValue(change.name,change.before))}</span>${icon("arrow")}<strong>${esc(policyValue(change.name,change.after))}</strong></dd></div>`).join("")}</dl></details>${canEdit?`<button type="button" class="btn btn-ghost" data-version="${row.version}">${icon("copy")}Usar como rascunho</button>`:""}</article>`;
+}
+function auditEntry(row) {
+  return `<article class="maintenance-audit-entry"><div><strong>${esc(operationLabels[row.action] || row.action)}</strong><span class="pill">${esc({completed:"Concluída",failed:"Falhou",running:"Em curso"}[row.status || "completed"] || row.status)}</span></div><p>${when(row.createdAt)} · ${esc(row.actorId || "Sistema")}</p>${Object.keys(row.details || {}).length?`<details><summary>Ver detalhes</summary><dl class="maintenance-change-list">${Object.entries(row.details).map(([key,value])=>`<div><dt>${esc({reason:"Motivo",uid:"Jogador",eventId:"Evento",gameId:"Jogo",scope:"Âmbito",version:"Versão",id:"Referência",action:"Ação"}[key] || key)}</dt><dd>${esc(typeof value==="object"?JSON.stringify(value):value)}</dd></div>`).join("")}</dl></details>`:""}</article>`;
+}
 function field(section, [key, label, initial, min, max], config) {
   const value = config[section][key],
     name = `${section}.${key}`;
   if (typeof initial === "boolean")
     return `<label class="maintenance-toggle"><input name="${name}" type="checkbox" ${value ? "checked" : ""}><span>${esc(label)}</span></label>`;
+  if (section === "cycle" && ["openDay","closeDay"].includes(key))
+    return `<label>${esc(label)}<select name="${name}">${WEEKDAYS.map((day,index)=>`<option value="${index}" ${value===index?"selected":""}>${day}</option>`).join("")}</select><small>Hora de Portugal continental.</small></label>`;
   const input = Array.isArray(min)
     ? `<select name="${name}">${min.map((option) => `<option value="${option}" ${value === option ? "selected" : ""}>${esc(labels[option] || option)}</option>`).join("")}</select>`
     : `<input name="${name}" ${typeof initial === "number" ? `type="number" min="${min}" max="${max}" step="${Number.isInteger(initial) ? 1 : 0.01}"` : 'maxlength="300"'} value="${esc(value)}" ${typeof initial === "number" || initial ? "required" : ""}>`;
@@ -60,7 +88,7 @@ function field(section, [key, label, initial, min, max], config) {
 }
 function report(value) {
   if (value.players)
-    return `<p>${esc(value.notice)}</p>${table(
+    return `<h3>${icon("lab")} Simulação de impacto</h3><p>${esc(value.notice)}</p><p class="muted small">${value.players.filter(player=>player.delta!==0).length} de ${value.players.length} jogadores com alteração no OVR.</p>${table(
       ["Jogador", "Atual", "Simulado", "Variação"],
       value.players.map(
         (p) =>
@@ -85,8 +113,8 @@ export async function mountMaintenance(ctx, root) {
   }
   let selected = available[0][0],
     revision = 0,
-    document = null;
-  root.innerHTML = `<div class="maintenance-heading"><div><h2>Configuração e operações</h2><p>As alterações ficam registadas e os dados históricos são preservados.</p></div><span class="pill">${icon("shield")} Administração</span></div><nav class="maintenance-tabs" aria-label="Áreas de manutenção">${available.map(([id, , name, symbol]) => `<button type="button" class="btn btn-secondary" data-maint-tab="${id}" aria-pressed="false">${icon(symbol)}${name}</button>`).join("")}</nav><div class="maintenance-body" aria-live="polite"></div>`;
+    document = null, working = null, capture = null, pageId = "cards";
+  root.innerHTML = `<header class="maintenance-heading"><div><p class="eyebrow">${icon("settings")} CONTROLO DA LIGA</p><h2>Central de manutenção</h2><p>Escolhe a página. Ajusta as regras. Simula antes de publicar.</p></div><span class="pill">${icon("shield")} Administração</span></header><nav class="maintenance-tabs" aria-label="Áreas de manutenção">${available.map(([id, , name, symbol]) => `<button type="button" class="btn btn-ghost" data-maint-tab="${id}" aria-pressed="false">${icon(symbol)}${name}</button>`).join("")}</nav><div class="maintenance-body"></div>`;
   const content = root.querySelector(".maintenance-body");
   const output = () => content.querySelector("[data-result]");
   const result = (value) => {
@@ -108,22 +136,28 @@ export async function mountMaintenance(ctx, root) {
     }
   }
   async function load(tab) {
+    if(selected === "config" && capture) working = capture();
+    capture = null;
     selected = tab;
     root
       .querySelectorAll("[data-maint-tab]")
       .forEach((b) =>
         b.setAttribute("aria-pressed", String(b.dataset.maintTab === tab)),
       );
-    content.innerHTML = '<p class="muted">A carregar…</p>';
+    content.innerHTML = '<p class="muted" role="status">A carregar…</p>';
     try {
       const value = await read(tab);
       if (selected !== tab || !root.isConnected) return;
       if (tab === "config") {
         document = value.document;
-        revision = document.revision || 0;
-        const config = value.draft?.config || value.config;
-        content.innerHTML = `<form id="maintenance-policy" class="content-stack"><div class="maintenance-status"><span class="pill">Versão ativa ${value.version}</span>${value.draft ? '<span class="pill warning">Rascunho recuperado</span>' : ""}<p>Publicar aplica as regras a partir da data escolhida. Prémios já entregues e cartas fechadas mantêm o histórico.</p></div><div class="maintenance-sections">${POLICY_FIELDS.map(([section, title, fields]) => `<details class="panel" ${section === "rewards" ? "open" : ""}><summary>${esc(title)}</summary><div class="maintenance-fields">${fields.map((f) => field(section, f, config)).join("")}</div></details>`).join("")}</div><section class="panel content-stack"><h3>Publicar configuração</h3><label>Motivo<textarea name="reason" minlength="5" maxlength="300" required></textarea></label><label>Entrada em vigor (vazio = agora)<input name="effectiveAt" type="datetime-local"></label><div class="actions"><button type="submit" class="btn btn-primary">Publicar</button><button type="button" class="btn btn-secondary" data-draft>Guardar rascunho</button><button type="button" class="btn btn-secondary" data-simulate>Simular impacto</button>${document.timeline?.some((row) => +new Date(row.effectiveAt) > Date.now()) ? '<button type="button" class="btn btn-danger" data-cancel>Cancelar agendamento</button>' : ""}</div><p class="muted small">A simulação é hipotética e não altera jogadores. Os limites de 0–99 e os pesos por posição permanecem nas áreas próprias.</p></section></form><div data-result></div>`;
+        revision = working?.revision ?? (document.revision || 0);
+        const config = normalizePolicy(working?.config || value.draft?.config || value.config);
+        content.innerHTML = `<form id="maintenance-policy" class="maintenance-policy-layout"><nav class="maintenance-pages" aria-label="P&#225;ginas da aplica&#231;&#227;o">${MAINTENANCE_PAGES.map(page=>`<button type="button" data-maint-page="${page.id}" aria-controls="maintenance-page-${page.id}" aria-pressed="${page.id===pageId}">${icon(page.icon)}<span>${esc(page.label)}</span>${icon("arrow")}</button>`).join("")}</nav><div class="maintenance-editor"><div class="maintenance-status"><span class="pill">Vers&#227;o ativa ${value.version}</span>${value.draft ? '<span class="pill warning">Rascunho recuperado</span>' : ""}<span class="maintenance-edit-status" data-unsaved>Sem altera&#231;&#245;es</span><button type="button" class="btn btn-secondary" data-simulate>${icon("lab")}Simular impacto</button></div>${MAINTENANCE_PAGES.map(page=>`<section class="maintenance-page" id="maintenance-page-${page.id}" data-maint-panel="${page.id}" ${page.id===pageId?"":"hidden"}><header class="maintenance-page-heading"><span>${icon(page.icon)}</span><div><h3>${esc(page.label)}</h3><p>${esc(page.description)}</p></div></header><div class="maintenance-related-links">${(pageLinks[page.id] || []).filter(([cap])=>canManage(ctx.user,cap)).map(([,href,label])=>linkButton(href,label,"ghost","arrow")).join("")}</div>${pageGroups(page).map(group=>`<section class="maintenance-rule-group"><h4>${esc(group.label)}</h4>${group.fields.some(row=>row.name==="cycle.openDay")?'<p class="maintenance-calendar-preview" data-calendar-preview></p>':""}<div class="maintenance-fields">${group.fields.map(row=>field(row.section,row.field,config)).join("")}</div></section>`).join("")}${page.id==="players" && canManage(ctx.user,"access")?'<button type="button" class="btn btn-secondary" data-maint-open="access">Gerir acessos e recuperar contas</button>':""}</section>`).join("")}<section class="maintenance-publish"><header><div><h3>Rever e publicar</h3><p>O rascunho inclui todas as p&#225;ginas. As cartas fechadas e os pr&#233;mios entregues mant&#234;m-se.</p></div></header><div class="maintenance-fields"><label>Motivo da altera&#231;&#227;o<textarea name="reason" minlength="5" maxlength="300" required></textarea></label><label>Entrada em vigor<input name="effectiveAt" type="datetime-local"><small>Vazio = agora. Se alterares o calend&#225;rio, propomos automaticamente a pr&#243;xima abertura antes de confirmares.</small><button type="button" class="maintenance-schedule-link" data-next-opening>Usar pr&#243;xima abertura</button></label></div><div class="actions"><button type="submit" class="btn btn-primary">${icon("publish")}Publicar</button><button type="button" class="btn btn-secondary" data-draft>${icon("edit")}Guardar rascunho</button><button type="button" class="btn btn-ghost" data-simulate>${icon("lab")}Simular impacto</button>${document.timeline?.some(row=>+new Date(row.effectiveAt)>Date.now())?'<button type="button" class="btn btn-danger" data-cancel>Cancelar agendamento</button>':""}</div></section></div></form><section class="maintenance-simulation" data-result aria-live="polite"></section>`;
         const form = content.querySelector("form");
+        const calendarFields = form.querySelector("[data-calendar-preview]").parentElement.querySelector(".maintenance-fields");
+        calendarFields.classList.add("maintenance-calendar-controls");
+        const cycleFields = POLICY_FIELDS.find(([section])=>section === "cycle")[2];
+        calendarFields.innerHTML = ["open","close"].map(prefix=>`<fieldset><legend>${icon(prefix === "open" ? "clock" : "lock")}${prefix === "open" ? "Abertura" : "Fecho"}</legend>${cycleFields.filter(([key])=>key.startsWith(prefix)).map(definition=>field("cycle",[definition[0],definition[0].endsWith("Hour") ? "Hora" : definition[0].endsWith("Minute") ? "Minutos" : definition[1],...definition.slice(2)],config)).join("")}</fieldset>`).join("");
         function values() {
           return Object.fromEntries(
             POLICY_FIELDS.map(([section, , fields]) => [
@@ -144,14 +178,86 @@ export async function mountMaintenance(ctx, root) {
             ]),
           );
         }
+        form.elements.reason.value = working?.reason || "";
+        form.elements.effectiveAt.value = working?.effectiveAt || "";
+        let automaticDate = working?.automaticDate ?? !form.elements.effectiveAt.value;
+        capture = () => ({config:values(),reason:form.elements.reason.value,effectiveAt:form.elements.effectiveAt.value,automaticDate,revision});
+        const calendarChanged = candidate => ["openDay","openHour","openMinute","closeDay","closeHour","closeMinute"].some(key => candidate.cycle[key] !== value.config.cycle[key]);
+        form.elements.effectiveAt.addEventListener("input", () => { automaticDate = !form.elements.effectiveAt.value; });
+        for (const id of ["cards","missions","events"])
+          form.querySelector(`[data-maint-panel="${id}"] .maintenance-related-links`).insertAdjacentHTML("afterend", `<details class="maintenance-limits" data-limits="${id}"><summary>${icon("rewardStats")}Tetos de stats e recompensas</summary><div></div></details>`);
+        const dateError = root.ownerDocument.createElement("p");
+        dateError.className = "maintenance-publish-error";
+        dateError.setAttribute("role", "alert");
+        dateError.hidden = true;
+        form.querySelector(".maintenance-publish .actions").before(dateError);
+        form.dataset.baseRevision = revision;
+        if(revision !== (document.revision || 0))
+          form.querySelector(".maintenance-status").insertAdjacentHTML("beforeend",'<p class="warning" role="status">Existe uma versão mais recente. Guarda o rascunho e recarrega para rever antes de publicar.</p>');
+        const updatePreview = () => {
+          const candidate = values();
+          const count = policyChanges(candidate,value.config).length;
+          form.querySelector("[data-unsaved]").textContent = count ? `${count} ajustes por publicar` : "Sem altera\u00e7\u00f5es";
+          const cycle = candidate.cycle, time = (h,m)=>`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+          const schedule = c => `${WEEKDAYS[c.openDay]} ${time(c.openHour,c.openMinute)} → ${WEEKDAYS[c.closeDay]} ${time(c.closeHour,c.closeMinute)}`;
+          if (calendarChanged(candidate) && automaticDate && POLICY_FIELDS.find(([key])=>key==="cycle")[2].slice(0,6).every(([key,,,min,max])=>Number.isInteger(cycle[key]) && cycle[key]>=min && cycle[key]<=max))
+            form.elements.effectiveAt.value = nextPolicyOpening(cycle).input;
+          form.querySelector("[data-calendar-preview]").innerHTML = `<b>Ativo:</b> ${esc(schedule(value.config.cycle))}${calendarChanged(candidate) ? `<br><b>Por publicar:</b> ${esc(schedule(cycle))}<br><small>Aplica-se a partir da abertura agendada. A semana atual e as cartas fechadas mantêm-se.</small>` : ""}<br><small>Hora de Lisboa</small>`;
+          for (const entry of (document.timeline || []).filter(row => row.config && !row.canceledAt && +new Date(row.effectiveAt) > Date.now()))
+            form.querySelector("[data-calendar-preview]").insertAdjacentHTML("beforeend", `<br><small><b>Já agendado para ${esc(when(entry.effectiveAt))}:</b> ${esc(schedule(normalizePolicy(entry.config).cycle))}</small>`);
+          form.querySelectorAll("[data-limits]").forEach(panel => {
+            const rows = maintenanceLimits(candidate,panel.dataset.limits), active = maintenanceLimits(value.config,panel.dataset.limits);
+            panel.querySelector("div").innerHTML = `<p>Valores em edição. As alterações só se aplicam depois de publicadas e em vigor.</p><dl>${rows.map((row,index)=>`<div><dt>${esc(row.title)}</dt><dd><strong>${esc(row.value)}</strong>${row.value !== active[index].value ? `<small>Ativo: ${esc(active[index].value)}</small>` : ""}<p>${esc(row.help)}</p></dd></div>`).join("")}</dl>`;
+          });
+        };
+        updatePreview();
+        form.addEventListener("input",updatePreview);
+        form.querySelectorAll("[data-maint-page]").forEach(button=>button.onclick=()=>{
+          pageId=button.dataset.maintPage;
+          form.querySelectorAll("[data-maint-page]").forEach(node=>node.setAttribute("aria-pressed",String(node===button)));
+          form.querySelectorAll("[data-maint-panel]").forEach(node=>node.hidden=node.dataset.maintPanel!==pageId);
+        });
+        form.querySelector("[data-maint-open]")?.addEventListener("click",()=>load("access"));
+        form.querySelector("[data-next-opening]").onclick=()=>{
+          automaticDate = true;
+          const next=nextPolicyOpening(values().cycle);
+          form.elements.effectiveAt.value=next.input;
+          toast("Entrada em vigor na pr\u00f3xima abertura.");
+        };
         form.onsubmit = async (event) => {
           event.preventDefault();
-          if (!(await confirmDialog("Publicar estas regras para a liga?")))
+          const candidate = values();
+          if (calendarChanged(candidate) && (automaticDate || !form.elements.effectiveAt.value))
+            form.elements.effectiveAt.value = nextPolicyOpening(candidate.cycle).input;
+          const scheduled = form.elements.effectiveAt.value;
+          dateError.hidden = true;
+          let activation;
+          try { activation = scheduled ? parseLisbonDateInput(scheduled) : null; }
+          catch (error) {
+            dateError.textContent = error.message;
+            dateError.hidden = false;
+            form.elements.effectiveAt.focus();
+            return;
+          }
+          if (calendarChanged(candidate)) {
+            const at = activation;
+            const clock = at && Object.fromEntries(new Intl.DateTimeFormat("en-GB", {timeZone:"Europe/Lisbon",weekday:"short",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(at).map(part=>[part.type,part.value]));
+            if (!at || +at <= Date.now()+60000 || clock.weekday !== ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][candidate.cycle.openDay] || +clock.hour !== candidate.cycle.openHour || +clock.minute !== candidate.cycle.openMinute) {
+              dateError.textContent = "Escolhe uma abertura futura do novo horário ou usa «Usar próxima abertura». A data deve coincidir com a abertura, com mais de um minuto de antecedência.";
+              dateError.hidden = false;
+              form.elements.effectiveAt.focus();
+              return;
+            }
+          }
+          const confirmation = scheduled
+            ? `Publicar estas regras para a liga, com entrada em vigor em ${parseLisbonDateInput(scheduled).toLocaleString("pt-PT", {timeZone:"Europe/Lisbon", dateStyle:"short", timeStyle:"short"})} (hora de Lisboa)?`
+            : "Publicar estas regras para a liga?";
+          if (!(await confirmDialog(confirmation)))
             return;
           await task(event.submitter, async () => {
             await act({
               action: "publish",
-              config: values(),
+              config: candidate,
               expectedRevision: revision,
               reason: form.elements.reason.value,
               effectiveAt: form.elements.effectiveAt.value
@@ -160,7 +266,8 @@ export async function mountMaintenance(ctx, root) {
                   ).toISOString()
                 : null,
             });
-            toast("Configuração publicada.");
+            working = null; capture = null;
+            toast(activation && +activation > Date.now() ? `Configuração agendada para ${when(activation)} (Lisboa).` : "Configuração publicada.");
             await ctx.refresh();
             await load(tab);
           });
@@ -170,10 +277,11 @@ export async function mountMaintenance(ctx, root) {
             await act({ action: "draft", config: values() });
             toast("Rascunho guardado.");
           });
-        content.querySelector("[data-simulate]").onclick = (event) =>
-          task(event.currentTarget, async () =>
-            result(await act({ action: "simulate", config: values() })),
-          );
+        content.querySelectorAll("[data-simulate]").forEach(button => button.onclick = event =>
+          task(event.currentTarget, async () => {
+            result(await act({ action: "simulate", config: values() }));
+            output()?.scrollIntoView({behavior:"auto",block:"start"});
+          }));
         content
           .querySelector("[data-cancel]")
           ?.addEventListener("click", (event) =>
@@ -183,6 +291,7 @@ export async function mountMaintenance(ctx, root) {
                 expectedRevision: revision,
                 reason: form.elements.reason.value,
               });
+              working = null; capture = null;
               await load(tab);
             }),
           );
@@ -192,7 +301,7 @@ export async function mountMaintenance(ctx, root) {
           ["Tarefa", "Agenda", "Estado", "Última conclusão", ""],
           value.registered.map((job) => {
             const row = byId.get(job.id) || {};
-            return `<tr><td>${esc(job.id)}${row.lastError ? `<small>${esc(row.lastError)}</small>` : ""}</td><td>${esc(job.schedule)}</td><td>${esc(row.status || "Sem execução registada")}</td><td>${when(row.finishedAt)}</td><td><button class="btn btn-secondary" data-job="${job.id}">Executar</button></td></tr>`;
+            return `<tr><td>${esc(jobLabels[job.id] || job.id)}${row.lastError ? `<small>${esc(row.lastError)}</small>` : ""}</td><td>${esc(job.schedule === "0 * * * *" ? "De hora a hora" : job.schedule === "15 * * * *" ? "Aos 15 minutos de cada hora" : job.schedule)}</td><td>${esc({completed:"Concluída",failed:"Falhou",running:"Em execução","completed-with-issues":"Com itens por rever"}[row.status] || row.status || "Sem execução registada")}</td><td>${when(row.finishedAt)}</td><td><button class="btn btn-secondary" data-job="${job.id}">Executar</button></td></tr>`;
           }),
         )}<label>Motivo<input id="job-reason" minlength="5" maxlength="300"></label><div data-result></div></section>`;
         content.querySelectorAll("[data-job]").forEach(
@@ -321,26 +430,16 @@ export async function mountMaintenance(ctx, root) {
           });
         };
       } else if (tab === "history") {
-        content.innerHTML = `<section class="panel content-stack"><h3>Versões das regras</h3>${table(
-          ["Versão", "Estado", "Entrada em vigor", "Autor", "Motivo", ""],
-          value.versions.map(
-            (row) =>
-              `<tr><td>${row.version}</td><td>${row.canceledAt ? "Cancelada" : row.version === value.activeVersion ? "Ativa" : +new Date(row.effectiveAt) > Date.now() ? "Agendada" : "Anterior"}</td><td>${when(row.effectiveAt)}</td><td>${esc(row.actorId)}</td><td>${esc(row.reason)}</td><td>${canManage(ctx.user, "settings") ? `<button class="btn btn-secondary" data-version="${row.version}">Usar como rascunho</button>` : ""}</td></tr>`,
-          ),
-        )}</section><section class="panel content-stack"><h3>Últimas 100 operações</h3><label>Pesquisar autor, operação ou referência<input data-audit-filter></label><div data-audit-list></div><button class="btn btn-secondary" data-export-audit>Exportar</button></section>`;
+        const versions=[...value.versions].sort((a,b)=>b.version-a.version);
+        content.innerHTML = `<section class="panel content-stack"><div class="section-head"><div><p class="eyebrow">REGRAS DA LIGA</p><h3>Histórico de alterações</h3></div><span class="pill">${versions.length} versões</span></div><p>Consulta o que mudou, compara os valores e recupera uma versão como rascunho.</p><div class="maintenance-versions">${versions.map((row,index)=>versionEntry(row,versions.slice(index+1).find(previous=>!previous.canceledAt),value.activeVersion,canManage(ctx.user,"settings"))).join("") || '<p class="muted">Ainda não há alterações publicadas.</p>'}</div></section><section class="panel content-stack"><div><p class="eyebrow">ATIVIDADE ADMINISTRATIVA</p><h3>Últimas 100 operações</h3></div><label>Pesquisar autor, operação ou referência<input data-audit-filter type="search" placeholder="Filtra o histórico"></label><div data-audit-list></div><button class="btn btn-secondary" data-export-audit>${icon("download")}Exportar histórico</button></section>`;
         const draw = () => {
           const term = content
             .querySelector("[data-audit-filter]")
             .value.toLowerCase();
-          content.querySelector("[data-audit-list]").innerHTML = table(
-            ["Data", "Autor", "Operação", "Estado", "Detalhes"],
-            value.audit
+          content.querySelector("[data-audit-list]").innerHTML = [...value.audit]
+              .sort((a,b)=>+new Date(b.createdAt)-+new Date(a.createdAt))
               .filter((row) => JSON.stringify(row).toLowerCase().includes(term))
-              .map(
-                (row) =>
-                  `<tr><td>${when(row.createdAt)}</td><td>${esc(row.actorId)}</td><td>${esc(row.action)}</td><td>${esc(row.status || "completed")}</td><td>${esc(JSON.stringify(row.details || {}))}</td></tr>`,
-              ),
-          );
+              .map(auditEntry).join("") || '<p class="muted">Sem operações para este filtro.</p>';
         };
         content.querySelector("[data-audit-filter]").oninput = draw;
         draw();
@@ -358,6 +457,7 @@ export async function mountMaintenance(ctx, root) {
                     ).config,
                   ),
                 });
+                working = null; capture = null;
                 await load("config");
               })),
         );
@@ -434,8 +534,8 @@ export async function mountMaintenance(ctx, root) {
   async function task(button, fn) {
     try {
       await busy(button, fn);
-    } catch (error) {
-      toast(error.message, "error");
+    } catch {
+      // busy already presents the error; keep the form available for retry.
     }
   }
   root

@@ -4,7 +4,8 @@ import { cardClip, expandCardOutline } from "./card-geometry.js";
 import { applyCardTemplate } from "./card-design.js";
 import { cardPhotoStyles } from "./card-photo.js";
 import { SPECIAL_CARD_DESIGNS } from "./card-specials.js";
-import { ATTRIBUTES, flag, informTheme, INFORM_THEMES } from "./utils.js";
+import { ATTRIBUTES, flag, informTheme, INFORM_THEMES, calculateBaseCard } from "./utils.js";
+import { SCRAP_OUTLINE, scrapArt } from "./card-scrap.js";
 import { esc } from "./ui.js";
 import { safeImage, ASSET_PATHS, PLAYSTYLE_ICONS } from "./assets.js";
 export function cardPlaystyles(player) {
@@ -25,15 +26,19 @@ export function cardPlaystyles(player) {
     }));
 }
 export function card(player, { size = "md", theme, preview = false } = {}) {
+  const playerBase = player.hasCard === false && player.cardType === "scrap"
+    ? "bronze-common"
+    : player.hasCard !== false && Number.isFinite(player.ovr) && (player.ovr < 50 || player.cardType === "scrap")
+      ? calculateBaseCard(player.ovr) : player.cardType || "bronze-common";
   const chosenTheme =
     theme ||
     (player.selectedCardId === "base"
-      ? player.cardType || "bronze-common"
+      ? playerBase
       : player.specials?.some((s) => s.id === player.selectedCardId)
         ? player.selectedCardId
         : null) ||
     player.specials?.[0]?.id ||
-    player.cardType ||
+    playerBase ||
     "bronze-common";
   const template = player.specials?.find(
     (sp) => sp.id === chosenTheme,
@@ -66,6 +71,7 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
   const rare = normal && t.endsWith("-rare");
   const outline =
     special?.outline ||
+    (t === "scrap" ? SCRAP_OUTLINE : null) ||
     (rare
       ? "9,6 38,6 50,1 62,6 91,6 98,13 94,18 98,23 98,79 94,88 81,95 50,99 19,95 6,88 2,79 2,23 6,18 2,13"
       : undefined);
@@ -98,7 +104,7 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.ovrDelta !== 0
       ? `<span class="card-ovr-trend ${player.ovrDelta > 0 ? "positive" : "negative"}" role="img" aria-label="${player.ovrDelta > 0 ? "Subiu" : "Desceu"} OVR nos valores permanentes face à semana anterior">${trendArrow(player.ovrDelta)}</span>`
       : "";
-  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.ultimate ? " card-ultimate" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
+  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.ultimate ? " card-ultimate" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${t === "scrap" ? scrapArt(clip.id) : ""}${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
     0,
     8,
   )

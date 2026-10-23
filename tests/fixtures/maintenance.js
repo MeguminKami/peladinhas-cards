@@ -13,7 +13,7 @@ export async function maintenanceFixture(state, name, data) {
         draft: state.systemDraft || null,
       };
     if (section === "history")
-      return { audit: state.systemAudit, versions: state.systemVersions || [] };
+      return { audit: state.systemAudit, versions: state.systemVersions || [], activeVersion:document.revision };
     if (section === "rewards") return { rewards: state.eventRewards || [] };
     if (section === "access")
       return {

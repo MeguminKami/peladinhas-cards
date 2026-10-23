@@ -1,3 +1,4 @@
+import { ratingQuorumCount } from "./rating-quorum.js";
 import { asDate, average, participants } from "./utils.js";
 import { PATH_CARD_EDITIONS } from "./path-card-designs.js";
 import { ULTIMATE_CARD_EDITIONS } from "./card-ultimate-designs.js";
@@ -10,6 +11,7 @@ export const RESERVED_CARD_IDS = Object.freeze([
   "titan",
   "carnival",
 ]);
+export const CARD_MINIMUM_RATINGS = 7;
 export const CARD_POLICY = Object.freeze({
   ...Object.fromEntries(Object.entries(ULTIMATE_CARD_EDITIONS).map(([id,edition])=>[id,{duration:"permanent",hint:edition.hint}])),
   ...Object.fromEntries(Object.keys(PATH_CARD_EDITIONS).map(id => [id, { duration: "permanent", hint: "Conquista a prova final em Escolhe o teu caminho!" }])),
@@ -150,8 +152,7 @@ export function leaguePeriod(value, months = 2) {
 const time = (value) => (value == null ? NaN : +asDate(value));
 export const qualifiedCardGame = (row) =>
   Number.isFinite(row.overall) &&
-  row.count >= 3 &&
-  (row.ratingCounts?.overall ?? row.count) >= 3 &&
+  ratingQuorumCount(row,"overall") >= CARD_MINIMUM_RATINGS &&
   Number.isFinite(time(row.date));
 export function mergeCardAchievements(existing = [], incoming = []) {
   const records = new Map();

@@ -21,6 +21,8 @@ Usar `goalDifficulty.statistics` para distribuições, médias, histogramas, lim
 
 Nas combinações com estrelas, o script reconstrói os votos às 48 horas. Janelas ainda abertas ficam em `windowPending`; falta de amostra fica em `waiting`; posições não elegíveis ficam em `cancelled`. A percentagem usa apenas `success + failure`; sem casos elegíveis é `null`, nunca 0%. As avaliações no campo superior `ratings` são os resumos atuais, não o corte histórico: não as usar para decidir o sucesso de uma combinação. Esta simulação usa os registos de jogo disponíveis hoje; correções posteriores ao jogo podem mudar os resultados entre consultas.
 
+Esta simulação mantém o corte das 48 horas e não reproduz o instante de entrega antecipada por sucesso garantido, introduzido em 23/10/2026. Um sucesso antecipado fica definitivo mesmo com edições posteriores; por isso, o replay às 48 horas pode divergir do resultado entregue. Para validar esse comportamento usar os testes de apuramento, não as frequências deste relatório.
+
 `comparison` guarda condições antigas/novas, denominadores e percentagens. Uma diferença pode resultar de novos jogos, correções ou novas metas; não a atribuir automaticamente à calibração. Preservar o JSON anterior e guardar a nova análise com outra data/revisão.
 
 ## Decidir e implementar

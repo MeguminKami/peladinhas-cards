@@ -1,4 +1,7 @@
 import { upgradePathProposals } from "../js/path-model.js";
+import { queueFeedback } from "./feedback-queue.js";
+import { hasRatingWaiver } from "../js/rating-quorum.js";
+import { randomUUID } from "node:crypto";
 import { gameTeamSize, validTeamSize } from "../js/game-format.js";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
@@ -143,7 +146,8 @@ export function writeFeedbackRevision(tx, ref, previous, vote) {
       order: "000000000000",
     });
   const voteRevision = (previous?.voteRevision || 0) + 1;
-  const value = { ...vote, voteRevision };
+  const feedbackBatchToken = queueFeedback(tx, ref.parent.parent, previous, vote);
+  const value = { ...vote, voteRevision, ...(feedbackBatchToken ? { feedbackBatchToken } : {}) };
   tx.set(journal.doc(), {
     vote: value,
     recordedAt: FieldValue.serverTimestamp(),
@@ -214,6 +218,7 @@ export function gameFlowFunctions(syncGame = async () => {}) {
       const now = new Date().toISOString();
       const output = {
         ...value,
+        ...(prior?.ratingWaivers ? {ratingWaivers:prior.ratingWaivers} : {}),
         creatorId: prior?.creatorId || request.auth.uid,
         createdAt: prior?.createdAt || FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
@@ -387,5 +392,32 @@ export function gameFlowFunctions(syncGame = async () => {}) {
     });
     return { ok: true };
   });
-  return { gameAction, feedbackAction };
+  const ratingWaiverAction = policyCall("ratingWaiverAction", async request => {
+    if (!canManage(request.systemActor,"ratings") && !canManage(request.systemActor,"games"))
+      throw new HttpsError("permission-denied","Sem permissão para gerir avaliações.");
+    const {gameId, uid, waive} = request.data || {};
+    if (!validId(gameId) || !validId(uid) || typeof waive !== "boolean") fail("Pedido inválido.");
+    const result = await db().runTransaction(async tx => {
+      const ref = db().doc(`games/${gameId}`), snap = await tx.get(ref), game = snap.data();
+      if (!game || game.deleting || game.status !== "closed" || !participants(game).includes(uid))
+        fail("Seleciona um participante de um jogo encerrado.");
+      const current = hasRatingWaiver(game,uid);
+      if (current === waive) return {changed:false};
+      const history = [...(game.ratingWaivers?.[uid] || [])];
+      const now = Timestamp.now();
+      if (waive) {
+        if (history.length >= 100) fail("Limite de alterações atingido para este participante.");
+        history.push({at:now, actorId:request.auth.uid});
+      } else {
+        const index = history.findLastIndex(row=>!row.until);
+        if (index >= 0) history[index] = {...history[index],until:now,revokedBy:request.auth.uid};
+      }
+      tx.update(ref,{[`ratingWaivers.${uid}`]:history});
+      tx.set(db().doc(`feedbackWork/${gameId}`),{token:randomUUID(),pending:true,updatedAt:FieldValue.serverTimestamp()},{merge:true});
+      tx.set(db().collection("systemAudit").doc(),{actorId:request.auth.uid,action:"rating-waiver",createdAt:now,details:{gameId,uid,waive}});
+      return {changed:true};
+    });
+    return {ok:true,...result};
+  });
+  return { gameAction, feedbackAction, ratingWaiverAction };
 }

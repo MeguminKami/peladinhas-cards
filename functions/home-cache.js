@@ -12,6 +12,7 @@ import { buildMissions } from "../js/mission-model.js";
 import { cardWeek } from "../js/card-week.js";
 import { policyAt } from "../js/system-policy.js";
 import { participants } from "../js/utils.js";
+import { performanceWeek } from "../js/performance-week.js";
 
 const db = () => getFirestore();
 const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
@@ -68,7 +69,7 @@ const maintenanceInputs = {
   ]),
 };
 const pending = new Map();
-const HOME_CACHE_VERSION = "2026-10-21-v1";
+const HOME_CACHE_VERSION = "2026-10-22-scrap-card-v1";
 // Cache documents are server-only. Timestamps become ISO strings, understood by
 // the same asDate helpers used by the browser. No SDK objects enter the cache.
 export function plain(value) {
@@ -236,6 +237,7 @@ async function leagueContext() {
 // Explicit projection: never publish raw profiles, private votes or other
 // players' missions, initial ratings, access fields or calculation inputs.
 export function homeProjection(league, uid) {
+  const performanceStart = performanceWeek().startsAt;
   const fields = [
     "uid",
     "username",
@@ -276,7 +278,7 @@ export function homeProjection(league, uid) {
     ),
     aggregates: player.aggregates.filter(
       (item, index) =>
-        +new Date(item.date) >= +new Date(league.cycle.opensAt) ||
+        +new Date(item.date) >= +performanceStart ||
         (player.uid === uid && index >= player.aggregates.length - 5),
     ),
   }));

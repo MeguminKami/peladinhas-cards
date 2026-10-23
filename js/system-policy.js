@@ -121,8 +121,12 @@ export const POLICY_FIELDS = [
     "cycle",
     "Calendário das cartas",
     [
-      ["openHour", "Abertura à quinta-feira (hora Lisboa)", 12, 0, 23],
-      ["closeHour", "Fecho à quarta-feira (hora Lisboa)", 12, 0, 23],
+      ["openDay", "Dia de abertura", 4, 0, 6],
+      ["openHour", "Hora de abertura (Lisboa)", 12, 0, 23],
+      ["openMinute", "Minutos da abertura", 0, 0, 59],
+      ["closeDay", "Dia de fecho", 3, 0, 6],
+      ["closeHour", "Hora de fecho (Lisboa)", 12, 0, 23],
+      ["closeMinute", "Minutos do fecho", 0, 0, 59],
       ["seasonMonths", "Meses por época de coleção", 2, 1, 12],
       ["yearMonths", "Meses por ano de coleção", 4, 1, 12],
     ],
@@ -268,7 +272,8 @@ export function validatePolicy(input) {
       throw Error(`Secção inválida: ${section}.`);
     result[section] = {};
     for (const [key, label, initial, min, max] of fields) {
-      const value = values[key];
+      // Older clients and saved drafts predate configurable weekdays/minutes.
+      const value = values[key] === undefined && section === "cycle" && ["openDay","closeDay","openMinute","closeMinute"].includes(key) ? initial : values[key];
       const valid =
         typeof initial === "boolean"
           ? typeof value === "boolean"
@@ -286,6 +291,8 @@ export function validatePolicy(input) {
       result[section][key] = value;
     }
   }
+  if (result.cycle.openDay === result.cycle.closeDay && result.cycle.openHour === result.cycle.closeHour && result.cycle.openMinute === result.cycle.closeMinute)
+    throw Error("A abertura e o fecho não podem ocorrer no mesmo instante semanal.");
   if (result.rewards.temporaryAward < result.rewards.temporaryAttribute)
     throw Error(
       "O limite por prémio não pode ser inferior ao limite por atributo.",

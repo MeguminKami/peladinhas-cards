@@ -38,7 +38,7 @@ import { startAuth, currentUser, loadProfile, logout } from "./auth.js";
 import { loadLeague } from "./data.js";
 import { startRevisionUpdates } from "./revision-updates.js";
 import { pathReviewText } from "./path-entry.js";
-import { refreshMissionsForCurrentUser, missionList, compareMissionPriority } from "./missions.js";
+import { refreshMissionsForCurrentUser, missionList, compareMissionPriority, bindMissionClaims } from "./missions.js";
 import {
   refreshNotifications,
   notificationsPage,
@@ -232,7 +232,7 @@ const ctx = {
   async refreshNotifications() {
     const owner = this.user.uid;
     const session = authSession;
-    const items = await refreshNotifications(owner, this.missions);
+    const items = await refreshNotifications(owner, this.missions.filter(mission => !mission.completed));
     if (currentUser?.uid !== owner || authSession !== session) return;
     this.notifications = items;
     header();
@@ -320,7 +320,8 @@ function header() {
 function home() {
   const me = ctx.league.players.find((p) => p.uid === ctx.user.uid),
     players = ctx.league.players.filter((p) => p.hasCard);
-  const visibleMissions = [...ctx.missions]
+  const pendingMissions = ctx.missions.filter(mission => !mission.completed);
+  const visibleMissions = [...pendingMissions]
     .sort(compareMissionPriority)
     .slice(0, 4);
   const hour = Number(
@@ -331,9 +332,10 @@ function home() {
     }).format(new Date()),
   );
   ctx.render(
-    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div></div><div id="home-podium"></div></section><div class="dashboard-columns">${homeCardPanel(me, ctx.league)}<section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${ctx.missions.length} ${ctx.missions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions)}${ctx.missions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
+    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div></div><div id="home-podium"></div></section><div class="dashboard-columns">${homeCardPanel(me, ctx.league)}<section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${pendingMissions.length} ${pendingMissions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions)}${pendingMissions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
   );
   const main = document.querySelector("#main");
+  bindMissionClaims(ctx, main);
   main
     .querySelector(".dashboard-greeting")
     .insertAdjacentHTML("afterend", homePushInvitation());
@@ -431,7 +433,7 @@ function rankingPage() {
     ctx.league.players.filter((p) => p.hasCard),
   );
   ctx.render(
-    `${pageHead(isoWeek(), "Ranking semanal", "Média dos jogos da semana com pelo menos 2 avaliações válidas; desempate por OVR. Sem avaliações, o OVR serve de referência.")}<div class="ranking-list">${players.map((p, i) => `<a class="ranking-row panel" href="#/player/${p.uid}"><span class="ranking-number">${i + 1}</span><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><div><b>${esc(p.displayName || p.username)}</b><small>${themeName(p.cardType)}</small></div><div><small>OVR</small><b>${p.ovr}</b></div><div><small>Forma semanal</small><b>${matchAverageSummary(p.weeklyComponentAverages,{digits:2})}</b></div>${icon("arrow")}</a>`).join("") || empty("A classificação começa contigo", "Conclui a autoavaliação para criares a tua carta.", linkButton("#/missions", "Missões"), "trophy")}</div>`,
+    `${pageHead(isoWeek(), "Ranking semanal", "Média dos jogos desde o último fecho semanal, com pelo menos 2 avaliações válidas; desempate por OVR. Sem avaliações, o OVR serve de referência.")}<div class="ranking-list">${players.map((p, i) => `<a class="ranking-row panel" href="#/player/${p.uid}"><span class="ranking-number">${i + 1}</span><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><div><b>${esc(p.displayName || p.username)}</b><small>${themeName(p.cardType)}</small></div><div><small>OVR</small><b>${p.ovr}</b></div><div><small>Forma semanal</small><b>${matchAverageSummary(p.weeklyComponentAverages,{digits:2})}</b></div>${icon("arrow")}</a>`).join("") || empty("A classificação começa contigo", "Conclui a autoavaliação para criares a tua carta.", linkButton("#/missions", "Missões"), "trophy")}</div>`,
   );
 }
 async function route({ cachedOnly = false } = {}) {
@@ -588,10 +590,12 @@ async function route({ cachedOnly = false } = {}) {
       if (parts[1] === "path") await pathsPage(pageCtx, parts[2]);
       else if (parts[1] === "self") await initialMission(pageCtx);
       else if (parts[1] === "new") await initialMission(pageCtx, parts[2]);
-      else
+      else {
         ctx.render(
           `${pageHead("A tua evolução", "Missões", "Acompanha os teus objetivos e as avaliações por concluir.")}<div class="missions-workspace content-stack">${missionList(ctx.missions)}<div class="missions-toolbar">${linkButton("#/events", "Calendário e histórico de eventos", "secondary")}</div></div>`,
         );
+        bindMissionClaims(pageCtx);
+      }
     } else if (parts[0] === "notifications") notificationsPage(pageCtx);
     else if (parts[0] === "tickets") await ticketsPage(pageCtx, parts[1]);
     else if (parts[0] === "ranking") rankingPage();

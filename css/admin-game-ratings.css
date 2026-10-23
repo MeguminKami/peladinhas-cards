@@ -65,7 +65,7 @@
 }
 .game-rating-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(110px, 180px) 44px;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, 180px) 96px;
   align-items: center;
   gap: 16px;
   padding: 16px 0;
@@ -96,7 +96,17 @@
 }
 .game-rating-state .pill {
   justify-self: start;
+  white-space:normal;
+  max-width:100%;
 }
+.game-rating-actions { display:flex; gap:8px; justify-content:flex-end; }
+.game-rating-actions .btn { flex:none; min-width:44px; min-height:44px; }
+.game-rating-actions [data-waive] { color:var(--warning); }
+.game-rating-waiver { padding:16px; border:1px solid var(--warning); border-radius:12px; background:var(--bg-surface); margin-bottom:16px; }
+.game-rating-waiver h4 { margin:0 0 8px; }
+.game-rating-waiver p { font-size:.85rem; line-height:1.6; margin:8px 0; }
+.game-rating-waiver .actions { gap:12px; margin:16px 0 0; flex-wrap:wrap; }
+.game-rating-waiver .btn { min-height:44px; }
 .game-rating-workspace :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
@@ -126,14 +136,14 @@
     gap: 16px;
   }
   .game-rating-row {
-    grid-template-columns: minmax(0, 1fr) 44px;
+    grid-template-columns: minmax(0, 1fr) 96px;
     gap: 12px;
   }
   .game-rating-state {
     grid-column: 1;
     padding-left: 32px;
   }
-  .game-rating-row > button {
+  .game-rating-actions {
     grid-column: 2;
     grid-row: 1 / span 2;
   }

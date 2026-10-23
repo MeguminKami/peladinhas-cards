@@ -1,9 +1,11 @@
 import { pathGameCoreSignature } from "./path-game-signature.js";
+import { sameData } from "./equal-data.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
 import {
   pathHistoricalSummary,
   pathWindowResult,
   pathReviewDeadline,
+  pathUsesRatings,
 } from "../js/path-window.js";
 import { createHash, randomInt, randomUUID } from "node:crypto";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -121,19 +123,27 @@ export function pathFunctions(rebuildPlayer) {
       const games = rows(gameSnap),
         summaries = rows(summarySnap),
         rewards = rows(rewardSnap);
-      const now = new Date().toISOString();
+      const nowMillis = Date.now();
+      const now = new Date(nowMillis).toISOString();
       const historic = new Map(
         await Promise.all(
           [
             ...new Set(
               (state.pending || [])
-                .filter((attempt) => attempt.windowVersion >= 3)
+                .filter((attempt) => attempt.windowVersion >= 3 &&
+                  pathUsesRatings(attempt.offer.objective) &&
+                  games.find(game => game.id === attempt.gameId)?.status === "closed")
                 .map((attempt) => attempt.gameId),
             ),
           ].map(async (gid) => {
+            const deadline = pathReviewDeadline(games.find(game => game.id === gid));
             const [votes, revisions] = await Promise.all([
-              tx.get(db().collection(`games/${gid}/feedback`)),
-              tx.get(db().collection(`games/${gid}/pathVoteRevisions`)),
+              tx.get(db().collection(`games/${gid}/feedback`).where("targetId", "==", uid)),
+              // Before the deadline the current votes are sufficient. Historical
+              // revisions are only needed to reconstruct a past 48-hour cutoff.
+              deadline && nowMillis >= deadline
+                ? tx.get(db().collection(`games/${gid}/pathVoteRevisions`))
+                : Promise.resolve({ docs: [] }),
             ]);
             return [gid, { votes: rows(votes), revisions: rows(revisions) }];
           }),
@@ -257,18 +267,19 @@ export function pathFunctions(rebuildPlayer) {
           }
           game = {
             ...frozen,
+            ratingWaivers: game.ratingWaivers || {},
             status: game.status,
             deleting: game.deleting || false,
           };
         }
         const history = historic.get(game?.id);
         const summary =
-          active.windowVersion >= 3 && game?.status === "closed"
+          active.windowVersion >= 3 && game?.status === "closed" && history
             ? pathHistoricalSummary(
                 game,
                 history?.votes || [],
                 history?.revisions || [],
-                pathReviewDeadline(game),
+                Math.min(nowMillis, pathReviewDeadline(game) || nowMillis),
               )
             : summaries.find((summary) => summary.id === game?.id);
         const result = active.frozenAt
@@ -278,7 +289,7 @@ export function pathFunctions(rebuildPlayer) {
                 game,
                 summary,
                 uid,
-                Date.now(),
+                nowMillis,
                 evaluatePathMission,
               )
             : !game ||
@@ -301,7 +312,7 @@ export function pathFunctions(rebuildPlayer) {
           changed = true;
         }
         if (active.windowVersion >= 3 && game?.status === "closed") {
-          const counts = summary?.players?.[uid]?.ratingCounts || {};
+          const counts = summary?.players?.[uid]?.ratingQuorumCounts || summary?.players?.[uid]?.ratingCounts || {};
           if (JSON.stringify(active.ratingCounts) !== JSON.stringify(counts)) {
             active.ratingCounts = counts;
             changed = true;
@@ -680,9 +691,15 @@ export function pathFunctions(rebuildPlayer) {
     syncGame: (gameId) => sweep({ gameId }),
     getPath,
     pathAction,
-    onPathGame: policyWritten("games/{gid}", (event) =>
-      sweep({ gameId: event.params.gid }),
-    ),
+    onPathGame: policyWritten("games/{gid}", (event) => {
+      const before = event.data.before.data(), after = event.data.after.data();
+      if (before && after) {
+        const {ratingWaivers:oldWaivers,...oldGame} = before;
+        const {ratingWaivers:newWaivers,...newGame} = after;
+        if (sameData(oldGame,newGame)) return;
+      }
+      return sweep({ gameId: event.params.gid });
+    }),
     onPathSummary: policyWritten("gameSummaries/{gid}", (event) =>
       sweep({ summaryId: event.params.gid }),
     ),

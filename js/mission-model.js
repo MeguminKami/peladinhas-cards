@@ -14,6 +14,7 @@ import {
 import { votersFor, candidatesFor } from "./event-rules.js";
 import { asDate, ATTRIBUTES, profileComplete, participants } from "./utils.js";
 import { eventIcon } from "./icons.js";
+import { hasRatingWaiver } from "./rating-quorum.js";
 export async function buildMissions(user, league, DB) {
   const p = league.players.find((x) => x.uid === user.uid) || user;
   const missions = [];
@@ -44,7 +45,7 @@ export async function buildMissions(user, league, DB) {
       icon: "ball",
     });
   const closedGames = league.games.filter(
-    (g) => g.status === "closed" && participants(g).includes(user.uid),
+    (g) => g.status === "closed" && participants(g).includes(user.uid) && !hasRatingWaiver(g,user.uid),
   );
   const [feedback, my] = await Promise.all([
     Promise.all(closedGames.map((g) => DB.myFeedback(g.id, user.uid))),
@@ -103,13 +104,13 @@ export async function buildMissions(user, league, DB) {
             const progress =
               detail.progress?.find((row) => row.uid === user.uid)?.progress ||
               0;
-            if (
+            const completed =
               detail.claimedPeriods?.includes(periodWindow(event).key) ||
-              (detail.claimedPeriods?.length || 0) >= event.maxRepeats
-            )
-              return missions;
+              (detail.claimedPeriods?.length || 0) >= event.maxRepeats;
+            if (completed) return missions;
             missions.push({
               id: `event-${event.id}`,
+              eventId: event.id,
               type: "OBJECTIVE_MISSION",
               claimable:
                 policyAt().features.mode === "normal" &&
