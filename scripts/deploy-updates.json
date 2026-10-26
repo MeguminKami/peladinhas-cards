@@ -12,6 +12,7 @@
     "cleanupPushDeliveries",
     "closeCardWeek",
     "closeEvents",
+    "communityRatingAction",
     "completePasswordRecovery",
     "correctRating",
     "deleteGame",

@@ -28,6 +28,12 @@ export function progressionGuidePage(ctx) {
   ).progression;
   const questions = [
     [
+      "edit",
+      "Recebi um pedido para rever uma avaliação. E agora?",
+      "Abre o aviso no teu perfil ou nas notificações e revê os atributos para refletirem aquilo que observaste em campo. A avaliação fica fora do cálculo enquanto aguarda revisão.",
+      "Tens uma revisão definitiva, dentro do prazo indicado no formulário. Guardar rascunhos não gasta essa oportunidade. Depois de submeter, a avaliação fica encerrada; recebes a confirmação de que está a ser considerada ou de que ficou excluída.",
+    ],
+    [
       "ratingAverage",
       "E se a minha nota ficar abaixo dos colegas?",
       "Até 0,75 estrelas abaixo, não há redução adicional. A uma estrela abaixo, conservas 85% da componente de desempenho; a 1,5, 50%; a duas ou mais, 25%. A transição é gradual.",

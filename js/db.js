@@ -236,7 +236,7 @@ export async function syncNotifications(uid, missions) {
   if (!policyAt().notifications.enabled) return existing;
   const ids = new Set(existing.map((n) => n.id));
   const missing = missions.filter(
-    (m) => !m.hiddenCard && !ids.has(`mission-${m.id}`),
+    (m) => !m.hiddenCard && m.type !== "COMMUNITY_RATING_REVIEW" && !ids.has(`mission-${m.id}`),
   );
   if (missing.length) {
     const batch = writeBatch(db);

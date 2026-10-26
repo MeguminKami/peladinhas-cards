@@ -13,6 +13,14 @@ export const CASINO_CATALOG = Object.freeze([
     available: true,
   },
   {
+    id: "slot-2",
+    category: "slots",
+    title: "A próxima slot",
+    label: "Uma nova forma de entrar em jogo.",
+    description: "A segunda slot está em preparação. O nome e a imagem chegam com a integração.",
+    art: "reels",
+  },
+  {
     id: "blackjack",
     category: "tables",
     title: "Blackjack",

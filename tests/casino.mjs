@@ -74,17 +74,16 @@ try {
     () =>
       document.querySelector(".casino-balance strong")?.textContent === "100",
   );
-  assert.equal(await page.locator(".casino-game").count(), 3);
+  assert.equal(await page.locator(".casino-game").count(), 4);
   assert.equal(
     await page.locator('#header a[href="#/casino"]').count(),
     0,
     "hidden from all navigation",
   );
   assert.equal(await page.evaluate(() => window.__casinoCalls.length), 1);
-  await page.getByRole("link", { name: "Explorar o salão" }).click();
   assert.equal(new URL(page.url()).hash, "#/casino");
   await page.locator('[data-casino-filter="slots"]').click();
-  assert.equal(await page.locator(".casino-game:visible").count(), 1);
+  assert.equal(await page.locator(".casino-game:visible").count(), 2);
   await page.locator('[data-casino-filter="tables"]').click();
   assert.equal(await page.locator(".casino-game:visible").count(), 2);
   await page.locator('[data-casino-game="blackjack"]').click();
@@ -103,7 +102,6 @@ try {
     1,
   );
   await page.keyboard.press("Escape");
-  await page.locator(".casino-rules summary").click();
   for (const theme of ["club", "volt", "champions", "ultimate"]) {
     await page.evaluate(
       async (theme) => (await import("./js/themes.js")).applyTheme(theme),
@@ -252,7 +250,7 @@ try {
   assert.equal(after.wallet.balance, 10000, "ordinary spins remain local");
   assert.equal(after.state.history.length, 1);
   await page
-    .getByText("Guardado neste dispositivo · por sincronizar", { exact: true })
+    .getByText("Guardado no dispositivo", { exact: true })
     .waitFor();
   await page.setViewportSize({ width: 390, height: 1050 });
   await page
@@ -297,7 +295,7 @@ try {
       fullPage: true,
     });
   }
-  await page.locator("[data-close-slot]").click();
+  await page.locator("[data-close-slot]").last().click();
   assert.equal(await page.locator(".casino-slot-mount iframe").count(), 0);
   // A lost checkpoint reply must recover the same on-device progress.
   await page.setViewportSize({ width: 1440, height: 1050 });
@@ -313,7 +311,7 @@ try {
   await page.evaluate(() => {
     window.__casinoLoseResponse = true;
   });
-  await page.locator("[data-close-slot]").click();
+  await page.locator("[data-close-slot]").last().click();
   await page.waitForFunction(
     async () =>
       !!(
@@ -351,7 +349,7 @@ try {
     ),
     saved.wallet,
   );
-  await page.locator("[data-close-slot]").click();
+  await page.locator("[data-close-slot]").last().click();
   await page
     .getByRole("button", { name: "Terminar sessão", exact: true })
     .click();

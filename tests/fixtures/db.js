@@ -115,9 +115,15 @@ export async function saveCommunity(raterId, targetId, ratings20, submit) {
     r = { raterId, targetId };
     state.communityRatings.push(r);
   }
-  r.ratings20 = ratings20;
+  if (r.submitted && !submit) r.draftRatings20 = ratings20;
+  else r.ratings20 = ratings20;
   if (!r.submitted && submit) r.submittedAt = new Date();
   r.submitted = !!submit || r.submitted === true;
+  if (submit && window.__communitySubmitResult) {
+    delete r.draftRatings20;
+    Object.assign(r, window.__communitySubmitResult);
+    return window.__communitySubmitResult;
+  }
 }
 export async function saveFeedback(gameId, raterId, targetId, ratings, submit) {
   let r = state.feedback.find(
@@ -151,7 +157,7 @@ export const markRead = async (uid, items) =>
     if (items.some((i) => i.id === n.id)) n.read = true;
   });
 export const syncNotifications = async (uid, missions) => {
-  for (const m of missions)
+  for (const m of missions.filter(m => m.type !== "COMMUNITY_RATING_REVIEW"))
     if (!state.notifications.some((n) => n.id === m.id))
       state.notifications.push({
         id: m.id,

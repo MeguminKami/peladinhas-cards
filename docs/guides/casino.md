@@ -61,6 +61,14 @@ Na atualização da primeira versão, um pedido antigo por spin é confirmado pe
 
 ## Preparar e testar
 
+Para trabalhar apenas no casino com **1000 DJC fictícios**, executar `npm.cmd run dev:casino` e abrir `http://localhost:8081/#/casino`. Este servidor usa fixtures, sem Firebase real. O saldo inicial aplica-se a uma carteira de teste nova; as jogadas seguintes conservam o progresso local. A porta 8081 separa este teste do desenvolvimento habitual na porta 8080.
+
+O catálogo apresenta duas slots, Blackjack e Roleta. Só Noite de Glória está integrada; os restantes jogos continuam em preparação. A slot abre num ecrã dedicado, com uma barra compacta que reúne nome, saldo, atualização e os controlos Voltar/Fechar jogo. «Centrar jogo» alterna o enquadramento ao espaço disponível sem recriar o iframe nem reiniciar a ronda. O destaque de entrada está preservado em `js/casino-spotlight.js` para futura inclusão no início da aplicação; ainda não está montado nessa página.
+
+### Capas dos jogos
+
+Pedir a cada autor uma capa vertical **800 × 1200 px (2:3)**, em **WebP**, sRGB, fundo opaco, idealmente até **250 KB**. Entregar também o original PNG. A composição deve incluir a arte e o logótipo/nome do jogo, legíveis em miniatura, com margem segura de 8%. Evitar texto essencial no canto superior esquerdo, reservado ao estado do jogo. Não incluir botões, saldo ou etiquetas «Disponível»/«Em breve», que pertencem à interface. Usar nomes como `noite-de-gloria-cover.webp`, com o mesmo formato para a segunda slot, Blackjack e Roleta. A imagem horizontal atual de Noite de Glória é provisória e mantém-se inteira até receber a capa vertical.
+
 Usar Node.js **24.16+** para a slot; o runtime Firebase das Functions continua em **22**.
 
 ```powershell

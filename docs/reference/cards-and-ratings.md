@@ -67,6 +67,8 @@ Desde 26/10/2026, novos jogos usam progressão gradual, bónus próprios de golo
 
 ## Da primeira carta à carta oficial
 
+As avaliações externas completas com média inferior a **1,9 na escala 0–20** não entram na base, contagem de avaliações válidas nem na data de elegibilidade comunitária. O limiar é aplicado no servidor. O autor recebe um aviso privado sem indicação do motivo numérico e pode fazer uma única revisão definitiva. Rascunhos não consomem a revisão. Uma segunda avaliação abaixo do limiar continua excluída; uma revisão válida passa a contar. A revisão tem a janela configurada de edição (sete dias por omissão), iniciada no aviso, mesmo em avaliações antigas. A autoavaliação inicial e o feedback de jogos não usam este filtro. [Implementação e publicação](../reports/community-rating-review-2026-10-26.md).
+
 A autoavaliação completa dos 12 atributos usa a escala 0–20 e permite criar a primeira carta. Desde o primeiro voto externo completo, o peso da autoavaliação é min(20%, 1 / (N + 1)), com N avaliações externas; com 1 a 4 avaliações externas. A partir de 5 avaliações externas, a referência é 4% para a autoavaliação e 96% para a comunidade. Os 96% são divididos pelas avaliações externas, truncando cada percentagem a duas casas decimais; o resto é somado à autoavaliação. Com 13 externas, cada uma pesa 7,38% e a autoavaliação 4,06%. Sem votos externos, a primeira carta provisória usa a autoavaliação. Com três avaliações externas completas, a carta passa a oficial.
 
 Os valores são convertidos para a escala 0–99 da carta. Avaliações da comunidade, feedback de jogos e recompensas têm responsabilidades distintas: a comunidade estabelece a base; os jogos alimentam a progressão; os eventos aplicam recompensas validadas pelo servidor.

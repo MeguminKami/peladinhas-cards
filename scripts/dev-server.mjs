@@ -6,6 +6,10 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const modeIndex = process.argv.indexOf("--mode");
 const mode = modeIndex < 0 ? "fixtures" : process.argv[modeIndex + 1];
 if (!["fixtures", "emulator", "production"].includes(mode)) throw Error("Modo local inválido.");
+const creditsIndex = process.argv.indexOf("--casino-credits");
+const casinoCredits = creditsIndex < 0 ? null : Number(process.argv[creditsIndex + 1]);
+if (casinoCredits !== null && (mode !== "fixtures" || !Number.isSafeInteger(casinoCredits * 100) || casinoCredits < 0 || casinoCredits > 1000000))
+  throw Error("Créditos de teste inválidos: usar apenas no modo fixtures.");
 const index = process.argv.indexOf("--port");
 const port = index < 0 ? 8080 : Number(process.argv[index + 1]);
 if (!Number.isInteger(port) || port < 1 || port > 65535)
@@ -47,7 +51,10 @@ const server = createServer(async (req, res) => {
     }
     if (mode === "fixtures" && ["tests/fixtures/game-ratings.js", "tests/fixtures/maintenance.js", "tests/fixtures/casino.js"].includes(localModule)) {
       res.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" });
-      res.end(await readFile(resolve(root, localModule), "utf8"));
+      let source = await readFile(resolve(root, localModule), "utf8");
+      if (localModule === "tests/fixtures/casino.js" && casinoCredits !== null)
+        source = source.replace("wallet: newCasinoWallet(),", `wallet: { ...newCasinoWallet(), balance: ${casinoCredits * 100}, recent: [] },`);
+      res.end(source);
       return;
     }
     if (mode === "fixtures" && ["js/firebase.js", "js/auth.js", "js/db.js"].includes(localModule)) {

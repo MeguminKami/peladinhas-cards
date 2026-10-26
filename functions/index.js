@@ -1249,6 +1249,8 @@ export const correctRating = policyCall("correctRating",async (request) => {
       keys =
         kind === "game" ? FEEDBACK.map(([k]) => k) : ATTRIBUTES.map(([k]) => k),
       max = kind === "game" ? 5 : 20;
+    if (kind === "community" && previous.reviewState)
+      throw new HttpsError("failed-precondition", "Esta avaliação deve seguir a revisão pelo seu autor.");
     if (kind === "game" && previous.raterId !== previous.targetId) {
       const self = (
         await tx.get(

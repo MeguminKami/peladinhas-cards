@@ -108,13 +108,13 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
     };
   const locked = !canEditRating(saved, new Date(), self);
   ctx.render(
-    `${pageHead(self ? "A minha primeira carta" : "Avaliação da comunidade", self ? "Conhece o teu jogo" : `Avaliar ${player.displayName || player.username}`, "As alterações são guardadas automaticamente.", linkButton("#/missions", "Todas as missões", "ghost"))}${initialForm(self ? "Autoavaliação" : "Ajuda a criar a primeira carta", values, false)}`,
+    `${pageHead(self ? "A minha primeira carta" : "Avaliação da comunidade", self ? "Conhece o teu jogo" : `Avaliar ${player.displayName || player.username}`, self ? "As alterações são guardadas automaticamente." : "O rascunho é guardado automaticamente. As alterações só contam depois de concluir.", linkButton("#/missions", "Todas as missões", "ghost"))}${initialForm(self ? "Autoavaliação" : "Ajuda a criar a primeira carta", values, false)}`,
   );
   const form = document.querySelector("form");
   if (!self && saved?.reviewState) form.insertAdjacentHTML("beforebegin",communityReviewBanner(player.displayName || player.username,saved));
   if (!self && saved?.reviewState === "required") form.querySelector('button.btn-primary').innerHTML = `${icon("check")}Submeter revisão definitiva`;
   const deadline = ratingEditDeadline(saved, self);
-  if (deadline)
+  if (deadline && (self || (saved?.reviewAttempts || 0) < 2))
     form.insertAdjacentHTML(
       "afterbegin",
       `<p class="muted">${locked ? "Prazo de edição terminado em" : "Podes editar até"} ${deadline.toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}.</p>`,

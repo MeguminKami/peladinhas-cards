@@ -1019,7 +1019,7 @@ test("avaliações: edição dentro de 7 dias, sem reiniciar o prazo", async () 
       ["games/closed/feedback/pedro_joao", { ratings: vote().ratings }],
     ]) {
       const ref = doc(signed("pedro"), path);
-      await (days < 7 && !path.startsWith("games/") ? assertSucceeds : assertFails)(
+      await (days < 7 && path.startsWith("initialRatings/") ? assertSucceeds : assertFails)(
         updateDoc(ref, { ...change, updatedAt: serverTimestamp() }),
       );
       await assertFails(

@@ -2,14 +2,14 @@
 
 ## Âmbito revisto localmente
 
-Commit indicado pelo utilizador: **`b3af042`**, `feat: add new path fusions and ultimate requirements; update weekly close schedule`. A comparação usa o seu pai (`b3af042^`), incluindo esse commit, os posteriores até `d8e3849` e as alterações locais desta conversa. Não foi consultada a configuração publicada na cloud, pelo que este relatório identifica o que deve ser publicado para cobrir esse intervalo, sem afirmar que cada recurso está desatualizado no servidor.
+Commit indicado pelo utilizador: **`b3af042`**, `feat: add new path fusions and ultimate requirements; update weekly close schedule`. A comparação usa o seu pai (`b3af042^`), incluindo esse commit, os posteriores até `58de9e1` e as alterações locais desta conversa. Não foi consultada a configuração publicada na cloud, pelo que este relatório identifica o que deve ser publicado para cobrir esse intervalo, sem afirmar que cada recurso está desatualizado no servidor.
 
 O intervalo inclui fusões/Ultimate e fecho semanal, missões e prazos de notificações, coleção e catálogo, Sucata, mínimos de avaliações, cache do início e respetivos sinais, processamento horário de feedback, integração do casino e carteira/sessões. O trabalho local acrescenta a remoção da penalização de inatividade, progressão v2 e o guia em Jogadores.
 
 Áreas necessárias:
 
 - **Firestore rules:** novos acessos de leitura aos sinais `homeSignals` e `eventSignals`.
-- **Functions:** 63 exports atuais identificados nominalmente. O intervalo altera `functions/policy-runtime.js` e módulos partilhados consumidos pelas famílias de funções, incluindo manutenção, notificações, push, recuperação de conta e casino. O deploy só de `deploy:progression` não cobre todo este conjunto.
+- **Functions:** 64 exports atuais identificados nominalmente. O intervalo altera `functions/policy-runtime.js` e módulos partilhados consumidos pelas famílias de funções, incluindo manutenção, notificações, push, recuperação de conta e casino. O deploy só de `deploy:progression` não cobre todo este conjunto.
 - **Hosting:** interface, assets, catálogo, guia, PWA e slot integrada.
 
 Não há diferenças em `storage.rules` ou `firestore.indexes.json` neste intervalo; esses seletores não entram no plano. Os ficheiros novos locais, ainda não commitados, também são publicados a partir do disco. Não é necessário fazer commit para executar o deploy.
@@ -65,7 +65,7 @@ Executar **Recalcular liga** na administração para atualizar cartas abertas e 
 
 - Comparação local do histórico e dos ficheiros desde `b3af042^`.
 - Dois testes do plano passaram: cobertura integral sem repetições, seletores/codebase, máximo de oito por grupo, exclusão de Storage/índices e validação de retoma.
-- Execução de `--plan`: 63 Functions e dez etapas, sem pedidos cloud.
+- Execução de `--plan`: 64 Functions e dez etapas, sem pedidos cloud.
 - Ligações da documentação validadas com `npm.cmd run test:docs`.
 
 Não foi executado deploy, recálculo real, consulta de dados Firestore/Storage ou verificação do estado publicado para preparar este plano.

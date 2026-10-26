@@ -24,7 +24,7 @@ function gameCard(game) {
   return `<article class="casino-game${game.thumbnail ? " casino-game-has-thumbnail" : ""}"><div class="casino-game-art casino-art-${game.art}">${artwork}<span class="casino-coming ${game.available ? "is-available" : ""}">${game.available ? "Disponível" : "Em breve"}</span></div><div class="casino-game-copy"><span class="casino-kicker">${game.category === "slots" ? "ROLOS & COMBINAÇÕES" : "JOGOS DE MESA"}</span><h3>${esc(game.title)}</h3><p>${esc(game.label)}</p><button class="casino-text-button" type="button" data-casino-game="${game.id}" ${game.available ? 'aria-controls="casino-play-area"' : 'aria-haspopup="dialog"'}>${game.available ? "Jogar agora" : `Conhecer ${esc(game.title)}`} ${icon("arrow")}</button></div></article>`;
 }
 function walletContent(wallet, loading = false, error = "") {
-  return `<div class="casino-wallet-heading">${coin}<span>A TUA CARTEIRA<strong>Djabucoin</strong></span></div><div class="casino-balance" aria-live="polite" aria-atomic="true"><strong>${wallet ? number(wallet.balance) : "—"}</strong><span>DJC disponíveis</span></div><p class="casino-wallet-status" role="status">${loading ? "A confirmar o saldo…" : error || wallet?.syncError ? esc(error || wallet.syncError) : wallet?.local ? "Guardado neste dispositivo · por sincronizar" : `Confirmado às ${new Date(wallet.checkedAt).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}`}</p><div class="casino-wallet-actions"><button type="button" class="casino-button casino-button-outline" data-wallet-refresh ${loading ? 'disabled aria-busy="true"' : ""}>${icon("refresh")}${error ? "Tentar novamente" : "Atualizar saldo"}</button><button type="button" class="casino-text-button" data-wallet-history ${!wallet ? "disabled" : ""} aria-haspopup="dialog">Movimentos ${icon("arrow")}</button></div><p class="casino-wallet-footnote">Moeda da liga. Sem compras ou levantamentos.</p>`;
+  return `<div class="casino-wallet-total">${coin}<span><small>O teu saldo</small><span class="casino-balance" aria-live="polite" aria-atomic="true"><strong>${wallet ? number(wallet.balance) : "—"}</strong> <small>DJC</small></span></span></div><div class="casino-wallet-actions"><button type="button" class="casino-text-button" data-wallet-history ${!wallet ? "disabled" : ""}>Movimentos</button><button type="button" class="casino-button casino-button-outline" data-wallet-refresh aria-label="Atualizar saldo" ${loading ? 'disabled aria-busy="true"' : ""}>${icon("refresh")}</button></div><p class="casino-wallet-status${error || wallet?.syncError ? " is-error" : ""}" role="status">${loading ? "A confirmar…" : error ? esc(error) : wallet?.syncError ? esc(wallet.syncError) : wallet?.local ? "Guardado no dispositivo" : "Saldo atualizado"}</p>`;
 }
 
 export async function casinoPage(ctx) {
@@ -72,21 +72,60 @@ export async function casinoPage(ctx) {
   window.addEventListener("peladinhas-before-logout", beforeLogout);
   document.addEventListener("visibilitychange", visibility);
   ctx.render(
-    `<div class="casino-page"><div class="casino-topline"><a href="#/" class="casino-back">${icon("arrow")}Voltar à liga</a><span>${icon("lock")} Abertura em preparação</span></div><section class="casino-hero" aria-labelledby="casino-title"><div class="casino-hero-copy"><p class="casino-kicker">PELADINHAS CARDS · CLUB CASINO</p><h1 id="casino-title">O jogo continua.<br><em>Fora das quatro linhas.</em></h1><p>O teu lugar à mesa. A tua próxima combinação.<br>Bem-vindo ao casino da tua liga.</p><a class="casino-button" href="#casino-games">Explorar o salão ${icon("arrow")}</a><span class="casino-hero-note">Slots & jogos de mesa · Apenas Djabucoins</span></div><div class="casino-hero-art" aria-hidden="true"><div class="casino-table-line"></div><div class="casino-hero-cards"><span>♠</span><span>♥</span></div><div class="casino-chip casino-chip-one">D</div><div class="casino-chip casino-chip-two">D</div><div class="casino-chip casino-chip-three">D</div><span class="casino-table-signature">A SORTE VESTE A TUA CAMISOLA.</span></div></section><div class="casino-lounge-layout"><section class="casino-salon" id="casino-games" aria-labelledby="casino-games-title"><div class="casino-section-heading"><div><p class="casino-kicker">ESCOLHE O TEU LUGAR</p><h2 id="casino-games-title">O salão</h2></div><span class="casino-count">1 disponível · 2 em preparação</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Todo o salão</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Mesas</button></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div><p class="casino-availability" role="status">${icon("clock")} Noite de Glória já está disponível. Novas mesas a caminho.</p></section><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside></div><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><section class="casino-rewards" aria-labelledby="casino-rewards-title"><div class="casino-reward-symbol" aria-hidden="true">${coin}</div><div><p class="casino-kicker">DO RELVADO PARA O SALÃO</p><h2 id="casino-rewards-title">Joga na liga. Ganha Djabucoins.</h2><p>Cada peladinha concluída em que participes vale <strong>+${number(DJABUCOIN.perMatch)} DJC</strong>. O crédito é automático, uma vez por jogo.</p></div><div class="casino-reward-amount"><strong>+${number(DJABUCOIN.initial)}</strong><span>DJC de boas-vindas<br>uma vez, para começar</span></div></section><details class="casino-rules"><summary>Como funciona a Djabucoin ${icon("info")}</summary><div><p>Começas com ${number(DJABUCOIN.initial)} DJC. A partir da ativação desta funcionalidade, recebes ${number(DJABUCOIN.perMatch)} DJC quando uma peladinha em que participaste é concluída, independentemente do resultado. Os jogos anteriores não são contabilizados.</p><p>O prémio pertence aos participantes registados no jogo, incluindo suplentes. Reabrir e voltar a fechar o mesmo jogo não repete o crédito. Alterações posteriores ao resultado não alteram o prémio.</p><p>A Djabucoin é uma moeda virtual da liga, sem valor monetário. Não existem depósitos, compras, transferências ou levantamentos. Podes consultar os últimos ${DJABUCOIN.recentLimit} movimentos na carteira.</p></div></details><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
+    `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" aria-pressed="false" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">4 jogos · 1 disponível</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
   );
   const root = document.querySelector(".casino-page");
+  const appHeader = document.querySelector("#header");
+  const headerSize = new ResizeObserver(() => {
+    root.style.setProperty("--casino-header-height", `${appHeader.getBoundingClientRect().height}px`);
+  });
+  if (appHeader) headerSize.observe(appHeader);
+  ctx.cleanup(() => headerSize.disconnect());
   const walletRoot = root.querySelector(".casino-wallet");
+  const toolbar = root.querySelector(".casino-toolbar");
+  const toolbarSize = new ResizeObserver(() => {
+    root.style.setProperty("--casino-toolbar-height", `${toolbar.getBoundingClientRect().height}px`);
+  });
+  toolbarSize.observe(toolbar);
+  ctx.cleanup(() => toolbarSize.disconnect());
   const playArea = root.querySelector("#casino-play-area");
-  root.querySelector('a[href="#casino-games"]').onclick = (event) => {
-    event.preventDefault();
-    root.querySelector("#casino-games-title").setAttribute("tabindex", "-1");
-    root.querySelector("#casino-games-title").focus({ preventScroll: true });
-    root.querySelector("#casino-games").scrollIntoView({
-      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-      block: "start",
+  const salon = root.querySelector(".casino-salon");
+  let launchButton;
+  function closeGame() {
+    slot?.destroy();
+    slot = undefined;
+    playArea.hidden = true;
+    playArea.innerHTML = "";
+    salon.hidden = false;
+    root.classList.remove("is-playing", "is-centered");
+    root.querySelectorAll(".casino-game-nav, .casino-game-tools").forEach(el => el.hidden = true);
+    root.querySelector("[data-center-game]").setAttribute("aria-pressed", "false");
+    launchButton?.focus();
+    void localWallet.checkpoint("exit").catch(() => {});
+  }
+  const back = () => { if (!playArea.hidden) closeGame(); };
+  window.addEventListener("popstate", back);
+  ctx.cleanup(() => window.removeEventListener("popstate", back));
+  function showGame(button) {
+    launchButton = button;
+    salon.hidden = true;
+    playArea.hidden = false;
+    root.classList.add("is-playing");
+    root.querySelectorAll(".casino-game-nav, .casino-game-tools").forEach(el => el.hidden = false);
+    window.history.pushState({ casinoGame: button.dataset.casinoGame }, "");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  function bindClose() {
+    root.querySelectorAll("[data-close-slot]").forEach(button => {
+      button.onclick = () => window.history.back();
     });
+  }
+  root.querySelector("[data-center-game]").onclick = (event) => {
+    const centered = root.classList.toggle("is-centered");
+    event.currentTarget.setAttribute("aria-pressed", String(centered));
+    const toolbar = root.querySelector(".casino-toolbar");
+    root.style.setProperty("--casino-toolbar-height", toolbar.getBoundingClientRect().height + "px");
+    window.scrollTo({ top: root.offsetTop, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
   async function openSlot(button) {
     if (slot) {
@@ -97,7 +136,7 @@ export async function casinoPage(ctx) {
     mounting = true;
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
-    playArea.hidden = false;
+    showGame(button);
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     const uid = ctx.realUser?.uid || ctx.user.uid;
     try {
@@ -114,7 +153,7 @@ export async function casinoPage(ctx) {
         streamId = crypto.randomUUID();
         localStorage.setItem(key, streamId);
       }
-      playArea.innerHTML = `<div class="casino-session-head"><div><p class="casino-kicker">FUTEBOL DE BAIRRO</p><h2 tabindex="-1">Noite de Glória</h2></div><button type="button" class="casino-button casino-button-outline" data-close-slot>Fechar jogo ${icon("close")}</button></div><p class="casino-session-note">Jogas com Djabucoins. Os valores da slot correspondem a DJC; aposta mínima de 0,20 DJC.</p><div class="casino-slot-mount"></div><p class="casino-session-note">Podes expandir o jogo sem interromper a ronda. O progresso fica guardado neste navegador.</p>`;
+      playArea.innerHTML = `<div class="casino-slot-mount"></div>`;
       slot = sdk.mountSlot(playArea.querySelector(".casino-slot-mount"), {
         src: new URL("../assets/games/futebol/embed.html", import.meta.url)
           .href,
@@ -134,19 +173,13 @@ export async function casinoPage(ctx) {
           return { balance: result.balance };
         },
       });
-      playArea.querySelector("[data-close-slot]").onclick = () => {
-        slot.destroy();
-        slot = undefined;
-        playArea.hidden = true;
-        playArea.innerHTML = "";
-        button.focus();
-        void localWallet.checkpoint("exit").catch(() => {});
-      };
-      playArea.querySelector("h2").focus({ preventScroll: true });
-      playArea.scrollIntoView({ block: "start" });
+      bindClose();
+      root.querySelector(".casino-game-nav h2").focus({ preventScroll: true });
+      window.scrollTo({ top: 0, behavior: "instant" });
     } catch (error) {
       if (active) {
-        playArea.innerHTML = `<p role="alert">${esc(friendlyError(error))}</p><p class="casino-session-note">Seleciona Jogar agora para tentar novamente. Nenhuma aposta foi iniciada.</p>`;
+        playArea.innerHTML = `<button type="button" class="casino-text-button casino-back" data-close-slot>${icon("arrow")} Voltar ao casino</button><p role="alert">${esc(friendlyError(error))}</p><p class="casino-session-note">Volta ao catálogo para tentar novamente. Nenhuma aposta foi iniciada.</p>`;
+        bindClose();
       }
     } finally {
       mounting = false;
@@ -206,9 +239,9 @@ export async function casinoPage(ctx) {
       });
       root.querySelector(".casino-count").textContent =
         category === "all"
-          ? "1 disponível · 2 em preparação"
+          ? "4 jogos · 1 disponível"
           : category === "slots"
-            ? "1 jogo disponível"
+            ? "2 slots · 1 disponível"
             : "2 em preparação";
     };
   });
