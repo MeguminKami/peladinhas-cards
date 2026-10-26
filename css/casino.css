@@ -646,8 +646,7 @@
 
 /* Catalogue and dedicated game screen. */
 .casino-toolbar {
-  position: sticky;
-  top: var(--casino-header-height, 80px);
+  position: relative;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -684,7 +683,6 @@
 .is-playing .casino-wallet { width: auto; margin-left: auto; flex: 0 1 auto; }
 .is-playing .casino-wallet-total .djabucoin { width: 28px; height: 28px; font-size: .95rem; }
 .is-playing .casino-wallet-total strong { font-size: 1.1rem; }
-.is-centered .casino-slot-mount:not([style*="position: fixed"]) { width: min(100%, calc((100dvh - var(--casino-header-height, 80px) - var(--casino-toolbar-height, 61px) - 32px) * 1.6)) !important; min-height: 0 !important; height: auto; aspect-ratio: 16 / 10 !important; margin-inline: auto; }
 @media (max-width: 600px) {
   .is-playing .casino-toolbar { gap: 8px; }
   .casino-game-nav { flex: 1 1 calc(100% - 52px); gap: 8px; }
@@ -692,7 +690,6 @@
   .casino-game-tools { gap: 8px; }
   .casino-game-tools [data-center-game] span { display: none; }
   .casino-game-tools .casino-tool:last-child { position: absolute; top: 8px; right: 0; }
-  .is-centered .casino-slot-mount:not([style*="position: fixed"]) { width: 100% !important; height: calc(100dvh - var(--casino-header-height, 80px) - var(--casino-toolbar-height, 112px) - 100px); aspect-ratio: auto !important; }
 }
 .casino-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
 .casino-section-heading .casino-kicker { color: var(--accent); margin-bottom: 8px; }
@@ -715,6 +712,8 @@
 .casino-session-head > div { margin-right: auto; }
 .casino-session-head .casino-back .ui-icon { transform: rotate(180deg); }
 .casino-slot-mount { min-height: 650px; }
+.casino-slot-mount.casino-table-mount { min-height: 0 !important; height: auto; aspect-ratio: auto !important; background: #11080d; border-radius: 12px; overflow: clip; }
+.casino-table-mount iframe { display: block; width: 100%; height: clamp(300px, calc(100dvh - var(--casino-header-height, 80px) - 100px), 780px); border: 0; }
 @media (max-width: 800px) {
   .casino-toolbar { gap: 16px; flex-wrap: wrap; }
   .casino-brand { margin-left: auto; }

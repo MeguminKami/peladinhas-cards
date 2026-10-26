@@ -1,0 +1,10 @@
+import {WalletDeclinedError,walletBalance,type Wallet,type WalletOperation} from './session';
+type Reply={channel:'atelier-wallet-v1';requestId:string;ok:boolean;balance?:number;error?:string;applied?:boolean};
+/** Optional iframe adapter. Both origin and source are mandatory, no wildcard messages. */
+export function iframeWallet(hostOrigin:string,hostWindow:Window=window.parent):Wallet&{destroy():void}{
+  if(new URL(hostOrigin).origin!==hostOrigin)throw new Error('Forneça uma origem exata, sem caminho');
+  const pending=new Map<string,{resolve:(value:{balance:number})=>void;reject:(e:Error)=>void;timer:number}>();
+  const listener=(event:MessageEvent)=>{if(event.origin!==hostOrigin||event.source!==hostWindow)return;const data=event.data as Reply;if(!data||data.channel!=='atelier-wallet-v1'||typeof data.requestId!=='string')return;const p=pending.get(data.requestId);if(!p)return;clearTimeout(p.timer);pending.delete(data.requestId);try{if(data.ok)p.resolve({balance:walletBalance(data.balance)});else if(data.applied===false)p.reject(new WalletDeclinedError(data.error||'Operação recusada pelo website',data.balance===undefined?undefined:walletBalance(data.balance)));else p.reject(new Error(data.error||'Resposta de carteira inválida'));}catch(e){p.reject(e instanceof Error?e:new Error('Resposta de carteira inválida'));}};window.addEventListener('message',listener);
+  const request=(method:'balance'|'settle',operation?:WalletOperation)=>new Promise<{balance:number}>((resolve,reject)=>{const requestId=crypto.randomUUID();const timer=window.setTimeout(()=>{pending.delete(requestId);reject(new Error('Timeout da carteira: recuperar a mesma operação'));},12000);pending.set(requestId,{resolve,reject,timer});hostWindow.postMessage({channel:'atelier-wallet-v1',requestId,method,operation},hostOrigin);});
+  return {getBalance:async()=>(await request('balance')).balance,settle:operation=>request('settle',operation),destroy(){window.removeEventListener('message',listener);for(const p of pending.values()){clearTimeout(p.timer);p.reject(new Error('Carteira desligada'));}pending.clear();}};
+}

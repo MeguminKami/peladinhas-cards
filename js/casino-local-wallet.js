@@ -1,8 +1,9 @@
 import { callAdmin } from "./db.js";
 import { settleCasinoSlot } from "./casino-economy.js";
 import { readCasinoLocal, writeCasinoLocal } from "./casino-local-store.js";
+import { tableOperation } from "./casino-table-operation.js";
 
-export function createCasinoLocalWallet(uid, changed = () => {}) {
+export function createCasinoLocalWallet(uid, changed = () => {}, { tables = false } = {}) {
   let state,
     releaseTab,
     starting,
@@ -249,6 +250,9 @@ export function createCasinoLocalWallet(uid, changed = () => {}) {
               previous?.progressRevision || migratedProgress?.revision || 0,
             rounds: previous?.rounds || migratedRounds,
             lastOperation: previous?.lastOperation || null,
+            tableReceipts: previous?.tableReceipts || {},
+            rift: previous?.rift || null,
+            riftReceipts: previous?.riftReceipts || {},
             checkedAt: 0,
           });
         }
@@ -344,6 +348,70 @@ export function createCasinoLocalWallet(uid, changed = () => {}) {
     if (input.bonusComplete && input.progress?.active === null)
       void checkpoint("bonus").catch(() => {});
     return result;
+  }
+  async function settleTable(game, input) {
+    return lock(async () => {
+      if (!tables) throw Error("As mesas estão disponíveis apenas no teste local.");
+      if (stopped || !state || state.closed || state.opening)
+        throw Error("Reabre o casino para recuperar esta operação.");
+      let operation;
+      try { operation = tableOperation(game, input); }
+      catch (error) { error.applied = false; error.balance = state.balance; throw error; }
+      const fingerprint = JSON.stringify(operation);
+      const receipt = state.tableReceipts && Object.hasOwn(state.tableReceipts, input.id) ? state.tableReceipts[input.id] : null;
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
+        return { balance: receipt.balance };
+      }
+      const balance = state.balance - operation.debit + operation.credit;
+      const spent = state.spent + operation.debit, won = state.won + operation.credit;
+      if (state.balance < operation.debit || ![balance, spent, won].every(n => Number.isSafeInteger(n) && n >= 0 && n <= 1e12)) {
+        const error = Error("Saldo insuficiente ou limite da carteira atingido.");
+        error.applied = false;
+        error.balance = state.balance;
+        throw error;
+      }
+      // Receipt and money commit together; storage failures remain ambiguous.
+      await save({ ...state, balance, spent, won, dirty: true,
+        wallet: { ...state.wallet, balance, recent: [
+          { id: input.id, kind: game, amount: operation.credit - operation.debit, at: Date.now() },
+          ...state.wallet.recent,
+        ].slice(0, 12) },
+        tableReceipts: { ...state.tableReceipts, [input.id]: { fingerprint, balance } },
+      });
+      return { balance };
+    });
+  }
+  async function riftRequest(action, payload, id) {
+    if (!tables) throw Error("A Rift está disponível apenas no teste local.");
+    const { applyLocalRift } = await import("./casino-rift-local.js");
+    return lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para recuperar.");
+      if (typeof id !== "string" || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error("Pedido inválido.");
+      const fingerprint = JSON.stringify({ action, payload });
+      const receipt = state.riftReceipts && Object.hasOwn(state.riftReceipts, id) ? state.riftReceipts[id] : null;
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
+        return structuredClone(receipt.result);
+      }
+      const next = applyLocalRift(state.rift, state.balance, { action, payload });
+      const spent = state.spent + next.debit, won = state.won + next.credit;
+      if (![spent, won].every(n => Number.isSafeInteger(n) && n <= 1e12)) throw Error("Limite da sessão atingido.");
+      try {
+        await save({ ...state, rift: next.session, balance: next.balance, spent, won,
+          dirty: state.dirty || action === "play",
+          wallet: { ...state.wallet, balance: next.balance,
+            recent: action === "play" ? [{ id, kind: "rift", amount: next.credit - next.debit, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
+          riftReceipts: action === "play" ? { ...state.riftReceipts, [id]: { fingerprint, result: next.result } } : state.riftReceipts,
+        });
+      } catch (error) {
+        // The supplied client retains pending requests only for ambiguous timeouts.
+        error.code = "SITE_TIMEOUT";
+        error.publicMessage = "Não foi possível confirmar a gravação local. Repete para recuperar a mesma jogada.";
+        throw error;
+      }
+      return structuredClone(next.result);
+    });
   }
   async function checkpoint(reason = "manual") {
     if (stopped) return view();
@@ -456,6 +524,9 @@ export function createCasinoLocalWallet(uid, changed = () => {}) {
   return {
     start,
     settle,
+    settleTable,
+    riftRequest,
+    riftActive: () => !!state?.rift?.state?.round,
     checkpoint,
     close,
     view,

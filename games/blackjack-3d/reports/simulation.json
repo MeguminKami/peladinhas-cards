@@ -1,0 +1,65 @@
+{
+  "generated": "2026-10-25T07:59:34.865Z",
+  "roundsPerSeed": 100000,
+  "version": "BJ-4D-S17-DAS-1",
+  "note": "Intervalos por ronda completa; RTP apenas da política descrita.",
+  "runs": [
+    {
+      "seed": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "policy": "Um lugar; hit abaixo de 17, stand em todo o 17+; sem seguro, split ou double. Não é estratégia básica.",
+      "rounds": 100000,
+      "mean": 0.94713,
+      "ci95": [
+        0.9410679752903309,
+        0.9531920247096691
+      ],
+      "exposure": 10000000,
+      "gross": 9471300,
+      "rtp": 0.94713,
+      "netPerInitial": -0.05287
+    },
+    {
+      "seed": [
+        42,
+        123,
+        987,
+        456
+      ],
+      "policy": "Um lugar; hit abaixo de 17, stand em todo o 17+; sem seguro, split ou double. Não é estratégia básica.",
+      "rounds": 100000,
+      "mean": 0.93749,
+      "ci95": [
+        0.9314313104194559,
+        0.9435486895805442
+      ],
+      "exposure": 10000000,
+      "gross": 9374900,
+      "rtp": 0.93749,
+      "netPerInitial": -0.06251
+    },
+    {
+      "seed": [
+        1999,
+        2026,
+        31337,
+        100
+      ],
+      "policy": "Um lugar; hit abaixo de 17, stand em todo o 17+; sem seguro, split ou double. Não é estratégia básica.",
+      "rounds": 100000,
+      "mean": 0.946975,
+      "ci95": [
+        0.9409039638508383,
+        0.9530460361491617
+      ],
+      "exposure": 10000000,
+      "gross": 9469750,
+      "rtp": 0.946975,
+      "netPerInitial": -0.053025
+    }
+  ]
+}

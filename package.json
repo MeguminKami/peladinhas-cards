@@ -8,6 +8,9 @@
   },
   "scripts": {
     "build:casino": "node scripts/build-casino.mjs",
+    "predev:casino": "node scripts/build-casino.mjs",
+    "test:casino:tables": "node tests/casino-tables.mjs",
+    "test:casino:rift": "node --test tests/casino-rift.test.js",
     "test:casino": "node --test tests/casino.test.js tests/casino-session.test.js && node tests/casino-local-wallet.mjs && node tests/casino.mjs",
     "test:casino:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.casino.json --project demo-peladinhas-casino --only firestore \"node --test tests/casino.backend.test.js\"",
     "audit:path-difficulty": "node scripts/audit-path-difficulty.mjs",

@@ -24,7 +24,7 @@ A slot fornecida foi movida de `casino_temp/Futebol-de-Bairro-Noite-de-Gloria` p
 
 O salão monta `embed.html` pelo SDK `mountSlot`, carregado apenas ao escolher **Jogar agora**. Fechar, navegar ou mudar de identidade destrói a instância. Expandir/recolher usa o mesmo iframe. O SDK verifica origem, janela, jogador e canal; não envia tokens no URL. O jogador enviado ao iframe identifica o armazenamento local; o servidor usa exclusivamente `request.auth.uid` para autorizar a carteira.
 
-Cada jogo futuro deve ter o seu próprio pacote estático, SDK/adaptador e contrato de liquidação. Blackjack e Roleta são, por agora, espaços de catálogo com informação e estado «Em breve», sem apostas.
+Cada jogo tem o seu próprio pacote estático e SDK/adaptador. Blackjack e Roleta estão jogáveis **apenas no site temporário com fixtures**, através dos SDKs de `games/blackjack-3d` e `games/roleta-europeia-3d`. Fora desse modo mantêm «Em breve»; esta integração não implementa endpoints online nem altera Functions.
 
 ## Chamadas e leituras
 
@@ -63,17 +63,37 @@ Na atualização da primeira versão, um pedido antigo por spin é confirmado pe
 
 Para trabalhar apenas no casino com **1000 DJC fictícios**, executar `npm.cmd run dev:casino` e abrir `http://localhost:8081/#/casino`. Este servidor usa fixtures, sem Firebase real. O saldo inicial aplica-se a uma carteira de teste nova; as jogadas seguintes conservam o progresso local. A porta 8081 separa este teste do desenvolvimento habitual na porta 8080.
 
-O catálogo apresenta duas slots, Blackjack e Roleta. Só Noite de Glória está integrada; os restantes jogos continuam em preparação. A slot abre num ecrã dedicado, com uma barra compacta que reúne nome, saldo, atualização e os controlos Voltar/Fechar jogo. «Centrar jogo» alterna o enquadramento ao espaço disponível sem recriar o iframe nem reiniciar a ronda. O destaque de entrada está preservado em `js/casino-spotlight.js` para futura inclusão no início da aplicação; ainda não está montado nessa página.
+O catálogo apresenta Noite de Glória, Rift Core Overdrive, Blackjack e Roleta, com as quatro capas verticais. Os quatro jogos estão jogáveis no modo temporário. Cada jogo abre numa página normal, com uma barra compacta que reúne nome, saldo, atualização e os controlos Voltar/Fechar jogo. «Centrar jogo» apenas desloca a página para centrar o jogo visível: não expande, redimensiona, bloqueia o scroll ou reinicia a ronda. As mesas conservam a instância durante a ronda e pedem para a terminar ou recuperar uma operação antes de fechar. O destaque de entrada está preservado em `js/casino-spotlight.js` para futura inclusão no início da aplicação; ainda não está montado nessa página.
+
+Os SDKs das mesas recebem diretamente uma carteira local, em modo integrado, dentro de iframes da mesma origem que isolam os estilos. Não são usados os endpoints HTTP de exemplo do fornecedor. Os débitos, retornos e recibos idempotentes partilham a carteira IndexedDB com a slot; a sessão de cada mesa, RNG e pedidos pendentes ficam no armazenamento local do respetivo SDK. Um erro ambíguo conserva o pedido. Só uma recusa garantidamente sem aplicação pode descartá-lo. Não há chamadas reais ao servidor, autenticação real ou dinheiro real neste modo.
+
+As mesas e a Rift adaptam a composição à altura disponível logo na página normal, sem exigir o botão Centrar. Num ecrã estreito, as mesas usam um seletor de ficha que delega a escolha nos controlos do próprio SDK. Regras e histórico continuam disponíveis nos diálogos do jogo. Os controlos nativos de ecrã inteiro, quando existentes, são ações separadas de Centrar.
+
+A Rift usa o motor de navegador fornecido em `games/rift-core-overdrive`, adaptado exclusivamente à carteira fictícia local por `js/casino-rift-local.js`. Saldo, RNG, estado da ronda e recibo ficam juntos em IndexedDB. Compra de bónus e free spins preservam o cálculo original; pedidos repetidos devolvem o recibo sem novo débito/sorteio. Não foi usado o motor Node nem criado um endpoint online. `npm.cmd run test:casino:rift` verifica os cálculos da adaptação; o teste de mesas inclui repetição e recuperação da carteira Rift. A preparação remove a dependência de fontes externas e usa os ficheiros locais com as respetivas licenças.
+
+Antes de iniciar numa instalação nova:
+
+```powershell
+npm.cmd ci --prefix games/blackjack-3d
+npm.cmd ci --prefix games/roleta-europeia-3d
+npm.cmd run dev:casino
+```
+
+`dev:casino` recompila os três pacotes antes de iniciar o servidor. As mesas podem ser verificadas com `npm.cmd run test:casino:tables`; os testes dos fornecedores usam `npm.cmd test --prefix games/blackjack-3d` e `npm.cmd test --prefix games/roleta-europeia-3d`. O guia recebido está em `INTEGRAR_COM_AI.md` dentro de cada pacote.
+
+**Orientação para a futura integração online, ainda não implementada:** comunicar as slots a cada 10 spins e na compra de bónus, o Blackjack por mão e a Roleta por spin. A política exata de carteira, saída e recuperação será definida com o utilizador nessa fase. Esta orientação não altera o protocolo online atual descrito acima.
 
 ### Capas dos jogos
 
-Pedir a cada autor uma capa vertical **800 × 1200 px (2:3)**, em **WebP**, sRGB, fundo opaco, idealmente até **250 KB**. Entregar também o original PNG. A composição deve incluir a arte e o logótipo/nome do jogo, legíveis em miniatura, com margem segura de 8%. Evitar texto essencial no canto superior esquerdo, reservado ao estado do jogo. Não incluir botões, saldo ou etiquetas «Disponível»/«Em breve», que pertencem à interface. Usar nomes como `noite-de-gloria-cover.webp`, com o mesmo formato para a segunda slot, Blackjack e Roleta. A imagem horizontal atual de Noite de Glória é provisória e mantém-se inteira até receber a capa vertical.
+Pedir a cada autor uma capa vertical **800 × 1200 px (2:3)**, em **WebP**, sRGB, fundo opaco, idealmente até **250 KB**. Entregar também o original PNG. A composição deve incluir a arte e o logótipo/nome do jogo, legíveis em miniatura, com margem segura de 8%. Evitar texto essencial no canto superior esquerdo, reservado ao estado do jogo. Não incluir botões, saldo ou etiquetas «Disponível»/«Em breve», que pertencem à interface. Usar nomes como `noite-de-gloria-cover.webp`, com o mesmo formato para a segunda slot, Blackjack e Roleta. Noite de Glória usa `capa-vertical-800x1200-v1.webp`, incluída na build da slot.
 
 Usar Node.js **24.16+** para a slot; o runtime Firebase das Functions continua em **22**.
 
 ```powershell
 npm.cmd ci
 npm.cmd ci --prefix games/futebol
+npm.cmd ci --prefix games/blackjack-3d
+npm.cmd ci --prefix games/roleta-europeia-3d
 npm.cmd run build:casino
 npm.cmd run dev
 ```

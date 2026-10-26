@@ -42,7 +42,7 @@ const entries = [
   "tests",
 ];
 const privatePath = (path) =>
-  /^(?:games\/futebol\/dist|assets\/games)(?:\/|$)/.test(relative(root,path).replaceAll('\\','/')) || relative(root, path)
+  /^(?:games\/(?:futebol|blackjack-3d|roleta-europeia-3d)\/dist|assets\/games)(?:\/|$)/.test(relative(root,path).replaceAll('\\','/')) || relative(root, path)
     .split(sep)
     .some(
       (part) =>

@@ -10,4 +10,6 @@ playwright-report/
 __pycache__/
 *.pyc
 games/futebol/dist/
+games/blackjack-3d/dist/
+games/roleta-europeia-3d/dist/
 assets/games/

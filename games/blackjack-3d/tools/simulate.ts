@@ -1,0 +1,7 @@
+import {writeFileSync,mkdirSync} from 'node:fs';
+import {RNG} from '../shared/core';
+import {fresh,start,act,acknowledge,total,RULES} from '../src/engine';
+const rounds=Number(process.argv[2]||100000),seeds=[[1,2,3,4],[42,123,987,456],[1999,2026,31337,100]];
+if(!Number.isSafeInteger(rounds)||rounds<2)throw new Error('Pelo menos duas rondas');
+const runs=seeds.map(seed=>{let s=fresh(new RNG(seed)),sum=0,square=0,exposure=0,gross=0;for(let i=0;i<rounds;i++){s.balance=1e12;s.ledger=[];s.history=[];s=start(s,[100,0,0,0,0]);while(s.round!.phase!=='summary'){const r=s.round!;if(r.phase==='insurance')s=act(s,{round:r.id,revision:r.revision,action:'declineAll'});else{const h=r.seats.flatMap(p=>p.hands).find(h=>h.id===r.active)!;s=act(s,{round:r.id,revision:r.revision,hand:r.active!,action:total(h.cards).value<17?'hit':'stand'});}}const r=s.round!,ratio=r.gross/r.cost;sum+=ratio;square+=ratio*ratio;exposure+=r.cost;gross+=r.gross;s=acknowledge(s);}const mean=sum/rounds,se=Math.sqrt((square-rounds*mean*mean)/(rounds-1)/rounds);return {seed,rounds,exposure,gross,rtp:gross/exposure,ci95:[mean-1.96*se,mean+1.96*se]};});
+const report={version:RULES.version,policy:'Um lugar; hit abaixo de 17; stand 17+; sem seguro, split ou double. Não é estratégia básica. CI por ronda completa.',runs};mkdirSync('reports',{recursive:true});writeFileSync('reports/simulation.json',JSON.stringify(report,null,2));console.log(report);

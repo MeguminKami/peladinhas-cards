@@ -64,10 +64,10 @@ const server = createServer(async (req, res) => {
         (await readFile(resolve(root, "tests/fixtures", localModule.slice(3)), "utf8")).replaceAll("../../js/", "./"));
       return;
     }
-    if (localModule === "js/config.js" && mode !== "fixtures") {
+    if (localModule === "js/config.js") {
       res.setHeader("Content-Type", "text/javascript; charset=utf-8");
       res.setHeader("Cache-Control", "no-store");
-      res.end(mode === "emulator" ? `export const runtimeMode="emulator"; export const firebaseConfig=${JSON.stringify({ apiKey: "demo-key", authDomain: "demo-peladinhas-development.firebaseapp.com", projectId: "demo-peladinhas-development", storageBucket: "demo-peladinhas-development.appspot.com", appId: "demo-app" })};` :
+      res.end(mode === "fixtures" ? 'export const runtimeMode="fixtures"; export const firebaseConfig={};' : mode === "emulator" ? `export const runtimeMode="emulator"; export const firebaseConfig=${JSON.stringify({ apiKey: "demo-key", authDomain: "demo-peladinhas-development.firebaseapp.com", projectId: "demo-peladinhas-development", storageBucket: "demo-peladinhas-development.appspot.com", appId: "demo-app" })};` :
         (await readFile(resolve(root, "js/config.js"), "utf8")) + '\nexport const runtimeMode="production";');
       return;
     }

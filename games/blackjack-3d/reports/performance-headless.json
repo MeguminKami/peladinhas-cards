@@ -1,0 +1,42 @@
+{
+  "generated": "2026-10-25T08:17:52.203Z",
+  "environment": "Microsoft Edge headless; SwiftShader; 1440x1000; no claim of visible 60 FPS; CPU/GPU timings and process memory not measured",
+  "fixtures": {
+    "blackjack": "Forced continuous redraw: five seats × four hands × four cards + dealer six cards, all visible. Synthetic fixture, not a playable/settled round.",
+    "roulette": "Five seconds of ordinary spin; procedural audio not measured by this fixture"
+  },
+  "blackjack": {
+    "drawCalls": 109,
+    "geometries": 24,
+    "textures": 60,
+    "renderer": "WebKit WebGL",
+    "quality": "reduzida",
+    "samples": 92,
+    "p95": 66.70000000000005,
+    "p99": 666.5999999999999,
+    "longFrames": 17,
+    "viewport": [
+      1440,
+      1000
+    ],
+    "dpr": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0"
+  },
+  "roulette": {
+    "drawCalls": 12,
+    "geometries": 12,
+    "textures": 2,
+    "renderer": "WebKit WebGL",
+    "quality": "reduzida",
+    "samples": 109,
+    "p95": 50.100000000000364,
+    "p99": 233.29999999999927,
+    "longFrames": 11,
+    "viewport": [
+      1440,
+      1000
+    ],
+    "dpr": 1,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0"
+  }
+}

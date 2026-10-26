@@ -1,0 +1,14 @@
+.three-bonuses{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.three-bonuses .bonus-option{padding:18px 8px 8px;display:flex;flex-direction:column;align-items:stretch}
+.three-bonuses .bonus-option b{font-size:20px;min-height:48px;display:grid;place-items:center;line-height:1.1}
+.three-bonuses .bonus-option strong{font-size:21px}
+.three-bonuses .bonus-option>span{font-size:15px;margin-top:auto}
+.three-bonuses .bonus-option p{font-size:12px;min-height:44px}
+.bonus-option.rift{background:linear-gradient(150deg,#234b41,#122728)!important;border-color:#6bcea0}
+.bonus-option.rift .bonus-art{filter:drop-shadow(0 0 16px #55e9a340)}
+.bonus-option.rift b,.bonus-option.rift>span{color:#abffcf}
+.modal[data-mode=rift]{--mode-glow:#7bffc2}
+.modal[data-mode=rift]>section{background:radial-gradient(ellipse at 50% 10%,#235140,#111f29 70%);border-color:#6bc395}
+.modal[data-mode=rift] .primary{background:linear-gradient(110deg,#368e68,#28594c);border-color:#a1f2c1}
+#game[data-mode=rift]{--accent:#70e8ae;--cyan:#adffda}
+@media(max-width:620px){.three-bonuses{grid-template-columns:1fr}.three-bonuses .bonus-option{padding:12px}.three-bonuses .bonus-option b{min-height:0;font-size:22px}.three-bonuses .bonus-option .bonus-art{height:105px}.three-bonuses .bonus-option p{min-height:0;margin:8px}.three-bonuses .bonus-option>span{font-size:17px}}

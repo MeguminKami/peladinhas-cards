@@ -1,0 +1,23 @@
+/* Idle matches the protocol legend; activation colours are independent of bonus mode. */
+.powers [data-power]{--protocol-color:#ff914d;position:relative;isolation:isolate;transition:color .25s,text-shadow .25s}
+.powers [data-power="REACTOR PULSE"]{--protocol-color:#ff914d}
+.powers [data-power="RIFT LINK"]{--protocol-color:#45ebd1}
+.powers [data-power="NEON STORM"]{--protocol-color:#51baff}
+.powers [data-power="WILD SURGE"]{--protocol-color:#d493ff}
+.powers [data-power="MEGA WILD DROP"]{--protocol-color:#ffd45c}
+.powers [data-power] b{position:relative;color:#ff705f;transition:color .25s,filter .25s;text-shadow:none}
+.powers [data-power].used{color:var(--protocol-color);text-shadow:0 0 9px color-mix(in srgb,var(--protocol-color) 40%,transparent)}
+.powers [data-power].used b{color:var(--protocol-color);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--protocol-color) 60%,transparent))}
+.powers [data-power]::before,.powers [data-power]::after{content:"";position:absolute;pointer-events:none;opacity:0;z-index:-1}
+.powers [data-power]::before{left:-7px;right:-3px;bottom:-3px;height:100%;border-radius:8px;background:radial-gradient(ellipse at 15% 100%,color-mix(in srgb,var(--protocol-color) 40%,transparent),transparent 72%);transform-origin:20% 100%}
+.powers [data-power]::after{left:-3px;width:31px;bottom:0;height:35px;background:radial-gradient(ellipse at 30% 85%,var(--protocol-color),transparent 43%),radial-gradient(ellipse at 70% 95%,var(--protocol-color),transparent 40%);clip-path:polygon(0 100%,8% 48%,25% 73%,38% 4%,52% 57%,72% 23%,81% 66%,94% 43%,100% 100%);transform-origin:50% 100%;mix-blend-mode:screen}
+.powers [data-power].active{color:var(--protocol-color);text-shadow:0 0 5px var(--protocol-color),0 0 15px var(--protocol-color)}
+.powers [data-power].active::before{animation:protocol-heat .65s ease-in-out infinite alternate}
+.powers [data-power].active::after{animation:protocol-flame .32s ease-in-out infinite alternate}
+.powers [data-power].active b{animation:protocol-burn .48s ease-in-out infinite alternate}
+@keyframes protocol-heat{from{opacity:.45;transform:scale(.95,.8)}to{opacity:.9;transform:scale(1.03,1.15)}}
+@keyframes protocol-flame{from{opacity:.25;transform:translateY(0) scale(.85,.75) skewX(-7deg)}to{opacity:.65;transform:translateY(-4px) scale(1.12,1.18) skewX(7deg)}}
+@keyframes protocol-burn{from{filter:drop-shadow(0 0 3px var(--protocol-color));text-shadow:0 0 4px var(--protocol-color)}to{filter:drop-shadow(0 0 8px var(--protocol-color));text-shadow:0 -4px 8px var(--protocol-color),0 0 15px var(--protocol-color)}}
+.reduced .powers [data-power].active::before{animation:none!important;opacity:.65}
+.reduced .powers [data-power].active::after{animation:none!important;opacity:.35}
+@media(prefers-reduced-motion:reduce){.powers [data-power].active b,.powers [data-power].active::before,.powers [data-power].active::after{animation:none!important}.powers [data-power].active::before{opacity:.65}.powers [data-power].active::after{opacity:.35}}

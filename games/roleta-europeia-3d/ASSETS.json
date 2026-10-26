@@ -1,0 +1,52 @@
+{
+  "version": 5,
+  "assets": [
+    {
+      "name": "Mesas, rotor, bola, shoe e fichas volumétricas",
+      "source": "Geometria e texturas Canvas geradas pelo código; fichas dos dois jogos com desenho, paleta e proporções partilhados em shared/chip-design.ts e shared/chip-materials.ts; montantes derivados do estado",
+      "rights": "Original criado para este projeto"
+    },
+    {
+      "name": "Verso Atelier Casino e capa do deck",
+      "source": "blackjack-3d/src/assets/card-back.svg",
+      "rights": "Design vetorial original bordô/dourado"
+    },
+    {
+      "name": "Logótipo Blackjack centrado",
+      "source": "blackjack-3d/src/assets/blackjack-logo.svg",
+      "rights": "Design vetorial original criado para este projeto"
+    },
+    {
+      "name": "Faces, avatares e seletor de fichas",
+      "source": "Cartas/avatares em blackjack-3d/src/cards.ts; seletor SVG comum dos dois jogos em shared/chip-design.ts, com dimensões em shared/chip-selector.css",
+      "rights": "Desenho original"
+    },
+    {
+      "name": "Efeitos e ambiente",
+      "source": "Osciladores Web Audio em shared/audio.ts",
+      "rights": "Original procedural; sem samples externos"
+    },
+    {
+      "name": "Manrope e Cormorant Garamond",
+      "source": "Fontes oficiais google/fonts, subconjuntos WOFF2 latinos incluídos localmente em src/assets/fonts dos dois jogos, com as licenças OFL correspondentes",
+      "license": "SIL Open Font License 1.1",
+      "notice": "Manrope-OFL.txt e CormorantGaramond-OFL.txt acompanham as fontes"
+    },
+    {
+      "name": "Georgia e system-ui",
+      "source": "Fontes do dispositivo para SVG e fallback",
+      "rights": "Não são distribuídos ficheiros destas fontes"
+    },
+    {
+      "name": "Three.js 0.180.0",
+      "source": "npm three",
+      "license": "MIT",
+      "notice": "Ver THIRD_PARTY_NOTICES.txt"
+    },
+    {
+      "name": "Roleta premium: logótipo, fichas instanciadas e tapete",
+      "source": "roleta-europeia-3d/src/assets/roulette-logo.svg, src/chips.ts, src/board.ts e src/chip-selector.ts",
+      "rights": "Geometria, Canvas e SVG originais criados para este projeto"
+    }
+  ]
+}
