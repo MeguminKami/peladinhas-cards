@@ -66,7 +66,7 @@ export function bindThemePicker(header) {
   button.setAttribute("aria-haspopup", "dialog");
   button.title = "Temas de cores";
   button.innerHTML = icon("palette");
-  const bell = header.querySelector("#bell");
+  const bell = header.querySelector("#header-tickets") || header.querySelector("#bell");
   if (bell) bell.before(button);
   else header.querySelector(".navbar")?.append(button);
   button.onclick = () => {

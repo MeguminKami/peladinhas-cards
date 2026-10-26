@@ -3,7 +3,7 @@ import { esc, modal } from "./ui.js";
 
 export function activeDestination(href, hash = location.hash || "#/") {
   if (href === "#/") return hash === "#/";
-  if (href === "#/players") return /^#\/(players|player)(\/|$)/.test(hash);
+  if (href === "#/players") return !hash.startsWith('#/players/cards') && /^#\/(players|player)(\/|$)/.test(hash);
   if (href === "#/games") return /^#\/(games|game)(\/|$)/.test(hash);
   if (href === "#/missions")
     return /^#\/(missions|events|event)(\/|$)/.test(hash);
@@ -22,6 +22,7 @@ export function mobileNavigation(user, pending, ready = 0) {
     ["#/players", "players", "Jogadores"],
     ["#/games", "games", "Jogos"],
     ["#/missions", "missions", "Missões"],
+    ["#/players/cards", "cards", "Cartas"],
   ]
     .map(
       ([href, symbol, label]) =>

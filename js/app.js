@@ -52,6 +52,7 @@ import { gamesPage, gamePage, gameRows } from "./games.js";
 import { initialMission, feedbackPage } from "./ratings.js";
 import { adminPage, cardLab, adminEdit, rawRatings } from "./admin.js";
 import { card, bindImages } from "./cards.js";
+import { cardCatalogPage } from "./card-catalog.js";
 import {
   ATTRIBUTES,
   isoWeek,
@@ -287,10 +288,10 @@ function header() {
     ["#/games", "games", "Jogos"],
     ["#/statistics", "trophy", "Estatísticas"],
     ["#/missions", "missions", "Missões"],
-    ["#/tickets", "tickets", "Tickets"],
+    ["#/players/cards", "cards", "Cartas"],
   ];
   document.querySelector("#header").innerHTML =
-    `<nav class="navbar"><a class="brand" href="#/" aria-label="Peladinhas Cards — início"><img src="${ASSET_PATHS.logo}" alt=""><span>PELADINHAS<small>CARDS</small></span></a>${p ? `<div class="desktop-nav">${links.map(([h, i, n]) => `<a href="${h}" class="nav-link ${activeDestination(h, hash) ? "active" : ""}">${icon(i)}${n}${i === "missions" && ctx.missions.length ? `<span class="badge">${ctx.missions.length}</span>` : ""}${i === "missions" ? missionRewardBadge(readyMissions) : ""}</a>`).join("")}${p.role === "admin" ? `<a class="nav-link ${hash.startsWith("#/admin") ? "active" : ""}" href="#/admin">${icon("shield")}Admin</a>` : ""}</div><div class="header-actions">${p.role === "admin" ? `<a class="btn btn-icon btn-ghost mobile-admin" href="#/admin" aria-label="Administração">${icon("shield")}</a>` : ""}<button id="bell" class="btn btn-icon btn-ghost" aria-label="Notificações${unread ? `, ${unread} por ler` : ""}">${icon("bell")}${unread ? `<span class="badge notification-count">${unread}</span>` : ""}</button><div class="profile-perspective-menu"><a class="user-link" href="#/profile" aria-label="Ver o meu perfil"><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><span>${esc(p.displayName || p.username)}</span></a>${perspectiveControl(ctx.realUser, p.role, true)}</div><button id="logout" class="btn btn-icon btn-ghost" aria-label="Terminar sessão">${icon("logout")}</button></div>` : '<span class="club-label">A TUA LIGA. A TUA CARTA.</span>'}</nav>${p ? mobileNavigation(p, ctx.missions.length, readyMissions) : ""}`;
+    `<nav class="navbar"><a class="brand" href="#/" aria-label="Peladinhas Cards — início"><img src="${ASSET_PATHS.logo}" alt=""><span>PELADINHAS<small>CARDS</small></span></a>${p ? `<div class="desktop-nav">${links.map(([h, i, n]) => `<a href="${h}" class="nav-link ${activeDestination(h, hash) ? "active" : ""}">${icon(i)}${n}${i === "missions" && ctx.missions.length ? `<span class="badge">${ctx.missions.length}</span>` : ""}${i === "missions" ? missionRewardBadge(readyMissions) : ""}</a>`).join("")}${p.role === "admin" ? `<a class="nav-link ${hash.startsWith("#/admin") ? "active" : ""}" href="#/admin">${icon("shield")}Admin</a>` : ""}</div><div class="header-actions">${p.role === "admin" ? `<a class="btn btn-icon btn-ghost mobile-admin" href="#/admin" aria-label="Administração">${icon("shield")}</a>` : ""}<a id="header-tickets" href="#/tickets" class="btn btn-icon btn-ghost ${hash.startsWith("#/tickets") ? "active" : ""}" aria-label="Tickets" title="Tickets">${icon("tickets")}</a><button id="bell" class="btn btn-icon btn-ghost" aria-label="Notificações${unread ? `, ${unread} por ler` : ""}">${icon("bell")}${unread ? `<span class="badge notification-count">${unread}</span>` : ""}</button><div class="profile-perspective-menu"><a class="user-link" href="#/profile" aria-label="Ver o meu perfil"><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><span>${esc(p.displayName || p.username)}</span></a>${perspectiveControl(ctx.realUser, p.role, true)}</div><button id="logout" class="btn btn-icon btn-ghost" aria-label="Terminar sessão">${icon("logout")}</button></div>` : '<span class="club-label">A TUA LIGA. A TUA CARTA.</span>'}</nav>${p ? mobileNavigation(p, ctx.missions.length, readyMissions) : ""}`;
   document
     .querySelector("#bell")
     ?.addEventListener("click", () => toggleNotifications(ctx));
@@ -573,7 +574,7 @@ async function route({ cachedOnly = false } = {}) {
       );
     if (!parts.length) {
       home();
-    } else if (parts[0] === "players") playersPage();
+    } else if (parts[0] === "players") parts[1] === "cards" ? cardCatalogPage(pageCtx) : playersPage();
     else if (parts[0] === "player") await playerPage(pageCtx, parts[1]);
     else if (parts[0] === "profile")
       parts[1] === "edit"

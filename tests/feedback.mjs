@@ -96,6 +96,8 @@ try {
     await page.locator(".feedback-review[open]").waitFor();
   }
   await openFeedback();
+  assert.equal((await page.locator(".feedback-scoreline > strong").textContent()).trim(), "5:3");
+  assert.match(await page.locator('[data-target="pedro"]').locator("..").locator(".feedback-player-stats").innerText(), /2\s+golos.*1\s+assist/s);
   const form = page.locator(".feedback-review[open] .feedback-form");
   const field = (key) => form.locator(`[data-dimension="${key}"]`);
   const choose = (key, value) =>
@@ -211,6 +213,13 @@ try {
         ),
       }));
       assert.equal(geometry.overflow, false, `Overflow ${theme} ${width}`);
+      const teams = await page.locator("section.feedback-team").evaluateAll(nodes => nodes.map(node => { const r = node.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width }; }));
+      if (width >= 1100) {
+        assert.ok(Math.abs(teams[0].y - teams[1].y) < 2);
+        assert.ok(Math.abs(teams[0].width - teams[1].width) < 2);
+      }
+      if (theme === "club" && [1440, 768, 390, 320].includes(width))
+        await page.screenshot({ path: `${output}/page-${width}.png`, fullPage: true, animations: "disabled" });
       assert.ok(
         geometry.rows.every((y, i) => !i || y > geometry.rows[i - 1]),
         "Each dimension must occupy its own row",

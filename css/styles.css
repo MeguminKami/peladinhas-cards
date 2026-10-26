@@ -1526,7 +1526,30 @@ legend {
   margin: 20px 0 0;
 }
 .feedback-grid, .feedback-team-players { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-.feedback-workspace .feedback-grid { gap: 32px; }
+.feedback-workspace .feedback-grid { gap: 24px; align-items: start; }
+.feedback-scoreboard { padding: 20px 24px; text-align: center; }
+.feedback-scoreline { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 16px; margin-top: 12px; }
+.feedback-scoreline > strong { display: flex; gap: 12px; align-items: center; font-size: clamp(1.8rem,4vw,3rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.feedback-scoreline > strong > span { color: var(--text-muted); font-size: .6em; }
+.feedback-score-team { color: var(--feedback-team); font-weight: 800; overflow-wrap: anywhere; }
+.feedback-score-team:first-child { text-align: right; }
+.feedback-score-team:last-child { text-align: left; }
+.feedback-player-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 3px; font-size: .75rem; color: var(--text-muted); }
+.feedback-player-stats > span { display: inline-flex; align-items: center; gap: 5px; }
+.feedback-player-stats svg { width: 14px; height: 14px; color: var(--feedback-team); }
+.feedback-player-stats b { color: var(--text); font-variant-numeric: tabular-nums; }
+@media (min-width: 1100px) {
+  .feedback-workspace .feedback-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .feedback-team { min-width: 0; padding: 16px; }
+  .feedback-team-heading { flex-wrap: wrap; }
+  .feedback-player { flex-wrap: wrap; padding: 16px 12px; gap: 10px; }
+  .feedback-player-name { flex-basis: calc(100% - 70px); }
+  .feedback-player .feedback-status { margin-left: 58px; }
+  .feedback-toggle { margin-left: auto; }
+  .feedback-field { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .feedback-rating { width: 100%; max-width: 300px; justify-self: end; }
+  .feedback-zero, .feedback-na { min-height: 44px; }
+}
 .feedback-overview { padding: 26px; background: linear-gradient(135deg,var(--bg-panel),var(--bg-surface)); }
 .feedback-overview h2 { font-size: 1.2rem; }
 .feedback-overview > p { margin: 14px 0; max-width: 76ch; font-size: .84rem; line-height: 1.7; color: var(--text-muted); }

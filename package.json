@@ -44,6 +44,7 @@
     "test:hosting": "node scripts/emulator-cli.mjs emulators:exec --project demo-peladinhas-hosting --only hosting \"node tests/hosting.mjs\"",
     "pretest:hosting": "node scripts/build-hosting.mjs",
     "simulate": "node scripts/simulate-evolution.mjs",
+    "test:card-catalog": "node --test tests/card-catalog.test.js && node tests/card-catalog.mjs",
     "test:feedback": "node tests/feedback.mjs",
     "test:profile": "node tests/profile-growth.mjs",
     "test:card-choice": "node tests/card-choice.mjs",

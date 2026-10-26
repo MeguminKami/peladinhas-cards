@@ -1,5 +1,6 @@
 import { TOTAL_OBJECTIVES } from "./event-totals.js";
 const paths = {
+  cards: "M8 3h11l2 3v13l-7 3-7-3V5Z M4 6H2v12l3 2 M10 8h8 M10 12h8 M10 16h5",
   ban: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M5 5l14 14",
   search: "M15 15l6 6 M17 9a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
   filter: "M3 5h18 M6 12h12 M9 19h6 M8 2v6 M16 9v6 M11 16v6",

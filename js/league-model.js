@@ -165,6 +165,7 @@ export function assembleLeague({
     cycle,
     events,
     eventRewards,
+    catalogSources: { collections, weeklyCards, previousCards },
     balances,
     ovrWeights,
     users,
