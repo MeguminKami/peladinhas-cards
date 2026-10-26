@@ -1,8 +1,10 @@
+import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
 import { ratingQuorum, ratingWaiverTimes } from "../js/rating-quorum.js";
 import { casinoFunctions } from './casino.js';
+import { blackjackFunctions } from './blackjack.js';
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
-import { homeFunctions } from "./home-cache.js";
+import { homeFunctions, invalidateHome } from "./home-cache.js";
 import { eligibleCommunityRating } from "./community-rating-policy.js";
 import { communityRatingFunctions, requiredCommunityReview, writeCommunityNotice } from "./community-ratings.js";
 import { markCardMvps } from "./card-unlock-rules.js";
@@ -11,7 +13,8 @@ import { passwordRecoveryFunctions } from "./password-recovery.js";
 import { maintenanceFunctions } from "./maintenance.js";
 import { pathFunctions } from "./paths.js";
 import { policyAt, budgetWindow, isQuietHour } from "../js/system-policy.js";
-import { policyCall, policySchedule, policyWritten, policyCreated } from "./policy-runtime.js";
+import { policyCall, policySchedule, policyWritten, policyCreated, setAutomationRunner, withPolicy } from "./policy-runtime.js";
+import { runAutomationCycle } from "./automation-cycle.js";
 import { notificationFunctions } from "./notifications.js";
 import { pushFunctions } from "./push.js";
 import { defineSecret } from "firebase-functions/params";
@@ -45,7 +48,6 @@ import { validCardDesign } from "../js/card-design.js";
 import { initializeApp, getApp } from "firebase-admin/app";
 import { assertTestEmulator, emulatorAppOptions } from "./test-environment.js";
 import { sameData } from "./equal-data.js";
-import { coalesceWork } from "./coalesce-work.js";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
@@ -75,8 +77,9 @@ initializeApp(emulatorAppOptions());
 setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
-export const { communityRatingAction } = communityRatingFunctions(async uid => { await aggregateCommunity(uid); await buildHistory(uid); });
+export const { communityRatingAction } = communityRatingFunctions(async () => {});
 export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession, grantCasinoCoins } = casinoFunctions();
+export const { blackjackAction, blackjackSweep } = blackjackFunctions();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {
   pushDeviceAction,
@@ -480,9 +483,10 @@ async function buildHistories(uids) {
   for (let i = 0; i < unique.length; i += 3)
     await Promise.all(unique.slice(i, i + 3).map(uid => buildHistory(uid, context)));
 }
-async function buildHistory(uid, shared = null) {
+async function buildHistory(uid, shared = null, { refreshCollection = true } = {}) {
   const context = shared?.snapshots ? shared : await collectionContext();
-  const earnedCards = await refreshPlayerCollection(uid, context);
+  const earnedCards = refreshCollection ? await refreshPlayerCollection(uid, context)
+    : availableCardAchievements((await db.doc(`cardCollections/${uid}`).get()).data()?.awards || []);
   const now = new Date();
   const [
     user,
@@ -717,47 +721,59 @@ async function buildHistory(uid, shared = null) {
         });
     });
 }
+async function queueCommunity(uid) {
+  await db.doc(`communityWork/${uid}`).set({ token: randomUUID(), pending: true,
+    updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+}
 export const onCommunityRating = policyWritten(
   "communityRatings/{id}",
   async (event) => {
-    const value = event.data.after.data() || event.data.before.data();
-    if (!value || (!value.submitted && !event.data.before.data()?.submitted))
+    const before = event.data.before.data(), after = event.data.after.data();
+    const value = after || before;
+    if (!value || (!after?.submitted && !before?.submitted))
       return;
-    await coalesceWork(`community:${value.targetId}`, async () => {
-      await aggregateCommunity(value.targetId);
-      await buildHistory(value.targetId);
-    });
-  },
+    if (after?.communityBatchToken && after.communityBatchToken !== before?.communityBatchToken) return;
+    const input = row => ({ targetId: row?.targetId || null, submitted: !!row?.submitted,
+      ratings20: row?.ratings20 || null, reviewState: row?.reviewState || null });
+    if (sameData(input(before), input(after))) return;
+    await queueCommunity(value.targetId);
+  }, { readPolicy: false },
 );
-export const onPlayerPosition = policyWritten("users/{uid}", (event) => {
-  if (
-    event.data.after.exists &&
-    event.data.after.data().primaryPosition !==
-      event.data.before.data()?.primaryPosition
-  )
-    return buildHistory(event.params.uid);
-});
+// Keep old deployed trigger identities; cards read these inputs in the cycle.
+export const onPlayerPosition = policyWritten("users/{uid}", () => {}, { disabled: true });
 export const onInitialRating = policyWritten(
-  "initialRatings/{uid}",
-  (event) => {
-    if (event.data.after.data()?.completed)
-      return buildHistory(event.params.uid);
-  },
+  "initialRatings/{uid}", () => {}, { disabled: true },
 );
 export const onFeedback = policyWritten(
   "games/{gid}/feedback/{id}",
   enqueueFeedbackEvent,
+  { readPolicy: false },
 );
 export const processFeedback = policySchedule("processFeedback", {
-  schedule: "0 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540,
-}, () => drainFeedbackQueue({
+  schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon", timeoutSeconds: 540,
+}, async () => {
+  const games = [];
+  const result = await drainFeedbackQueue({
   aggregate: async gid => {
-    await aggregateGame(gid);
+    games.push(gid);
     const game = (await db.doc(`games/${gid}`).get()).data();
+    if (!game || game.deleting) {
+      await db.doc(`gameSummaries/${gid}`).delete();
+      await db.doc(`gameBalances/${gid}`).delete();
+      return [];
+    }
+    if (game.status === "closed") await captureGameBalance(gid, game);
+    else await db.doc(`gameBalances/${gid}`).delete();
+    await aggregateGame(gid);
     return participants(game || {});
   },
-  rebuild: buildHistories,
-}));
+  rebuild: async () => {
+    // Keep the queue pending if correction review fails.
+    for (const gid of games) await pathEndpoints.syncGame(gid);
+  },
+  });
+  return result;
+});
 // Store only the rendering fields, once per participant and match week.
 async function captureGameCards(gid) {
   const ref = db.doc(`games/${gid}`);
@@ -866,24 +882,15 @@ export const renameGameTeam = policyCall("renameGameTeam",async (request) => {
   return { ok: true };
 });
 export const onGame = policyWritten("games/{gid}", async (event) => {
-  const latestGame = await db.doc(`games/${event.params.gid}`).get();
-  if (!latestGame.exists) {
-    await db.doc(`gameSummaries/${event.params.gid}`).delete();
-    await db.doc(`gameBalances/${event.params.gid}`).delete();
-    await buildHistories(data(await db.collection("users").get()).filter(u => !u.disabled).map(u => u.uid));
-    return;
-  }
-  const g = latestGame.data();
-  if (g.deleting) return;
   const before = event.data.before?.data?.(),
-    after = event.data.after?.data?.() || g;
+    after = event.data.after?.data?.();
   if (before && after) {
     const core = (value) =>
       JSON.stringify(
         Object.fromEntries(
           Object.entries(value).filter(
             ([key]) =>
-              !["teamNames", "playerCards", "cardWeekId", "updatedAt", "ratingWaivers"].includes(
+              !["teamNames", "playerCards", "cardWeekId", "updatedAt", "ratingWaivers", "derivedWorkToken"].includes(
                 key,
               ),
           ),
@@ -891,16 +898,15 @@ export const onGame = policyWritten("games/{gid}", async (event) => {
       );
     if (core(before) === core(after)) return;
   }
-  if (g.status === "closed") await captureGameCards(event.params.gid);
-  if (g.status === "closed") await captureGameBalance(event.params.gid, g);
-  else await db.doc(`gameBalances/${event.params.gid}`).delete();
-  await aggregateGame(event.params.gid);
-  const uids = data(await db.collection("users").get())
-    .filter((u) => !u.disabled)
-    .map((u) => u.uid);
-  await buildHistories(uids);
-  if (g.status === "closed") await closeEvents.run({});
-  if (g.status === "closed" && event.data.before.data()?.status !== "closed")
+  if (!after?.derivedWorkToken || after.derivedWorkToken === before?.derivedWorkToken)
+    await db.doc(`feedbackWork/${event.params.gid}`).set({ token: randomUUID(),
+      pending: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  if (after?.status !== "closed" || before?.status === "closed") return;
+  const g = (await db.doc(`games/${event.params.gid}`).get()).data();
+  if (!g || g.deleting || g.status !== "closed") return;
+  await captureGameCards(event.params.gid);
+  await executeAutomationCycle(`game:${event.params.gid}:${g.closedAt?.toMillis() || event.id}`);
+  if (g.status === "closed")
     await Promise.all(
       participants(g).map((uid) =>
         notification(uid, `mission-game-${event.params.gid}`, {
@@ -911,7 +917,7 @@ export const onGame = policyWritten("games/{gid}", async (event) => {
         }),
       ),
     );
-});
+}, { timeoutSeconds: 540, retry: true });
 async function requireAdmin(request) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Inicia sessão.");
   const u = await db.doc(`users/${request.auth.uid}`).get();
@@ -935,8 +941,6 @@ export const saveOvrWeights = policyCall("saveOvrWeights",
       updatedBy: request.auth.uid,
       updatedAt: FieldValue.serverTimestamp(),
     });
-    const users = data(await db.collection("users").get());
-    await buildHistories(users.map(user => user.uid));
     return { ok: true, weights, positions };
   },
 );
@@ -972,7 +976,7 @@ async function publishWeeklyCard(uid, snapshot, cycle) {
   });
 }
 export const closeCardWeek = policySchedule("closeCardWeek",
-  { schedule: "0 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  { schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
     if(cardWeek().phase!=="closed") return;
     const users = data(await db.collection("users").get()).filter(
@@ -982,7 +986,7 @@ export const closeCardWeek = policySchedule("closeCardWeek",
   },
 );
 export const openCardWeek = policySchedule("openCardWeek",
-  { schedule: "0 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  { schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async () => {
     if(cardWeek().phase!=="open") return;
     const users = data(await db.collection("users").get()).filter(
@@ -997,30 +1001,22 @@ export const ensureHistory = policyCall("ensureHistory",async (request) => {
     user = await db.doc(`users/${uid}`).get();
   if (user.data()?.disabled)
     throw new HttpsError("permission-denied", "Conta desactivada.");
-  const cycle = cardWeek();
-  const [history, published] = await Promise.all([
-    db.doc(`users/${uid}/cardHistory/${cycle.weekId}`).get(),
-    db.doc(`weeklyCards/${uid}`).get(),
-  ]);
-  const age = Date.now() - (history.data()?.updatedAt?.toMillis?.() || 0);
-  if (history.exists && published.exists && age >= 0 && age < 300000 &&
-      published.data().weekId === cycle.weekId &&
-      published.data().phase === cycle.phase &&
-      !!history.data().locked === (cycle.phase === "closed"))
-    return { ok: true, current: true };
-  await buildHistory(uid);
-  return { ok: true };
+  return { ok: true, scheduled: true };
 });
 export const refreshCardCollection = policySchedule("refreshCardCollection",
-  { schedule: "15 * * * *", timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
-  async () => {
+  { schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
+  async (event) => {
     const context = await collectionContext();
+    const collectionEnabled = policyAt().automation.collection !== false;
+    if (collectionEnabled) {
+      await settleCollectionPeriods(context);
+      await ensureFuttiesVote(context);
+    }
     for (const user of context.users)
-      await refreshPlayerCollection(user.uid, context);
-    await settleCollectionPeriods(context);
-    await ensureFuttiesVote(context);
-    await closeEvents.run({ incremental: true });
-    return { ok: true, nextAt: nextHomeBoundary(context) };
+      if (event?.cycle && policyAt().automation.cards !== false)
+        await buildHistory(user.uid, context, { refreshCollection: collectionEnabled });
+      else if (collectionEnabled) await refreshPlayerCollection(user.uid, context);
+    return { ok: true, nextAt: nextHomeBoundary([context.games, context.rewards]) };
   },
 );
 export const selectWeeklyCard = policyCall("selectWeeklyCard",async (request) => {
@@ -1038,7 +1034,6 @@ export const selectWeeklyCard = policyCall("selectWeeklyCard",async (request) =>
   const user = await db.doc(`users/${uid}`).get();
   if (!user.exists || user.data().disabled)
     throw new HttpsError("permission-denied", "Conta indisponível.");
-  await buildHistory(uid);
   await db.runTransaction(async (tx) => {
     const ref = db.doc(`users/${uid}/cardHistory/${weekId}`);
     const snapshot = await tx.get(ref);
@@ -1122,13 +1117,10 @@ export const deleteGame = policyCall("deleteGame",async (request) => {
       );
     tx.update(ref, { deleting: true });
   });
-  const affected = data(await db.collection("users").get())
-    .filter((u) => !u.disabled)
-    .map((u) => u.uid);
   await db.recursiveDelete(ref);
   await db.doc(`gameSummaries/${id}`).delete();
   await db.doc(`gameBalances/${id}`).delete();
-  await buildHistories(affected);
+  await db.doc(`feedbackWork/${id}`).set({ token: randomUUID(), pending: true });
   return { ok: true };
 });
 export const adminMessage = policyCall("adminMessage",async (request) => {
@@ -1334,6 +1326,7 @@ export const saveWeeklyCardPhoto = policyCall("saveWeeklyCardPhoto",async (reque
       cardWeek().weekId !== weekId
     )
       throw new HttpsError("failed-precondition", "Esta carta está fechada.");
+    return history;
   };
   let uploaded;
   if (reset !== true && imageBase64 !== undefined) {
@@ -1375,8 +1368,13 @@ export const saveWeeklyCardPhoto = policyCall("saveWeeklyCardPhoto",async (reque
   }
   try {
     await db.runTransaction(async (tx) => {
-      await validate(tx);
+      const history = await validate(tx);
+      const published = await tx.get(db.doc(`weeklyCards/${uid}`));
       const ref = db.doc(`weeklyCardPhotos/${uid}_${weekId}`);
+      const cardPhoto = reset === true ? null : { photoURL, design };
+      if (history.exists) tx.update(history.ref, { cardPhoto });
+      if (published.exists && published.data().weekId === weekId && published.data().phase === "open")
+        tx.update(published.ref, { cardPhoto });
       if (reset === true) tx.delete(ref);
       else
         tx.set(ref, {
@@ -1392,7 +1390,6 @@ export const saveWeeklyCardPhoto = policyCall("saveWeeklyCardPhoto",async (reque
     if (uploaded) await uploaded.delete().catch(() => {});
     throw error;
   }
-  await buildHistory(uid);
   return { ok: true, photoURL: reset === true ? "" : photoURL };
 });
 
@@ -1435,17 +1432,19 @@ export const {
   getEvent,
   listEvents,
   claimMission,
-} = eventFunctions(buildHistory);
+} = eventFunctions(async () => {});
 
 export const { getHome, onHomeSource, onHomeFeedback, onHomeVote } = homeFunctions(listEvents, {
   loadEvent: (request, eventId) => getEvent.run({ ...request, data: { eventId } }),
-  settleEvents: () => closeEvents.run({ incremental: true }),
-  settlePath: request => pathEndpoints.pathAction.run({ ...request, data: { action: "sync" } }),
 });
 
-const pathEndpoints = pathFunctions(buildHistory);
+const pathEndpoints = pathFunctions(async () => {});
 export const { getPath, pathAction, onPathGame, onPathSummary, settlePaths } = pathEndpoints;
-export const { gameAction, feedbackAction, ratingWaiverAction } = gameFlowFunctions(pathEndpoints.syncGame);
+export const { gameAction, feedbackAction, ratingWaiverAction } = gameFlowFunctions(async gid => {
+  await captureGameCards(gid);
+  const game = (await db.doc(`games/${gid}`).get()).data();
+  await executeAutomationCycle(`game:${gid}:${game.closedAt.toMillis()}`);
+});
 
 export const {
   onGameNotifications,
@@ -1459,4 +1458,38 @@ export const { maintenanceRead, maintenanceAction, systemHeartbeat, systemCleanu
   rebuildPlayer: buildHistory,
   rebuildGame: async id => { await aggregateGame(id); const game=(await db.doc(`games/${id}`).get()).data(); if(game)await buildHistories(participants(game)); },
   rebuildAll: async () => { const users=data(await db.collection("users").get()), games=data(await db.collection("games").get()); for(const game of games)await aggregateGame(game.id); for(const user of users)await aggregateCommunity(user.uid); await buildHistories(users.map(user=>user.uid)); return {ok:true}; },
+});
+
+// Every scheduler delivery joins the same cycle. The legacy endpoints remain
+// deployed, so rolling out this change does not leave old hourly workers alive.
+async function executeAutomationCycle(key) {
+  return withPolicy(() => runAutomationCycle(db, key, async () => {
+    const community = policyAt().features.mode !== "readOnly" && policyAt().automation.cards !== false
+      ? await db.collection("communityWork").where("pending", "==", true).get() : { docs: [] };
+    for (const job of community.docs) {
+      await aggregateCommunity(job.id);
+      await db.runTransaction(async tx => {
+        if ((await tx.get(job.ref)).data()?.token === job.data().token)
+          tx.update(job.ref, { pending: false });
+      });
+    }
+    let feedback;
+    do {
+      feedback = await processFeedback.run({ cycle: true });
+      if (feedback.running) throw Error("O processamento de jogos está em execução.");
+    }
+    while (feedback.processed === 50);
+    for (const job of [settlePaths, closeEvents, systemHeartbeat, refreshCardCollection, scheduledNotifications]) {
+      const result = await job.run({ cycle: true });
+      if (result?.running || result?.ok === false || result?.issues?.length)
+        throw Error("Uma tarefa do ciclo ficou pendente.");
+    }
+    await invalidateHome("games", "automation-cycle", null, { key });
+    return { ok: true };
+  }));
+}
+setAutomationRunner(event => {
+  const time = Date.parse(event.scheduleTime);
+  const key = Number.isFinite(time) ? new Date(time).toISOString() : String(event.scheduleTime);
+  return executeAutomationCycle(`schedule:${key}`);
 });

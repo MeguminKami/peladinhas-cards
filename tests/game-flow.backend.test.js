@@ -148,9 +148,11 @@ test("game flow: atomic freeze, singleton opening, immediate numeric settlement 
       disabled: false,
     });
   const paths = pathFunctions(async () => {});
-  const path = (action, values = {}) =>
-    paths.pathAction.run({ auth: { uid }, data: { action, ...values } });
-  const flow = gameFlowFunctions(() => path("sync"));
+  const path = async (action, values = {}) => {
+    if (action === "sync") await paths.settlePaths.run({});
+    return paths.pathAction.run({ auth: { uid }, data: { action, ...values } });
+  };
+  const flow = gameFlowFunctions(gid => paths.syncGame(gid));
   const gameCall = (gameId, game) =>
     flow.gameAction.run({ auth: { uid: admin }, data: { gameId, game } });
   const game = {
@@ -256,6 +258,7 @@ test("game flow: atomic freeze, singleton opening, immediate numeric settlement 
     status: "closed",
     score: { teamA: 4, teamB: 0 },
   });
+  await paths.syncGame(second); // The next permitted check detects the correction.
   const corrected = (await db.doc(`pathStates/${uid}`).get()).data();
   assert.equal(corrected.reviews[waiting.pending[0].id].pending, true);
   await assert.rejects(path("offers", { nodeId: "pace-0-0" }), /corrigido/);
@@ -436,6 +439,7 @@ test("path settlement: an edit committed after the cutoff uses its old baseline;
     },
   });
   const paths = pathFunctions(async () => {});
+  await paths.settlePaths.run({});
   const settled = await paths.pathAction.run({
     auth: { uid },
     data: { action: "sync" },
@@ -591,6 +595,7 @@ test("fusion flow: milestones gate activation, origins remain intact and final c
     await db
       .doc(`games/${gid}/feedback/${raterId}_${uid}`)
       .set({ raterId, targetId: uid, submitted: true, ratings, updatedAt });
+  await paths.settlePaths.run({});
   const result = await call("sync");
   assert.equal(result.lastResult.reward.specialId, "path-fusion-predator");
   assert.deepEqual(result.lastResult.reward.boosts, {

@@ -10,10 +10,18 @@ import {
 import { policyAt, setPolicyProvider, canManage } from "../js/system-policy.js";
 import { cardWeek } from "../js/card-week.js";
 import { runChangedMaintenance } from "./maintenance-gate.js";
+import { AUTOMATION_SCHEDULE, AUTOMATION_TIME_ZONE, CYCLE_JOBS } from "./automation-cycle.js";
+let automationRunner;
+export function setAutomationRunner(runner) {
+  automationRunner = runner;
+  jobs.set("automationCycle", { group: "system", schedule: AUTOMATION_SCHEDULE,
+    run: () => runner({ scheduleTime: `manual-${randomUUID()}` }) });
+}
 const context = new AsyncLocalStorage();
 setPolicyProvider(() => context.getStore()?.document || null);
 const db = () => getFirestore();
 export async function withPolicy(handler, document) {
+  if (document === undefined && context.getStore()) return handler();
   const value =
     document === undefined
       ? (await db().doc("settings/system").get()).data()
@@ -283,6 +291,9 @@ export async function runTracked(name, handler, cycleKey = null) {
   }
 }
 export function policySchedule(name, options, handler) {
+  if (CYCLE_JOBS.has(name)) options = { ...options, schedule: AUTOMATION_SCHEDULE,
+    timeZone: AUTOMATION_TIME_ZONE, timeoutSeconds: 540, retryCount: 3,
+    minBackoffSeconds: 60, maxBackoffSeconds: 300 };
   const group =
     name === "systemHeartbeat"
       ? "system"
@@ -298,7 +309,9 @@ export function policySchedule(name, options, handler) {
   const invoke = (event) =>
     withPolicy(async () => {
       if (
-        policyAt().automation[group] === false ||
+        (policyAt().automation[group] === false &&
+          !(name === "refreshCardCollection" && event?.cycle && policyAt().automation.cards !== false) &&
+          !(name === "scheduledNotifications" && event?.cycle && policyAt().notifications.enabled)) ||
         (policyAt().features.mode === "readOnly" && group !== "system")
       )
         return { paused: true };
@@ -328,10 +341,14 @@ export function policySchedule(name, options, handler) {
       }
     });
   jobs.set(name, { group, schedule: options.schedule, run: invoke });
-  return onSchedule(options, invoke);
+  return onSchedule(options, event =>
+    CYCLE_JOBS.has(name) && event?.scheduleTime && automationRunner
+      ? automationRunner(event)
+      : invoke(event));
 }
-export function policyWritten(path, handler) {
-  return onDocumentWritten(path, (event) => withPolicy(() => handler(event)));
+export function policyWritten(path, handler, { disabled = false, readPolicy = true, ...options } = {}) {
+  return onDocumentWritten({ document: path, ...options }, (event) =>
+    disabled ? undefined : readPolicy ? withPolicy(() => handler(event)) : handler(event));
 }
 export function policyCreated(path, handler) {
   return onDocumentCreated(path, (event) => withPolicy(() => handler(event)));

@@ -1,4 +1,5 @@
 export {mount} from './main';
+export {mountMultiplayer} from './multiplayer';
 export {iframeWallet} from '../shared/bridge';
 export type {MountOptions,Wallet,WalletOperation} from '../shared/session';
 

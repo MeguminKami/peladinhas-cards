@@ -37,7 +37,7 @@ flowchart TB
 
 ## Guarda-redes no feedback de jogo
 
-As avaliações de jogo são guardadas imediatamente e os resultados derivados são publicados hora a hora, apenas para jogos alterados. Consultar [processamento das avaliações](feedback-processing.md) para distinguir submissão, publicação, apuramento do ETC e recálculo administrativo.
+As avaliações de jogo são guardadas imediatamente e os resultados derivados são publicados nos quatro ciclos diários e no fecho de jogo, apenas para jogos alterados. Consultar [processamento das avaliações](feedback-processing.md) para distinguir submissão, publicação, apuramento do ETC e recálculo administrativo.
 
 Quando a autoavaliação **submetida** tem guarda-redes N/A, esse critério fica excluído para o jogador nesse jogo, mesmo que colegas tenham enviado números antes. A média é `null` e a contagem válida dessa dimensão é zero. O formulário dos colegas mostra N/A bloqueado e uma explicação; as restantes dimensões continuam editáveis dentro do respetivo prazo. As regras impedem novas notas numéricas incompatíveis; a correção administrativa de uma resposta de colega conserva N/A.
 

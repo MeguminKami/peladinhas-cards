@@ -3,15 +3,40 @@ import assert from "node:assert/strict";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import {
   eventAction,
-  voteEvent,
-  getEvent,
+  voteEvent as rawVoteEvent,
+  getEvent as rawGetEvent,
   listEvents,
-  claimMission,
+  claimMission as rawClaimMission,
   closeEvents,
-  onEventNotifications,
+  onEventNotifications as rawOnEventNotifications,
+  scheduledNotifications,
   onGame,
 } from "../functions/index.js";
 import { ATTRIBUTES } from "../js/utils.js";
+import { checkObjectiveProgress } from "../functions/event-management.js";
+// These objective regression scenarios explicitly model a permitted check
+// before reading/claiming. automation-cycle.backend.test.js verifies that real
+// page reads and claims never trigger that check themselves.
+const getEvent = { run: async request => {
+  await checkObjectiveProgress(request.data.eventId);
+  return rawGetEvent.run(request);
+} };
+const claimMission = { run: async request => {
+  await checkObjectiveProgress(request.data.eventId);
+  return rawClaimMission.run(request);
+} };
+const onEventNotifications = { run: async request => {
+  const event = (await getFirestore().doc(`events/${request.params.eid}`).get()).data();
+  await rawOnEventNotifications.run({ ...request, data: { after: { data: () => event } } });
+  return scheduledNotifications.run({ cycle: true });
+} };
+const voteEvent = { run: async request => {
+  const result = await rawVoteEvent.run(request);
+  // The emulator's server clock is not changed by Node's mocked Date.
+  await getFirestore().doc(`events/${request.data.eventId}/votes/${request.auth.uid}`)
+    .update({ submittedAt: Timestamp.fromDate(new Date()) });
+  return result;
+} };
 const db = getFirestore(),
   admin = "managed-admin",
   ids = ["managed-a", "managed-b", "managed-c", "managed-d"];
@@ -980,7 +1005,8 @@ test("objective competition closes on first verified completion and preserves ch
   );
   await onGame.run({
     params: { gid: "race-goals-1" },
-    data: { before: { data: () => ({ status: "open" }) } },
+    data: { before: { data: () => ({ status: "open" }) },
+      after: { data: () => ({ status: "closed" }) } },
   });
   const ended = (await db.doc(`events/${id}`).get()).data();
   assert.equal(ended.status, "closed");

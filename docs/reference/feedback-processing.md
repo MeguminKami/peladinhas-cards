@@ -1,33 +1,29 @@
-# Processamento horário das avaliações
+# Processamento das avaliações
 
-[← Documentação](../README.md) · [Cartas e avaliações](cards-and-ratings.md)
+[← Documentação](../README.md) · [Ciclos de atualização](automation-cycles.md) · [Percursos](player-paths.md)
 
-## Guardar e publicar
+As avaliações e as revisões são guardadas imediatamente. Os resultados derivados são publicados às **08:00, 12:00, 17:00 e 22:00 de Lisboa**, e no encerramento de um jogo, usando os dados mais recentes elegíveis pelas regras do sistema.
 
-A avaliação fica guardada imediatamente. As médias de jogo, a evolução das cartas e as conquistas derivadas são publicadas pelo processamento horário, aos minutos `00`, na hora de Lisboa. Até lá, os ecrãs usam o último resumo publicado. O estado da própria submissão continua disponível imediatamente.
+## Fila de trabalho
 
-Uma mudança efetiva numa avaliação submetida cria ou atualiza uma entrada privada em `feedbackWork/{gameId}`. Rascunhos e mudanças apenas de timestamps não iniciam cálculos. O envio e a marcação são atómicos, incluindo correções administrativas. O trigger `onFeedback` cobre também remoções e escritores antigos; não recalcula cartas.
+Os escritores de avaliações submetidas registam uma geração em `feedbackWork/{gameId}` na mesma transação. Alterações de rascunho ou timestamps sem mudança de valores não criam outra geração. `onFeedback` cobre também escritas antigas, edições e eliminações, sem voltar a enfileirar gerações já registadas pelos escritores atuais.
 
-## Trabalho limitado às alterações
+`processFeedback` consulta entradas pendentes em lotes de 50 jogos. O ciclo drena os lotes, calcula resumos e revê percursos associados. A geração é confirmada apenas depois desse trabalho; alterações recebidas entretanto conservam a entrada pendente. As cartas são publicadas no final, depois de missões, eventos e recompensas, com um contexto partilhado.
 
-`processFeedback` consulta apenas entradas pendentes, com limite de 50 jogos por execução. Calcula cada jogo uma vez e partilha um contexto de leitura para reconstruir os jogadores afetados, sem reler as avaliações brutas de todos os jogos anteriores. Sem entradas pendentes, não consulta jogos, avaliações ou históricos. A consulta vazia e os documentos de controlo do agendamento ainda têm custo; não se promete consumo zero.
+Sem entradas pendentes, esta fila não consulta jogos ou avaliações brutas. Consultas vazias, checkpoints, validações e outros passos continuam a ter custo. Não existe uma percentagem de poupança cloud medida para esta alteração.
 
-Cada entrada tem uma geração. Se chegar outra avaliação durante o cálculo, essa geração fica pendente para a execução seguinte. Falhas conservam o trabalho para nova tentativa. A exclusão entre execuções usa o controlo de tarefas existente. Pode haver uma publicação intermédia antes da execução seguinte quando chegam avaliações durante o cálculo.
+Avaliações comunitárias submetidas usam `communityWork/{uid}`. As avaliações iniciais e a posição atual são lidas na publicação das cartas; os seus triggers deixam de reconstruir históricos. A aplicação deixa de chamar `ensureHistory` ao navegar.
 
-Abrir páginas não força o processamento. Resumos históricos incompletos são colocados na fila e reparados pela tarefa horária; a leitura normal da coleção não percorre avaliações antigas para os reconstruir. A fila é exclusiva do servidor e não exige novas permissões de cliente nem índices compostos.
+## Prazos e percursos
 
-## Prazos e operações explícitas
+Os prazos continuam validados na ação. Um evento terminado aguarda o próximo ciclo; isso não permite votar depois do prazo nem incluir jogos fora do período definido.
 
-O ETC continua a associar cada missão ao próximo jogo. A verificação horária consulta os votos originais de jogos com tentativas pendentes: com sete votos reais por critério, entrega se o sucesso resistir a duas estrelas em todos os votos em falta. Esta antecipação não depende do resumo publicado nem consulta revisões históricas. As contagens guardadas da tentativa atualizam nessa verificação. Sem sucesso antecipado, às 48 horas consulta o registo de versões para selecionar as avaliações elegíveis no prazo original, mesmo que a execução seja posterior. O atraso de publicação não prolonga o prazo. [Regras completas](player-paths.md#avaliações-48-horas-e-sete-votos).
+O ETC mantém a associação ao próximo jogo e o prazo original de 48 horas. Antes do prazo, a antecipação exige sete votos reais por critério e sucesso atribuindo duas estrelas aos votos em falta. Depois do prazo, usa as versões elegíveis até ao corte original. Informação mais recente não altera a janela de elegibilidade nem resultados definitivos. [Regras completas](player-paths.md#avaliações-48-horas-e-sete-votos).
 
-Semanas já fechadas e conquistas anteriormente entregues conservam as regras de preservação existentes. O processamento horário não reabre semanas. As operações administrativas explícitas de recalcular jogos/liga e o fecho ou correção dos dados de um jogo continuam a poder recalcular imediatamente. As avaliações iniciais e comunitárias não são abrangidas por esta fila.
+Semanas fechadas permanecem preservadas. Correções, dispensas e eliminações de jogos refletem-se no ciclo seguinte. Operações administrativas explicitamente destinadas a reconstruir dados continuam disponíveis.
 
-## Testar e publicar
+## Validação e publicação
 
-Executar `npm.cmd run test:feedback-hourly` para testar a fila com dados sintéticos no emulador. O comando não necessita de leituras da base real. Os testes de integração de cartas, jogos e percursos devem chamar o processamento quando pretendem observar uma publicação horária.
+`npm.cmd run test:cycles` verifica coordenação, falhas, duplicações, publicação e consultas sem apuramento, com dados sintéticos em emulador. `npm.cmd run test:feedback-hourly` continua a testar a fila; o nome histórico não representa a cadência atual.
 
-Publicar com `npm.cmd run deploy:feedback-hourly`. O script inclui a nova tarefa, o trigger, os escritores e todos os consumidores dos módulos partilhados de cálculo e percursos. Não exige publicação do frontend. A execução deste comando é uma operação separada; os testes locais não confirmam a publicação cloud.
-
-## Votos em falta anulados pelo administrador
-
-Jogos → Avaliações permite anular a obrigação pendente de um participante, sem inventar notas. O crédito conta apenas para os mínimos de avaliação; médias e contagens reais mantêm-se. O admin pode repor a obrigação. A alteração é auditada e segue a fila horária, sem recálculo global. O ETC respeita o estado da dispensa no prazo de 48 horas. [Modelo, testes e publicação](../reports/rating-waivers-2026-10-22.md).
+Publicar com `npm.cmd run deploy:cycles` e depois `npm.cmd run deploy:frontend`. Não é necessário reconstruir a liga nem reabrir semanas fechadas. Os primeiros ciclos criam os resultados guardados em falta.

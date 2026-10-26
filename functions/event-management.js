@@ -7,6 +7,8 @@ import { CARD_POLICY } from "../js/card-achievements.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
 import { getFirestore, FieldValue, Timestamp, Filter } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
+import { createHash } from "node:crypto";
+import { coalesceWork } from "./coalesce-work.js";
 import { cardWeek } from "../js/card-week.js";
 import { votersFor } from "../js/event-rules.js";
 import { asDate, ATTRIBUTES } from "../js/utils.js";
@@ -32,6 +34,40 @@ const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 // A one-off mission keeps its authoritative result after closing.
 const closedMission = (event) => event?.kind === "mission" &&
   event.method === "objective" && event.status === "closed" && event.cadence === "once";
+const progressVersion = event => createHash("sha256").update(JSON.stringify([
+  event.objective, event.startsAt, event.endsAt, event.indefinite, event.cadence,
+  event.participantIds, event.prerequisites, event.maxRepeats, event.scope,
+])).digest("hex");
+async function publishedProgress(ref, event, tx = null) {
+  if (["closed", "review"].includes(event.status)) return event.ranking || [];
+  const snap = tx ? await tx.get(ref.collection("private").doc("progress"))
+    : await ref.collection("private").doc("progress").get();
+  const value = snap.data();
+  return value?.version === progressVersion(event) && value.periodKey === periodWindow(event).key
+    ? value.ranking || [] : [];
+}
+// Shared by the scheduled batch and local objective regression fixtures.
+export async function publishObjectiveProgress(event, games, completions, now = new Date()) {
+  const ranking = eventRanking(event, [], games, [], now, completions);
+  await db().runTransaction(async tx => {
+    const ref = db().doc(`events/${event.id}`), fresh = await tx.get(ref);
+    if (!fresh.exists || progressVersion(fresh.data()) !== progressVersion(event))
+      throw Error("A configuração mudou durante o apuramento.");
+    tx.set(ref.collection("private").doc("progress"), {
+      version: progressVersion(event), periodKey: periodWindow(event, now).key,
+      ranking, evaluatedAt: now,
+    });
+  });
+}
+export async function checkObjectiveProgress(id) {
+  const snap = await db().doc(`events/${id}`).get();
+  const event = snap.exists ? { ...snap.data(), id } : null;
+  if (!event || event.method !== "objective" || !["open", "scheduled"].includes(event.status)) return;
+  const [games, ledger] = await Promise.all([
+    objectiveGames(null, usesRatingObjective(event.objective)), db().collection("eventRewards").get(),
+  ]);
+  return publishObjectiveProgress(event, rows(games), rows(ledger));
+}
 // Read both collections in the same transaction when granting rewards.
 async function objectiveGames(tx = null, includeRatings = true) {
   const read = (path) => tx ? tx.get(db().collection(path)) : db().collection(path).get();
@@ -801,8 +837,7 @@ export function managedEvents(rebuild) {
     await db().runTransaction(async (tx) => {
       const ref = db().doc(`events/${eventId}`),
         snap = await tx.get(ref),
-        votesSnap = await tx.get(ref.collection("votes")),
-        gamesSnap = await tx.get(db().collection("games"));
+        previousVote = await tx.get(ref.collection("votes").doc(request.auth.uid));
       const event = snap.data();
       if (
         !event ||
@@ -825,20 +860,11 @@ export function managedEvents(rebuild) {
       )
         fail("Voto fora das regras deste evento.");
       const value = { selections, submittedAt: FieldValue.serverTimestamp() };
-      const votes = rows(votesSnap).filter((v) => v.id !== request.auth.uid);
-      votes.push({ selections, id: request.auth.uid, submittedAt: new Date() });
       tx.set(ref.collection("votes").doc(request.auth.uid), value);
       audit(tx, ref, request.auth.uid, "vote-submitted", {
         selections,
-        previous:
-          rows(votesSnap).find((v) => v.id === request.auth.uid)?.selections ||
-          [],
+        previous: previousVote.data()?.selections || [],
       });
-      if (event.liveResults)
-        tx.update(ref, {
-          ranking: eventRanking(event, votes, rows(gamesSnap)),
-          totalVotes: votes.reduce((sum, v) => sum + v.selections.length, 0),
-        });
     });
     return { ok: true };
   }
@@ -853,7 +879,7 @@ export function managedEvents(rebuild) {
       throw new HttpsError("permission-denied", "Evento indisponível.");
     const completionLedger =
       event.kind === "mission"
-        ? rows(await (context ? context.read("rewards", () => db().collection("eventRewards").get()) : db().collection("eventRewards").get()))
+        ? rows(await (context ? context.read("rewards", () => db().collection("eventRewards").where("uid", "==", request.auth.uid).get()) : db().collection("eventRewards").get()))
         : [];
     if (
       user.role !== "admin" &&
@@ -875,15 +901,7 @@ export function managedEvents(rebuild) {
       result.unlockedAt = unlocked ? unlocked.toISOString() : null;
     }
     if (event.method === "objective") {
-      const games = closedMission(event) ? [] : rows(await (context ? context.read("objectiveGames", () => objectiveGames(null, context.includeRatings)) : objectiveGames(null, usesRatingObjective(event.objective))));
-      result.progress = closedMission(event) ? (event.ranking || []) : eventRanking(
-        event,
-        [],
-        games,
-        [],
-        new Date(),
-        completionLedger,
-      );
+      result.progress = await publishedProgress(ref, event);
       if (event.kind === "mission" && !context?.summaryOnly) {
         const key = periodWindow(event).key;
         const credits=completionLedger.filter(row=>row.eventId===id && !row.revokedAt);
@@ -913,8 +931,8 @@ export function managedEvents(rebuild) {
           (row) => row.uid === request.auth.uid,
         );
       const claims = rows(context
-        ? await context.read("rewards", () => db().collection("eventRewards").get())
-        : await db().collection("eventRewards").where("eventId", "==", id).get()
+        ? await context.read("rewards", () => db().collection("eventRewards").where("uid", "==", request.auth.uid).get())
+        : await db().collection("eventRewards").where("uid", "==", request.auth.uid).get()
       ).filter((r) => r.eventId === id && r.uid === request.auth.uid && !r.revokedAt);
       result.claimedPeriods = claims.map((r) => r.periodKey).filter(Boolean);
       result.myRewards = claims.map((r) => ({
@@ -962,7 +980,7 @@ export function managedEvents(rebuild) {
     }
     return result;
   }
-  async function claim(request) {
+  async function claimOnce(request) {
     assertFeature("missions");
     assertFeature("claims");
     const id = request.data?.eventId;
@@ -970,12 +988,15 @@ export function managedEvents(rebuild) {
     let awarded;
     await db().runTransaction(async (tx) => {
       const ref = db().doc(`events/${id}`),
-        snap = await tx.get(ref),
-        games = closedMission(snap.data()) ? null : await objectiveGames(tx, usesRatingObjective(snap.data()?.objective)),
+        snap = await tx.get(ref);
+      const event = snap.data(), uid = request.auth.uid;
+      const window = event?.kind === "mission" ? periodWindow(event) : null;
+      // Lock the deterministic delivery document before reading the ledger.
+      // Concurrent claims must serialize even when that query is still empty.
+      const delivery = window ? await tx.get(db().doc(`eventRewards/${id}_mission_${uid}_${window.key}`)) : null;
+      const progress = snap.exists ? await publishedProgress(ref, snap.data(), tx) : [],
         rewards = await tx.get(ref.collection("private").doc("rewards")),
-        ledgerSnap = await tx.get(db().collection("eventRewards"));
-      const event = snap.data(),
-        uid = request.auth.uid;
+        ledgerSnap = await tx.get(db().collection("eventRewards").where("uid", "==", request.auth.uid));
       if (
         !event ||
         event.kind !== "mission" ||
@@ -993,22 +1014,18 @@ export function managedEvents(rebuild) {
         );
       const own = ledger.filter(
           (r) => r.eventId === id && r.uid === uid && !r.revokedAt,
-        ),
-        window = periodWindow(event);
+        );
+      if (delivery?.exists && !delivery.data().revokedAt) {
+        awarded = delivery.data();
+        return;
+      }
       if (own.some((r) => r.periodKey === window.key)) {
         awarded = own.find((r) => r.periodKey === window.key);
         return;
       }
       if (own.length >= event.maxRepeats)
         fail("Limite de conclusões atingido.");
-      const row = (closedMission(event) ? (event.ranking || []) : eventRanking(
-        event,
-        [],
-        rows(games),
-        [],
-        new Date(),
-        ledger,
-      )).find((r) => r.uid === uid);
+      const row = progress.find((r) => r.uid === uid);
       if (!row?.eligible) fail("Ainda não cumpriste o objetivo desta missão.");
       const key = `${id}_mission_${uid}_${window.key}`;
       awarded = grant(
@@ -1054,6 +1071,13 @@ export function managedEvents(rebuild) {
       expiresAt: asDate(awarded.expiresAt).toISOString(),
     };
   }
+  function claim(request) {
+    assertFeature("missions");
+    assertFeature("claims");
+    if (!validEventId(request.data?.eventId)) fail("Missão inválida.");
+    return coalesceWork(`mission-claim:${JSON.stringify([request.auth.uid, request.data.eventId])}`,
+      () => claimOnce(request));
+  }
   async function scheduled() {
     const ledger = rows(await db().collection("eventRewards").where("expiresAt", "<=", Timestamp.fromMillis(Date.now())).get());
     const expired = ledger.filter(
@@ -1071,11 +1095,25 @@ export function managedEvents(rebuild) {
       Filter.where("status", "in", ["open", "scheduled"]),
       Filter.where("rewardsApplied", "==", false),
     )).get());
-    const races = events.filter(e => e.schemaVersion === 2 && e.kind !== "mission" && e.method === "objective" && ["open", "scheduled"].includes(e.status) && +asDate(e.startsAt) <= Date.now());
-    const games = races.length ? rows(await objectiveGames(null, races.some(e => usesRatingObjective(e.objective)))) : [];
+    const objectives = events.filter(e => e.schemaVersion === 2 && e.method === "objective" && ["open", "scheduled"].includes(e.status) && +asDate(e.startsAt) <= Date.now());
+    const liveVotes = events.filter(e => e.schemaVersion === 2 && e.method === "vote" && e.liveResults && e.status === "open");
+    const games = objectives.length || liveVotes.length ? rows(await objectiveGames(null, objectives.some(e => usesRatingObjective(e.objective)))) : [];
+    const completionLedger = objectives.length ? rows(await db().collection("eventRewards").get()) : [];
     const issues=[];
     for (const event of events.filter((e) => e.schemaVersion === 2)) {
       try {
+      if (objectives.some(row => row.id === event.id)) {
+        await publishObjectiveProgress(event, games, completionLedger);
+      }
+      if (liveVotes.some(row => row.id === event.id)) {
+        await db().runTransaction(async tx => {
+          const ref = db().doc(`events/${event.id}`), current = await tx.get(ref);
+          const votes = rows(await tx.get(ref.collection("votes")));
+          if (current.data()?.status !== "open") return;
+          tx.update(ref, { ranking: eventRanking(current.data(), votes, games),
+            totalVotes: votes.reduce((sum, vote) => sum + (vote.selections?.length || 0), 0) });
+        });
+      }
       if (event.status === "scheduled" && +asDate(event.startsAt) <= Date.now())
         await db().runTransaction(async (tx) => {
           const ref = db().doc(`events/${event.id}`),

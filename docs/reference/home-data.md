@@ -30,13 +30,13 @@ Ao regressar à página ou recuperar a ligação, verifica-se o servidor. Não e
 
 ## Tempo e recuperação
 
-As tarefas `closeEvents`, `settlePaths`, `scheduledNotifications`, `systemHeartbeat`, `closeCardWeek` e `openCardWeek` usam `0 * * * *`, em Lisboa. `refreshCardCollection` mantém `15 * * * *`. O fecho semanal continua às 18h de quarta-feira e a abertura às 12h de quinta-feira.
+As tarefas `closeEvents`, `settlePaths`, `scheduledNotifications`, `systemHeartbeat`, `closeCardWeek`, `openCardWeek`, `processFeedback` e `refreshCardCollection` entram num ciclo coordenado às 08:00, 12:00, 17:00 e 22:00 de Lisboa (`0 8,12,17,22 * * *`) e no fecho de um jogo. Entregas do scheduler para o mesmo instante partilham o checkpoint, executando o trabalho uma vez. O calendário semanal mantém os prazos configurados; a materialização ocorre no ciclo seguinte. [Funcionamento dos ciclos](automation-cycles.md).
 
-Eventos, percursos, coleção e lembretes têm checkpoints duradouros. Sem alteração das respetivas entradas e antes do próximo prazo, o trabalho termina depois de consultar metadados, sem enumerar as coleções. Os checkpoints incluem limites de datas, início/fim de eventos, expiração de recompensas e prazos conhecidos; os lembretes incluem a manhã e a janela de feedback. Publicar cartas não volta a enfileirar o seu próprio cálculo.
+Cada ciclo consulta os dados atuais de avaliações, percursos, eventos, recompensas e cartas. As filas agrupam os jogos e jogadores alterados; os checkpoints impedem repetir o ciclo devido a entregas duplicadas. Os checkpoints incrementais antigos continuam disponíveis para operações explicitamente incrementais. Publicar cartas não volta a enfileirar o seu próprio cálculo.
 
-Ao reconstruir o início, o servidor reconcilia eventos pendentes através desse checkpoint e apura uma tentativa pessoal cujo prazo de avaliação já terminou. Os prazos continuam validados no servidor; a cadência horária não prolonga elegibilidade nem reinicia as 48 horas. Execuções manuais de tarefas, sem `incremental`, continuam a executar o trabalho explicitamente solicitado.
+Reconstruir o início não apura eventos ou tentativas pessoais. O servidor apresenta o último progresso publicado. Os prazos continuam validados nas ações; o processamento posterior não prolonga elegibilidade nem reinicia as 48 horas. Execuções administrativas explícitas continuam disponíveis.
 
-Há leituras mínimas dos metadados e verificações temporais mesmo sem jogadores presentes. O objetivo é eliminar varrimentos repetidos, não prometer consumo cloud nulo.
+Há leituras de metadados, consultas e validações das ações. A redução de ciclos não elimina todo o consumo cloud nem fornece, por si só, uma percentagem de poupança faturada.
 
 ## Manutenção
 

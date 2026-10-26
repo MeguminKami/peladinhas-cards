@@ -39,12 +39,12 @@ export async function casinoPage(ctx) {
     loading = false,
     category = "all",
     slot,
-    mounting = false, gameRun = 0;
+    mounting = false, gameRun = 0, onlineBalance;
   const uid = ctx.realUser?.uid || ctx.user.uid;
   const playerId = `${uid}:${CASINO_EDITION}`;
   const localWallet = createCasinoLocalWallet(uid, (value) => {
     if (active && value) {
-      wallet = value;
+      wallet = onlineBalance === undefined ? value : { ...value, balance: onlineBalance };
       if (!loading) drawWallet();
     }
   }, { tables: CASINO_TABLES_ENABLED });
@@ -102,6 +102,8 @@ export async function casinoPage(ctx) {
   const salon = root.querySelector(".casino-salon");
   let launchButton;
   function closeGame() {
+    const refreshOnline = slot?.onlineTable;
+    onlineBalance = undefined;
     gameRun++;
     mounting = false;
     slot?.destroy();
@@ -112,7 +114,7 @@ export async function casinoPage(ctx) {
     root.classList.remove("is-playing", "is-centered", "is-table");
     root.querySelectorAll(".casino-game-nav, .casino-game-tools").forEach(el => el.hidden = true);
     launchButton?.focus();
-    void localWallet.checkpoint("exit").catch(() => {});
+    void localWallet.checkpoint(refreshOnline ? "entry" : "exit").catch(() => {});
   }
   function canCloseGame() {
     if (!slot?.canLeave || slot.canLeave()) return true;
@@ -159,6 +161,9 @@ export async function casinoPage(ctx) {
     window.scrollTo({ top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
   async function openSlot(button, game) {
+    // Let pre-multiplayer rounds finish through their original wallet adapter.
+    const savedBlackjack = game.id === 'blackjack' && JSON.parse(localStorage.getItem(`atelier:blackjack:website:${playerId}`) || 'null');
+    const legacyBlackjack = !!(savedBlackjack?.pending || savedBlackjack?.state?.round);
     if (CASINO_TABLES_ENABLED) {
       for (const table of CASINO_CATALOG.filter(item => item.category === "tables" && item.id !== game.id)) {
         const saved = JSON.parse(localStorage.getItem(`atelier:${table.id}:website:${playerId}`) || "null");
@@ -188,7 +193,7 @@ export async function casinoPage(ctx) {
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
       const [sdk, latest] = await Promise.all([
-        game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
+        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
         localWallet.enterGame(),
       ]);
       if (!active || run !== gameRun) return;
@@ -201,7 +206,15 @@ export async function casinoPage(ctx) {
         localStorage.setItem(key, streamId);
       }
       playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}"></div>`;
-      if (game.id === "cardoso-road") {
+      if (game.id === "blackjack" && !legacyBlackjack) {
+        slot = sdk.mountBlackjackMultiplayer(playArea.querySelector(".casino-slot-mount"), {
+          uid,
+          onBalance: balance => { if (active && run === gameRun) { onlineBalance = balance; wallet = { ...wallet, balance }; drawWallet(); } },
+          onExit: message => { if (active && run === gameRun) { closeGame(); modal("Mesa de Blackjack", `<p>${esc(message)}</p>`); void loadWallet(true); } },
+        });
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "cardoso-road") {
         slot = sdk.mountCardoso(playArea.querySelector(".casino-slot-mount"), localWallet);
         await slot.ready;
         if (!active || run !== gameRun) return;

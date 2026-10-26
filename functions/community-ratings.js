@@ -192,6 +192,10 @@ export function communityRatingFunctions(rebuild) {
             "required",
           );
         }
+        value.communityBatchToken = randomUUID();
+        tx.set(db.doc(`communityWork/${targetId}`), {
+          token: value.communityBatchToken, pending: true, updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
         tx.set(ref, value);
         return {
           submitted: true,

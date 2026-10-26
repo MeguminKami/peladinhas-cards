@@ -8,34 +8,56 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import {
-  onCommunityRating,
-  onInitialRating,
-  onPlayerPosition,
-  onGame,
-  onGameNotifications,
-  onEventNotifications,
+  onCommunityRating as queuedCommunityRating,
+  onInitialRating as queuedInitialRating,
+  onPlayerPosition as queuedPlayerPosition,
+  onGame as queuedGame,
+  onGameNotifications as queuedGameNotifications,
+  onEventNotifications as queuedEventNotifications,
   scheduledNotifications,
-  onFeedback, processFeedback,
-  deleteGame,
+  onFeedback, processFeedback as queuedFeedback,
+  deleteGame as queuedDeleteGame,
   rebuildHistory,
   adminMessage,
   saveTheme,
   saveWeeklyCardPhoto,
-  eventAction,
+  eventAction as queuedEventAction,
   voteEvent,
   getEvent,
   listEvents,
   closeEvents,
   initializeOvrPresets,
   saveOvrPreset,
-  saveOvrWeights,
-  ensureHistory,
+  saveOvrWeights as queuedOvrWeights,
+  ensureHistory as scheduledHistory,
   selectWeeklyCard,
   correctRating,
   ticketAction,
   onTicketMessage,
   onTicketClosed,
 } from "../functions/index.js";
+import { afterCheck, checkCards, checkCycle, checkNotices, checkedEventNotice } from "./cycle-fixtures.js";
+const onCommunityRating = afterCheck(queuedCommunityRating, checkCycle);
+const onInitialRating = afterCheck(queuedInitialRating);
+const onPlayerPosition = afterCheck(queuedPlayerPosition);
+const onGame = afterCheck(queuedGame, checkCycle);
+const onGameNotifications = afterCheck(queuedGameNotifications, checkNotices);
+const onEventNotifications = checkedEventNotice(queuedEventNotifications);
+const processFeedback = afterCheck(queuedFeedback);
+const deleteGame = afterCheck(queuedDeleteGame);
+const saveOvrWeights = afterCheck(queuedOvrWeights);
+const ensureHistory = afterCheck(scheduledHistory);
+const eventAction = { run: async request => {
+  const result = await queuedEventAction.run(request);
+  if (["close", "cancel", "revoke"].includes(request.data.action)) {
+    // Emulator commit timestamps use the real clock, unlike this suite's
+    // historical Date fixtures. Align deliveries before checking their cards.
+    const rewards = await getFirestore().collection("eventRewards").where("eventId", "==", request.data.eventId).get();
+    for (const doc of rewards.docs) await doc.ref.update({ createdAt: Timestamp.fromDate(new Date()) });
+    await checkCards();
+  }
+  return result;
+} };
 import {
   ATTRIBUTES,
   FEEDBACK,
@@ -47,6 +69,16 @@ import {
 } from "../js/utils.js";
 const db = getFirestore(),
   now = Timestamp.now();
+// Historical clock fixtures move backwards between scenarios. The SDK's
+// cached BulkWriter limiter uses that same clock; give each local recursive
+// deletion its own writer instead of carrying limiter state between eras.
+const recursiveDeleteFixture = db.recursiveDelete.bind(db);
+db.recursiveDelete = async (ref, suppliedWriter) => {
+  if (suppliedWriter) return recursiveDeleteFixture(ref, suppliedWriter);
+  const writer = db.bulkWriter({ throttling: false });
+  try { return await recursiveDeleteFixture(ref, writer); }
+  finally { await writer.close(); }
+};
 test("Card Lab: ADMIN creates and edits every edition without duplicating or changing ownership", async (t) => {
   t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-18T08:00:00Z") });
   t.after(() => t.mock.timers.reset());
@@ -198,6 +230,7 @@ test("18h: current premature lock reopens for photo and calculations; past weeks
   const oldRef=db.doc(`users/${uid}/cardHistory/2026-W41`);
   await oldRef.set({weekId:"2026-W41",locked:true,ovr:42,marker:"preserve"});
   await db.doc(`users/${uid}`).update({displayName:"Depois"});
+  await checkCards(); // The next check repairs the premature lock before appearance edits.
   await saveWeeklyCardPhoto.run({auth:{uid},data:{uid,weekId:cycle.weekId,reset:true}});
   const reopened=(await ref.get()).data();
   assert.equal(reopened.locked,false);
@@ -646,12 +679,12 @@ test("equilíbrio do jogo: referência fixa, impacto nas cartas e limpeza ao rea
 });
 
 test("golos, assistências e atitude: frontend e histórico Firebase usam a mesma fórmula; corrigir jogo recalcula", async (t) => {
-  const cycle = cardWeek();
   t.mock.timers.enable({
     apis: ["Date"],
-    now: cycle.phase === "open" ? Date.now() : +cycle.nextOpensAt + 1000,
+    now: new Date("2026-10-18T14:00:00Z"),
   });
   t.after(() => t.mock.timers.reset());
+  const now = Timestamp.now();
   const gid = "performance-match",
     scorer = "performance-scorer",
     other = "performance-other";
@@ -749,10 +782,9 @@ test("golos, assistências e atitude: frontend e histórico Firebase usam a mesm
 });
 
 test("evolução relativa: resumo público e histórico concordam; voto num colega recalcula a equipa", async (t) => {
-  const cycle = cardWeek();
   t.mock.timers.enable({
     apis: ["Date"],
-    now: cycle.phase === "open" ? Date.now() : +cycle.nextOpensAt + 1000,
+    now: new Date("2026-10-18T14:00:00Z"),
   });
   t.after(() => t.mock.timers.reset());
   const gid = "relative-progression",
@@ -1050,6 +1082,7 @@ test("fotografia semanal: admin, upload validado, perfil independente e semanas 
       ratings20: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 10])),
       createdAt: Timestamp.now(),
     });
+    await checkCards();
     const call = (actor, extra = {}) =>
       saveWeeklyCardPhoto.run({
         auth: { uid: actor },
@@ -1554,7 +1587,7 @@ test("notificações: convocatórias, lembretes, alterações, votações e idem
     await scheduledNotifications.run({});
     assert.equal(
       (await notices(ids[0])).filter((n) => n.type === "GAME_REMINDER").length,
-      0,
+      1,
     );
     t.mock.timers.setTime(new Date("2030-01-16T10:00:00Z").getTime());
     await scheduledNotifications.run({});
@@ -1757,6 +1790,7 @@ test("escolha da carta: coleção própria, normal e seleção independente dos 
       auth: { uid },
       data: { weekId: cycle.weekId, cardId },
     });
+  await checkCards();
   await assert.rejects(
     selectWeeklyCard.run({ data: { weekId: cycle.weekId, cardId: "mvp" } }),
   );

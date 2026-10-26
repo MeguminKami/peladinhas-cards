@@ -16,7 +16,7 @@ try{
    Object.defineProperty(crypto,'getRandomValues',{value:a=>{a.fill(4294967295);return a;}});
   },{step,mode});
   await page.goto(origin+"/game.html");await page.waitForFunction(()=>!document.querySelector('#play')?.disabled);await page.waitForTimeout(900);
-  const inspect=()=>page.locator('canvas').evaluate(el=>JSON.parse(el.dataset.camera));const before=await inspect(),expected=VILLAINS[stageVillain(step)];
+  const inspect=()=>page.locator('canvas').evaluate(el=>JSON.parse(el.dataset.camera));const before=await inspect(),expected=VILLAINS[stageVillain(step,{id:`fixture-${step}`})];
   assert.equal(before.stageEnemies[step].id,expected.id);assert.equal(before.stageEnemies[step].drawn,true);
   await page.locator('#play').click();await page.waitForFunction(()=>!!JSON.parse(document.querySelector('canvas').dataset.camera).attacker);await page.waitForTimeout(reduced?30:650);
   let after=await inspect();assert.equal(after.attacker.id,expected.id);assert.equal(after.attacker.stage,step);assert.equal(after.stageEnemies[step].drawn,false,'failed stage must not leave a duplicate villain behind');

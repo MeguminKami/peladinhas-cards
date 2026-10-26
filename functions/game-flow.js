@@ -158,7 +158,7 @@ export function writeFeedbackRevision(tx, ref, previous, vote) {
 
 export function gameFlowFunctions(syncGame = async () => {}) {
   const db = () => getFirestore();
-  const gameAction = policyCall("gameAction", async (request) => {
+  const gameAction = policyCall("gameAction", { timeoutSeconds: 540 }, async (request) => {
     assertFeature("games");
     const actor = request.systemActor;
     if (!canManage(actor, "games") && actor.role !== "dbs")
@@ -172,7 +172,7 @@ export function gameFlowFunctions(syncGame = async () => {}) {
     const ref = gameId
       ? db().doc(`games/${gameId}`)
       : db().collection("games").doc();
-    await db().runTransaction(async (tx) => {
+    const closingGame = await db().runTransaction(async (tx) => {
       const [existing, guard, openGames] = await Promise.all([
         tx.get(ref),
         tx.get(db().doc("gameFlow/open")),
@@ -218,6 +218,7 @@ export function gameFlowFunctions(syncGame = async () => {}) {
       const now = new Date().toISOString();
       const output = {
         ...value,
+        derivedWorkToken: randomUUID(),
         ...(prior?.ratingWaivers ? {ratingWaivers:prior.ratingWaivers} : {}),
         creatorId: prior?.creatorId || request.auth.uid,
         createdAt: prior?.createdAt || FieldValue.serverTimestamp(),
@@ -278,6 +279,8 @@ export function gameFlowFunctions(syncGame = async () => {}) {
           if (next !== original) tx.set(snap.ref, next);
         }
       tx.set(ref, output);
+      tx.set(db().doc(`feedbackWork/${ref.id}`), { token: output.derivedWorkToken,
+        pending: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
       tx.set(db().collection("gameAudit").doc(), {
         gameId: ref.id,
         actorId: request.auth.uid,
@@ -296,11 +299,12 @@ export function gameFlowFunctions(syncGame = async () => {}) {
           gameId: null,
           updatedAt: FieldValue.serverTimestamp(),
         });
+      return closing;
     });
     // Numeric attempts are settled in this request. Triggers and the scheduled
     // sweep also retry if a reward budget or temporary service error intervenes.
     let settlementPending = false;
-    if (value.status !== "open")
+    if (closingGame)
       try {
         await syncGame(ref.id);
       } catch (error) {

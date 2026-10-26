@@ -39,6 +39,7 @@ export const read = async (path) => {
   const s = await getDoc(doc(db, path));
   return s.exists() ? { ...s.data(), id: s.id } : null;
 };
+export const watchBlackjack = (callback, error) => onSnapshot(doc(db, 'casinoBlackjack/main'), snapshot => callback(snapshot.data() || null), error);
 export const users = () => list("users");
 export const getHome = async () => {
   for (let attempt = 0; ; attempt++) {

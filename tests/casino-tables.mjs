@@ -81,7 +81,9 @@ try {
   for (const key of ["noCalls", "changedRejected", "insufficientRejected", "gated"]) assert.equal(accounting[key], true, key);
   await page.evaluate(() => sessionStorage.clear());
   await page.goto(origin + "/#/casino");
-  for (const game of ["roulette", "blackjack"]) {
+  // Multiplayer now has its own five-browser workflow below. This section
+  // exercises the roulette SDK and the legacy local-wallet table adapter.
+  for (const game of ["roulette"]) {
     await page.locator(`[data-casino-game="${game}"]`).click();
     const frame = page.frameLocator(".casino-table-mount iframe");
     await frame.locator("[data-balance]").filter({ hasText: /[0-9]/ }).waitFor();
@@ -123,23 +125,6 @@ try {
     if (game === "roulette") {
       await frame.locator(".number-grid [data-bet-id]").first().click();
       await frame.locator('[data-action="spin"]').click();
-    } else {
-      await frame.locator('[data-seat-join="0"]').click();
-      await frame.locator('[data-seat-bet="0"]').click();
-      await frame.locator('[data-action="deal"]').click();
-      // A natural may settle immediately; only decisions have a stable leave guard.
-      const phase = await page.evaluate(() => JSON.parse(localStorage.getItem("atelier:blackjack:website:pedro:official-2026-10-26-cardoso-reset")).state.round?.phase);
-      if (["play", "insurance"].includes(phase)) {
-        await page.locator("[data-close-slot]").last().click();
-        assert.equal(await page.locator(".casino-table-mount iframe").count(), 1);
-      }
-      for (let i = 0; i < 30; i++) {
-        const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("atelier:blackjack:website:pedro:official-2026-10-26-cardoso-reset")));
-        if (!saved.state.round && !saved.pending) break;
-        if (await frame.locator('[data-action="declineAll"]:not(:disabled)').count()) await frame.locator('[data-action="declineAll"]').click();
-        else if (await frame.locator('[data-action="stand"]:not(:disabled)').count()) await frame.locator('[data-action="stand"]').click();
-        await page.waitForTimeout(200);
-      }
     }
     await page.waitForFunction(game => {
       const saved = JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`));
@@ -161,3 +146,4 @@ try {
   await browser.close();
   await new Promise(resolve => server.close(resolve));
 }
+await import('./blackjack-browser.mjs');

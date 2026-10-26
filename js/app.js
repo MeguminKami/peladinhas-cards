@@ -244,31 +244,6 @@ const ctx = {
   },
 };
 let authSession = 0;
-let historyOwner = null;
-let historyUpdatedAt = 0;
-let historyTask = null;
-function ensureOwnHistory() {
-  const owner = currentUser?.uid;
-  if (
-    !owner ||
-    (historyOwner === owner &&
-      (historyTask || Date.now() - historyUpdatedAt < 300000))
-  )
-    return;
-  historyOwner = owner;
-  const task = DB.callAdmin("ensureHistory", {})
-    .then(() => {
-      if (historyOwner === owner && currentUser?.uid === owner) {
-        historyUpdatedAt = Date.now();
-        ctx.detailCache.delete(`history:${owner}`);
-      }
-    })
-    .catch(() => {})
-    .finally(() => {
-      if (historyTask === task) historyTask = null;
-    });
-  historyTask = task;
-}
 let routeNumber = 0;
 const playerFilters = { search: "", sort: "ovr", direction: "desc" };
 const searchable = (value) =>
@@ -592,7 +567,6 @@ async function route({ cachedOnly = false } = {}) {
       return;
     }
     header();
-    if (!ctx.user.disabled && !homeOnly) ensureOwnHistory();
     if (ctx.user.disabled)
       return ctx.render(
         empty("Conta desativada", "Contacta o apoio da liga.", "", "shield"),

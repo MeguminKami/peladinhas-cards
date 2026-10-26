@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { ensureHistory, selectWeeklyCard, onFeedback, processFeedback } from "../functions/index.js";
+import { ensureHistory as scheduledHistory, selectWeeklyCard, onFeedback, processFeedback as queuedFeedback } from "../functions/index.js";
+import { afterCheck } from "./cycle-fixtures.js";
+const ensureHistory = afterCheck(scheduledHistory);
+const processFeedback = afterCheck(queuedFeedback);
 import {
   refreshPlayerCollection,
   collectionContext,

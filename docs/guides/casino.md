@@ -30,17 +30,17 @@ Em Administração → Jogadores, **Moedas** permite adicionar de 0 a 10 000 DJC
 - Cada jogada é primeiro guardada atomicamente em IndexedDB, com saldo, RNG/progresso e recibo local.
 - A entrada no casino consulta o saldo do utilizador. Entrar em qualquer jogo confirma primeiro os lotes pendentes e obtém o saldo comum atualizado antes de montar o SDK. Se essa consulta falhar, o jogo apresenta erro e permite tentar novamente; não abre com um saldo antigo como alternativa.
 - As slots confirmam os totais após **15 spins normais**, sem confirmar a meio de um bónus. O fim de um bónus confirma o resultado completo, incluindo retriggers.
-- Blackjack confirma **uma vez no fim da ronda**, depois de todas as mãos, splits e decisões. Débitos intermédios ficam locais. A Roleta confirma no fim de cada ronda.
+- O Blackjack abre agora uma [mesa pública multiplayer](blackjack-multiplayer.md): apostas reservadas online, decisões validadas no servidor e pagamentos atómicos por jogador. Rondas locais antigas podem terminar pelo adaptador anterior. A Roleta confirma no fim de cada ronda.
 - Sair do jogo, navegar, ocultar a página, logout e recuperação de entrada também tentam guardar alterações pendentes. Não existe polling nem gravação por temporizador.
 - Cada dispositivo abre uma sessão independente. Não existe bloqueio global por dispositivo. Na mesma origem, a proteção entre abas impede alterações simultâneas ao mesmo snapshot.
-- Todos os dispositivos usam o saldo comum completo do utilizador. Não existem reservas, parcelas nem distribuição manual de moedas.
+- Os jogos com checkpoints usam o saldo comum completo do utilizador, sem parcelas nem distribuição manual. O Blackjack multiplayer reserva cada aposta no servidor antes de distribuir.
 - Checkpoints concorrentes são serializados pela transação Firestore e nunca tornam o saldo confirmado negativo. Se outro dispositivo tiver consumido o saldo necessário para confirmar um lote, o servidor recusa esse lote sem o alterar. O pedido exato permanece guardado e novas apostas nessa sessão param até recuperar a confirmação. Depois de haver saldo suficiente, repetir o pedido confirma-o uma única vez.
 - Com checkpoints por lotes, dispositivos podem iniciar apostas usando o mesmo saldo anterior à atualização. Este modelo impede saldo negativo no Firebase, mas não garante prevenção de todo o gasto local concorrente. Para garantir esse limite antes de cada aposta seria necessário validar cada aposta online ou reservar fundos; nenhuma dessas opções faz parte do fluxo pedido.
 - Cada confirmação leva sequência e totais acumulados de débitos e prémios. O servidor aplica apenas a diferença em transação, preservando recompensas e envios administrativos concorrentes.
 - Respostas perdidas conservam exatamente o pedido até recuperação. Não apagar IndexedDB ou pedidos pendentes para resolver erros.
 - Falhas de rede não provocam tentativas em todos os spins: uma nova tentativa automática por quantidade só acontece após outros 15 spins normais. Fim de bónus, fim de ronda, atualização manual e entrada são também pontos de recuperação. Não existe repetição infinita por temporizador.
 
-O estado dos jogos fica no navegador. O servidor verifica identidade, sequência e contabilidade; não prova que um resultado veio de um motor intacto. As regras negam acesso direto a carteiras e recibos, incluindo por administradores.
+Nos jogos com checkpoints, o estado fica no navegador: o servidor verifica identidade, sequência e contabilidade, sem provar a origem do resultado. No Blackjack multiplayer, o servidor controla também o motor, o baralho privado, os turnos e os resultados. As regras negam acesso direto a carteiras e recibos, incluindo por administradores.
 
 ## Código e publicação
 
@@ -53,7 +53,7 @@ npx.cmd firebase deploy --only "functions:peladinhas:getCasinoWallet,functions:p
 npm.cmd run deploy:frontend
 ```
 
-Não são necessárias alterações de regras, índices, Storage ou recálculo histórico. Publicar é separado dos testes locais; estes comandos não foram executados durante a implementação.
+Estes comandos publicam a economia e os checkpoints. Para o Blackjack multiplayer, seguir também os [seletores das novas funções e regras](blackjack-multiplayer.md#código-testes-e-publicação). Não são necessários índices, Storage ou recálculo histórico. Publicar é separado dos testes locais; estes comandos não foram executados durante a implementação.
 
 ## Desenvolvimento offline
 
@@ -67,7 +67,7 @@ npm.cmd ci --prefix games/roleta-europeia-3d
 npm.cmd run dev:casino
 ```
 
-Abrir `http://localhost:8081/#/casino`. O servidor usa fixtures, sem Firebase real, e 1000 créditos de desenvolvimento numa carteira nova. O site oficial começa com 100. O comando recompila os jogos; depois de alterar fontes de `games`, reiniciar o comando ou executar `npm.cmd run build:casino`. As builds em `assets/games` são geradas e ignoradas no Git.
+Abrir `http://localhost:8081/#/casino`. O servidor usa fixtures, sem Firebase real, e 1000 créditos de desenvolvimento numa carteira nova. O site oficial começa com 250 DJC. A mesa multiplayer de desenvolvimento tem carteiras fictícias próprias de 250 DJC e estado em memória, partilhado entre browsers desse servidor local. O comando recompila os jogos; depois de alterar fontes de `games`, reiniciar o comando ou executar `npm.cmd run build:casino`. As builds em `assets/games` são geradas e ignoradas no Git.
 
 Node 24.16+ para compilar os jogos; runtime das Functions: Node 22. O backend usa Java 21 e [firebase.casino.json](../../firebase.casino.json), com projeto `demo-` e Firestore em 8188.
 

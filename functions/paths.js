@@ -1,3 +1,4 @@
+import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
 import { pathGameCoreSignature } from "./path-game-signature.js";
 import { sameData } from "./equal-data.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
@@ -72,7 +73,7 @@ export function pathGameSignature(game) {
 
 export function pathFunctions(rebuildPlayer) {
   const db = () => getFirestore();
-  async function transaction(uid, input = { action: "sync" }) {
+  async function transaction(uid, input = { action: "sync" }, settle = false) {
     return db().runTransaction(async (tx) => {
       const ref = db().doc(`pathStates/${uid}`);
       const [
@@ -130,7 +131,7 @@ export function pathFunctions(rebuildPlayer) {
           [
             ...new Set(
               (state.pending || [])
-                .filter((attempt) => attempt.windowVersion >= 3 &&
+                .filter((attempt) => settle && attempt.windowVersion >= 3 &&
                   pathUsesRatings(attempt.offer.objective) &&
                   games.find(game => game.id === attempt.gameId)?.status === "closed")
                 .map((attempt) => attempt.gameId),
@@ -182,6 +183,7 @@ export function pathFunctions(rebuildPlayer) {
         changed = true;
       }
       for (const previous of state.history) {
+        if (!settle) break;
         if (!previous.signature) continue;
         const game = games.find((game) => game.id === previous.gameId);
         const signature = previous.signature.startsWith("core:")
@@ -208,6 +210,7 @@ export function pathFunctions(rebuildPlayer) {
         ...(state.pending || []).map((row) => row.id),
         ...(state.active ? [state.active.id] : []),
       ]) {
+        if (!settle) break;
         if (blocked) break;
         const active =
           (state.pending || []).find((row) => row.id === attemptId) ||
@@ -604,9 +607,9 @@ export function pathFunctions(rebuildPlayer) {
       return { ...state, history: state.history.slice(-30) };
     });
   }
-  async function sync(uid, input) {
-    const state = await transaction(uid, input);
-    if (state.rebuildPending) {
+  async function sync(uid, input, settle = false) {
+    const state = await transaction(uid, input, settle);
+    if (settle && state.rebuildPending) {
       await rebuildPlayer(uid);
       // Clear only the revision that was rebuilt; concurrent deliveries remain pending.
       await db().runTransaction(async (tx) => {
@@ -627,6 +630,10 @@ export function pathFunctions(rebuildPlayer) {
   });
   const pathAction = policyCall("pathAction", async (request) => {
     const input = request.data || {};
+    if (input.action === "sync") {
+      const state = (await db().doc(`pathStates/${request.auth.uid}`).get()).data() || emptyPathState(request.auth.uid);
+      return upgradePathProposals(state);
+    }
     if (input.action === "acknowledge") {
       if (
         typeof input.uid !== "string" ||
@@ -644,11 +651,11 @@ export function pathFunctions(rebuildPlayer) {
   async function sweep({ gameId, summaryId } = {}) {
     if (
       policyAt().features.mode !== "normal" ||
+      policyAt().automation.events === false ||
       !policyAt().features.missions ||
       !policyAt().features.claims
     )
       return;
-    const states = await db().collection("pathStates").get();
     const linked = gameId
       ? new Set(
           (
@@ -656,6 +663,11 @@ export function pathFunctions(rebuildPlayer) {
           ).docs.map((doc) => doc.id),
         )
       : new Set();
+    const game = gameId ? (await db().doc(`games/${gameId}`).get()).data() : null;
+    const ids = gameId ? [...new Set([...linked, ...participants(game || {})])] : [];
+    const states = gameId
+      ? { docs: ids.length ? (await db().getAll(...ids.map(uid => db().doc(`pathStates/${uid}`)))).filter(doc => doc.exists) : [] }
+      : await db().collection("pathStates").get();
     const failures = [];
     for (const doc of states.docs) {
       const state = doc.data();
@@ -678,7 +690,7 @@ export function pathFunctions(rebuildPlayer) {
         await sync(doc.id, {
           action: "sync",
           ...(linked.has(doc.id) ? { reviewGameId: gameId } : {}),
-        });
+        }, true);
       } catch (error) {
         if (error.code !== "permission-denied")
           failures.push(`${doc.id}: ${error.message}`);
@@ -691,21 +703,12 @@ export function pathFunctions(rebuildPlayer) {
     syncGame: (gameId) => sweep({ gameId }),
     getPath,
     pathAction,
-    onPathGame: policyWritten("games/{gid}", (event) => {
-      const before = event.data.before.data(), after = event.data.after.data();
-      if (before && after) {
-        const {ratingWaivers:oldWaivers,...oldGame} = before;
-        const {ratingWaivers:newWaivers,...newGame} = after;
-        if (sameData(oldGame,newGame)) return;
-      }
-      return sweep({ gameId: event.params.gid });
-    }),
-    onPathSummary: policyWritten("gameSummaries/{gid}", (event) =>
-      sweep({ summaryId: event.params.gid }),
-    ),
+    // Retain deployed trigger identities without performing intermediate sweeps.
+    onPathGame: policyWritten("games/{gid}", () => {}, { disabled: true }),
+    onPathSummary: policyWritten("gameSummaries/{gid}", () => {}, { disabled: true }),
     settlePaths: policySchedule(
       "settlePaths",
-      { schedule: "0 * * * *", timeZone: "Europe/Lisbon" },
+      { schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon" },
       () => sweep(),
     ),
   };

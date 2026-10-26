@@ -1,7 +1,7 @@
 /* The game surface has a finite height supplied by its host, not a page layout. */
 html,body{height:100%;min-height:0;background:#10121e}
 body{display:block}
-.game{height:100%;width:100%;max-width:none;margin:0;padding:6px;display:grid;grid-template-rows:36px minmax(180px,1fr) auto auto 44px;gap:4px;overflow:auto;align-content:stretch}
+.game{height:100%;width:100%;max-width:none;margin:0;padding:6px;display:grid;grid-template-rows:36px minmax(180px,1fr) auto auto auto;gap:4px;overflow:auto;align-content:stretch}
 .game>header{grid-row:1;min-height:0;padding:0 6px;gap:12px;flex-wrap:nowrap}
 .game>header h1{font-size:17px;border:0;padding:0;white-space:nowrap}
 .game>header h1>span{display:none}
@@ -68,7 +68,7 @@ dialog{max-height:calc(100dvh - 24px)}
  .console .primary{grid-column:4;grid-row:1}
 }
 @media(max-width:620px){
- .game{padding:4px;gap:4px;grid-template-rows:32px minmax(180px,1fr) auto auto 44px}
+ .game{padding:4px;gap:4px;grid-template-rows:32px minmax(180px,1fr) auto auto auto}
  .game>header{gap:8px;padding:0 2px}
  .game>header h1{font-size:15px}
  .game>header .demo{font-size:6px;padding:4px 5px}
@@ -96,10 +96,20 @@ dialog{max-height:calc(100dvh - 24px)}
  .console .cashout span{font-size:10px}
  .console .cashout strong{font-size:18px}
  .console .cashout small{font-size:8px}
- .console .primary{grid-column:2;grid-row:2;min-height:54px}
+ .console .primary{grid-column:2;grid-row:2;min-height:54px;font-size:18px;gap:6px}
  .console .primary .again-label{font-size:10px}
  .game>footer{padding:0 4px;gap:8px}
  footer .speech{font-size:9px}
  footer #training-open{padding:8px 10px;font-size:10px}
 }
-@media(max-height:430px){.game{grid-template-rows:32px minmax(160px,1fr) auto auto 44px}.game>.arena{min-height:160px}}
+@media(max-height:430px){.game{grid-template-rows:32px minmax(160px,1fr) auto auto auto}.game>.arena{min-height:160px}}
+
+/* Persistent music controls share the footer without shrinking the touch target. */
+.game>footer{flex-wrap:wrap;padding-block:2px;gap:8px 16px}
+.music-control{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 370px}
+.music-control button{min-height:44px;font-size:10px;padding:8px;flex:none}
+.music-control label{font-size:10px;margin:0;letter-spacing:0}
+.music-control input{width:80px;min-width:50px;min-height:44px;flex:1;accent-color:#bbfa77}
+.music-control output{font-size:10px;min-width:30px;color:#bbfa77}
+footer .speech{flex:1 1 180px}
+@media(max-width:620px){footer .speech{flex:1 1 100px}.music-control{flex-basis:100%}.music-control input{width:auto}.console .primary{font-size:18px;gap:6px}.console .primary span{font-size:16px}}

@@ -1,3 +1,4 @@
+import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
 import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { getApp } from "firebase-admin/app";
@@ -114,8 +115,10 @@ export function maintenanceFunctions({
       .get();
     const rate = await db().collection("systemRateLimits").get();
     const operations = await db().collection("systemJobs").get();
+    const cycles = await db().collection("automationCycles").where("expiresAt", "<", new Date()).get();
     const p = policyAt();
     const candidates = [
+      ...cycles.docs,
       ...notifications.docs.filter(
         (doc) =>
           +asDate(doc.data().createdAt) <
@@ -945,11 +948,11 @@ export function maintenanceFunctions({
   const systemHeartbeat = policySchedule(
     "systemHeartbeat",
     {
-      schedule: "0 * * * *",
+      schedule: AUTOMATION_SCHEDULE,
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
     },
-    async () => {
+    async (event) => {
       // Publishing is time based; consumers select the applicable immutable version.
       const value = policyAt();
       await db().doc("systemStatus/policy").set({
@@ -998,7 +1001,7 @@ export function maintenanceFunctions({
             });
             return true;
           });
-          if (delivered) await rebuildPlayer(candidate.data().uid);
+          if (delivered && !event?.cycle) await rebuildPlayer(candidate.data().uid);
         }
       }
     },
@@ -1006,7 +1009,7 @@ export function maintenanceFunctions({
   const systemCleanup = policySchedule(
     "systemCleanup",
     {
-      schedule: "every 24 hours",
+      schedule: "0 8 * * *",
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
     },

@@ -64,7 +64,7 @@ As posições são registadas por DBS/admin no formulário do jogo. Não se dedu
 
 `cardCollections/{uid}` guarda conquistas, datas, validade e IDs dos jogos de prova. `cardSelections/{uid}` guarda a escolha atual. `cardPeriodAwards/{cycle}` garante um único fecho de cada ciclo. Só Functions podem escrever nestes documentos; membros ativos podem consultá-los. A mesma conquista permanente não é duplicada nem retirada por uma baixa de forma posterior.
 
-As conquistas são verificadas nos recálculos de cartas e por uma tarefa horária, que também fecha ciclos e prepara FUTTIES. O histórico existente é processado com as datas originais, sem renovar cartas temporárias antigas. As missões mostram pistas antes do desbloqueio; o seletor revela a condição depois da conquista. Apogeu, Legado, Titã e Carnaval nos designs originais ficam em reserva, sem atribuição automática; as identidades ativas usam TOTY, ICON, HEROES e BIRTHDAY quando aplicável.
+As conquistas são verificadas nos ciclos das 08:00, 12:00, 17:00 e 22:00 de Lisboa e no fecho de um jogo. Estes ciclos também apuram prémios de período e preparam FUTTIES. O histórico existente é processado com as datas originais, sem renovar cartas temporárias antigas. As missões mostram pistas antes do desbloqueio; o seletor revela a condição depois da conquista. Apogeu, Legado, Titã e Carnaval nos designs originais ficam em reserva, sem atribuição automática; as identidades ativas usam TOTY, ICON, HEROES e BIRTHDAY quando aplicável.
 
 Testes: `npm.cmd test`, `npm.cmd run test:backend`, `npm.cmd run test:rules`, `npm.cmd run test:card-choice` e `npm.cmd run test:card-collection`.
 

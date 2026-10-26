@@ -1,5 +1,11 @@
 // Apenas interceptado pelo teste de browser; nunca importado pela aplicação real.
 import { ATTRIBUTES } from "../../js/utils.js";
+export function watchBlackjack(callback, error) {
+  let active=true,last='';
+  const poll=async()=>{try{const response=await fetch('/__blackjack');if(!response.ok)throw Error('Fixture indisponível');const text=await response.text();if(active&&text!==last){last=text;callback(JSON.parse(text));}}catch(e){if(active)error?.(e);}};
+  void poll();const timer=setInterval(poll,300);
+  return ()=>{active=false;clearInterval(timer);};
+}
 import { cardWeek } from "../../js/card-week.js";
 const now = {
   seconds: Math.floor(Date.now() / 1000),
@@ -170,6 +176,12 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if(name === 'blackjackAction') {
+    const response=await fetch('/__blackjack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:window.__blackjackUid||'pedro',name:window.__blackjackName||'Pedro',input:data})});
+    const body=await response.json();
+    if(!response.ok){const error=new Error(body.error);error.code='functions/failed-precondition';throw error;}
+    return {data:body};
+  }
   if(name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession' || name === 'grantCasinoCoins') {
     const {casinoFixture}=await import('../tests/fixtures/casino.js');
     return casinoFixture(name,data);

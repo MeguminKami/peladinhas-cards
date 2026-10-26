@@ -1,3 +1,4 @@
+import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
 import { grant } from "./event-management.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
 import { createReadContext } from "./read-context.js";
@@ -443,7 +444,7 @@ export function eventFunctions(rebuild) {
   });
   const closeEvents = policySchedule("closeEvents",
     {
-      schedule: "0 * * * *",
+      schedule: AUTOMATION_SCHEDULE,
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
     },

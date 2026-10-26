@@ -2,6 +2,10 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signedIn() { return request.auth != null; }
+  match /casinoBlackjack/{id} {
+   allow get: if id == 'main' && active();
+   allow list, write: if false;
+  }
   match /homeSignals/{uid} {
    allow get: if active() && (uid == 'global' || uid == request.auth.uid);
    allow list, write: if false;

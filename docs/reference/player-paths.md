@@ -44,7 +44,7 @@ No fecho, objetivos sem avaliações apuram imediatamente, incluindo combinaçõ
 
 ## Avaliações: 48 horas e sete votos
 
-Uma missão que inclua avaliações tem um prazo máximo de **48 horas desde `closedAt`**. Na verificação horária, pode concluir antes se tiver **sete avaliações reais válidas em cada critério** e cumprir todas as condições mesmo atribuindo **duas estrelas a todos os votos em falta**. O denominador é o total de participantes distintos, incluindo o próprio jogador e suplentes. N/A e dispensas não reduzem esse denominador da projeção; créditos de dispensa não substituem os sete votos reais na antecipação. GR exige também autoavaliação numérica de GR antes de antecipar, pois uma autoavaliação N/A ainda em falta poderia invalidar a participação.
+Uma missão que inclua avaliações tem um prazo máximo de **48 horas desde `closedAt`**. Na verificação às 08:00, 12:00, 17:00 e 22:00 de Lisboa ou no fecho de um jogo, pode concluir antes se tiver **sete avaliações reais válidas em cada critério** e cumprir todas as condições mesmo atribuindo **duas estrelas a todos os votos em falta**. O denominador é o total de participantes distintos, incluindo o próprio jogador e suplentes. N/A e dispensas não reduzem esse denominador da projeção; créditos de dispensa não substituem os sete votos reais na antecipação. GR exige também autoavaliação numérica de GR antes de antecipar, pois uma autoavaliação N/A ainda em falta poderia invalidar a participação.
 
 A prova aplica-se a cada mínimo individual, à média entre critérios e às comparações estritas, além das condições numéricas do jogo. Por exemplo, sete notas 5 entre dez participantes projetam 4,1★; oito notas com média 4,5 projetam 4,0★. Só se entrega sucesso antecipado, nunca falha ou cancelamento antecipados por falta de amostra. A interface mostra tempo restante e votos; o relógio do navegador só apresenta a contagem, o servidor decide.
 
@@ -64,7 +64,7 @@ Nas propostas v4, não jogar a GR cancela sem penalização uma missão que exij
 
 Antes do prazo, o apuramento usa os votos originais atuais, filtrados e deduplicados, sem depender da publicação do resumo horário; não lê o registo de revisões nessa fase. Sem sucesso antecipado, às 48 horas reconstrói a última versão de cada voto até ao corte original, não o agregado atual. Edições ou submissões posteriores à entrega podem continuar a contar para o resto da aplicação, mas não mudam esta tentativa. Um processamento atrasado é idempotente e mantém o corte das 48 horas. Depois do prazo, a interface mostra **A apurar resultado** até à resposta do servidor.
 
-A regra de antecipação também se aplica às tentativas já pendentes (janela v3, propostas v3/v4), sem mudar metas, avanço, associação ao jogo ou prazo original. Não exige migração cloud nem reabre resultados entregues ou semanas fechadas. A tarefa `settlePaths` verifica de hora a hora; os triggers e ações de sincronização existentes também podem apurar uma tentativa.
+A regra de antecipação também se aplica às tentativas já pendentes (janela v3, propostas v3/v4), sem mudar metas, avanço, associação ao jogo ou prazo original. Não exige migração cloud nem reabre resultados entregues ou semanas fechadas. O ciclo coordenado executa `settlePaths` nos quatro horários e no fecho de jogo. Os triggers de resumos e os pedidos de sincronização das páginas não apuram tentativas.
 
 Após fechar o jogo, pode preparar-se outra missão num nó disponível, enquanto as anteriores ficam imutáveis em avaliação. Os nós que uma tentativa pode afetar, incluindo eventual excedente, ficam reservados. A falta de votos não obriga a gastar um reroll para continuar.
 
@@ -120,7 +120,7 @@ Os cálculos futuros das cartas abertas usam o novo teto. Não foi executado rec
 - `games/{gid}/pathVoteRevisions`: versões privadas dos votos, inacessíveis pelo navegador, incluindo administradores.
 - `pathGameLinks/{gid}/players/{uid}`: associação duradoura para revisão e proteção contra reutilização.
 
-O cliente não escreve jogos, feedback, progresso, propostas ou entregas diretamente. Callables verificam identidade, capacidades, políticas, transições e dados. Triggers, a recuperação horária com checkpoint e a atualização explícita retomam apuramentos pendentes. A página visível reage a versões pequenas e aos prazos conhecidos; consultar a [gestão de leituras e atualizações](home-data.md).
+O cliente não escreve jogos, feedback, progresso, propostas ou entregas diretamente. Callables verificam identidade, capacidades, políticas, transições e dados. Triggers, a processamento nos quatro ciclos diários e no fecho de jogo e a atualização explícita retomam apuramentos pendentes. A página visível reage a versões pequenas e aos prazos conhecidos; consultar a [gestão de leituras e atualizações](home-data.md).
 
 Consultar [testes e publicação da atualização anterior](../reports/path-update-2026-10-18.md) e o [deploy seletivo da variedade v4](../reports/path-variety-2026-10-19.md). Para a v4, publicar Functions consumidoras e frontend; não houve alterações de regras ou índices nesta atualização. Se a atualização anterior também estiver por publicar, os seus requisitos continuam aplicáveis.
 

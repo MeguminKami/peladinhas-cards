@@ -1,0 +1,18 @@
+# Vilões de comida — nível 2
+
+Gerados em 2026-10-26 com a ferramenta integrada imagegen, uma chamada por personagem. Referência visual inspecionada: `assets/enemy-oil.png`. Destino: `assets/villains/food-07.png` a `food-12.png`.
+
+Os seis PNG têm 1254 × 1254 px, ARGB e transparência real confirmada nos cantos. Todos foram inspecionados visualmente: corpo e extremidades completos, silhueta independente, sem cenário ou elementos Canvas. A serpente assenta na cauda enrolada.
+
+## Prompt comum
+
+Use case: stylized-concept. Generate ONE production game villain sprite, premium stylized 3D, glossy tactile food materials, sculpted volumetric face, detailed cinematic studio key lighting. Same visual quality as supplied reference, but no text or labels. TRUE transparent background alpha, no scenery, no platform, no shadow rectangle. Entire creature full body with feet visible, centered square composition, 10% transparent margins on all sides, facing slightly left, angry funny villain expression, readable silhouette at small scale. Organically fused food monster, ingredients form its anatomy rather than worn costume or separate props.
+
+## Sujeitos acrescentados ao prompt comum
+
+- **07:** Formidable cheeseburger and fried chicken fusion beast. Sesame brioche shell torso with layered melted cheddar and beef, two large crunchy fried chicken drumstick arms ending in claws, stout chicken nugget feet, menacing eyes embedded in upper bun, toothy cheese grin. Delicious oily highlights, golden breading, amber and orange palette.
+- **08:** Mutant pizza and french fries crab villain. Triangular thick pepperoni pizza torso is its face, bubbly melted cheese anatomy, curled crispy crust carapace, six chunky french fry legs, two huge crab pincers made from twisted fries bonded with melted cheddar. Fierce brows and grin naturally embedded in pizza surface. Greasy golden crust, red pepperoni, cheese drips. Powerful compact stance.
+- **09:** Evil donut and bacon serpent fusion, thick pink glazed donut ring forming a coiled muscular serpentine body, crispy bacon strips organically spiral through dough as scale armor, snarling face sculpted from fried dough with shiny chocolate horns and two small bacon claw arms. Coiled tail supports whole body clearly visible. Oil and sugar glossy highlights, delicious golden dough pores, ferocious but humorous.
+- **10:** Hotdog and melted cheese sausage brute. Muscular red grilled sausage body cradled in a split toasted bun forming chunky shoulder armor and back, flowing golden cheddar fused into massive fists and thick feet, mustard zigzag natural belly markings, angry sausage face with oversized brows and teeth. Anatomically a single food creature, powerful hunched pose, oily delicious toasted materials.
+- **11:** Chocolate cake and cooking oil ooze golem villain. Stacked decadent chocolate layer cake torso organically merging into golden translucent oily ooze muscular arms and squat feet. Dripping glossy dark ganache forms angry eyebrows, cake crumb face with glowing amber eyes, sharp caramel teeth. Clear glassy golden oil veins cutting through chocolate, chocolate frosted fist, broken cake layers. Unified heavy grounded silhouette, no bottle or accessories.
+- **12:** Fried chicken and waffle monster fusion. Massive crispy breaded fried chicken torso and head, golden waffle plates grow organically as broad shoulders and chest armor, maple syrup drips like molten golden glue between all anatomy, waffle fingers form crushing fists, stout fried chicken drumstick feet. Angry expressive eyes and snarling open mouth integrated into crunchy breading. Delicious realistic crumbs, butter sheen, warm golden and brown color, no tools no costume.

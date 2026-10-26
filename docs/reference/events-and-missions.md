@@ -54,7 +54,7 @@ O painel separa Eventos (classificação e vencedores) de Missões (objetivo e c
 
 A mesma lista de participantes determina votantes e candidatos. Mantém-se durante o evento, a menos que seja alterada explicitamente no editor. Até 20 posições premiadas, cada uma com recompensa própria; até 200 participantes e 10 escolhas distintas por votante. Um documento por votante: atualizar substitui o boletim e guarda a revisão na auditoria. Voto em si próprio, mínimo de votos, contagens em direto e confirmação ADMIN são configuráveis. Contagens em direto atualizam a consulta a cada cinco segundos. O desempate usa golos, participação ou identificador estável; igualdade final resolve-se sempre por identificador.
 
-Métodos: votação, classificação manual pelo ADMIN ou objetivos verificados. O scheduler abre agendados, fecha os prazos e processa expirações através da recuperação horária com checkpoint. O backend rejeita votos fora da janela, mesmo antes da execução do scheduler. Resultados que exigem confirmação ficam em revisão sem entregar prémios. Fecho e entrega são idempotentes, com IDs estáveis por evento/posição/jogador.
+Métodos: votação, classificação manual pelo ADMIN ou objetivos verificados. O scheduler abre agendados, fecha os prazos e processa expirações através da processamento nos quatro ciclos diários e no fecho de jogo. O backend rejeita votos fora da janela, mesmo antes da execução do scheduler. Resultados que exigem confirmação ficam em revisão sem entregar prémios. Fecho e entrega são idempotentes, com IDs estáveis por evento/posição/jogador.
 
 ## Objetivos de missões
 
@@ -166,7 +166,7 @@ As competições por objetivo aparecem nas Missões com o progresso do âmbito e
 
 A ordem de chegada é verificada pelos jogos finalizados. Quem atingir a meta antes fica à frente, mesmo que outra pessoa tenha um total maior mais tarde. Se a meta for atingida no mesmo jogo, aplica-se o desempate configurado; uma ordem fixa resolve a igualdade restante. Não existem tempos individuais de golos registados dentro do mesmo jogo.
 
-Ao preencher as posições premiadas, a competição encerra automaticamente (ou fica em revisão se exigir confirmação). A verificação ocorre ao finalizar/atualizar jogos e também através da recuperação horária com checkpoint. Com uma posição premiada, o primeiro jogador a atingir a meta vence; com várias, o pódio segue a ordem de conclusão. Missões continuam a recompensar cada participante que cumprir o objetivo.
+Ao preencher as posições premiadas, a competição encerra automaticamente (ou fica em revisão se exigir confirmação). A verificação ocorre ao finalizar/atualizar jogos e também através da processamento nos quatro ciclos diários e no fecho de jogo. Com uma posição premiada, o primeiro jogador a atingir a meta vence; com várias, o pódio segue a ordem de conclusão. Missões continuam a recompensar cada participante que cumprir o objetivo.
 
 ## Apresentação das recompensas
 

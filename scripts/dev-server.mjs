@@ -3,6 +3,8 @@ import { readFile, stat } from "node:fs/promises";
 import { resolve, dirname, relative, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+import { blackjackFixtureServer } from '../tests/fixtures/blackjack-server.mjs';
+const blackjackFixture = blackjackFixtureServer();
 const modeIndex = process.argv.indexOf("--mode");
 const mode = modeIndex < 0 ? "fixtures" : process.argv[modeIndex + 1];
 if (!["fixtures", "emulator", "production"].includes(mode)) throw Error("Modo local inválido.");
@@ -35,6 +37,7 @@ const types = {
 };
 const server = createServer(async (req, res) => {
   try {
+    if (mode === 'fixtures' && req.url === '/__blackjack') { await blackjackFixture(req,res); return; }
     if (!["GET", "HEAD"].includes(req.method)) {
       res.writeHead(405);
       res.end();

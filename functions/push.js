@@ -478,7 +478,7 @@ export function pushFunctions({
     });
   });
   const cleanupPushDeliveries = policySchedule("cleanupPushDeliveries",
-    { schedule: "every 24 hours", timeZone: "Europe/Lisbon" },
+    { schedule: "0 8 * * *", timeZone: "Europe/Lisbon" },
     async () => {
       // Bound each run; expiry is enforced by the acknowledgement endpoint as well.
       const expired = await db()

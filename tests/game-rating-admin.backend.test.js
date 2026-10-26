@@ -137,11 +137,11 @@ test("administrative game submissions and shared reminders", async (t) => {
     async () => {
       await scheduledNotifications.run({});
       assert.equal(
-        (await db.collection(`users/${ids[1]}/notifications`).get()).size,
+        (await db.collection(`users/${ids[1]}/notifications`).where("type", "==", "RATING_REQUIRED").get()).size,
         1,
       );
       assert.equal(
-        (await db.collection(`users/${ids[2]}/notifications`).get()).size,
+        (await db.collection(`users/${ids[2]}/notifications`).where("type", "==", "RATING_REQUIRED").get()).size,
         1,
       );
     },

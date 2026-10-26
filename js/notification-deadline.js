@@ -13,7 +13,7 @@ export function nextNotificationDeadline(
   { now = Date.now(), feedbackHours } = {},
 ) {
   let morning = Math.floor(now / 3600000) * 3600000 + 3600000;
-  while (Number(hours.format(morning)) !== 9) morning += 3600000;
+  while (Number(hours.format(morning)) !== 8) morning += 3600000;
   const deadlines = [morning];
   for (const game of games) {
     if (game.status === "closed" && game.closedAt)
@@ -24,7 +24,7 @@ export function nextNotificationDeadline(
     if (
       game.status === "open" &&
       game.scheduledAt &&
-      Number(hours.format(asDate(game.scheduledAt))) < 9
+      Number(hours.format(asDate(game.scheduledAt))) < 8
     )
       deadlines.push(+asDate(game.scheduledAt) - 2 * 3600000);
   }

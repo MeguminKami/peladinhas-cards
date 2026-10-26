@@ -18,13 +18,13 @@ Prompt de correção do rosto: «Authoritative REAL FACE of Cardoso. Correct all
 
 ## Coluna e áudio
 
-[food-monsters.png](./assets/food-monsters.png) é o atlas de referência dos quatro inimigos. O renderer usa agora imagens independentes: [óleo](./assets/enemy-oil.png), [bolo](./assets/enemy-cake.png), [hambúrguer](./assets/enemy-burger.png) e [fritadeira](./assets/enemy-fryer.png). Assim, os recortes não incluem fragmentos dos vizinhos. São animados por deslocação e rotação no Canvas; o motor não consulta as suas posições.
+[food-monsters.png](./assets/food-monsters.png) é o atlas de referência dos quatro inimigos. A primeira versão do renderer usava imagens independentes: [óleo](./assets/enemy-oil.png), [bolo](./assets/enemy-cake.png), [hambúrguer](./assets/enemy-burger.png) e [fritadeira](./assets/enemy-fryer.png). Estes quatro recursos foram preservados como referência. A versão ativa usa os 18 PNG completos descritos abaixo. Os sprites são animados por deslocação e rotação no Canvas; o motor não consulta as suas posições.
 
 As quatro imagens foram separadas com a ferramenta integrada `image_gen`, usando o atlas como referência. Prompt comum: «Isolate ONLY the selected character from the reference. Preserve its exact design, face, expression, materials and cartoon 3D appearance. Remove all other characters completely. Output ONE complete full-body monster centered, all hands, feet, cap/candles/basket handle/steam fully contained. True alpha transparent background, no glows, no backdrop, no cast shadow, no extra objects, no detached fragments. Standalone game sprite, not a sheet.» Seleções: primeira personagem, garrafa ÓLEO; segunda, bolo de chocolate com duas velas; terceira, hambúrguer com sésamo; quarta, fritadeira de inox com rodas e vapor.
 
 A coluna com identificação JBL é desenhada no [cenário](./scene.mjs), não corresponde a um modelo comercial específico e não implica parceria com a marca. Anéis, luz, pulsação e ondas sonoras são procedurais.
 
-O [áudio](./audio.mjs) combina música/efeitos sintetizados em Web Audio com as oito gravações fornecidas pelo utilizador. O jogo não usa síntese de voz do sistema nem chama serviços de voz externos. Os OGG mantêm os bytes originais; os WAV são alternativas PCM geradas localmente pelo descodificador do browser.
+O [áudio](./audio.mjs) combina duas faixas MP3 locais, efeitos de evento OGG, sinais de passo sintetizados e as oito falas do Cardoso. As faixas e os efeitos novos foram fornecidos pelo utilizador em 26/10/2026. O jogo não usa síntese de voz do sistema nem chama serviços de voz externos. Os OGG mantêm os bytes originais; os WAV são alternativas PCM geradas localmente pelo descodificador do browser.
 
 | Gravação | Evento |
 | --- | --- |
@@ -38,3 +38,23 @@ O [áudio](./audio.mjs) combina música/efeitos sintetizados em Web Audio com as
 | [Grito de cashout](./assets/voices/grito_de_cashout.ogg) | Levantamento |
 
 O nome original «uma_chupadela _de_cada-vez.ogg» foi normalizado para URL sem espaços. O [relatório de descodificação](./reports/voice-assets.json) regista os oito recursos verificados.
+
+
+## Atualização de 26/10/2026
+
+Os quatro [cenários e prompts](./ART-DIFFICULTIES.md) ativos são PNG panorâmicos 2172 × 724 (3:1). O [renderer](./scene.mjs) conserva a proporção natural com recorte cover. O [catálogo de vilões](./enemies.mjs) define 18 personagens: seis por tier, geradas individualmente como sprites PNG completos com transparência em [assets/villains](./assets/villains). As composições com acessórios Canvas foram removidas. A seleção usa o ID da ronda, mantém a identidade após recarregar e não altera probabilidades nem pagamentos.
+
+| Recurso | Utilização |
+| --- | --- |
+| [easy_medium_hard.mp3](./assets/audio/easy_medium_hard.mp3) | Fácil, normal e difícil, em loop |
+| [extreme.mp3](./assets/audio/extreme.mp3) | Extremo, em loop |
+| [starrt_1.ogg](./assets/audio/starrt_1.ogg) | Aposta aceite, na partida |
+| [win_1.ogg](./assets/audio/win_1.ogg) | Cash Out e vitória final |
+| [perdeu_1.ogg](./assets/audio/perdeu_1.ogg), [perdeu_2.ogg](./assets/audio/perdeu_2.ogg) | Derrotas alternadas |
+
+A barra de volume da música permanece no rodapé, independente do volume de efeitos/vozes no menu. A música inicia após interação, pausa ao ocultar o jogo e muda de faixa ao escolher extremo. As preferências ficam no dispositivo. O fluxo visível é Apostar (reserva a aposta na partida), Avançar (uma tentativa por clique) e Cash Out (disponível após primeiro sucesso).
+
+Validação local: testes de motor/apresentação e verificação no browser em 320/390/768/1440 px, incluindo fluxo e controlo de música, através de `node tests/update-browser.mjs` com `npm.cmd run dev` ativo. Sem consulta Firebase real ou publicação.
+
+
+A [galeria dos 18 vilões e quatro fundos](./art-gallery.html) permite inspecionar todos os recursos em conjunto. Prompts: [nível 1](./ART-VILLAINS-TIER1.md), [nível 2](./ART-VILLAINS-TIER2.md), [nível 3](./ART-VILLAINS-TIER3.md). Verificação local de assets, proporções e galeria: `node tests/art-browser.mjs` com o servidor local ativo.

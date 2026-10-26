@@ -20,8 +20,10 @@ test.before(async () => {
   for (const doc of open.docs) await doc.ref.update({ status: "draft" });
 });
 const endpoints = pathFunctions(async () => {});
-const call = (uid, action, values = {}) =>
-  endpoints.pathAction.run({ auth: { uid }, data: { action, ...values } });
+const call = async (uid, action, values = {}) => {
+  if (action === "sync") await endpoints.settlePaths.run({});
+  return endpoints.pathAction.run({ auth: { uid }, data: { action, ...values } });
+};
 const player = async () => {
   const uid = `variety-${randomUUID().slice(0, 8)}`;
   await db.doc(`users/${uid}`).set({ uid, role: "admin", disabled: false });

@@ -351,7 +351,7 @@ A PWA utiliza o mesmo frontend e Firebase do website. A instalação atual não 
 
 O casino tem um convite abaixo do pódio no início e está em `#/casino` (ou `/casino` no Hosting). Inclui Noite de Glória, Rift Core Overdrive, Blackjack e Roleta, com carteira Djabucoin partilhada e recompensas de 20–200 DJC por peladinha. [Build, economia, testes e publicação](docs/guides/casino.md).
 
-O início reutiliza dados e missões pessoais em cache, atualiza por versões enquanto está visível e suspende listeners em segundo plano. As automações têm recuperação horária e checkpoints para evitar repetir consultas sem alterações. [Funcionamento](docs/reference/home-data.md) · [Validação local e publicação](docs/reports/home-read-cache-2026-10-21.md).
+O início reutiliza dados e missões pessoais em cache, atualiza por versões enquanto está visível e suspende listeners em segundo plano. As automações são processadas às 08:00, 12:00, 17:00 e 22:00 de Lisboa e no fecho de um jogo, com checkpoints para evitar ciclos duplicados. [Funcionamento](docs/reference/home-data.md) · [Validação local e publicação](docs/reports/home-read-cache-2026-10-21.md).
 
 O frontend utiliza **HTML, CSS e JavaScript com ES Modules**. O Firebase suporta autenticação, Firestore, Storage e processamento em Cloud Functions. Os procedimentos técnicos e as regras detalhadas ficam nos documentos abaixo.
 

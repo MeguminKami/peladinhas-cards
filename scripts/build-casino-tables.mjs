@@ -28,8 +28,16 @@ for (const [source, directory, sdk] of [
 <link rel="stylesheet" href="../../../css/casino-table-fit.css">
 <style>html,body{margin:0;min-width:0;min-height:0}#game{min-width:0}</style>
 <body><div id="game"></div><script type="module">
-import {mount,WalletDeclinedError} from './sdk/${sdk}.js';
+import * as SDK from './sdk/${sdk}.js';
+const {mount,WalletDeclinedError}=SDK;
 import {installCasinoTableFit} from '../../../js/casino-table-fit.js';
+window.mountBlackjackMultiplayer = connection => {
+const root=document.querySelector('#game');
+const handle=SDK.mountMultiplayer(root,connection);
+const fit=installCasinoTableFit(root);
+window.setCasinoFit=value=>fit.set(value);
+return {destroy(){fit.destroy();handle.destroy();}};
+};
 window.mountCasinoTable = ({playerId,wallet}) => {
 const root=document.querySelector('#game');
 const handle=mount(root, {

@@ -6,7 +6,9 @@ export function coalesceWork(key, work) {
   if (existing) { existing.dirty = true; return existing.promise; }
   const entry = { dirty: true };
   entry.promise = Promise.resolve().then(async () => {
-    while (entry.dirty) { entry.dirty = false; await work(); }
+    let result;
+    while (entry.dirty) { entry.dirty = false; result = await work(); }
+    return result;
   }).finally(() => { if (running.get(key) === entry) running.delete(key); });
   running.set(key, entry);
   return entry.promise;

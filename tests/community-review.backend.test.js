@@ -2,7 +2,9 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import assert from "node:assert/strict";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { communityRatingAction, rebuildHistory, correctRating } from "../functions/index.js";
+import { communityRatingAction as queuedCommunityRatingAction, rebuildHistory, correctRating } from "../functions/index.js";
+import { afterCheck, checkCycle } from "./cycle-fixtures.js";
+const communityRatingAction = afterCheck(queuedCommunityRatingAction, checkCycle);
 import { ATTRIBUTES } from "../js/utils.js";
 const db = getFirestore(),
   all = (n) => Object.fromEntries(ATTRIBUTES.map(([key]) => [key, n]));
@@ -77,7 +79,7 @@ test("first exclusion, free draft saves, one valid retry, idempotency and final 
     1,
   );
   assert.equal(
-    (await db.collection(`users/${s.author}/notifications`).get()).size,
+    (await db.collection(`users/${s.author}/notifications`).where("type", "==", "COMMUNITY_RATING_ACCEPTED").get()).size,
     1,
   );
   await assert.rejects(

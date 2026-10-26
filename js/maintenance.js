@@ -56,7 +56,7 @@ const operationLabels = {
   publish:"Configuração publicada", draft:"Rascunho guardado", simulate:"Simulação de impacto", "cancel-scheduled":"Agendamento cancelado",
   "run-job":"Execução manual", permissions:"Permissões alteradas", recovery:"Conta recuperada", rebuild:"Recálculo", "task-item-failed":"Falha numa tarefa",
 };
-const jobLabels = {closeCardWeek:"Fechar cartas semanais",openCardWeek:"Abrir nova semana",closeEvents:"Apurar eventos e recompensas",settlePaths:"Apurar missões do ETC",refreshCardCollection:"Atualizar coleção de cartas",scheduledNotifications:"Enviar lembretes",systemHeartbeat:"Verificar estado da liga",systemCleanup:"Limpar dados transitórios",processFeedback:"Atualizar avaliações de jogos"};
+const jobLabels = {automationCycle:"Atualizar todos os sistemas",closeCardWeek:"Fechar cartas semanais",openCardWeek:"Abrir nova semana",closeEvents:"Apurar eventos e recompensas",settlePaths:"Apurar missões do ETC",refreshCardCollection:"Atualizar coleção de cartas",scheduledNotifications:"Enviar lembretes",systemHeartbeat:"Verificar estado da liga",systemCleanup:"Limpar dados transitórios",processFeedback:"Atualizar avaliações de jogos"};
 const pageLinks = {
   cards:[["cards","#/admin/weights","Pesos do OVR"],["cards","#/admin/card-types","Tipos de carta"]],
   games:[["games","#/admin/games","Gerir jogos e equipas"]],
@@ -301,7 +301,7 @@ export async function mountMaintenance(ctx, root) {
           ["Tarefa", "Agenda", "Estado", "Última conclusão", ""],
           value.registered.map((job) => {
             const row = byId.get(job.id) || {};
-            return `<tr><td>${esc(jobLabels[job.id] || job.id)}${row.lastError ? `<small>${esc(row.lastError)}</small>` : ""}</td><td>${esc(job.schedule === "0 * * * *" ? "De hora a hora" : job.schedule === "15 * * * *" ? "Aos 15 minutos de cada hora" : job.schedule)}</td><td>${esc({completed:"Concluída",failed:"Falhou",running:"Em execução","completed-with-issues":"Com itens por rever"}[row.status] || row.status || "Sem execução registada")}</td><td>${when(row.finishedAt)}</td><td><button class="btn btn-secondary" data-job="${job.id}">Executar</button></td></tr>`;
+            return `<tr><td>${esc(jobLabels[job.id] || job.id)}${row.lastError ? `<small>${esc(row.lastError)}</small>` : ""}</td><td>${esc({"0 8,12,17,22 * * *":"08:00 · 12:00 · 17:00 · 22:00 (Lisboa)","0 8 * * *":"Diariamente às 08:00 (Lisboa)","0 * * * *":"De hora a hora","15 * * * *":"Aos 15 minutos de cada hora"}[job.schedule] || job.schedule)}</td><td>${esc({completed:"Concluída",failed:"Falhou",running:"Em execução","completed-with-issues":"Com itens por rever"}[row.status] || row.status || "Sem execução registada")}</td><td>${when(row.finishedAt)}</td><td><button class="btn btn-secondary" data-job="${job.id}">Executar</button></td></tr>`;
           }),
         )}<label>Motivo<input id="job-reason" minlength="5" maxlength="300"></label><div data-result></div></section>`;
         content.querySelectorAll("[data-job]").forEach(

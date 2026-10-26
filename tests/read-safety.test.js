@@ -33,14 +33,14 @@ test("concurrent work forces a fresh pass and every caller waits; errors can ret
   let release, entered, count = 0;
   const started = new Promise(resolve => { entered = resolve; });
   const blocked = new Promise(resolve => { release = resolve; });
-  const work = async () => { count++; if (count === 1) { entered(); await blocked; } };
+  const work = async () => { count++; if (count === 1) { entered(); await blocked; } return count; };
   const first = coalesceWork("test-game", work);
   await started;
   const second = coalesceWork("test-game", work);
   const third = coalesceWork("test-game", work);
   assert.equal(first, second);
   release();
-  await Promise.all([first, second, third]);
+  assert.deepEqual(await Promise.all([first, second, third]), [2, 2, 2]);
   assert.equal(count, 2);
   await assert.rejects(coalesceWork("test-game", async () => { throw Error("retry"); }), /retry/);
   await coalesceWork("test-game", work);

@@ -8,6 +8,7 @@ import {
   homeProjection,
 } from "../functions/home-cache.js";
 import { runChangedMaintenance } from "../functions/maintenance-gate.js";
+import { checkObjectiveProgress } from "../functions/event-management.js";
 import { ATTRIBUTES } from "../js/utils.js";
 import { cardWeek } from "../js/card-week.js";
 
@@ -98,6 +99,7 @@ test("home caches isolate personal missions, reuse the league and invalidate onl
     },
   });
   const call = (uid) => getHome.run({ auth: { uid }, data: {} });
+  await checkObjectiveProgress(mission.id);
   const [first, concurrent] = await Promise.all([call(ids[0]), call(ids[0])]);
   assert.deepEqual(first, concurrent, "concurrent opens share the same build");
   assert.equal(first.league.players.length, 20);
@@ -321,10 +323,10 @@ test("durable maintenance checkpoints honor deadlines, failures and writes durin
   const events = await closeEvents.run({ incremental: true });
   assert.equal(events.ok, true);
   assert.equal((await closeEvents.run({ incremental: true })).current, true);
-  assert.equal(
-    (await closeEvents.run({ scheduleTime: new Date().toISOString() })).current,
-    true,
-  );
+  const scheduled = { scheduleTime: new Date().toISOString() };
+  assert.equal((await closeEvents.run(scheduled)).ok, true);
+  assert.equal((await closeEvents.run(scheduled)).current, true);
+  await closeEvents.run({ incremental: true });
   await invalidateHome("pathStates", "only-this-player", null, { revision: 1 });
   assert.equal(
     (await closeEvents.run({ incremental: true })).current,

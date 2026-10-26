@@ -38,14 +38,14 @@ export async function openGameRatings(gameId) {
     }
     if (waiverCandidate) {
       const person = data.users.find(user=>user.uid === waiverCandidate);
-      root.querySelector(".game-rating-list").insertAdjacentHTML("beforebegin", `<section class="game-rating-waiver" role="region" aria-label="Confirmar alteração dos votos"><h4>${esc(person.name)}</h4><p>${person.waiverActive ? "Repor a obrigação de enviar as avaliações em falta?" : "Os votos em falta passam a contar apenas para o mínimo exigido. Não entram nas médias e as avaliações já enviadas mantêm-se."}</p><p>Os cálculos atualizam na próxima execução horária. A alteração fica registada.</p><div class="actions"><button class="btn btn-primary" data-confirm-waiver ${sending ? "disabled" : ""}>${person.waiverActive ? "Repor votos" : "Anular votos em falta"}</button><button class="btn btn-secondary" data-cancel-waiver ${sending ? "disabled" : ""}>Cancelar</button></div></section>`);
+      root.querySelector(".game-rating-list").insertAdjacentHTML("beforebegin", `<section class="game-rating-waiver" role="region" aria-label="Confirmar alteração dos votos"><h4>${esc(person.name)}</h4><p>${person.waiverActive ? "Repor a obrigação de enviar as avaliações em falta?" : "Os votos em falta passam a contar apenas para o mínimo exigido. Não entram nas médias e as avaliações já enviadas mantêm-se."}</p><p>Os cálculos atualizam na próximo ciclo (08:00, 12:00, 17:00 ou 22:00). A alteração fica registada.</p><div class="actions"><button class="btn btn-primary" data-confirm-waiver ${sending ? "disabled" : ""}>${person.waiverActive ? "Repor votos" : "Anular votos em falta"}</button><button class="btn btn-secondary" data-cancel-waiver ${sending ? "disabled" : ""}>Cancelar</button></div></section>`);
       root.querySelector("[data-cancel-waiver]").onclick = () => {waiverCandidate=null;draw();};
       root.querySelector("[data-confirm-waiver]").onclick = async () => {
         if(sending) return;
         sending=true; draw();
         try {
           await request("ratingWaiverAction",{uid:person.uid,waive:!person.waiverActive});
-          announcement=person.waiverActive ? "Votos em falta repostos." : "Votos em falta anulados. Sem alteração das médias; cálculos na próxima atualização horária.";
+          announcement=person.waiverActive ? "Votos em falta repostos." : "Votos em falta anulados. Sem alteração das médias; cálculos na próximo ciclo de atualização.";
           waiverCandidate=null;
         } catch(error) {announcement=error.message;}
         finally {sending=false;if(open) await load();}

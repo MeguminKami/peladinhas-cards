@@ -1,11 +1,12 @@
+import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
 import { policySchedule, policyWritten, policyCall, auditSystem } from "./policy-runtime.js";
+import { randomUUID, createHash } from "node:crypto";
 import { nextNotificationDeadline } from "../js/notification-deadline.js";
 import { policyAt, isQuietHour, canManage, budgetWindow } from "../js/system-policy.js";
 import { gameFeedbackProgress } from "../js/game-feedback-status.js";
 import { HttpsError } from "firebase-functions/v2/https";
 import { eventEndMillis, missionUnlocked } from "../js/event-model.js";
 import { medal, rewardText, hasTemporaryReward } from "../js/event-model.js";
-import { createHash } from "node:crypto";
 import { getFirestore } from "firebase-admin/firestore";
 import { asDate, participants } from "../js/utils.js";
 import { votersFor, candidatesFor, eventOutcome } from "../js/event-rules.js";
@@ -132,9 +133,7 @@ export function notificationFunctions(notify) {
       return user && !user.disabled && revision(current) === revision(game);
     });
   }
-  const onGameNotifications = policyWritten(
-    "games/{gid}",
-    async (event) => {
+  const processGameNotice = async (event) => {
       const before = event.data.before.data(),
         after = event.data.after.data();
       const gid = event.params.gid;
@@ -186,8 +185,20 @@ export function notificationFunctions(notify) {
           href: `#/game/${gid}`,
         });
       }
-    },
-  );
+    };
+  const onGameNotifications = policyWritten("games/{gid}", async event => {
+    const before = event.data.before.data() || null, after = event.data.after.data() || null;
+    if (revision(before) === revision(after)) return;
+    const ref = db().doc(`gameNoticeWork/${event.params.gid}`);
+    await db().runTransaction(async tx => {
+      const [queued, game] = await tx.getAll(ref, db().doc(`games/${event.params.gid}`));
+      if (revision(game.data()) !== revision(after)) return;
+      const previous = queued.data();
+      tx.set(ref, { before: previous?.pending ? previous.before : before,
+        after, pending: true, token: event.id || hash([revision(before), revision(after), after?.updatedAt || null]),
+        updatedAt: new Date() });
+    });
+  }, { readPolicy: false });
   async function eventNotices(id, event, users, games, now) {
     const completions = event.prerequisites?.missionIds?.length
       ? rows(await db().collection("eventRewards").get())
@@ -240,6 +251,7 @@ export function notificationFunctions(notify) {
           (event.method === "vote" ||
             (event.schemaVersion !== 2 && event.kind !== "mission")) &&
           remaining <= 86400000 &&
+          !isQuietHour(policyAt().notifications) && policyAt().automation.reminders !== false &&
           !(await db().doc(`events/${id}/votes/${uid}`).get()).exists
         )
           await send(uid, `event-deadline-${id}`, {
@@ -325,23 +337,19 @@ export function notificationFunctions(notify) {
   const onEventNotifications = policyWritten(
     "events/{eid}",
     async (event) => {
-      const current = (
-        await db().doc(`events/${event.params.eid}`).get()
-      ).data();
-      if (!current || current.status === "draft") return;
-      const { users, games } = await league();
-      await eventNotices(event.params.eid, current, users, games, new Date());
-    },
+      if (!event.data.after.data() || event.data.after.data().status === "draft") return;
+      await db().doc(`eventNoticeWork/${event.params.eid}`).set({ pending: true, token: randomUUID() });
+    }, { readPolicy: false },
   );
   const scheduledNotifications = policySchedule("scheduledNotifications",
     {
-      schedule: "0 * * * *",
+      schedule: AUTOMATION_SCHEDULE,
       timeZone: "Europe/Lisbon",
       timeoutSeconds: 540,
       retryCount: 3,
     },
     async () => {
-      if (!policyAt().notifications.enabled || isQuietHour(policyAt().notifications)) return { ok: true, nextAt: Date.now() + 3600000 };
+      if (!policyAt().notifications.enabled) return { ok: true, nextAt: Date.now() + 3600000 };
       const now = new Date(),
         today = dayFormat.format(now);
       const [year, month, dayOfMonth] = today.split("-").map(Number);
@@ -349,21 +357,33 @@ export function notificationFunctions(notify) {
         new Date(Date.UTC(year, month - 1, dayOfMonth + 1, 12)),
       );
       const { users, games } = await league();
+      const acknowledge = job => db().runTransaction(async tx => {
+        if ((await tx.get(job.ref)).data()?.token === job.data().token)
+          tx.update(job.ref, { pending: false });
+      });
+      const gameNotices = await db().collection("gameNoticeWork").where("pending", "==", true).get();
+      for (const job of gameNotices.docs) {
+        const value = job.data();
+        await processGameNotice({ id: value.token, params: { gid: job.id }, data: {
+          before: { data: () => value.before }, after: { data: () => value.after },
+        } });
+        await acknowledge(job);
+      }
       const active = new Set(users.map((u) => u.uid));
       for (const game of games) {
-        if (game.deleting) continue;
+        if (game.deleting || isQuietHour(policyAt().notifications) || policyAt().automation.reminders === false) continue;
         const date = asDate(game.scheduledAt);
         if (game.status === "open" && date && +date > +now) {
           const day = dayFormat.format(date),
             kind =
               day === today ? "today" : day === tomorrow ? "tomorrow" : null;
-          // For early games, allow the morning reminder before 09:00.
+          // The morning check is at 08:00 Lisbon time.
           if (
             !kind ||
-            (Number(hourFormat.format(now)) < 9 &&
+            (Number(hourFormat.format(now)) < 8 &&
               !(
                 kind === "today" &&
-                Number(hourFormat.format(date)) < 9 &&
+                Number(hourFormat.format(date)) < 8 &&
                 +date - +now <= 2 * 3600000
               ))
           )
@@ -400,6 +420,13 @@ export function notificationFunctions(notify) {
       );
       for (const event of events)
         await eventNotices(event.id, event, users, games, now);
+      const eventNoticesPending = await db().collection("eventNoticeWork").where("pending", "==", true).get();
+      for (const job of eventNoticesPending.docs) {
+        const current = (await db().doc(`events/${job.id}`).get()).data();
+        if (current && !events.some(event => event.id === job.id))
+          await eventNotices(job.id, current, users, games, now);
+        await acknowledge(job);
+      }
       // Recheck the next morning, day boundary or feedback reminder deadline;
       // do not reread every game's feedback in every quiet hour.
       return { ok: true, nextAt: nextNotificationDeadline(games, events, { now: +now, feedbackHours: policyAt().notifications.feedbackHours }) };

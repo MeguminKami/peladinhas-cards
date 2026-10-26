@@ -34,7 +34,9 @@
 
 [Ultimate 20: cores, contraste e validação em desktop/telemóvel](reports/ultimate-theme-2026-10-21.md).
 
-[Avaliações processadas apenas quando há alterações, hora a hora](reference/feedback-processing.md) · [Validação de 21/10/2026](reports/feedback-hourly-2026-10-21.md).
+[Ciclos às 08:00, 12:00, 17:00 e 22:00 e no fecho de jogo](reference/automation-cycles.md) · [Processamento das avaliações](reference/feedback-processing.md) · [Validação histórica de 21/10/2026](reports/feedback-hourly-2026-10-21.md).
+
+[Implementação e publicação dos ciclos — 26/10/2026](reports/automation-cycles-2026-10-26.md).
 
 [Diagnóstico de permissões nas avaliações da app](reports/feedback-mobile-access-2026-10-19.md).
 

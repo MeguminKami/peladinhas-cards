@@ -23,11 +23,13 @@ test("paths: legacy settlement stays idempotent and archived corrections require
       disabled: false,
     });
   const endpoints = pathFunctions(async () => {});
-  const call = (action, values = {}, actor = uid) =>
-    endpoints.pathAction.run({
+  const call = async (action, values = {}, actor = uid) => {
+    if (action === "sync") await endpoints.settlePaths.run({});
+    return endpoints.pathAction.run({
       auth: { uid: actor },
       data: { action, ...values },
     });
+  };
   await assert.rejects(pathAction.run({ data: { action: "offers" } }));
   assert.equal(
     (await getPath.run({ auth: { uid }, data: { uid: admin } })).uid,
@@ -156,8 +158,10 @@ test("paths: multi-node overflow delivers capped rewards once in the same settle
     positions: { [uid]: "AV" },
   });
   const endpoints = pathFunctions(async () => {});
-  const call = () =>
-    endpoints.pathAction.run({ auth: { uid }, data: { action: "sync" } });
+  const call = async () => {
+    await endpoints.settlePaths.run({});
+    return endpoints.pathAction.run({ auth: { uid }, data: { action: "sync" } });
+  };
   const settled = await call();
   assert.deepEqual(settled.lastResult.completedNodeIds, [
     "shooting-0-0",
@@ -213,6 +217,7 @@ test("paths: a previously accepted tenth-stage proposal keeps its permanent card
     performance: { teamA: { goals: [uid], assists: [] } },
   });
   const endpoints = pathFunctions(async () => {});
+  await endpoints.settlePaths.run({});
   const result = await endpoints.pathAction.run({
     auth: { uid },
     data: { action: "sync" },

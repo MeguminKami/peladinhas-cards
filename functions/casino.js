@@ -23,7 +23,7 @@ import {
 // Same identity / revocation / global-mode / App Check gates as policyCall,
 // with the quota kept in the wallet's existing atomic write. No separate
 // per-operation or global rate-limit documents are read on every spin.
-function walletCall(handler, { read = false } = {}) {
+export function walletCall(handler, { read = false } = {}) {
   return onCall((request) =>
     withPolicy(async () => {
       if (!request.auth)

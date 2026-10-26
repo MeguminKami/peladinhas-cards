@@ -69,7 +69,7 @@ const maintenanceInputs = {
   ]),
 };
 const pending = new Map();
-const HOME_CACHE_VERSION = "2026-10-22-scrap-card-v1";
+const HOME_CACHE_VERSION = "2026-10-26-cycles-v1";
 // Cache documents are server-only. Timestamps become ISO strings, understood by
 // the same asDate helpers used by the browser. No SDK objects enter the cache.
 export function plain(value) {
@@ -306,7 +306,7 @@ export function homeProjection(league, uid) {
 
 export function homeFunctions(
   listEvents,
-  { settleEvents, settlePath, loadEvent } = {},
+  { loadEvent } = {},
 ) {
   const getHome = policyCall(
     "getHome",
@@ -324,7 +324,6 @@ export function homeFunctions(
       const sharedVersion = `${HOME_CACHE_VERSION}:${leagueVersion}:${JSON.stringify(policyAt())}:${cardWeek().weekId}:${cardWeek().phase}`;
       const version = `${sharedVersion}:${globalVersion}:${ownVersion}`;
       const result = await cached(`player-${uid}`, version, async () => {
-        await settleEvents?.();
         const league = await cached("league", sharedVersion, leagueContext);
         const events = await listEvents.run({
           ...request,
@@ -351,21 +350,6 @@ export function homeFunctions(
             const value = (await db().doc(path).get()).data() || null;
             if (path === `pathStates/${uid}`) {
               pathState = value;
-              const due = [value?.active, ...(value?.pending || [])].some(
-                (attempt) =>
-                  attempt?.reviewDeadline &&
-                  attempt.reviewDeadline <= Date.now(),
-              );
-              if (
-                due &&
-                settlePath &&
-                policyAt().features.mode === "normal" &&
-                policyAt().features.missions &&
-                policyAt().features.claims
-              ) {
-                pathState = await settlePath(request);
-                return pathState;
-              }
             }
             return value;
           },
