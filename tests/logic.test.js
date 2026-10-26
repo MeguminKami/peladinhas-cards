@@ -446,7 +446,7 @@ test("estatísticas individuais: suplentes, jogos antigos e jogos ainda abertos"
   assert.equal(stats.assists, 1);
 });
 
-test("inatividade: 4–7 ausências, limite, suplente e entrada recente", () => {
+test("inatividade: ausências nunca descontam OVR; mantém contagem e fórmula histórica", () => {
   const game = (i, team = { starters: [], bench: [] }) => ({
     id: String(i),
     status: "closed",
@@ -457,11 +457,11 @@ test("inatividade: 4–7 ausências, limite, suplente e entrada recente", () => 
   const games = Array.from({ length: 10 }, (_, i) => game(i + 1));
   for (const [count, penalty] of [
     [3, 0],
-    [4, 2],
-    [5, 5],
-    [6, 7],
-    [7, 10],
-    [10, 10],
+    [4, 0],
+    [5, 0],
+    [6, 0],
+    [7, 0],
+    [10, 0],
   ]) {
     const result = calculateInactivity(
       "absent",

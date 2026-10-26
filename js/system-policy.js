@@ -1,4 +1,5 @@
 // Shared by the browser and trusted Functions. No Firebase dependency here.
+import { FAIR_PROGRESSION_FROM, FAIR_PROGRESSION } from "./game-progression.js";
 export const POLICY_FIELDS = [
   [
     "rewards",
@@ -72,20 +73,11 @@ export const POLICY_FIELDS = [
   ],
   [
     "progression",
-    "Progressão e inatividade",
+    "Progressão",
     [
       ["speed", "Velocidade de progressão", 2.3, 0.1, 4],
       ["gainCap", "Ganho máximo por atributo/jogo", 4, 0, 5],
       ["lossCap", "Perda máxima por atributo/jogo", 0.45, 0, 2],
-      [
-        "inactivityStart",
-        "Jogos seguidos sem participar antes da penalização",
-        4,
-        1,
-        30,
-      ],
-      ["inactivityMaximum", "Penalização máxima de OVR", 10, 0, 20],
-      ["inactivityEnabled", "Aplicar penalização por inatividade", true],
     ],
   ],
   [
@@ -189,6 +181,7 @@ let provider = () => browserDocument;
 const compiledPolicies = new WeakMap();
 // Versioned baseline: retain earlier weeks, extend the cycle ending 21/10 onward.
 const calendarBaseline = {effectiveAt:"2026-10-21T00:00:00Z",patch:{cycle:{closeHour:18}},calendarBaseline:true};
+const progressionBaseline = {effectiveAt:FAIR_PROGRESSION_FROM,patch:{progression:{speed:FAIR_PROGRESSION.speed,gainCap:FAIR_PROGRESSION.gainCap,lossCap:FAIR_PROGRESSION.lossCap}},progressionBaseline:true};
 const emptyPolicyDocument = Object.freeze({});
 export function normalizePolicy(value = {}) {
   return Object.fromEntries(
@@ -208,7 +201,7 @@ function compile(document) {
   if (compiledPolicies.has(document)) return compiledPolicies.get(document);
   let config = DEFAULT_POLICY;
   let version = 0;
-  const entries = [...(document.timeline || []), calendarBaseline]
+  const entries = [...(document.timeline || []), calendarBaseline, progressionBaseline]
     .sort((a, b) => +new Date(a.effectiveAt) - +new Date(b.effectiveAt))
     .map((row) => {
       config = row.config
@@ -221,7 +214,7 @@ function compile(document) {
               ]),
             ),
           );
-      if (!row.calendarBaseline) version = row.version;
+      if (!row.calendarBaseline && !row.progressionBaseline) version = row.version;
       return { ...row, version, config };
     });
   compiledPolicies.set(document, entries);
@@ -267,7 +260,11 @@ export function validatePolicy(input) {
     if (
       !values ||
       typeof values !== "object" ||
-      Object.keys(values).some((key) => !fields.some(([id]) => key === id))
+      Object.keys(values).some((key) =>
+        !fields.some(([id]) => key === id) &&
+        // Accept old saved drafts/clients, but discard the retired settings.
+        !(section === "progression" && ["inactivityStart", "inactivityMaximum", "inactivityEnabled"].includes(key)),
+      )
     )
       throw Error(`Secção inválida: ${section}.`);
     result[section] = {};

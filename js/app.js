@@ -32,6 +32,7 @@ import { mountAdminMenu, adminAreaCapability } from "./admin-menu.js";
 import { configured } from "./firebase.js";
 import { ovrAuditPage } from "./ovr-audit.js";
 import { statisticsPage } from "./statistics.js";
+import { progressionGuidePage, progressionGuideLink } from "./progression-guide.js";
 import { ticketsPage } from "./tickets.js";
 import { bindThemePicker } from "./themes.js";
 import { startAuth, currentUser, loadProfile, logout } from "./auth.js";
@@ -383,7 +384,7 @@ function home() {
 }
 function playersPage() {
   ctx.render(
-    `${pageHead("A comunidade", "Jogadores", "Cada carta tem uma história. As setas verdes e vermelhas mostram a variação face à semana anterior.")}<div class="filters panel"><label class="search-field">Procurar<input id="search" placeholder="Nome ou username"></label><label>Ordenar<select id="sort"><option value="ovr">OVR</option><option value="name">Nome</option>${ATTRIBUTES.map(([key, name]) => `<option value="${key}">${esc(name)}</option>`).join("")}</select></label><label>Por<select id="sort-direction"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label></div><div id="player-grid" class="card-grid"></div>`,
+    `${pageHead("A comunidade", "Jogadores", "Cada carta tem uma história. As setas verdes e vermelhas mostram a variação face à semana anterior.", progressionGuideLink())}<div class="filters panel"><label class="search-field">Procurar<input id="search" placeholder="Nome ou username"></label><label>Ordenar<select id="sort"><option value="ovr">OVR</option><option value="name">Nome</option>${ATTRIBUTES.map(([key, name]) => `<option value="${key}">${esc(name)}</option>`).join("")}</select></label><label>Por<select id="sort-direction"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select></label></div><div id="player-grid" class="card-grid"></div>`,
   );
   document.querySelector("#search").value = playerFilters.search;
   document.querySelector("#sort").value = playerFilters.sort;
@@ -613,7 +614,7 @@ async function route({ cachedOnly = false } = {}) {
       );
     if (!parts.length) {
       home();
-    } else if (parts[0] === "players") parts[1] === "cards" ? cardCatalogPage(pageCtx) : playersPage();
+    } else if (parts[0] === "players") parts[1] === "cards" ? cardCatalogPage(pageCtx) : parts[1] === "evolution" ? progressionGuidePage(pageCtx) : playersPage();
     else if (parts[0] === "player") await playerPage(pageCtx, parts[1]);
     else if (parts[0] === "profile")
       parts[1] === "edit"

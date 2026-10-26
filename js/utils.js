@@ -1,4 +1,5 @@
 import { policyAt } from "./system-policy.js";
+import { FAIR_PROGRESSION_FROM, usesFairProgression, calculateFairGameDeltas } from "./game-progression.js";
 import { cardWeek } from "./card-week.js";
 import { performanceWeek } from "./performance-week.js";
 import {
@@ -312,8 +313,15 @@ const ATTRIBUTE_FEEDBACK = Object.freeze({
   composure: "attack",
 });
 export function calculateGameDeltas(stats, aggregate, options = {}) {
+  if (usesFairProgression(aggregate.date)) {
+    const normalized = normalizeOvrWeights(options.weights);
+    return calculateFairGameDeltas(stats, aggregate, {
+      weights: normalized.positions[options.position] || normalized.weights,
+      settings: policyAt(asDate(aggregate.date)).progression,
+    });
+  }
   const a = aggregate,
-    settings = {...PERFORMANCE_SETTINGS, ...policyAt(a.date || new Date()).progression};
+    settings = {...PERFORMANCE_SETTINGS, ...policyAt(a.date || new Date(Date.parse(FAIR_PROGRESSION_FROM) - 1)).progression};
   const rounded = Object.fromEntries(
     ATTRIBUTES.map(([key]) => [key, Math.round(stats[key])]),
   );
@@ -419,7 +427,7 @@ export function calculatePlayerStatsDetails(initial, aggregates, options = {}) {
     row.value = Math.round(row.exact);
   }
   return {
-    version: "per-game-growth-v1",
+    version: games.some(game => usesFairProgression(game.date)) ? "per-game-growth-v2" : "per-game-growth-v1",
     rows,
     stats: Object.fromEntries(rows.map((row) => [row.key, row.value])),
   };
@@ -531,8 +539,9 @@ export function calculateInactivity(uid, games, joinedAt, cutoff = new Date()) {
   }
   return {
     missed,
-    penalty:
-      !policyAt(cutoff).progression.inactivityEnabled || missed < policyAt(cutoff).progression.inactivityStart ? 0 : Math.min(policyAt(cutoff).progression.inactivityMaximum, Math.round(2 + ((missed - policyAt(cutoff).progression.inactivityStart) * 8) / 3)),
+    // Keep attendance metadata, but absence no longer reduces a current card's OVR.
+    // calculateOverallDetails still accepts stored penalties for historical cards.
+    penalty: 0,
   };
 }
 export function calculateOverallDetails(stats, settings, position, inactivity) {

@@ -58,6 +58,8 @@ flowchart TB
 
 [Ver a fórmula de progressão →](progression.md)
 
+Desde 26/10/2026, novos jogos usam progressão gradual, bónus próprios de golos/assistências e ganhos reduzidos em derrotas. Jogos anteriores mantêm a sua fórmula. Em **Jogadores → (i) Como as tuas estatísticas mudam**, consultar a explicação e o simulador sem alterar a carta.
+
 ---
 
 <details>
@@ -75,7 +77,7 @@ A carta acompanha velocidade, finalização, passe, drible, defesa, físico, gua
 
 Cada conjunto de pesos soma 100%. A administração pode editar pesos e presets; o painel de auditoria apresenta os valores, pesos, contributos e arredondamento. A posição altera os pesos do OVR, não os atributos do jogador.
 
-A penalização por inatividade começa após quatro jogos consecutivos da liga sem participação e pode chegar a dez pontos de OVR. O cálculo considera as regras de entrada do jogador e a participação, incluindo suplentes, implementadas em `js/utils.js`.
+As ausências não reduzem atributos nem OVR. A contagem de jogos consecutivos sem participação é apenas informativa. Cartas de semanas fechadas conservam os valores e eventuais penalizações históricas guardadas.
 
 ## Jogos, forma e estatísticas
 

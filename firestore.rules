@@ -52,9 +52,8 @@ service cloud.firestore {
   match /communityRatings/{id} {
    allow read: if capable('ratings') || (active() && resource.data.raterId==request.auth.uid);
    allow get: if active() && id.matches('^'+request.auth.uid+'_.*') && !exists(/databases/$(database)/documents/communityRatings/$(id));
-   function validVote() { let d=request.resource.data; return d.keys().hasOnly(['raterId','targetId','ratings20','submitted','createdAt','updatedAt','submittedAt','editDays']) && d.raterId==request.auth.uid && d.targetId!=request.auth.uid && exists(/databases/$(database)/documents/users/$(d.targetId)) && id==d.raterId+'_'+d.targetId && validInitial(d.ratings20) && d.submitted is bool && (!d.submitted || d.ratings20.keys().hasAll(attrs())) && d.updatedAt==request.time && (!d.submitted || d.submittedAt is timestamp); }
-   allow create: if writable('ratings') && active() && validVote() && request.resource.data.createdAt==request.time && (!request.resource.data.submitted || request.resource.data.submittedAt==request.time && request.resource.data.get('editDays',7)==systemConfig().get('rules',{}).get('ratingEditDays',7));
-   allow update: if writable('ratings') && active() && validVote() && (!resource.data.submitted || request.resource.data.submitted) && request.resource.data.raterId==resource.data.raterId && request.resource.data.targetId==resource.data.targetId && request.resource.data.createdAt==resource.data.createdAt && ratingEditable(resource.data,'submitted') && keepsSubmission(resource.data,request.resource.data,'submitted');
+   // Attempts and review status are managed atomically by communityRatingAction.
+   allow create, update, delete: if false;
   }
   match /communitySummaries/{uid} { allow read: if active(); allow write: if false; }
   match /gameSummaries/{gid} { allow read: if active(); allow write: if false; }

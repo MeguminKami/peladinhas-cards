@@ -2,6 +2,7 @@ import { ratingQuorum, ratingQuorumCount, ratingWaiverTimes } from "../js/rating
 import { policyAt } from "../js/system-policy.js";
 import { createReadContext } from "./read-context.js";
 import { sameData } from "./equal-data.js";
+import { eligibleCommunityRating } from "./community-rating-policy.js";
 import {
   evaluateCardAchievements,
   periodCardAwards,
@@ -250,7 +251,7 @@ export async function refreshPlayerCollection(uid, context = null) {
         .where("targetId", "==", uid)
         .get(),
     )
-      .filter((row) => row.submitted && completeInitial(row.ratings20))
+      .filter(eligibleCommunityRating)
       .map((row) => asDate(row.submittedAt || row.createdAt))
       .filter((date) => date && Number.isFinite(+date))
       .sort((a, b) => a - b);

@@ -4,6 +4,8 @@
 
 ## Escolher o menor âmbito
 
+Para publicar o conjunto acumulado desde o commit das fusões `b3af042`, incluindo o trabalho local de evolução: `npm.cmd run deploy:updates`. O [plano revisto de 26/10/2026](../reports/deploy-updates-since-fusions-2026-10-26.md) inclui regras Firestore, Functions em grupos e frontend, com modo local `--plan` e retoma `--from-stage N`. Não substituir este conjunto pelo deploy isolado da progressão.
+
 Executar na raiz do projeto, com Node.js 22 e acesso ao Firebase **pedalinhas-cards**. Cliente e Functions usam `europe-west1`; a codebase das Functions chama-se `peladinhas`.
 
 | Alteração                                       | Comando                                                                                                             |

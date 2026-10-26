@@ -169,6 +169,28 @@
     flex: 1 1 auto;
   }
 }
+.community-review-notice {
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  padding:22px 24px;
+  margin-block:20px 24px;
+  border:1px solid var(--border-strong);
+  border-left:3px solid var(--accent);
+  border-radius:14px;
+  background:var(--bg-surface);
+}
+.community-review-notice p { margin:0; line-height:1.6; font-size:.85rem; overflow-wrap:anywhere; }
+.community-review-notice .eyebrow { color:var(--accent); font-size:.65rem; margin-bottom:6px; }
+.community-review-symbol { display:grid; place-items:center; width:40px; height:40px; border-radius:50%; color:var(--accent); background:var(--accent-tint); }
+.community-review-notice .btn { min-height:44px; gap:10px; white-space:normal; }
+.community-review-notice .btn:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+@media(max-width:600px) {
+  .community-review-notice { grid-template-columns:32px minmax(0,1fr); padding:18px 16px; gap:12px; align-items:start; }
+  .community-review-symbol { width:32px; height:32px; }
+  .community-review-notice > .btn { grid-column:2; justify-self:start; }
+}
 .install-spotlight {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 160px;

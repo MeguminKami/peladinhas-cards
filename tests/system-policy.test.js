@@ -21,6 +21,23 @@ import { cardWeek } from "../js/card-week.js";
 import { leaguePeriod } from "../js/card-achievements.js";
 import { ratingEditDeadline } from "../js/rating-window.js";
 const config = () => structuredClone(DEFAULT_POLICY);
+
+test("legacy inactivity settings cannot restore OVR penalties and old drafts remain valid", () => {
+  const legacy = config();
+  Object.assign(legacy.progression, { inactivityEnabled: true, inactivityStart: 1, inactivityMaximum: 20 });
+  assert.deepEqual(validatePolicy(legacy).progression, DEFAULT_POLICY.progression);
+  setPolicyDocument({ timeline: [{version: 1, effectiveAt: "2026-01-01", config: legacy}] });
+  try {
+    const games = Array.from({length: 10}, (_, i) => ({
+      id: String(i), status: "closed", closedAt: new Date(`2026-10-${String(i + 1).padStart(2, "0")}T12:00:00Z`),
+      teamA: {starters: [], bench: []}, teamB: {starters: [], bench: []},
+    }));
+    assert.deepEqual(calculateInactivity("absent", games, null, new Date("2026-10-20")), {missed: 10, penalty: 0});
+    assert.equal(Object.hasOwn(policyAt().progression, "inactivityEnabled"), false);
+  } finally {
+    setPolicyDocument(null);
+  }
+});
 test("18h baseline extends legacy policy without modifying its timeline or future explicit settings", () => {
   const doc={timeline:[{version:1,effectiveAt:"2026-10-01",config:config()},{version:2,effectiveAt:"2026-10-22",patch:{cycle:{closeHour:20}}}]};
   assert.equal(policyAt(new Date("2026-10-20"),doc).cycle.closeHour,12);

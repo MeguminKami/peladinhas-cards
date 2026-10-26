@@ -16,6 +16,8 @@
 
 ## Por onde começar
 
+[Como as tuas estatísticas mudam: guia em Jogadores e progressão versionada — 26/10/2026](reports/progression-guide-implementation-2026-10-26.md).
+
 [Casino, Djabucoin e integração da slot](guides/casino.md) · [Validação local de 24/10/2026](reports/casino-2026-10-24.md).
 
 [Carteira local sem chamadas por spin — 25/10/2026](reports/casino-local-2026-10-25.md).

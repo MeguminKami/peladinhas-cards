@@ -3,6 +3,7 @@ import { auditAuth } from "./firestore-audit-cache.mjs";
 import { createRequire } from "node:module";
 import { firebaseConfig } from "../js/config.js";
 import { cardWeek } from "../js/card-week.js";
+import { performanceWeek } from "../js/performance-week.js";
 import {
   ATTRIBUTES,
   asDate,
@@ -89,6 +90,7 @@ const [
   read("settings/ovr"),
 ]);
 const cycle = cardWeek();
+const period = performanceWeek();
 const previousWeek = cardWeek(new Date(+cycle.opensAt - 1)).weekId;
 const findings = [];
 for (const user of users.filter((u) => !u.disabled)) {
@@ -140,7 +142,8 @@ for (const user of users.filter((u) => !u.disabled)) {
     delta: applied.stats[k] - previous.stats[k],
   }));
   const playedThisWeek = matches.filter(
-    (g) => +asDate(g.closedAt || g.scheduledAt) >= +cycle.opensAt,
+    (g) => +asDate(g.closedAt || g.scheduledAt) >= +period.startsAt &&
+      +asDate(g.closedAt || g.scheduledAt) < +period.endsAt,
   ).length;
   if (
     (playedThisWeek && overall.ovr >= previous.ovr) ||

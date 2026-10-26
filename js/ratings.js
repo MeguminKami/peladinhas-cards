@@ -11,6 +11,7 @@ import {
 import { pageHead, esc, empty, linkButton, toast, busy } from "./ui.js";
 import { icon } from "./icons.js";
 import { safeImage, ASSET_PATHS } from "./assets.js";
+import { communityReviewBanner } from "./community-review.js";
 // Uma fila por formulário: nunca deixa uma gravação antiga ultrapassar a mais recente.
 function autosave(ctx, form, save, onComplete) {
   let timer,
@@ -54,8 +55,8 @@ function autosave(ctx, form, save, onComplete) {
     await enqueue();
     try {
       await busy(e.submitter, async () => {
-        await save(readRatings(form), true);
-        toast("Avaliação concluída.");
+        const result = await save(readRatings(form), true);
+        toast(result?.reviewState === "required" ? "A tua avaliação precisa de revisão. Tens mais uma oportunidade." : result?.reviewState === "ignored" ? "Revisão recebida. Esta avaliação ficou encerrada." : "Avaliação concluída.");
         await onComplete();
       });
     } catch {}
@@ -103,13 +104,15 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
     ),
     values = {
       ...Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 0])),
-      ...(saved?.ratings20 || {}),
+      ...(saved?.draftRatings20 || saved?.ratings20 || {}),
     };
   const locked = !canEditRating(saved, new Date(), self);
   ctx.render(
     `${pageHead(self ? "A minha primeira carta" : "Avaliação da comunidade", self ? "Conhece o teu jogo" : `Avaliar ${player.displayName || player.username}`, "As alterações são guardadas automaticamente.", linkButton("#/missions", "Todas as missões", "ghost"))}${initialForm(self ? "Autoavaliação" : "Ajuda a criar a primeira carta", values, false)}`,
   );
   const form = document.querySelector("form");
+  if (!self && saved?.reviewState) form.insertAdjacentHTML("beforebegin",communityReviewBanner(player.displayName || player.username,saved));
+  if (!self && saved?.reviewState === "required") form.querySelector('button.btn-primary').innerHTML = `${icon("check")}Submeter revisão definitiva`;
   const deadline = ratingEditDeadline(saved, self);
   if (deadline)
     form.insertAdjacentHTML(
@@ -149,7 +152,7 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
       if (submit && !completeInitial(r))
         throw Error("Preenche os 12 atributos, entre 0 e 20.");
       if (self) await DB.saveInitial(targetId || ctx.user.uid, r, submit);
-      else await DB.saveCommunity(ctx.user.uid, targetId, r, submit);
+      else return DB.saveCommunity(ctx.user.uid, targetId, r, submit, {reviewToken:saved?.reviewToken});
     },
     async () => {
       await ctx.refresh();

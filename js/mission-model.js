@@ -71,6 +71,11 @@ export async function buildMissions(user, league, DB) {
   }
   for (const target of league.players.filter((x) => x.uid !== user.uid)) {
     const rating = my.find((r) => r.targetId === target.uid);
+    if (rating?.reviewState === "required") {
+      const deadline = asDate(rating.reviewDeadline);
+      if (!deadline || +deadline > Date.now()) missions.push({id:`review-${target.uid}`,type:"COMMUNITY_RATING_REVIEW",title:`Revê a tua avaliação de ${target.displayName || target.username}`,description:"A tua avaliação precisa de revisão. Tens mais uma oportunidade para refletir aquilo que observaste em campo.",done:0,total:1,href:`#/missions/new/${target.uid}`,icon:"edit"});
+      continue;
+    }
     if (rating?.submitted) continue;
     missions.push({
       id: `new-${target.uid}`,

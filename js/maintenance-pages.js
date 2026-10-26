@@ -4,7 +4,7 @@ export const WEEKDAYS = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira"
 export const MAINTENANCE_PAGES = [
   {id:"cards",label:"Início e cartas",icon:"profile",description:"Calendário semanal, evolução dos jogadores e limites das cartas.",groups:[
     ["Calendário semanal",["cycle.openDay","cycle.openHour","cycle.openMinute","cycle.closeDay","cycle.closeHour","cycle.closeMinute"]],
-    ["Evolução e inatividade",["progression.*","rules.communityMinimum","rules.selfWeight"]],
+    ["Evolução",["progression.*","rules.communityMinimum","rules.selfWeight"]],
     ["Coleção e prémios",["cycle.seasonMonths","cycle.yearMonths","rewards.temporaryAttribute","rewards.temporaryAward","rewards.permanentAttribute","rewards.dailyBudget","rewards.weeklyBudget","rewards.monthlyBudget","rewards.overflow","automation.cards","automation.collection"]],
   ]},
   {id:"games",label:"Jogos",icon:"games",description:"Disponibilidade da gestão de partidas e acesso ao calendário.",groups:[["Gestão de jogos",["features.games"]]]},

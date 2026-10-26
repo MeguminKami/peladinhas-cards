@@ -3,6 +3,8 @@ import { casinoFunctions } from './casino.js';
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
 import { homeFunctions } from "./home-cache.js";
+import { eligibleCommunityRating } from "./community-rating-policy.js";
+import { communityRatingFunctions, requiredCommunityReview, writeCommunityNotice } from "./community-ratings.js";
 import { markCardMvps } from "./card-unlock-rules.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
 import { passwordRecoveryFunctions } from "./password-recovery.js";
@@ -73,6 +75,7 @@ initializeApp(emulatorAppOptions());
 setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
+export const { communityRatingAction } = communityRatingFunctions(async uid => { await aggregateCommunity(uid); await buildHistory(uid); });
 export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession } = casinoFunctions();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {
@@ -245,9 +248,13 @@ async function aggregateCommunity(uid) {
     const query = db
       .collection("communityRatings")
       .where("targetId", "==", uid);
-    const votes = data(await tx.get(query)).filter(
-      (v) => v.submitted && completeInitial(v.ratings20),
-    );
+    const [voteSnapshot,target] = await Promise.all([tx.get(query),tx.get(db.doc(`users/${uid}`))]);
+    const rows = data(voteSnapshot);
+    for (const row of rows.filter(row => row.submitted && completeInitial(row.ratings20) && !eligibleCommunityRating(row) && !row.reviewState)) {
+      tx.update(db.doc(`communityRatings/${row.id}`),requiredCommunityReview());
+      writeCommunityNotice(tx,db,row,target.data()?.displayName || target.data()?.username || "este jogador","required");
+    }
+    const votes = rows.filter(eligibleCommunityRating);
     const ref = db.doc(`communitySummaries/${uid}`);
     tx.set(ref, {
       targetId: uid,
@@ -318,7 +325,7 @@ async function captureGameBalance(gid, g) {
       (v) =>
         v.targetId === uid &&
         v.submitted &&
-        completeInitial(v.ratings20) &&
+        eligibleCommunityRating(v) &&
         (v.submittedAt || v.createdAt)?.toMillis?.() <= closedAt,
     );
     const community = {
@@ -506,7 +513,7 @@ async function buildHistory(uid, shared = null) {
   const ovrWeights = normalizeOvrWeights(settings.data());
   const self = initial.data().ratings20;
   const votes = data(community).filter(
-    (r) => r.submitted && completeInitial(r.ratings20),
+    eligibleCommunityRating,
   );
   const games = data(gameSnaps).filter(
     (g) =>
@@ -622,7 +629,7 @@ async function buildHistory(uid, shared = null) {
       inactivity,
       stats,
       eventBoosts: calculation.eventBoosts,
-      calculationVersion: "base-plus-growth-v1",
+      calculationVersion: calculation.progression.version === "per-game-growth-v2" ? "base-plus-growth-v2" : "base-plus-growth-v1",
       baseStats: calculation.baseStats,
       gameStats: calculation.rawStats,
       primaryPosition: user.data().primaryPosition || null,

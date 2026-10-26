@@ -20,6 +20,7 @@ run(process.execPath, [
   "tests/team-balance.test.js",
   "tests/card-week.test.js",
   "tests/progression.test.js",
+  "tests/game-progression.test.js",
   "tests/events.test.js",
   "tests/match-time.test.js",
   "tests/push-config.test.js",

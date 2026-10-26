@@ -2,11 +2,13 @@ import { policyAt } from "./system-policy.js";
 import { asDate } from "./utils.js";
 
 export function ratingEditDeadline(rating, initial = false) {
+  if (!initial && rating?.reviewState === "required") return asDate(rating.reviewDeadline);
   if (!rating?.[initial ? "completed" : "submitted"]) return null;
   const submittedAt = asDate(rating.submittedAt || rating.createdAt);
   return new Date(+submittedAt + (rating.editDays ?? 7) * 86400000);
 }
 export function canEditRating(rating, date = new Date(), initial = false) {
+  if (!initial && ((rating?.reviewAttempts || 0) >= 2 || rating?.reviewState === "ignored")) return false;
   const deadline = ratingEditDeadline(rating, initial);
   return !deadline || +date < +deadline;
 }

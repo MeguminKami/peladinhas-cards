@@ -920,7 +920,7 @@ test("cartas semanais: fecho imutável, pausa e nova carta na quinta às 12h", a
   }
 });
 
-test("inatividade: finalizar atualiza ausentes, suplente recupera e reabrir remove ausência", async (t) => {
+test("inatividade: finalizar e reabrir contam ausências sem descontar OVR", async (t) => {
   t.mock.timers.enable({
     apis: ["Date"],
     now: new Date("2026-10-10T12:00:00Z"),
@@ -965,7 +965,7 @@ test("inatividade: finalizar atualiza ausentes, suplente recupera e reabrir remo
         await onGame.run(eventFor(before, await ref.get(), ref.id));
         const row = (await history.get()).data();
         assert.equal(row.inactivity.missed, i + 1);
-        assert.equal(row.inactivity.penalty, i === 3 ? 2 : 10);
+        assert.equal(row.inactivity.penalty, 0);
         assert.equal(
           row.ovr,
           row.ovrCalculation.rawOvr - row.inactivity.penalty,
@@ -976,7 +976,7 @@ test("inatividade: finalizar atualiza ausentes, suplente recupera e reabrir remo
       before = await last.get();
     await last.update({ status: "open" });
     await onGame.run(eventFor(before, await last.get(), last.id));
-    assert.equal((await history.get()).data().inactivity.penalty, 7);
+    assert.equal((await history.get()).data().inactivity.penalty, 0);
     const reset = db.doc("games/inactivity-return"),
       missing = await reset.get();
     await reset.set({
@@ -995,6 +995,34 @@ test("inatividade: finalizar atualiza ausentes, suplente recupera e reabrir remo
   } finally {
     t.mock.timers.reset();
   }
+});
+
+test("progressão v2: trigger publica novos ganhos e perdas e preserva carta fechada", async (t) => {
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-27T12:00:00Z")});
+  try {
+    const uid="fair-progression-player",gid="fair-progression-game",stamp=Timestamp.fromDate(new Date("2026-10-26T19:00:00Z"));
+    await db.doc(`users/${uid}`).set({uid,role:"member",primaryPosition:"ALA",createdAt:stamp});
+    await db.doc(`initialRatings/${uid}`).set({uid,ratings20:Object.fromEntries(ATTRIBUTES.map(([key])=>[key,16])),createdAt:stamp});
+    const frozen=db.doc(`users/${uid}/cardHistory/2026-W42`);
+    await frozen.set({weekId:"2026-W42",locked:true,ovr:70,stats:{pace:70}});
+    const ref=db.doc(`games/${gid}`),before=await ref.get();
+    await ref.set({status:"closed",closedAt:stamp,scheduledAt:stamp,teamA:{starters:[uid],bench:[]},teamB:{starters:[],bench:[]},score:{teamA:7,teamB:1},performance:{teamA:{goals:Array(6).fill(uid),assists:[uid]}}});
+    const vote=ref.collection("feedback").doc(`${uid}_${uid}`);
+    await vote.set({targetId:uid,raterId:uid,submitted:true,createdAt:stamp,submittedAt:stamp,ratings:{overall:4,attack:4.5,passing:3.5,defense:3,physical:4,attitude:4,goalkeeping:null}});
+    await onGame.run({params:{gid},data:{before,after:await ref.get()}});
+    const history=db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`);
+    const row=(await history.get()).data();
+    assert.equal(row.calculationVersion,"base-plus-growth-v2");
+    assert.ok(row.stats.shooting>row.baseStats.shooting);
+    assert.equal(row.stats.goalkeeping,row.baseStats.goalkeeping);
+    assert.equal(row.inactivity.penalty,0);
+    const prior=await ref.get();
+    await ref.update({score:{teamA:0,teamB:5},performance:{teamA:{goals:[],assists:[]}}});
+    await vote.update({ratings:{overall:2,attack:2,passing:2,defense:2,physical:2,attitude:2,goalkeeping:null}});
+    await onGame.run({params:{gid},data:{before:prior,after:await ref.get()}});
+    assert.ok((await history.get()).data().stats.shooting<row.baseStats.shooting);
+    assert.deepEqual((await frozen.get()).data(),{weekId:"2026-W42",locked:true,ovr:70,stats:{pace:70}});
+  } finally {t.mock.timers.reset();}
 });
 
 test("fotografia semanal: admin, upload validado, perfil independente e semanas fechadas", async (t) => {

@@ -2,6 +2,21 @@
 
 Os valores descritos abaixo são os valores iniciais. As regras configuráveis e a preservação do histórico estão descritas em [Manutenção](maintenance.md).
 
+## Regras desde 26/10/2026
+
+Em **Jogadores → (i) Como as tuas estatísticas mudam** (`#/players/evolution`), consultar o guia temático e experimentar o simulador local, que usa o mesmo motor da aplicação, com pesos de posição de referência e sem leituras adicionais de dados.
+
+Jogos encerrados desde 26/10/2026 às 00:00 UTC usam `per-game-growth-v2`, implementado em [`js/game-progression.js`](../../js/game-progression.js). Os anteriores, incluindo feedback recebido mais tarde, conservam a fórmula original. A autoavaliação e a comunidade continuam a definir uma base variável; não foi introduzido congelamento da base.
+
+- Nota neutra de 3 por dimensão; um mau desempenho pode perder atributos mesmo a vencer. N/A não inventa uma nota.
+- Comparação gradual com os colegas: sem redução adicional até −0,75; conserva 85% a −1, 50% a −1,5 e 25% a −2, interpolando. Uma nota ≥3,5 conserva pelo menos 75% dessa componente.
+- Golos reforçam Finalização, assistências reforçam Passe e os dois ajudam parcialmente Drible. A curva aproxima 1–3, distingue 4–5 e aumenta mais aos 6, saturando aos 10. Qualidade da dimensão, patamar e limites continuam a aplicar-se.
+- Vitória por 1/3/5+ conserva 92/96/100% do ganho; empate 75%; derrota por 1/3/5+ conserva 60/50/40%. Perdas são atenuadas pela vitória e agravadas pela derrota.
+- Defaults de velocidade 2,6, ganho máximo 5 antes do patamar e perda máxima 0,6. As configurações futuras explícitas podem ajustar estes três parâmetros.
+- Patamares 1/0,7/0,4 abaixo de 75/85/90; a partir de 90, `0,12 × (99−atributo)/9`. Orçamento máximo de ganhos ponderados de +2,5 OVR exatos por jogo. Tetos e orçamento aplicam-se antes do fator de resultado, garantindo a ordem vitória ≥ empate ≥ derrota; o arredondamento da carta pode mostrar três inteiros.
+
+O código é partilhado pelo navegador e Functions. Publicar ambos; depois, **Recalcular liga** atualiza cartas abertas, incluindo a remoção de descontos antigos de inatividade, mas não transforma jogos anteriores em v2 nem reescreve semanas fechadas. [Implementação, validação e deploy seletivo](../reports/progression-guide-implementation-2026-10-26.md).
+
 [← Documentação](../README.md) · [Cartas e OVR](cards-and-ratings.md)
 
 ## O que faz um jogador evoluir
@@ -25,7 +40,7 @@ flowchart TB
 | Dimensão sem avaliação / GR N/A | Não altera os atributos dessa dimensão.                              |
 | Carta semanal fechada           | Preserva o snapshot guardado.                                        |
 
-## Exemplo de calibração
+## Exemplo de calibração da fórmula anterior
 
 | Jogos   |   0 |   5 |  10 |  12 |  18 |  30 |
 | :------ | --: | --: | --: | --: | --: | --: |
@@ -44,11 +59,11 @@ npm.cmd run simulate
 <details>
 <summary><strong>Regras completas e implementação</strong></summary>
 
-Implementação partilhada pelo cliente e Cloud Functions: `js/player-calculation.js` coordena a base, os jogos, as recompensas e o OVR; `js/utils.js` mantém a progressão `per-game-growth-v1`. O cálculo atual não recebe atributos nem OVR de cartas semanais anteriores. As cartas fechadas são snapshots de apresentação e comparação.
+Implementação partilhada pelo cliente e Cloud Functions: `js/player-calculation.js` coordena a base, os jogos, as recompensas e o OVR; `js/utils.js` escolhe a versão pela data do jogo. O cálculo atual não recebe atributos nem OVR de cartas semanais anteriores. As cartas fechadas são snapshots de apresentação e comparação. Os detalhes de fórmula abaixo descrevem `per-game-growth-v1`, preservada nos jogos anteriores a 26/10/2026.
 
 Com 1 a 4 avaliações externas completas, o peso da autoavaliação é min(20%, 1 / (N + 1)), sendo N o número de avaliações externas. Com pelo menos 5, os 96% da comunidade são divididos igualmente pelas avaliações externas, truncando cada percentagem a duas casas decimais; a autoavaliação recebe os 4% de referência mais o resto. Exemplo com 13 externas: 13 × 7,38% + 4,06% = 100%. Sem avaliações externas, a primeira carta provisória usa a autoavaliação. A base é convertida de 0–20 para 0–99. Jogos são reproduzidos por data e ID; cada delta é somado sem arredondamento intermédio. O OVR de início do jogo usa os pesos da posição principal e atributos arredondados, sem penalização por inatividade.
 
-Atributos atuais = base atual + variações dos jogos elegíveis + recompensas ativas. O OVR pondera esses atributos pela posição e aplica a penalização por inatividade. Jogos futuros, abertos ou em eliminação não entram. Recalcular começa sempre na base, sem somar novamente melhorias já aplicadas. Novos snapshots guardam baseStats e gameStats para distinguir a base das variações dos jogos.
+Atributos atuais = base atual + variações dos jogos elegíveis + recompensas ativas. O OVR pondera esses atributos pela posição, sem desconto por inatividade. Jogos futuros, abertos ou em eliminação não entram. Recalcular começa sempre na base, sem somar novamente melhorias já aplicadas. Novos snapshots guardam baseStats e gameStats para distinguir a base das variações dos jogos. Depois de publicar a remoção da penalização, **Recalcular liga** atualiza as cartas abertas que ainda tenham descontos guardados; semanas fechadas conservam os seus valores históricos.
 
 Alterar a autoavaliação ou a avaliação da comunidade altera a base, mesmo sem jogos novos. A autoavaliação pesa no máximo 20% até 4 avaliações externas e passa a 4% mais o resto dessa divisão a partir de 5; guardar os 12 valores a zero reduz a base. As comparações semanais incluem essas alterações, os jogos e as recompensas permanentes; excluem as temporárias.
 
@@ -58,7 +73,7 @@ A autoavaliação pós-jogo submetida com guarda-redes N/A exclui todas as notas
 
 A comparação entre semanas usa progressão e recompensas **permanentes**. A entrada, renovação ou expiração de bónus temporários não provoca setas de evolução, embora os números atuais da carta incluam os bónus ativos.
 
-## Fórmula
+## Fórmula anterior · jogos até 25/10/2026
 
 Por dimensão: `R = 0,70 × (estrelas − 3) + 0,30 × (estrelas − média dos colegas) + 0,20 × (estrelas − média adversária)`.
 As médias excluem o próprio e avaliações N/A. Referências ausentes produzem diferença zero. Dimensão sem avaliação não altera atributos, incluindo guarda-redes N/A. Atitude substitui físico em resistência e ataque em compostura quando presente.

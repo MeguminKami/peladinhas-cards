@@ -41,7 +41,7 @@ export const ACTIVITY_CATEGORIES = [
 export function activityCategory(item) {
   if (item.type === "PLAYER_PATH") return "path";
   if (
-    ["GAME_FEEDBACK", "RATE_NEW_PLAYER", "SELF_INITIAL_RATING"].includes(
+    ["GAME_FEEDBACK", "RATE_NEW_PLAYER", "SELF_INITIAL_RATING", "COMMUNITY_RATING_REVIEW"].includes(
       item.type,
     )
   )

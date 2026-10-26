@@ -17,6 +17,7 @@ import { card, bindImages, weeklyEvolution } from "./cards.js";
 import { esc, empty, linkButton, pageHead, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
 import * as DB from "./db.js";
+import { communityReviewBanner } from "./community-review.js";
 import {
   durationName,
   validCardSelection,
@@ -130,7 +131,7 @@ export async function playerPage(ctx, uid) {
     uid !== ctx.user.uid
       ? linkButton(
           `#/missions/new/${uid}`,
-          myRating?.submitted ? "Editar a minha avaliação" : "Avaliar jogador",
+          myRating?.reviewState === "required" ? "Rever a minha avaliação" : myRating?.reviewAttempts >= 2 ? "Consultar a minha avaliação" : myRating?.submitted ? "Editar a minha avaliação" : "Avaliar jogador",
           "primary",
           "edit",
         )
@@ -172,6 +173,12 @@ export async function playerPage(ctx, uid) {
     .join("");
   const canChooseCard = own && p.hasCard && cardChoices.length > 1;
   const previousWeek = cardWeek(new Date(+cardWeek().opensAt - 1)).weekId;
+  const reviewNotices = own
+    ? (ctx.missions || []).filter(mission => mission.type === "COMMUNITY_RATING_REVIEW").map(mission => {
+        const target = ctx.league.players.find(player => player.uid === mission.href.split("/").at(-1));
+        return communityReviewBanner(target?.displayName || target?.username || "este jogador",{reviewState:"required"},mission.href);
+      }).join("")
+    : communityReviewBanner(p.displayName || p.username,myRating,`#/missions/new/${uid}`);
   const attributePrevious = history.find((h) => h.weekId === previousWeek);
   const previous = attributePrevious;
   Object.assign(
@@ -190,7 +197,7 @@ export async function playerPage(ctx, uid) {
         })).sort((a, b) => b.delta - a.delta)[0]
       : null;
   ctx.render(
-    `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${own ? linkButton("#/missions/path", "Escolhe o teu caminho!", "secondary", "path") : ""}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}${weeklyEvolution(p)}${canChooseCard ? '<button type="button" id="choose-weekly-card" class="btn btn-secondary">Escolher carta</button>' : ""}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? `Semana fechada · Reabre ${new Intl.DateTimeFormat("pt-PT",{timeZone:"Europe/Lisbon",weekday:"long",hour:"2-digit",minute:"2-digit"}).format(cardWeek().nextOpensAt)}` : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
+    `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${own ? linkButton("#/missions/path", "Escolhe o teu caminho!", "secondary", "path") : ""}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}${reviewNotices}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}${weeklyEvolution(p)}${canChooseCard ? '<button type="button" id="choose-weekly-card" class="btn btn-secondary">Escolher carta</button>' : ""}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? `Semana fechada · Reabre ${new Intl.DateTimeFormat("pt-PT",{timeZone:"Europe/Lisbon",weekday:"long",hour:"2-digit",minute:"2-digit"}).format(cardWeek().nextOpensAt)}` : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
       ["Idade", `${age(p.birthDate)} anos`],
       ["Altura", p.heightCm ? `${p.heightCm} cm` : "—"],
       ["Peso", p.weightKg ? `${p.weightKg} kg` : "—"],

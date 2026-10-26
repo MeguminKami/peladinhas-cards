@@ -452,7 +452,7 @@ test("initial 0–20; agregados e snapshots não são manipuláveis", async () =
     }),
   );
 });
-test("novo jogador: leitura de rascunho ausente e submissão única", async () => {
+test("comunidade: leitura própria e escritas exclusivamente pelo callable", async () => {
   await assertSucceeds(
     getDoc(doc(signed("pedro"), "communityRatings/pedro_joao")),
   );
@@ -465,9 +465,10 @@ test("novo jogador: leitura de rascunho ausente e submissão única", async () =
     updatedAt: serverTimestamp(),
     submittedAt: null,
   };
-  await assertSucceeds(
+  await assertFails(
     setDoc(doc(signed("pedro"), "communityRatings/pedro_joao"), r),
   );
+  await env.withSecurityRulesDisabled(async c => setDoc(doc(c.firestore(),"communityRatings/pedro_joao"),{...r,createdAt:Timestamp.now(),updatedAt:Timestamp.now()}));
   await assertFails(getDoc(doc(signed("joao"), "communityRatings/pedro_joao")));
   await assertFails(
     setDoc(doc(signed("pedro"), "communityRatings/pedro_pedro"), {
@@ -484,7 +485,7 @@ test("novo jogador: leitura de rascunho ausente e submissão única", async () =
   );
 });
 
-test("comunidade: editar voto próprio completo sem voltar a rascunho", async () => {
+test("comunidade: cliente não pode editar notas nem reiniciar tentativas", async () => {
   const ref = doc(signed("pedro"), "communityRatings/pedro_joao");
   const ratings20 = Object.fromEntries(
     [
@@ -502,8 +503,8 @@ test("comunidade: editar voto próprio completo sem voltar a rascunho", async ()
       "composure",
     ].map((key) => [key, 15]),
   );
-  await assertSucceeds(
-    setDoc(ref, {
+  await env.withSecurityRulesDisabled(async c =>
+    setDoc(doc(c.firestore(),"communityRatings/pedro_joao"), {
       raterId: "pedro",
       targetId: "joao",
       ratings20,
@@ -513,12 +514,13 @@ test("comunidade: editar voto próprio completo sem voltar a rascunho", async ()
       submittedAt: serverTimestamp(),
     }),
   );
-  await assertSucceeds(
+  await assertFails(
     updateDoc(ref, {
       ratings20: { ...ratings20, pace: 18 },
       updatedAt: serverTimestamp(),
     }),
   );
+  await assertFails(updateDoc(ref,{reviewAttempts:0,reviewState:"accepted",ratings20}));
   await assertFails(
     updateDoc(ref, { submitted: false, updatedAt: serverTimestamp() }),
   );

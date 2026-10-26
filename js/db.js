@@ -150,34 +150,13 @@ export async function saveCommunity(
   targetId,
   ratings20,
   submit = false,
+  options = {},
 ) {
-  const target = doc(db, "communityRatings", `${raterId}_${targetId}`);
-  await runTransaction(db, async (tx) => {
-    const s = await tx.get(target);
-    if (!canEditRating(s.data()))
-      throw Error("O prazo para editar a avaliação terminou.");
-    submit = submit || s.data()?.submitted === true;
-    if (submit && !completeInitial(ratings20))
-      throw Error("Preenche os 12 atributos.");
-    const value = {
-      raterId,
-      targetId,
-      ratings20,
-      submitted: submit,
-      editDays: s.data()?.submitted
-        ? (s.data().editDays ?? 7)
-        : policyAt().rules.ratingEditDays,
-      updatedAt: serverTimestamp(),
-      submittedAt: s.data()?.submitted
-        ? s.data().submittedAt || s.data().createdAt
-        : submit
-          ? serverTimestamp()
-          : null,
-    };
-    if (!s.exists()) value.createdAt = serverTimestamp();
-    else value.createdAt = s.data().createdAt;
-    tx.set(target, value);
-  });
+  return (await callAdmin("communityRatingAction", {
+    targetId, ratings20, submit,
+    ...(submit ? {submissionId:crypto.randomUUID()} : {}),
+    ...(options.reviewToken ? {reviewToken:options.reviewToken} : {}),
+  })).data;
 }
 export async function saveFeedback(
   gid,
