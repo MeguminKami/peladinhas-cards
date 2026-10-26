@@ -1,9 +1,9 @@
 ﻿# Integração da RIFT//CORE no site principal
 
-Matemática atual: **rift-4.14**. Entradas 3→CORE (8 FS), 4→RIFT (10 FS),
+Matemática atual: **rift-4.15**. Entradas 3→CORE (8 FS), 4→RIFT (10 FS),
 5→OVERDRIVE (12 FS), 6→OVERDRIVE (14 FS). Compras usam os mesmos portais;
 OVERDRIVE comprado tem 33,33% de chance de 6. Consultar
-[pagamentos, probabilidades e RTP atuais](./RTP-v4.14.md).
+[pagamentos, probabilidades e RTP atuais](./RTP-v4.15.md).
 Atualizar motor e configuração em conjunto no host Node, quando aplicável.
 Os bónus usam perfis próprios reforçados de Wilds e poderes, definidos em math-config.js. O ganho da rodada e
 o ganho acumulado do bónus são separados; o saldo visual só inclui este
@@ -182,6 +182,7 @@ Verificar na infraestrutura real do site:
 - Todos os montantes mostram apenas o número, inclusive no histórico e na compra.
 
 Na entrega, os testes incluem transações, idempotência, concorrência, saldo insuficiente, FS e ausência de confiança em ganhos do cliente. O QA no navegador usa iframe entre origens diferentes, perde intencionalmente uma resposta após o débito e confirma recuperação sem nova cobrança. A base de dados e a autenticação reais do site ainda precisam da implementação acima.
+
 
 
 

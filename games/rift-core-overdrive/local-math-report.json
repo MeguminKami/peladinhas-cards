@@ -1,16 +1,16 @@
 {
   "purchaseSample": {
-    "reused": true,
+    "reused": false,
     "validation": "Independent validation seeds after prices were fixed; no price fitting to this sample.",
-    "version": "rift-4.14",
-    "configurationHash": "a85a699c780a46bca52d50f6410c621494d5de0d62336a0f11052a113fa5ba33",
-    "engineHash": "d24206725ae8b3797da268574de7f54675ae628fbb33989513fd246a00654ded"
+    "version": "rift-4.15",
+    "configurationHash": "152de609e53eaf413484bbd4cc5ebe3cfd644595256e32398a76a12af425a98c",
+    "engineHash": "4685a32b66117c48d0822daaee70cd231e2e77e609076c80878b310f6c93c4c6"
   },
-  "date": "2026-10-26T19:53:07.995Z",
-  "version": "rift-4.14",
+  "date": "2026-10-26T21:00:57.950Z",
+  "version": "rift-4.15",
   "bet": 0.1,
-  "configurationHash": "02884b9bf2917a9d79c3680ea1c765fc88ee5faae340d1ed79e53eee8618b653",
-  "engineHash": "d24206725ae8b3797da268574de7f54675ae628fbb33989513fd246a00654ded",
+  "configurationHash": "152de609e53eaf413484bbd4cc5ebe3cfd644595256e32398a76a12af425a98c",
+  "engineHash": "4685a32b66117c48d0822daaee70cd231e2e77e609076c80878b310f6c93c4c6",
   "configuration": {
     "growth": {
       "cascadeMultiplier": false,
@@ -34,8 +34,8 @@
     ],
     "rng": "xoshiro128**",
     "sampling": "independent-symbol-weights",
-    "payDenominator": 10000,
-    "payScale": 1,
+    "payDenominator": 100000,
+    "payScale": 1.1,
     "payBase": [
       0.1,
       0.125,
@@ -620,20 +620,20 @@
       "n": 1000000,
       "seed": 781026,
       "bet": 0.1,
-      "mean": 0.5523916000000186,
-      "variance": 1.107183667433858,
-      "entryPaidMean": 0.0005226999999999999,
-      "entryPaidVariance": 0.0008277576124676108
+      "mean": 0.6067990000000653,
+      "variance": 1.3369111505107278,
+      "entryPaidMean": 0.000576,
+      "entryPaidVariance": 0.0010029092269092255
     },
     {
       "scenario": "hunt",
       "n": 1000000,
       "seed": 781027,
       "bet": 0.1,
-      "mean": 1.6425683999999685,
-      "variance": 7.411866923189313,
-      "entryPaidMean": 0.004450499999999998,
-      "entryPaidVariance": 0.015593878643628675
+      "mean": 1.8048962999996763,
+      "variance": 8.958960855210607,
+      "entryPaidMean": 0.004888299999999992,
+      "entryPaidVariance": 0.018842493365603376
     }
   ],
   "bonusComponents": [
@@ -642,32 +642,32 @@
       "n": 50000,
       "seed": 751026,
       "bet": 0.1,
-      "mean": 76.1176540000004,
-      "variance": 13922.035648449208
+      "mean": 83.70704599999993,
+      "variance": 16843.377000493954
     },
     {
       "scenario": "rift",
       "n": 50000,
       "seed": 751027,
       "bet": 0.1,
-      "mean": 213.2472460000024,
-      "variance": 74261.19731636206
+      "mean": 234.53888200000023,
+      "variance": 89851.20236883749
     },
     {
       "scenario": "overdrive",
       "n": 33227,
       "seed": 751028,
       "bet": 0.1,
-      "mean": 401.2221295934041,
-      "variance": 177430.20653819208
+      "mean": 441.2996027327172,
+      "variance": 214682.91917759518
     },
     {
       "scenario": "overdrive14",
       "n": 16773,
       "seed": 751028,
       "bet": 0.1,
-      "mean": 499.72500447147354,
-      "variance": 258416.1530809146
+      "mean": 549.6458594169221,
+      "variance": 312668.77216103685
     }
   ],
   "probabilities": {
@@ -719,54 +719,54 @@
   },
   "summaries": {
     "core": {
-      "rtp": 0.951470675,
+      "rtp": 1.046338075,
       "ci95": [
-        0.9385426419725194,
-        0.9643987080274807
+        1.0321182036612384,
+        1.0605579463387615
       ],
       "n": 50000,
-      "kind": "reused-purchased-bonus-sample",
-      "sampleVersion": "rift-4.14"
+      "kind": "complete-purchased-bonus-rounds",
+      "sampleVersion": "rift-4.15"
     },
     "rift": {
-      "rtp": 0.9693056636363636,
+      "rtp": 1.0660858272727274,
       "ci95": [
-        0.9584481755395269,
-        0.9801631517332003
+        1.0541429124496564,
+        1.0780287420957984
       ],
       "n": 50000,
-      "kind": "reused-purchased-bonus-sample",
-      "sampleVersion": "rift-4.14"
+      "kind": "complete-purchased-bonus-rounds",
+      "sampleVersion": "rift-4.15"
     },
     "overdrive": {
-      "rtp": 0.9650353422222222,
+      "rtp": 1.0614343066666667,
       "ci95": [
-        0.9561783184233301,
-        0.9738923660211143
+        1.0516917822192302,
+        1.0711768311141032
       ],
       "n": 50000,
-      "kind": "reused-purchased-bonus-sample",
-      "sampleVersion": "rift-4.14"
+      "kind": "complete-purchased-bonus-rounds",
+      "sampleVersion": "rift-4.15"
     },
     "base": {
-      "rtp": 0.9616591279940168,
+      "rtp": 1.056936631747115,
       "ci95": [
-        0.9576531487360813,
-        0.9650860165289203
+        1.052530457110462,
+        1.0607047356492298
       ],
       "n": 1000000,
       "kind": "stratified-paid-spin-plus-natural-bonus",
-      "naturalEntryCapCorrectionBound": 0.0005790907230318566
+      "naturalEntryCapCorrectionBound": 0.0006380707345380614
     },
     "hunt": {
-      "rtp": 0.9567903279939877,
+      "rtp": 1.051769731746942,
       "ci95": [
-        0.9519612080059718,
-        0.960054362686353
+        1.0464607960965777,
+        1.0553595523288617
       ],
       "n": 1000000,
       "kind": "stratified-paid-spin-plus-natural-bonus",
-      "naturalEntryCapCorrectionBound": 0.001565085295650464
+      "naturalEntryCapCorrectionBound": 0.0017191150684447182
     }
   }
 }

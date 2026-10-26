@@ -1,13 +1,13 @@
 // Every eligible cell is an independent draw from fixed per-reel weights.
 // No target outcomes, quotas, retries or player-dependent adjustments.
-export const MATH_VERSION='rift-4.14';
+export const MATH_VERSION='rift-4.15';
 const weights=[16,15,14,13,12,10,7.5,5.5,4,3];
 const reels=bias=>Array.from({length:6},(_,c)=>weights.map((w,i)=>w*(i===c?bias:1)));
 const reelWeights=reels(10);
 export const CONFIG={
  growth:{cascadeMultiplier:false,core:{every:3,step:1},rift:{every:3,step:1},overdrive:{every:3,step:1}},
  target:.96,precision:[.94,.98],rng:'xoshiro128**',sampling:'independent-symbol-weights',
- payDenominator:10000,payScale:1,payBase:[.1,.125,.15,.2],payFactors:[1,1.1,1.2,1.3,1.4,1.8,2.5,3.5,5,7],
+ payDenominator:100000,payScale:1.1,payBase:[.1,.125,.15,.2],payFactors:[1,1.1,1.2,1.3,1.4,1.8,2.5,3.5,5,7],
  prices:{core:80,rift:220,overdrive:450},
  bonuses:{core:{name:'CORE AWAKENING',spins:8,startGlobal:1,maxGlobal:25,retrigger:4,art:8},rift:{name:'RIFT ASCENSION',spins:10,startGlobal:3,maxGlobal:50,retrigger:5,art:7},overdrive:{name:'CRITICAL OVERDRIVE',spins:12,startGlobal:5,maxGlobal:100,retrigger:6,art:9}},
  payOverrides:{},

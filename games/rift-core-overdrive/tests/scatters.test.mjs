@@ -6,6 +6,7 @@ import * as old from '../engine-v4.3.js';
 import * as previous44 from '../engine-v4.4.js';
 import * as previous45 from '../engine-v4.5.js';
 import * as previous46 from '../engine-v4.6.js';
+import * as previous414 from '../engine-v4.14.js';
 import * as previous413 from '../engine-v4.13.js';
 import * as previous412 from '../engine-v4.12.js';
 import * as previous411 from '../engine-v4.11.js';
@@ -21,9 +22,9 @@ test('new paytable grows clearly for every extra column and matches the server',
   assert.ok(row[6]<=row[3]*2.001);
  }
  assert.deepEqual(browser.CONFIG.precision,[.94,.98]);
- assert.deepEqual(browser.PAY[0].slice(3),[.1,.125,.15,.2]);
- assert.equal(browser.PAY[9][6],1.4);
- for(const row of browser.PAY)assert.ok(row[3]>=.1);
+ assert.deepEqual(browser.PAY[0].slice(3),[.11,.1375,.165,.22]);
+ assert.equal(browser.PAY[9][6],1.54);
+ for(const row of browser.PAY)assert.ok(row[3]>=.11);
 });
 
 test('existing 4.7 bonuses keep their original math and balance',()=>{
@@ -124,11 +125,11 @@ test('six-column yellow wins apply the displayed x20 core multiplier in every bo
 });
 
 
-test('one six-column way pays 0.2x minimum and 1.4x for the strongest symbol before multipliers',()=>{
+test('one six-column way pays 0.22x minimum and 1.54x for the strongest symbol before multipliers',()=>{
  for(const symbol of [0,9]){
   const grid=Array.from({length:6},(_,c)=>Array.from({length:5},(_,r)=>({id:`${c}-${r}`,s:r===0?symbol:11})));
   const result=browser.evaluate(grid);assert.equal(result.wins.length,1);assert.equal(result.wins[0].ways,1);
-  assert.equal(result.amount,symbol===0?.2:1.4);assert.equal(browser.money(result.amount*.1*20),symbol===0?.4:2.8);
+  assert.equal(result.amount,symbol===0?.22:1.54);assert.equal(browser.money(result.amount*.1*20),symbol===0?.44:3.08);
  }
 });
 
@@ -180,8 +181,12 @@ test('existing 4.12 bonuses retain their paytable and cascade multipliers',()=>{
 test('bonus prices stay locked at 80x, 220x and 450x',()=>{
  assert.deepEqual(browser.CONFIG.prices,{core:80,rift:220,overdrive:450});
  for(const mode of ['core','rift','overdrive'])assert.equal(browser.purchasePrice(mode,.1),browser.CONFIG.prices[mode]*.1);
- assert.deepEqual(browser.PAY,previous413.PAY);
+ for(let symbol=0;symbol<10;symbol++)for(let length=3;length<=6;length++)assert.equal(Math.round(browser.PAY[symbol][length]*100000),Math.round(previous414.PAY[symbol][length]*100000)*11/10);
 });
 test('existing 4.13 bonuses preserve their original price and feature profile',()=>{
  const state=previous413.fresh(719);previous413.play(state,{buy:'overdrive'});state.pending=null;const copy=structuredClone(state);assert.deepEqual(browser.play(state),previous413.play(copy));assert.deepEqual(state,copy);
+});
+
+test('existing 4.14 bonuses preserve the paytable before the 10 percent increase',()=>{
+ const state=previous414.fresh(720);previous414.play(state,{buy:'overdrive'});state.pending=null;const copy=structuredClone(state);assert.deepEqual(browser.play(state),previous414.play(copy));assert.deepEqual(state,copy);
 });

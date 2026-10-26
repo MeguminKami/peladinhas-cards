@@ -166,7 +166,7 @@ export function createRenderer({board,settings,sound,mode,status,isActivation=()
   for(const win of event.wins){
    board.querySelectorAll('.winner').forEach(el=>el.classList.remove('winner'));cells(win.positions,'winner');
    const pt=document.documentElement.lang.startsWith('pt');sound('symbol',win.symbol);
-   const factor=win.value.toLocaleString(pt?'pt-PT':'en-GB',{maximumFractionDigits:4});
+   const factor=win.value.toLocaleString(pt?'pt-PT':'en-GB',{maximumFractionDigits:5});
    const legacyCascade=event.cm>1?` \u00d7${event.cm} CASCADE`:'';
    status(`${NAMES[win.symbol]} \u00b7 ${win.ways} WAYS \u00b7 ${pt?'COLUNAS':'REELS'} 1\u2013${win.length}`,`${win.ways} \u00d7 ${factor} \u00d7 ${format(event.bet)} \u00d7${event.gm} CORE${legacyCascade} = ${format(win.paid??win.amount*event.bet*event.cm*event.gm)}`);
    await pause(reduced()?Math.max(300,groupBudget):Math.max(240,groupBudget));

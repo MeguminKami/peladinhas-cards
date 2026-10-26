@@ -1,4 +1,6 @@
-﻿# RIFT//CORE 4.14 — preços fixos, bónus reforçados e barra compacta
+﻿> Histórico. Aumento de 10%: [4.15](./RTP-v4.15.md).
+
+# RIFT//CORE 4.14 — preços fixos, bónus reforçados e barra compacta
 
 Resultados locais de 2026-10-26, aposta-base 0,10. Sem leituras cloud ou deploy.
 
@@ -38,7 +40,7 @@ Preços e parâmetros dos FS fixados antes das seeds independentes 751026/751027
 
 Retriggers: 8 697 / 11 162 / 14 385. Caps: zero nos três modos. Rondas sem qualquer ganho: 6 / 0 / 0, respetivamente; são observações da amostra, não garantias. Os ganhos médios anteriores eram cerca de 4,22× / 15,71× / 143,07× por aposta-base, pelo que os novos bónus foram efetivamente reforçados, em vez de apenas encarecidos.
 
-[Resultados completos dos bónus](./purchases-50000.json), incluindo contagens por poder e hashes da amostra.
+[Resultados completos dos bónus](./purchases-v4.14-validation.json), incluindo contagens por poder e hashes da amostra.
 
 ## Normal e Hunt
 
@@ -51,7 +53,7 @@ Como os bónus naturais passaram a devolver mais, foram ajustados apenas os peso
 | Normal | 96,17% | 95,77–96,51% |
 | Hunt | 95,68% | 95,20–96,01% |
 
-Método: um milhão de spins pagos novos por modo, seeds 781026/781027, mais expectativas condicionais dos FS ponderadas pelas probabilidades exatas de entrada. Há desconto conservador no limite inferior pela correlação com o cap acumulado. Os modos partilham as amostras de FS. [Relatório principal, configuração final e hashes](./local-math-report.json).
+Método: um milhão de spins pagos novos por modo, seeds 781026/781027, mais expectativas condicionais dos FS ponderadas pelas probabilidades exatas de entrada. Há desconto conservador no limite inferior pela correlação com o cap acumulado. Os modos partilham as amostras de FS. [Relatório principal, configuração final e hashes](./rtp-v4.14-sample.json).
 
 A amostra dos bónus precede o último ajuste dos pesos dos spins pagos. Foi reutilizada após verificar que todos os parâmetros condicionais dos FS, os preços, a tabela e o motor de liquidação são iguais; apenas os perfis pagos diferem. Os hashes originais ficam preservados em purchaseSample e purchases-50000.json. Não são apresentadas novas compras após esse ajuste.
 
@@ -95,3 +97,4 @@ npm.cmd run test:docs
 A reprodução gera novos hashes finais e pode produzir um resultado diferente das compras guardadas, porque a geração da grelha de ativação usa o perfil pago que foi ajustado depois; a distribuição condicional dos FS permanece igual. Para reproduzir o relatório atual com a amostra guardada, executar apenas audit-paid-rtp com --reuse-bonus-sample. Todas as medições referem-se à aposta 0,10 e arredondamento a cêntimos; não são certificação.
 
 Publicação: npm.cmd run deploy:frontend. Nenhum deploy executado. Nenhuma função Firebase atual importa o motor Node de referência; hosts externos devem atualizar motor e configuração em conjunto.
+

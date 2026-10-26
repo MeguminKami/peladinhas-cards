@@ -4,13 +4,13 @@ import {evaluate,PAY,CONFIG,fresh,play} from '../engine.js';
 const board=(counts,symbol=0)=>Array.from({length:6},(_,c)=>Array.from({length:5},(_,r)=>({id:`${c}-${r}`,s:r<(counts[c]||0)?symbol:11})));
 test('3 x 3 x 3 pays 27 ways and six columns only doubles the same 27 ways',()=>{
  const short=evaluate(board([3,3,3])),long=evaluate(board([3,3,3,1,1,1]));
- assert.equal(short.wins[0].ways,27);assert.equal(short.wins[0].length,3);assert.equal(short.amount,2.7);
- assert.equal(long.wins[0].ways,27);assert.equal(long.wins[0].length,6);assert.equal(long.amount,5.4);
- assert.equal(Math.round(short.amount*.1*11*100)/100,2.97);
+ assert.equal(short.wins[0].ways,27);assert.equal(short.wins[0].length,3);assert.equal(short.amount,2.97);
+ assert.equal(long.wins[0].ways,27);assert.equal(long.wins[0].length,6);assert.equal(long.amount,5.94);
+ assert.equal(Math.round(short.amount*.1*11*100)/100,3.27);
 });
-test('minimum one-way payment is 0.1x and every symbol has modest distance growth',()=>{
- assert.equal(evaluate(board([1,1,1])).amount,.1);
- for(const row of PAY){assert.ok(row[3]>=.1);assert.equal(row[6],row[3]*2);}
+test('minimum one-way payment is 0.11x and every symbol has modest distance growth',()=>{
+ assert.equal(evaluate(board([1,1,1 ])).amount,.11);
+ for(const row of PAY){assert.ok(row[3]>=.11);assert.equal(row[6],row[3]*2);}
 });
 test('only consecutive reels count and right-hand extras do not multiply short ways',()=>{
  assert.equal(evaluate(board([3,3,3,0,5,5])).wins[0].ways,27);
@@ -20,11 +20,11 @@ test('only consecutive reels count and right-hand extras do not multiply short w
 test('all-Wild prefix extended by a natural symbol is not paid again as a shorter win',()=>{
  const grid=board([3,3,3],10);grid[3][0].s=0;const result=evaluate(grid);
  assert.equal(result.wins.length,1);assert.equal(result.wins[0].symbol,0);assert.equal(result.wins[0].length,4);
- assert.equal(result.wins[0].ways,27);assert.equal(result.amount,3.375);
+ assert.equal(result.wins[0].ways,27);assert.equal(result.amount,3.7125);
 });
 test('unextended all-Wild ways pay the highest symbol exactly once',()=>{
  const result=evaluate(board([3,3,3],10));assert.equal(result.wins.length,1);
- assert.equal(result.wins[0].symbol,9);assert.equal(result.wins[0].ways,27);assert.equal(result.amount,18.9);
+ assert.equal(result.wins[0].symbol,9);assert.equal(result.wins[0].ways,27);assert.equal(result.amount,20.79);
 });
 // Enumerate actual row choices instead of multiplying counts, as an independent oracle.
 function oracle(grid){
@@ -60,4 +60,5 @@ test('new paid spins and bonus free spins never apply a cascade multiplier',()=>
   assert.ok(wins>0,mode);
  }
 });
+
 

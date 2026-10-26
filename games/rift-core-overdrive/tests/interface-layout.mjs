@@ -156,10 +156,10 @@ export async function verifyInterface(browser,url,errors){
    const grid=Array.from({length:6},(_,c)=>Array.from({length:5},(_,r)=>({id:`fixture-${c}-${r}`,s:c<3&&r<3?0:11})));
    let text='';const renderer=createRenderer({board:document.querySelector('#board'),settings:()=>({reduced:true,speed:4}),sound:()=>{},mode:()=> 'core',status:(line,value)=>{document.querySelector('#status').textContent=line;document.querySelector('#payExplanation').textContent=value;text=line+' '+value;}});
    renderer.draw(grid);const result=evaluate(grid);
-   await renderer.presentWin({grid,...result,wins:allocateWinCents(result.wins,297),bet:.1,cm:1,gm:11},n=>n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}),()=>{});
+   await renderer.presentWin({grid,...result,wins:allocateWinCents(result.wins,327),bet:.1,cm:1,gm:11},n=>n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}),()=>{});
    return text;
   });
-  assert.equal(await page.locator('.cascade').isVisible(),false,'new rounds hide the removed cascade multiplier');assert.ok(message.includes('27 WAYS'));assert.ok(message.includes('2,97'));assert.ok(!message.includes('CASCADE'));
+  assert.equal(await page.locator('.cascade').isVisible(),false,'new rounds hide the removed cascade multiplier');assert.ok(message.includes('27 WAYS'));assert.ok(message.includes('3,27'));assert.ok(!message.includes('CASCADE'));
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.screenshot({path:resolve(tmpdir(),`rift-ways-27-${width}.png`)});
   await page.close();
