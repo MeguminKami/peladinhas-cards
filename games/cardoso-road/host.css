@@ -1,0 +1,4 @@
+/* Same viewport allowance as the app's .casino-table-mount iframe. App-owned
+   custom properties carry its measured header, toolbar and bottom-nav sizes. */
+.cardoso-host{min-width:0;border-radius:12px;background:#10121e;box-shadow:0 16px 60px #0004}
+.cardoso-host>iframe,.casino-table-mount.cardoso-host>iframe{display:block;width:100%;height:clamp(160px,calc(100dvh - var(--casino-header-height,80px) - var(--casino-toolbar-height,70px) - var(--casino-bottom-height,0px) - 24px),780px);border:0;border-radius:inherit}

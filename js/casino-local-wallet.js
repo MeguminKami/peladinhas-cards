@@ -1,9 +1,10 @@
 import { callAdmin } from "./db.js";
-import { settleCasinoSlot } from "./casino-economy.js";
+import { settleCasinoSlot, CASINO_EDITION } from "./casino-economy.js";
 import { readCasinoLocal, writeCasinoLocal } from "./casino-local-store.js";
 import { tableOperation } from "./casino-table-operation.js";
 
 export function createCasinoLocalWallet(uid, changed = () => {}, { tables = false } = {}) {
+  const playerId = `${uid}:${CASINO_EDITION}`;
   let state,
     releaseTab,
     starting,
@@ -17,7 +18,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     state &&
     !state.opening && {
       ...state.wallet,
-      balance: state.balance,
+      balance: state.syncBlocked ? 0 : state.balance,
       local: state.dirty || !!state.pending,
       checkedAt: state.checkedAt,
       syncError: state.syncError || "",
@@ -41,6 +42,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     if (
       !Number.isSafeInteger(data?.wallet?.balance) ||
       data.wallet.balance < 0 ||
+      data.wallet.edition !== CASINO_EDITION || data.wallet.sessionProtocol !== 5 ||
+      !Number.isSafeInteger(data.sessionBalance) || data.sessionBalance < 0 ||
       !Array.isArray(data.wallet.recent) ||
       !Number.isSafeInteger(data.sequence) ||
       data.sequence < 0 ||
@@ -87,6 +90,13 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     releaseTab?.();
     releaseTab = undefined;
   }
+  function assertPlayable() {
+    if (!state?.syncBlocked) return;
+    const error = Error(state.syncError || "Atualiza o saldo para recuperar o lote pendente antes de continuar.");
+    Object.assign(error, { definitive: true, applied: false, balance: 0,
+      code: "INSUFFICIENT_BALANCE", publicMessage: error.message });
+    throw error;
+  }
   async function accept(result, payload) {
     // The server may have credited football matches since the previous save.
     const balance =
@@ -96,20 +106,23 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     const next = {
       ...state,
       wallet: result.wallet,
-      balance,
+      sessionBalance: result.sessionBalance,
+      balance: Math.max(0, balance),
+      syncBlocked: balance < 0,
       sequence: result.sequence,
       confirmedSpent: payload.spent,
       confirmedWon: payload.won,
+      confirmedNormalSpins: payload.normalSpins || 0,
       pending: null,
       closed: result.closed,
       checkedAt: Date.now(),
-      syncError: "",
+      syncError: balance < 0 ? "O saldo mudou noutro dispositivo. Atualiza para confirmar o lote pendente antes de continuar." : "",
       dirty:
         state.spent !== payload.spent ||
         state.won !== payload.won ||
         state.progressRevision !== payload.progressRevision,
     };
-    if (next.progress) next.progress = { ...next.progress, balance };
+    if (next.progress) next.progress = { ...next.progress, balance: next.balance };
     return save(next);
   }
   async function flush(release = false) {
@@ -131,6 +144,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       spent: state.spent,
       won: state.won,
       progressRevision: state.progressRevision,
+      normalSpins: state.normalSpins || 0,
     };
     await save({ ...state, pending }); // Persist intent before any network request.
     const result = await send(pending.body);
@@ -138,7 +152,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
   }
   async function restoreFrameCache() {
     if (!state.progress) return;
-    const key = `slot-local-v1:player:${encodeURIComponent(uid)}`;
+    const key = `slot-local-v1:player:${encodeURIComponent(playerId)}`;
     const pendingRaw = localStorage.getItem(key + ":wallet-pending");
     const pending = pendingRaw ? JSON.parse(pendingRaw) : null;
     const currentRaw = localStorage.getItem(key);
@@ -159,28 +173,6 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       );
     }
   }
-  async function migrateLegacy() {
-    const key = `slot-local-v1:player:${encodeURIComponent(uid)}`;
-    const raw = localStorage.getItem(key + ":wallet-pending");
-    if (!raw) return;
-    const pending = JSON.parse(raw);
-    if (pending.transaction?.progress) return; // New durable-local protocol.
-    const streamId = localStorage.getItem(`peladinhas:casino:stream:${uid}`);
-    if (!streamId)
-      throw Error(
-        "Existe uma jogada antiga pendente. Conserva o armazenamento e contacta o apoio.",
-      );
-    const { data } = await callAdmin(
-      "settleCasinoSlot",
-      { ...pending.transaction, streamId },
-      { timeout: 10000 },
-    );
-    localStorage.setItem(
-      key,
-      JSON.stringify({ ...pending.next, balance: data.balance }),
-    );
-    localStorage.removeItem(key + ":wallet-pending");
-  }
   async function start() {
     if (starting) return starting;
     if (state && !state.opening && !state.closed && !stopped && releaseTab)
@@ -190,35 +182,6 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       return lock(async () => {
         if (stopped) throw Error("Esta página já foi fechada.");
         state = await readCasinoLocal(uid);
-        await migrateLegacy();
-        let migratedProgress,
-          migratedRounds = {};
-        if (!state) {
-          const raw = localStorage.getItem(
-            `slot-local-v1:player:${encodeURIComponent(uid)}`,
-          );
-          if (raw) {
-            const progress = JSON.parse(raw);
-            if (progress.schema === 1 && progress.configVersion === "0.6.0") {
-              migratedProgress = progress;
-              const row = progress.history?.[0],
-                stream = localStorage.getItem(
-                  `peladinhas:casino:stream:${uid}`,
-                );
-              if (row && stream)
-                migratedRounds = {
-                  [stream]: {
-                    roundId: row.id,
-                    spin: row.spins.length,
-                    paid: row.paid,
-                    bet: row.bet,
-                    mode: row.mode,
-                    bonusHunt: row.bonusHunt === true,
-                  },
-                };
-            }
-          }
-        }
         const recovering =
           state &&
           !state.opening &&
@@ -239,20 +202,25 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
             won: 0,
             confirmedSpent: 0,
             confirmedWon: 0,
+            normalSpins: 0,
+            confirmedNormalSpins: 0,
             balance: 0,
             wallet: previous?.wallet || { balance: 0, recent: [] },
             closed: false,
             opening: true,
             dirty: false,
             pending: null,
-            progress: previous?.progress || migratedProgress,
+            progress: previous?.progress,
             progressRevision:
-              previous?.progressRevision || migratedProgress?.revision || 0,
-            rounds: previous?.rounds || migratedRounds,
+              previous?.progressRevision || 0,
+            rounds: previous?.rounds || {},
             lastOperation: previous?.lastOperation || null,
             tableReceipts: previous?.tableReceipts || {},
             rift: previous?.rift || null,
             riftReceipts: previous?.riftReceipts || {},
+            cardoso: previous?.cardoso || null,
+            cardosoReceipt: previous?.cardosoReceipt || null,
+            cardosoReceipts: previous?.cardosoReceipts || {},
             checkedAt: 0,
           });
         }
@@ -266,6 +234,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
           opening: false,
           wallet: result.wallet,
           balance: result.wallet.balance,
+          sessionBalance: result.sessionBalance,
           checkedAt: Date.now(),
           syncError: "",
         });
@@ -298,6 +267,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
           throw Error("Pedido repetido com valores diferentes.");
         return view();
       }
+      assertPlayable();
       if (
         !progress ||
         progress.schema !== 1 ||
@@ -328,10 +298,11 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       await save({
         ...state,
         balance: next.wallet.balance,
-        wallet: next.wallet,
+        wallet: { ...state.wallet, recent: next.wallet.recent },
         spent,
         won,
         dirty: true,
+        normalSpins: (state.normalSpins || 0) + (transaction.mode === "base" && transaction.spin === 1 ? 1 : 0),
         progress: { ...progress, balance: next.wallet.balance },
         progressRevision: progress.revision,
         rounds: {
@@ -347,11 +318,13 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     // The complete final-FS snapshot is already durable. Never sync mid-bonus.
     if (input.bonusComplete && input.progress?.active === null)
       void checkpoint("bonus").catch(() => {});
+    else if (input.progress?.active === null && (state.normalSpins || 0) - Math.max(state.confirmedNormalSpins || 0, state.lastAttemptNormalSpins || 0) >= 15)
+      void checkpoint("spins").catch(() => {});
     return result;
   }
   async function settleTable(game, input) {
     return lock(async () => {
-      if (!tables) throw Error("As mesas estão disponíveis apenas no teste local.");
+      if (!tables) throw Error("As mesas estão indisponíveis.");
       if (stopped || !state || state.closed || state.opening)
         throw Error("Reabre o casino para recuperar esta operação.");
       let operation;
@@ -363,6 +336,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
         return { balance: receipt.balance };
       }
+      assertPlayable();
       const balance = state.balance - operation.debit + operation.credit;
       const spent = state.spent + operation.debit, won = state.won + operation.credit;
       if (state.balance < operation.debit || ![balance, spent, won].every(n => Number.isSafeInteger(n) && n >= 0 && n <= 1e12)) {
@@ -373,7 +347,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       }
       // Receipt and money commit together; storage failures remain ambiguous.
       await save({ ...state, balance, spent, won, dirty: true,
-        wallet: { ...state.wallet, balance, recent: [
+        wallet: { ...state.wallet, recent: [
           { id: input.id, kind: game, amount: operation.credit - operation.debit, at: Date.now() },
           ...state.wallet.recent,
         ].slice(0, 12) },
@@ -383,9 +357,10 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     });
   }
   async function riftRequest(action, payload, id) {
-    if (!tables) throw Error("A Rift está disponível apenas no teste local.");
+    if (!tables) throw Error("A Rift está indisponível.");
     const { applyLocalRift } = await import("./casino-rift-local.js");
-    return lock(async () => {
+    let bonusComplete = false;
+    const result = await lock(async () => {
       if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para recuperar.");
       if (typeof id !== "string" || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error("Pedido inválido.");
       const fingerprint = JSON.stringify({ action, payload });
@@ -394,13 +369,17 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
         return structuredClone(receipt.result);
       }
+      if (action === "play") assertPlayable();
       const next = applyLocalRift(state.rift, state.balance, { action, payload });
+      bonusComplete = action === "play" && !!state.rift?.state?.round && !next.session.state.round;
+      const normalSpin = action === "play" && !state.rift?.state?.round && !payload.buy;
       const spent = state.spent + next.debit, won = state.won + next.credit;
       if (![spent, won].every(n => Number.isSafeInteger(n) && n <= 1e12)) throw Error("Limite da sessão atingido.");
       try {
         await save({ ...state, rift: next.session, balance: next.balance, spent, won,
           dirty: state.dirty || action === "play",
-          wallet: { ...state.wallet, balance: next.balance,
+          normalSpins: (state.normalSpins || 0) + (normalSpin ? 1 : 0),
+          wallet: { ...state.wallet,
             recent: action === "play" ? [{ id, kind: "rift", amount: next.credit - next.debit, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
           riftReceipts: action === "play" ? { ...state.riftReceipts, [id]: { fingerprint, result: next.result } } : state.riftReceipts,
         });
@@ -412,10 +391,56 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       }
       return structuredClone(next.result);
     });
+    if (bonusComplete) void checkpoint("bonus").catch(() => {});
+    else if (action === "play" && !state.rift?.state?.round && (state.normalSpins || 0) - Math.max(state.confirmedNormalSpins || 0, state.lastAttemptNormalSpins || 0) >= 15)
+      void checkpoint("spins").catch(() => {});
+    return result;
   }
-  async function checkpoint(reason = "manual") {
+  async function cardosoState() {
+    const { fresh } = await import('../assets/games/cardoso-road/engine.mjs');
+    return structuredClone({ ...(state?.cardoso || fresh()), balance: state?.balance || 0 });
+  }
+  async function cardosoAct(action, requestId) {
+    const { transition } = await import('../assets/games/cardoso-road/engine.mjs');
+    let completed = false;
+    const result = await lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error('Reabre o casino para recuperar o treino.');
+      if (typeof requestId !== 'string' || !/^[\w-]{16,80}$/.test(requestId)) throw Error('Pedido inválido.');
+      const fingerprint = JSON.stringify(action);
+      const prior = state.cardosoReceipts?.[requestId] || (state.cardosoReceipt?.id === requestId ? state.cardosoReceipt.fingerprint : null);
+      if (prior) {
+        if (prior !== fingerprint) throw Error('Pedido repetido com valores diferentes.');
+        return cardosoState();
+      }
+      assertPlayable();
+      let next;
+      try { next = transition(await cardosoState(), action); }
+      catch (error) { error.definitive = true; throw error; }
+      const debit = action.type === 'start' ? next.round.bet : 0;
+      completed = next.round.status !== 'active';
+      const credit = completed ? next.round.payment : 0;
+      const spent = state.spent + debit, won = state.won + credit;
+      if (![spent, won, next.balance].every(n => Number.isSafeInteger(n) && n >= 0 && n <= 1e12)) throw Error('Limite da sessão atingido.');
+      await save({ ...state, balance: next.balance, spent, won, dirty: true, cardoso: next,
+        cardosoReceipt: { id: requestId, fingerprint },
+        cardosoReceipts: Object.fromEntries([...Object.entries(state.cardosoReceipts || {}), [requestId, fingerprint]].slice(-600)),
+        wallet: { ...state.wallet, recent: debit || completed ? [
+          { id: requestId, kind: 'cardoso-road', amount: credit - debit, at: Date.now() },
+          ...state.wallet.recent,
+        ].slice(0, 12) : state.wallet.recent },
+      });
+      return structuredClone(next);
+    });
+    if (completed) void checkpoint('cardoso-round').catch(() => {});
+    return result;
+  }
+  async function checkpoint(reason = "manual", { strict = false } = {}) {
     if (stopped) return view();
     if (synchronizing) {
+      if (strict) {
+        await synchronizing;
+        return checkpoint(reason, { strict });
+      }
       syncRequested = true;
       return synchronizing;
     }
@@ -427,6 +452,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         await lock(async () => {
           if (stopped || !state || state.closed || state.opening) return;
           pending = state.pending;
+          if (reason === "spins") await save({ ...state, lastAttemptNormalSpins: state.normalSpins || 0 });
           if (!pending && state.dirty) {
             pending = {
               body: {
@@ -440,10 +466,11 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
               spent: state.spent,
               won: state.won,
               progressRevision: state.progressRevision,
+              normalSpins: state.normalSpins || 0,
             };
             await save({ ...state, pending });
           }
-          if (!pending && first && (reason === "entry" || reason === "manual"))
+          if (!pending && first && ["entry", "manual", "game-entry"].includes(reason))
             refresh = { action: "open", id: state.id };
         });
         // Never hold the local money lock across a network request. New spins
@@ -451,37 +478,41 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         if (pending) {
           const result = await send(pending.body);
           await lock(() => accept(result, pending));
+          if (strict && state.dirty) syncRequested = true;
         } else if (refresh) {
           const result = await send(refresh);
-          await lock(() =>
-            save({
+          await lock(() => {
+            const balance = result.wallet.balance + (state.won - state.confirmedWon) - (state.spent - state.confirmedSpent);
+            return save({
               ...state,
               wallet: result.wallet,
-              balance:
-                result.wallet.balance +
-                (state.won - state.confirmedWon) -
-                (state.spent - state.confirmedSpent),
+              sessionBalance: result.sessionBalance,
+              balance: Math.max(0, balance),
               checkedAt: Date.now(),
-              syncError: "",
-            }),
-          );
+              syncError: balance < 0 ? "O saldo mudou noutro dispositivo. Atualiza para confirmar o lote pendente antes de continuar." : "",
+              syncBlocked: balance < 0,
+            });
+          });
         }
         first = false;
       } while (syncRequested && !stopped);
       return publish();
     })()
-      .catch(async () => {
-        return lock(() => {
+      .catch(async error => {
+        const blocked = error.details?.reason === "insufficient-balance";
+        const result = await lock(async () => {
           if (state) {
-            state = {
+            await save({
               ...state,
+              syncBlocked: state.syncBlocked || blocked,
               syncError:
-                "Guardado neste dispositivo. A confirmação online fica pendente.",
-            };
-            publish();
+                blocked ? error.message : "Guardado neste dispositivo. A confirmação online fica pendente.",
+            });
           }
           return view();
         });
+        if (strict) throw error;
+        return result;
       })
       .finally(() => {
         synchronizing = undefined;
@@ -503,6 +534,7 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
               opening: false,
               wallet: result.wallet,
               balance: result.wallet.balance,
+              sessionBalance: result.sessionBalance,
             });
           }
           return await flush(true);
@@ -523,15 +555,21 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
   }
   return {
     start,
+    async enterGame() {
+      await start();
+      return checkpoint("game-entry", { strict: true });
+    },
     settle,
     settleTable,
     riftRequest,
     riftActive: () => !!state?.rift?.state?.round,
+    cardosoState,
+    cardosoAct,
     checkpoint,
     close,
     view,
     async balance() {
-      return state?.balance;
+      return state?.syncBlocked ? 0 : state?.balance;
     },
   };
 }

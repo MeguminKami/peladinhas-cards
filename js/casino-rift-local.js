@@ -1,4 +1,4 @@
-// Browser engine for the explicitly temporary fixture site. No server module.
+﻿// Browser engine backed by the shared durable wallet and server checkpoints.
 import { fresh, initial, play, BETS, MATH_VERSION } from "../assets/games/rift/engine.js";
 
 function fail(code, message) {
@@ -15,7 +15,7 @@ export function applyLocalRift(previous, balance, { action, payload = {} }) {
   };
   if (!session.state.grid) session.state.grid = initial(session.state);
   session.state.balance = balance / 100;
-  if (session.state.round && session.state.round.mathVersion !== MATH_VERSION)
+  if (session.state.round && ![MATH_VERSION, "rift-4.13", "rift-4.12", "rift-4.11", "rift-4.10", "rift-4.9", "rift-4.8", "rift-4.7", "rift-4.6", "rift-4.5", "rift-4.4", "rift-4.3", "rift-4.2", "rift-4.1", "rift-4.0", "rift-3.0", "rift-1.0"].includes(session.state.round.mathVersion))
     fail("VERSION_MISMATCH", "Conclui a ronda com a versão original do jogo.");
   let debit = 0, credit = 0;
   if (action === "play") {
@@ -54,3 +54,10 @@ export function applyLocalRift(previous, balance, { action, payload = {} }) {
     result: { sessionId: session.sessionId, revision: session.revision, state: client },
   };
 }
+
+
+
+
+
+
+

@@ -1,0 +1,113 @@
+/* Readouts and bonus UI: shared by the standalone game and the fitted iframe. */
+#game .core-module{display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:center;gap:8px;margin:8px 0 0;padding:12px;clip-path:none;border:1px solid #655578;border-radius:8px;background:#141827;text-align:left;box-shadow:inset 0 1px #b0a0cc15}
+#game .core-module>span{grid-column:1/-1;max-width:none;margin:0;font-size:9px;line-height:1.3;font-weight:600;letter-spacing:1px;color:#bcc5db}
+#game .core-module #global{margin:0;font:600 38px/1 Rajdhani,sans-serif;letter-spacing:-1px;color:#f4ebff;font-variant-numeric:tabular-nums;text-shadow:none}
+#game .core-module #global[data-digits="2"]{font-size:32px}
+#game .core-module #global[data-digits="3"]{font-size:26px}
+#game .core-module>.core-art{display:block;width:42px;height:42px;margin:0;filter:drop-shadow(0 0 7px #7960e744)}
+#game .core-module .core-meter,#game .core-module small{display:none}
+#game #fsPanel{min-width:0;padding:10px 8px}
+#game #fs{font-size:26px;line-height:1.2;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+#game footer{padding:16px 12px;column-gap:14px;align-items:center}
+#game footer .metric{display:grid;grid-template-rows:14px 30px;align-content:center;gap:6px;min-width:0;min-height:52px;padding:0 8px;text-align:left}
+#game footer .metric label{margin:0;font-size:9px;line-height:14px;letter-spacing:1px;color:#9aa5c1;white-space:nowrap}
+#game footer .metric strong{font-size:24px;font-weight:600;line-height:30px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#game footer .metric strong.wide-value{font-size:19px;letter-spacing:-.4px}
+#game #roundTotal{display:none}
+#game #speed{width:64px;min-width:64px;flex:0 0 64px;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0}
+#game #speed>b{display:flex;align-items:center;justify-content:center;width:54px;height:25px;font-size:23px;line-height:1;letter-spacing:-3px}
+#game #speed i{display:block;width:16px;font-style:normal;color:#a178ff;opacity:.2;transition:opacity 160ms ease}
+#game #speed i.on{opacity:1}
+#game #speed>span{font-size:7px;line-height:1.2;letter-spacing:.6px}
+
+/* One compact catalog, then a separate confirmation with an explicit debit. */
+#modal:has(.bonus-shop)>section{width:min(680px,100%);padding:28px;max-height:calc(100svh - 32px);overflow:auto;border-radius:28px 12px 28px 12px}
+#modal:has(.bonus-shop) h2{font-size:28px;line-height:1.1;margin:0 40px 16px 0}
+.bonus-shop{display:grid;gap:18px}
+.bonus-shop .purchase-stake{display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(76px,auto) 44px;align-items:center;gap:10px;padding:0}
+.bonus-shop .purchase-stake>span{width:auto;text-align:left;margin:0;font-size:12px}
+.bonus-shop .purchase-stake>button{width:44px;height:44px;font-size:22px}
+.bonus-shop .purchase-stake>strong{min-width:0;font-size:20px}
+.bonus-offers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.bonus-offer{--offer-color:#7beaf6;display:grid;justify-items:center;align-content:center;gap:14px;min-width:0;min-height:226px;padding:24px 12px;border:1px solid color-mix(in srgb,var(--offer-color) 45%,#263048);border-radius:60px 60px 18px 18px;background:radial-gradient(ellipse at 50% 28%,color-mix(in srgb,var(--offer-color) 12%,transparent),transparent 75%),#131c2b}
+.bonus-offer[data-bonus=rift]{--offer-color:#9af3a8}
+.bonus-offer[data-bonus=overdrive]{--offer-color:#ffb665}
+.bonus-offer:hover{border-color:var(--offer-color);background-color:#1b2737}
+.bonus-offer:active{transform:scale(.98)}
+.bonus-offer-art{display:block;width:86px;height:90px;filter:drop-shadow(0 0 10px color-mix(in srgb,var(--offer-color) 25%,transparent))}
+.bonus-offer-art>.symbol{width:100%;height:100%}.bonus-offer[data-bonus=rift] .symbol{filter:hue-rotate(145deg)}
+.bonus-offer-count{display:flex;align-items:baseline;gap:6px;font-size:11px;letter-spacing:1px;color:#bdc8dc}
+.bonus-offer-count>b{font-size:22px;color:var(--offer-color);font-variant-numeric:tabular-nums}
+.bonus-offer-price{font-size:24px;line-height:1.1;color:#f1f5ff;font-variant-numeric:tabular-nums}
+
+/* Content-sized protocol notice, with a stable copy/illustration alignment. */
+#game #powerBanner.power-readable{left:50%;right:auto;bottom:12px;top:auto;transform:translateX(-50%);width:min(430px,calc(100% - 24px));box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px;border:1px solid #8892b777;border-radius:7px;background:#111a2ff2;letter-spacing:normal;text-align:left;opacity:1;animation:none!important}
+.power-copy{display:grid;min-width:0;gap:5px}
+#game #powerBanner .power-copy>strong{font:600 17px/1.15 'Barlow Condensed',sans-serif;letter-spacing:1px;overflow-wrap:anywhere}
+#game #powerBanner .power-explanation{font-size:10px;line-height:1.3;letter-spacing:.2px;min-height:13px;color:#b5e8ee}
+#game #powerBanner .power-preview{display:flex;align-items:center;gap:5px;height:36px;margin:0}
+#game #powerBanner .power-preview .symbol{width:30px;height:34px}
+#game #powerBanner .power-preview>span{font-size:18px}
+
+@media(max-width:750px){
+ #game #fsPanel{padding:6px 8px}
+ #game #fs{font-size:22px}
+ #game .core-module{grid-template-columns:minmax(0,1fr) 32px;padding:8px;gap:5px;align-self:start}
+ #game .core-module>span{font-size:8px;letter-spacing:.7px}
+ #game .core-module #global{font-size:30px}
+ #game .core-module>.core-art{width:32px;height:32px}
+ #game footer{padding:12px 8px;column-gap:8px;row-gap:12px}
+ #game footer .metric{padding:0 4px}
+ #game footer .metric strong{font-size:22px}
+ #game footer .metric label{font-size:8px;letter-spacing:.7px}
+ #game #speed{width:100%;min-width:0;flex-basis:auto}
+ #game #speed>b{width:45px;font-size:21px}
+ #game #speed i{width:14px}
+ #game #speed>span{font-size:6px;letter-spacing:0}
+ .bonus-shop{gap:14px}
+ .bonus-offers{grid-template-columns:1fr;gap:10px}
+ .bonus-offer{grid-template-columns:52px minmax(0,1fr) auto;border-radius:36px 12px 12px 36px;justify-items:start;gap:12px;min-height:82px;padding:12px}
+ .bonus-offer-art{width:42px;height:46px}
+ .bonus-offer-price{font-size:22px}
+ .bonus-offer-count{font-size:9px;letter-spacing:.5px}
+ .bonus-offer-count>b{font-size:20px}
+ .bonus-shop .purchase-stake{grid-template-columns:44px minmax(0,1fr) 44px;gap:8px}
+ .bonus-shop .purchase-stake>span{grid-column:1/-1;text-align:center}
+ #game #powerBanner.power-readable{gap:8px;padding:10px 12px;bottom:8px}
+ #game #powerBanner .power-copy>strong{font-size:15px;letter-spacing:.6px}
+ #game #powerBanner .power-explanation{font-size:9px}
+ #game #powerBanner .power-preview{height:30px;gap:3px}
+ #game #powerBanner .power-preview .symbol{width:24px;height:28px}
+}
+@media(max-height:560px){
+ .bonus-offers{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .bonus-offer{display:grid;grid-template-columns:1fr;justify-items:center;gap:8px;min-height:140px;padding:10px}
+ .bonus-offer-art{width:38px;height:40px}
+ .bonus-offer-price{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){#game #speed i{transition:none}}
+
+#game footer .bonus-winnings[hidden]{display:none}
+#game footer .bonus-winnings strong{color:var(--accent,#a1f0ff)}
+#game footer:has(.bonus-winnings:not([hidden])){flex-wrap:wrap;row-gap:14px}
+@media(min-width:751px){
+ #game footer:has(.bonus-winnings:not([hidden])){display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:center}
+ #game footer:has(.bonus-winnings:not([hidden])) .balance{grid-column:1/4;grid-row:1}
+ #game footer:has(.bonus-winnings:not([hidden])) .winnings{grid-column:4/7;grid-row:1}
+ #game footer:has(.bonus-winnings:not([hidden])) .bonus-winnings{grid-column:7/10;grid-row:1}
+ #game footer:has(.bonus-winnings:not([hidden])) .bet-control{grid-column:10/13;grid-row:1}
+ #game footer:has(.bonus-winnings:not([hidden])) #rules{grid-column:1;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) #history{grid-column:2;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) #speed{grid-column:3;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) .auto-wrap{grid-column:4;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) #buyBonus{grid-column:5/7;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) #hunt{grid-column:7/9;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) .master-volume{grid-column:9/11;grid-row:2}
+ #game footer:has(.bonus-winnings:not([hidden])) #spin{grid-column:11/13;grid-row:2;justify-self:end;width:74px;height:74px}
+}
+@media(max-width:750px){
+ #game footer .bonus-winnings{grid-column:1/-1;grid-row:4;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #69738b40;padding-top:8px}
+ html[data-casino-fit] #game footer .bonus-winnings{grid-row:5}
+ .bonus-offer-art{width:50px;height:54px}
+}
+

@@ -1,10 +1,11 @@
 // Each local settlement commits money and the complete game snapshot together.
 // No localStorage fallback: a failed durable write must stop the next spin.
 let database;
+import { CASINO_EDITION } from "./casino-economy.js";
 export function casinoDatabase() {
   if (!database)
     database = new Promise((resolve, reject) => {
-      const request = indexedDB.open("peladinhas-casino", 1);
+      const request = indexedDB.open(`peladinhas-casino-${CASINO_EDITION}`, 1);
       request.onupgradeneeded = () =>
         request.result.createObjectStore("sessions");
       request.onsuccess = () => resolve(request.result);

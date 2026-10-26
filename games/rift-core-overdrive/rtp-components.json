@@ -1,0 +1,284 @@
+{
+  "date": "2026-10-26T13:56:35.913Z",
+  "configuration": {
+    "growth": {
+      "cascadeEvery": 2,
+      "core": {
+        "every": 3,
+        "step": 1
+      },
+      "rift": {
+        "every": 3,
+        "step": 1
+      },
+      "overdrive": {
+        "every": 3,
+        "step": 1
+      }
+    },
+    "target": 0.96,
+    "precision": [
+      0.94,
+      0.98
+    ],
+    "rng": "xoshiro128**",
+    "sampling": "independent-symbol-weights",
+    "payDenominator": 10000,
+    "payScale": 0.144,
+    "payBase": [
+      0.01,
+      0.025,
+      0.06,
+      0.15
+    ],
+    "payFactors": [
+      1,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      1.8,
+      2.4,
+      3.4,
+      5,
+      8
+    ],
+    "prices": {
+      "core": 12.1,
+      "rift": 37.5,
+      "overdrive": 517
+    },
+    "bonuses": {
+      "core": {
+        "name": "CORE AWAKENING",
+        "spins": 8,
+        "startGlobal": 1,
+        "maxGlobal": 25,
+        "retrigger": 4,
+        "art": 8
+      },
+      "rift": {
+        "name": "RIFT ASCENSION",
+        "spins": 10,
+        "startGlobal": 3,
+        "maxGlobal": 50,
+        "retrigger": 5,
+        "art": 7
+      },
+      "overdrive": {
+        "name": "CRITICAL OVERDRIVE",
+        "spins": 12,
+        "startGlobal": 5,
+        "maxGlobal": 100,
+        "retrigger": 6,
+        "art": 9
+      }
+    },
+    "payOverrides": {
+      "5": [
+        0.075,
+        0.117,
+        0.2925,
+        0.78
+      ],
+      "6": [
+        0.078,
+        0.182,
+        0.4875,
+        1.3
+      ],
+      "7": [
+        0.1105,
+        0.2925,
+        0.78,
+        2.275
+      ],
+      "8": [
+        0.1625,
+        0.4875,
+        1.3,
+        3.9
+      ],
+      "9": [
+        0.26,
+        0.78,
+        2.275,
+        7.8
+      ]
+    },
+    "scatterChance": [
+      0.0011,
+      0.8516,
+      0.8516,
+      0.8516,
+      0.8516,
+      0.8641
+    ],
+    "huntScatterBoost": 1.5,
+    "bonusScatters": {
+      "core": 3,
+      "rift": 4,
+      "overdrive": 5
+    },
+    "extraOverdriveSpins": 2,
+    "purchaseSixScatterChance": 0.3333,
+    "profiles": {
+      "base": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.006,
+        "powers": [
+          0.0017,
+          0.013,
+          0.019,
+          0.013
+        ],
+        "pulse": 0.04
+      },
+      "hunt": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.074,
+        "powers": [
+          0.0022,
+          0.018,
+          0.024,
+          0.018
+        ],
+        "pulse": 0.12
+      },
+      "core": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.008,
+        "powers": [
+          0.006,
+          0.03,
+          0.05,
+          0.04
+        ],
+        "pulse": 0.2,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      },
+      "rift": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.009,
+        "powers": [
+          0.008,
+          0.04,
+          0.06,
+          0.05
+        ],
+        "pulse": 0.25,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      },
+      "overdrive": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.01,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.6,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      }
+    }
+  },
+  "configurationHash": "2cfa8501fae11a96c45ae0adb9a6d163f5c37ddeb536a54b3d76c5394148ee4a",
+  "results": [
+    {
+      "scenario": "core",
+      "n": 500000,
+      "seed": 771026,
+      "bet": 0.1,
+      "mean": 11.66082199999941,
+      "variance": 2817.904954134082
+    },
+    {
+      "scenario": "rift",
+      "n": 250000,
+      "seed": 881026,
+      "bet": 0.1,
+      "mean": 36.379213599999446,
+      "variance": 19538.279550643576
+    }
+  ]
+}

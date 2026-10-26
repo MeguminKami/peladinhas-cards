@@ -76,7 +76,7 @@ setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
 export const { communityRatingAction } = communityRatingFunctions(async uid => { await aggregateCommunity(uid); await buildHistory(uid); });
-export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession } = casinoFunctions();
+export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession, grantCasinoCoins } = casinoFunctions();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {
   pushDeviceAction,

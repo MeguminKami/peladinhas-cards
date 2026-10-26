@@ -8,6 +8,7 @@ import './polish-v2.css';
 import './console.css';
 import './compact-layout.css';
 import './stadium-console.css';
+import {presentBonusTransition} from './bonus-transitions.ts';
 import {bonusSummaryMarkup} from './bonus-summary.ts';
 import {linePrizes} from './line-prizes.ts';
 import {autoSpinCount,autoSpinCounts} from './autospin.ts';
@@ -211,7 +212,7 @@ function positionAutoPanel(){
 
 function clearRetriggerTimers(){clearTimeout(retriggerTimer);clearInterval(retriggerCountdown);retriggerTimer=undefined;retriggerCountdown=undefined;}
 function showRetrigger(){
-  const pending=session.pendingRetrigger;if(!pending)return;clearRetriggerTimers();audioCue('retrigger');
+  const pending=session.pendingRetrigger;if(!pending)return;clearRetriggerTimers();bonusView=session.active?{...session.active}:null;renderFreeSpins();audioCue('retrigger');
   const mode=session.active?.mode==='superior'?'superior':'normal';
   modal('Prolongamento!',`<div class="retrigger-celebration"><div class="retrigger-rays" aria-hidden="true"></div><img src="${bonusArt[mode]}" alt="Bilhetes de prolongamento"><span class="eyebrow">O JOGO CONTINUA!</span><strong class="retrigger-award">+${pending.awarded}</strong><h3>FREE SPINS</h3><p>Mais ${pending.awarded} jogadas grátis · global e Wilds fixos mantidos.</p><button id="continue-retrigger" class="primary">CONTINUAR</button><small>Ou continua automaticamente em <span id="retrigger-countdown">10</span> s</small><div class="retrigger-progress" aria-hidden="true"><i></i></div></div>`,'retrigger');
   $('modal').classList.toggle('reduced-retrigger',prefs.reduced);
@@ -223,7 +224,7 @@ function showRetrigger(){
 async function finishRetrigger(){
   if(retriggerClosing)return;const pending=session.pendingRetrigger;if(!pending)return;
   retriggerClosing=true;
-  try{await mutate(s=>acknowledgeRetrigger(s,pending));clearRetriggerTimers();if(session.pendingRetrigger){showRetrigger();return;}$<HTMLDialogElement>('modal').close();render();scheduleAuto();}
+  try{await mutate(s=>acknowledgeRetrigger(s,pending));clearRetriggerTimers();if(session.pendingRetrigger){showRetrigger();return;}$<HTMLDialogElement>('modal').close();bonusView=session.active?{...session.active}:null;render();scheduleAuto();}
   catch(error){notify(error instanceof Error?error.message:String(error));if(session.pendingRetrigger)showRetrigger();}
   finally{retriggerClosing=false;}
 }
@@ -270,14 +271,21 @@ async function play(command:Command){
       await presentBonusActivation(command.mode,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message});
       delete document.querySelector<HTMLElement>('.machine')!.dataset.presentation;
       document.querySelector<HTMLElement>('.machine')!.dataset.mode='base';$('mode').textContent=modeName('base');$('round-note').textContent='Free spin 1 de '+config.freeSpins+' · aposta '+money(session.bet);
+      await presentBonusTransition({kind:'entry',mode:command.mode,reduced:prefs.reduced,signal:controller.signal});
       await showBonusEntry(command.mode);
     }
     await presentSpin(result,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message});
     drawBoard(result);
-    if(result.mode!=='base'&&bonusView){bonusView={...result.next};renderFreeSpins();}
+    if(result.mode!=='base'&&bonusView){bonusView={...result.next};if(result.retrigger){bonusView.remaining-=result.retrigger.awarded;bonusView.totalFreeSpins-=result.retrigger.awarded;}renderFreeSpins();}
     await presentWinningLines(result,controller.signal);
     await celebrateWin(result.paid,session.history[0].bet,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,control:finish=>finishAnimation=finish,cue:tier=>victoryAudio(tier)});
-    finishAnimation=undefined;interruptPresentation=undefined;
+    finishAnimation=undefined;
+    const completedRow=session.history[0];
+    const transitionMode=bonusView?.mode==='superior'?'superior':'normal';
+    if(result.next.done&&(completedRow.spins.length>1||completedRow.mode!=='base'))await presentBonusTransition({kind:'final',mode:transitionMode,reduced:prefs.reduced,signal:controller.signal});
+    else if(result.retrigger&&session.pendingRetrigger)await presentBonusTransition({kind:'retrigger',mode:transitionMode,reduced:prefs.reduced,signal:controller.signal});
+    else if(session.active&&result.mode==='base')await presentBonusTransition({kind:'entry',mode:session.active.mode as 'normal'|'superior',reduced:prefs.reduced,signal:controller.signal});
+    interruptPresentation=undefined;
     busy=false;$('board').classList.remove('busy');render();const row=session.history[0];
     message(prizeClass(result.paid,row.bet,row.paid===config.cap*row.bet),`Spin ${money(result.paid)} · ${x(result.paid,row.bet)}${session.active?' · '+session.active.remaining+' FS por jogar':row.paid<row.cost?' · retorno inferior ao custo da ronda':''}`);
     if(result.next.done&&(row.spins.length>1||row.mode!=='base'))summary(row);

@@ -1,0 +1,349 @@
+{
+  "version": "rift-4.14",
+  "date": "2026-10-26T19:36:22.601Z",
+  "results": [
+    {
+      "mode": "core",
+      "bias": 6,
+      "n": 3000,
+      "seed": 701028,
+      "profile": {
+        "wild": 0.015,
+        "powers": [
+          0.015,
+          0.08,
+          0.12,
+          0.1
+        ],
+        "pulse": 0.35
+      },
+      "mean": 25.64383333333332,
+      "se": 0.752425575400889,
+      "active": 0.40951061865189287,
+      "spins": 25992,
+      "empty": 4,
+      "powers": {
+        "RIFT LINK": 4782,
+        "WILD SURGE": 5848,
+        "NEON STORM": 3802,
+        "MEGA WILD DROP": 722,
+        "REACTOR PULSE": 732,
+        "CORE EVOLUTION": 1
+      }
+    },
+    {
+      "mode": "core",
+      "bias": 4,
+      "n": 3000,
+      "seed": 701027,
+      "profile": {
+        "wild": 0.015,
+        "powers": [
+          0.015,
+          0.08,
+          0.12,
+          0.1
+        ],
+        "pulse": 0.35
+      },
+      "mean": 48.28329999999993,
+      "se": 1.3559281780800079,
+      "active": 0.4448761347899677,
+      "spins": 25996,
+      "empty": 0,
+      "powers": {
+        "NEON STORM": 4372,
+        "RIFT LINK": 5582,
+        "WILD SURGE": 6747,
+        "REACTOR PULSE": 1216,
+        "MEGA WILD DROP": 782,
+        "CORE EVOLUTION": 10
+      }
+    },
+    {
+      "mode": "core",
+      "bias": 2,
+      "n": 3000,
+      "seed": 701026,
+      "profile": {
+        "wild": 0.015,
+        "powers": [
+          0.015,
+          0.08,
+          0.12,
+          0.1
+        ],
+        "pulse": 0.35
+      },
+      "mean": 98.51503333333346,
+      "se": 2.7073231418132675,
+      "active": 0.5137989515880358,
+      "spins": 25944,
+      "empty": 0,
+      "powers": {
+        "MEGA WILD DROP": 1043,
+        "WILD SURGE": 8180,
+        "NEON STORM": 5527,
+        "REACTOR PULSE": 2383,
+        "RIFT LINK": 7011,
+        "CORE EVOLUTION": 102
+      }
+    },
+    {
+      "mode": "core",
+      "bias": 8,
+      "n": 3000,
+      "seed": 701029,
+      "profile": {
+        "wild": 0.015,
+        "powers": [
+          0.015,
+          0.08,
+          0.12,
+          0.1
+        ],
+        "pulse": 0.35
+      },
+      "mean": 15.608766666666666,
+      "se": 0.5438680290020914,
+      "active": 0.3792694133864298,
+      "spins": 26116,
+      "empty": 21,
+      "powers": {
+        "RIFT LINK": 4264,
+        "NEON STORM": 3443,
+        "WILD SURGE": 5079,
+        "REACTOR PULSE": 389,
+        "MEGA WILD DROP": 633
+      }
+    },
+    {
+      "mode": "rift",
+      "bias": 6,
+      "n": 3000,
+      "seed": 701032,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.45
+      },
+      "mean": 98.99586666666629,
+      "se": 2.488183994346876,
+      "active": 0.47541773295197953,
+      "spins": 33215,
+      "empty": 1,
+      "powers": {
+        "NEON STORM": 6385,
+        "WILD SURGE": 8918,
+        "RIFT LINK": 7835,
+        "REACTOR PULSE": 1344,
+        "MEGA WILD DROP": 1252
+      }
+    },
+    {
+      "mode": "rift",
+      "bias": 4,
+      "n": 3000,
+      "seed": 701031,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.45
+      },
+      "mean": 164.3107333333334,
+      "se": 3.2845988570116664,
+      "active": 0.5218061008758683,
+      "spins": 33110,
+      "empty": 0,
+      "powers": {
+        "WILD SURGE": 10424,
+        "RIFT LINK": 9102,
+        "NEON STORM": 7533,
+        "REACTOR PULSE": 2379,
+        "MEGA WILD DROP": 1488
+      }
+    },
+    {
+      "mode": "rift",
+      "bias": 2,
+      "n": 3000,
+      "seed": 701030,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.45
+      },
+      "mean": 335.02726666666643,
+      "se": 6.514765363667846,
+      "active": 0.5797214317807399,
+      "spins": 33385,
+      "empty": 0,
+      "powers": {
+        "RIFT LINK": 11262,
+        "NEON STORM": 9261,
+        "WILD SURGE": 13029,
+        "REACTOR PULSE": 4570,
+        "MEGA WILD DROP": 1848
+      }
+    },
+    {
+      "mode": "rift",
+      "bias": 8,
+      "n": 3000,
+      "seed": 701033,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.45
+      },
+      "mean": 62.14726666666659,
+      "se": 1.4287770718481136,
+      "active": 0.4466307277628032,
+      "spins": 33390,
+      "empty": 5,
+      "powers": {
+        "WILD SURGE": 8024,
+        "RIFT LINK": 6913,
+        "NEON STORM": 5738,
+        "REACTOR PULSE": 811,
+        "MEGA WILD DROP": 1132
+      }
+    },
+    {
+      "mode": "overdrive",
+      "bias": 4,
+      "n": 3000,
+      "seed": 701035,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.025,
+          0.12,
+          0.16,
+          0.14
+        ],
+        "pulse": 0.6
+      },
+      "mean": 690.7581666666654,
+      "se": 12.559469621106233,
+      "active": 1,
+      "spins": 42862,
+      "empty": 0,
+      "powers": {
+        "CORE IMPULSE": 42862,
+        "NEON STORM": 13660,
+        "WILD SURGE": 17929,
+        "RIFT LINK": 16021,
+        "REACTOR PULSE": 5667,
+        "MEGA WILD DROP": 2799
+      }
+    },
+    {
+      "mode": "overdrive",
+      "bias": 6,
+      "n": 3000,
+      "seed": 701036,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.025,
+          0.12,
+          0.16,
+          0.14
+        ],
+        "pulse": 0.6
+      },
+      "mean": 432.43853333333396,
+      "se": 8.714219653455634,
+      "active": 1,
+      "spins": 43422,
+      "empty": 0,
+      "powers": {
+        "CORE IMPULSE": 43422,
+        "WILD SURGE": 15669,
+        "REACTOR PULSE": 3378,
+        "RIFT LINK": 13732,
+        "NEON STORM": 11910,
+        "MEGA WILD DROP": 2473
+      }
+    },
+    {
+      "mode": "overdrive",
+      "bias": 2,
+      "n": 3000,
+      "seed": 701034,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.025,
+          0.12,
+          0.16,
+          0.14
+        ],
+        "pulse": 0.6
+      },
+      "mean": 1271.6913666666658,
+      "se": 22.24178575051551,
+      "active": 1,
+      "spins": 43014,
+      "empty": 0,
+      "powers": {
+        "CORE IMPULSE": 43014,
+        "WILD SURGE": 22596,
+        "REACTOR PULSE": 10319,
+        "RIFT LINK": 19682,
+        "NEON STORM": 16742,
+        "MEGA WILD DROP": 3470
+      }
+    },
+    {
+      "mode": "overdrive",
+      "bias": 8,
+      "n": 3000,
+      "seed": 701037,
+      "profile": {
+        "wild": 0.02,
+        "powers": [
+          0.025,
+          0.12,
+          0.16,
+          0.14
+        ],
+        "pulse": 0.6
+      },
+      "mean": 292.98950000000013,
+      "se": 5.484269203674417,
+      "active": 1,
+      "spins": 42782,
+      "empty": 0,
+      "powers": {
+        "CORE IMPULSE": 42782,
+        "MEGA WILD DROP": 2154,
+        "NEON STORM": 10524,
+        "WILD SURGE": 13869,
+        "REACTOR PULSE": 2153,
+        "RIFT LINK": 12348
+      }
+    }
+  ]
+}

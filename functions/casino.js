@@ -6,6 +6,9 @@ import { policyAt } from "../js/system-policy.js";
 import { participants } from "../js/utils.js";
 import {
   newCasinoWallet,
+  currentCasinoWallet,
+  casinoMatchReward,
+  CASINO_EDITION,
   awardCasinoMatch,
   DJABUCOIN,
   validateSlotTransaction,
@@ -41,7 +44,7 @@ function walletCall(handler, { read = false } = {}) {
           "Verificação da aplicação necessária.",
         );
       if (!read) assertFeature();
-      return handler(request);
+      return handler(request, user);
     }),
   );
 }
@@ -63,6 +66,34 @@ function counted(wallet) {
 }
 
 export function casinoFunctions() {
+  const grantCasinoCoins = walletCall(async (request, admin) => {
+    if (admin.role !== "admin") throw new HttpsError("permission-denied", "Apenas administradores podem enviar moedas.");
+    const input = request.data;
+    if (!input || Object.keys(input).some(key => !["uid", "id", "amount"].includes(key)) ||
+        typeof input.uid !== "string" || !/^[\w-]{1,128}$/.test(input.uid) ||
+        typeof input.id !== "string" || !/^[\w-]{16,80}$/.test(input.id) ||
+        !Number.isSafeInteger(input.amount) || input.amount < 0 || input.amount > 10000 * DJABUCOIN.scale)
+      throw new HttpsError("invalid-argument", "Envia entre 0 e 10 000 moedas.");
+    const db = getFirestore();
+    const ref = db.doc(`casinoWallets/${input.uid}`);
+    const receipt = ref.collection("grants").doc(input.id);
+    const fingerprint = JSON.stringify([request.auth.uid, input.uid, input.amount]);
+    return db.runTransaction(async tx => {
+      const [target, snapshot, prior] = await tx.getAll(db.doc(`users/${input.uid}`), ref, receipt);
+      if (!target.exists || target.data().disabled) throw new HttpsError("not-found", "Jogador indisponível.");
+      if (prior.exists) {
+        if (prior.data().fingerprint !== fingerprint) throw new HttpsError("already-exists", "Pedido já utilizado.");
+        return { balance: prior.data().balance };
+      }
+      const wallet = currentCasinoWallet(snapshot.data());
+      const balance = wallet.balance + input.amount;
+      if (!Number.isSafeInteger(balance) || balance > 1e12) throw new HttpsError("failed-precondition", "Limite de saldo atingido.");
+      tx.set(ref, { ...wallet, balance, revision: wallet.revision + 1,
+        recent: [{ id: input.id, kind: "admin", amount: input.amount, at: Date.now() }, ...wallet.recent].slice(0, DJABUCOIN.recentLimit) });
+      tx.create(receipt, { fingerprint, balance, amount: input.amount, admin: request.auth.uid, at: Date.now() });
+      return { balance };
+    });
+  });
   const casinoSession = walletCall(async (request) => {
     let input;
     try {
@@ -85,13 +116,14 @@ export function casinoFunctions() {
       let result;
       try {
         result = applyCasinoSession(
-          wallet.data() || newCasinoWallet(),
+          currentCasinoWallet(wallet.data()),
           session.data(),
           input,
         );
       } catch (error) {
         throw new HttpsError("failed-precondition", error.message, {
           definitive: true,
+          reason: error.reason || "invalid-checkpoint",
         });
       }
       if (result.write) {
@@ -113,7 +145,7 @@ export function casinoFunctions() {
       return db.runTransaction(async (tx) => {
         const snapshot = await tx.get(ref);
         if (!snapshot.exists) assertFeature();
-        const wallet = counted(snapshot.data() || newCasinoWallet());
+        const wallet = counted(currentCasinoWallet(snapshot.data()));
         tx.set(ref, wallet);
         return wallet;
       });
@@ -157,7 +189,7 @@ export function casinoFunctions() {
         return wallet;
       }
       // Old bundles can only recover receipts already applied before upgrade.
-      if (wallet.sessionProtocol >= 2 || wallet.activeCasinoSession)
+      if (wallet.edition !== CASINO_EDITION || wallet.sessionProtocol >= 2 || wallet.activeCasinoSession)
         throw new HttpsError(
           "failed-precondition",
           "Atualiza a página para usar a carteira local.",
@@ -228,14 +260,16 @@ export function casinoFunctions() {
             walletRef,
           );
           if (awarded.exists || !user.exists || user.data().disabled) return;
-          const next = awardCasinoMatch(wallet.data(), event.params.gid);
+          const amount = casinoMatchReward(after, uid);
+          const next = awardCasinoMatch(wallet.data(), event.params.gid, Date.now(), amount);
           tx.set(walletRef, next);
-          tx.create(receipt, { amount: DJABUCOIN.perMatch, at: Date.now() });
+          tx.create(receipt, { amount, at: Date.now() });
         });
       }
     },
   );
   return {
+    grantCasinoCoins,
     casinoSession,
     getCasinoWallet,
     settleCasinoSlot: settleCasinoSlotOperation,

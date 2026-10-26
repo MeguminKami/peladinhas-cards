@@ -1,8 +1,10 @@
 /* The lounge uses the app's type, spacing and surfaces; the felt and brass
    belong to the game artwork and retain their contrast in every theme. */
-.casino-page {
+.casino-page, .casino-hero {
   --casino-gold: #ebcd8b;
   --casino-ink: #081f1b;
+}
+.casino-page {
   display: grid;
   gap: 32px;
   min-width: 0;
@@ -78,18 +80,20 @@
 .casino-hero-copy {
   position: relative;
   z-index: 2;
+  min-width: 0;
 }
+.casino-hero :is(h2, p) { margin: 0; }
 .casino-hero .casino-kicker {
   color: var(--casino-gold);
   margin-bottom: 20px;
 }
-.casino-hero h1 {
+.casino-hero h2 {
   font-size: clamp(2rem, 3.8vw, 3.5rem);
   line-height: 1.08;
   letter-spacing: -0.055em;
   font-weight: 800;
 }
-.casino-hero h1 em {
+.casino-hero h2 em {
   color: var(--casino-gold);
   font-style: normal;
 }
@@ -523,7 +527,8 @@
   font-size: 0.85rem;
   line-height: 1.8;
 }
-.casino-page :is(button, a, summary):focus-visible {
+.casino-page :is(button, a, summary):focus-visible,
+.casino-hero a:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 4px;
 }
@@ -581,8 +586,8 @@
     grid-template-columns: minmax(0, 1fr);
     padding: 28px 24px 18px;
   }
-  .casino-hero h1 {
-    font-size: 2.25rem;
+  .casino-hero h2 {
+    font-size: clamp(1.8rem, 6.5vw, 2.25rem);
   }
   .casino-hero-art {
     width: 260px;
@@ -646,13 +651,14 @@
 
 /* Catalogue and dedicated game screen. */
 .casino-toolbar {
-  position: relative;
-  z-index: 40;
+  position: sticky;
+  top: var(--casino-header-height, 80px);
+  z-index: 29;
   display: flex;
   align-items: center;
   gap: 24px;
   padding: 12px 8px;
-  background: transparent;
+  background: var(--bg-app);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border-strong);
 }
@@ -713,7 +719,7 @@
 .casino-session-head .casino-back .ui-icon { transform: rotate(180deg); }
 .casino-slot-mount { min-height: 650px; }
 .casino-slot-mount.casino-table-mount { min-height: 0 !important; height: auto; aspect-ratio: auto !important; background: #11080d; border-radius: 12px; overflow: clip; }
-.casino-table-mount iframe { display: block; width: 100%; height: clamp(300px, calc(100dvh - var(--casino-header-height, 80px) - 100px), 780px); border: 0; }
+.casino-table-mount iframe { display: block; width: 100%; height: clamp(160px, calc(100dvh - var(--casino-header-height, 80px) - var(--casino-toolbar-height, 70px) - var(--casino-bottom-height, 0px) - 24px), 780px); border: 0; }
 @media (max-width: 800px) {
   .casino-toolbar { gap: 16px; flex-wrap: wrap; }
   .casino-brand { margin-left: auto; }
@@ -739,3 +745,8 @@
   .casino-game-copy p { min-height: 0; }
   .casino-game-copy .casino-kicker { display: none; }
 }
+
+.casino-grant { display: grid; gap: 12px; margin-top: 20px; }
+.casino-grant p { margin: 0; }
+.casino-grant label { margin-bottom: -4px; }
+.casino-grant-status { min-height: 1.5em; overflow-wrap: anywhere; }

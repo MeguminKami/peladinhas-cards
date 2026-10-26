@@ -1,0 +1,466 @@
+{
+  "date": "2026-10-26T13:56:47.531Z",
+  "version": "rift-4.6",
+  "kind": "stratified-local-rtp",
+  "n": 150000,
+  "bet": 0.1,
+  "configurationHash": "2cfa8501fae11a96c45ae0adb9a6d163f5c37ddeb536a54b3d76c5394148ee4a",
+  "engineHash": "a6c555bce5af88dcbfd6316f7dbfacdcd37bcac3ca7932a558c9b63008b27836",
+  "configuration": {
+    "growth": {
+      "cascadeEvery": 2,
+      "core": {
+        "every": 3,
+        "step": 1
+      },
+      "rift": {
+        "every": 3,
+        "step": 1
+      },
+      "overdrive": {
+        "every": 3,
+        "step": 1
+      }
+    },
+    "target": 0.96,
+    "precision": [
+      0.94,
+      0.98
+    ],
+    "rng": "xoshiro128**",
+    "sampling": "independent-symbol-weights",
+    "payDenominator": 10000,
+    "payScale": 0.144,
+    "payBase": [
+      0.01,
+      0.025,
+      0.06,
+      0.15
+    ],
+    "payFactors": [
+      1,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      1.8,
+      2.4,
+      3.4,
+      5,
+      8
+    ],
+    "prices": {
+      "core": 12.1,
+      "rift": 37.9,
+      "overdrive": 517
+    },
+    "bonuses": {
+      "core": {
+        "name": "CORE AWAKENING",
+        "spins": 8,
+        "startGlobal": 1,
+        "maxGlobal": 25,
+        "retrigger": 4,
+        "art": 8
+      },
+      "rift": {
+        "name": "RIFT ASCENSION",
+        "spins": 10,
+        "startGlobal": 3,
+        "maxGlobal": 50,
+        "retrigger": 5,
+        "art": 7
+      },
+      "overdrive": {
+        "name": "CRITICAL OVERDRIVE",
+        "spins": 12,
+        "startGlobal": 5,
+        "maxGlobal": 100,
+        "retrigger": 6,
+        "art": 9
+      }
+    },
+    "payOverrides": {
+      "5": [
+        0.075,
+        0.117,
+        0.2925,
+        0.78
+      ],
+      "6": [
+        0.078,
+        0.182,
+        0.4875,
+        1.3
+      ],
+      "7": [
+        0.1105,
+        0.2925,
+        0.78,
+        2.275
+      ],
+      "8": [
+        0.1625,
+        0.4875,
+        1.3,
+        3.9
+      ],
+      "9": [
+        0.26,
+        0.78,
+        2.275,
+        7.8
+      ]
+    },
+    "scatterChance": [
+      0.0011,
+      0.8516,
+      0.8516,
+      0.8516,
+      0.8516,
+      0.8641
+    ],
+    "huntScatterBoost": 1.5,
+    "bonusScatters": {
+      "core": 3,
+      "rift": 4,
+      "overdrive": 5
+    },
+    "extraOverdriveSpins": 2,
+    "purchaseSixScatterChance": 0.3333,
+    "profiles": {
+      "base": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.006,
+        "powers": [
+          0.0017,
+          0.013,
+          0.019,
+          0.013
+        ],
+        "pulse": 0.04
+      },
+      "hunt": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.074,
+        "powers": [
+          0.0022,
+          0.018,
+          0.024,
+          0.018
+        ],
+        "pulse": 0.12
+      },
+      "core": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.008,
+        "powers": [
+          0.006,
+          0.03,
+          0.05,
+          0.04
+        ],
+        "pulse": 0.2,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      },
+      "rift": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.009,
+        "powers": [
+          0.008,
+          0.04,
+          0.06,
+          0.05
+        ],
+        "pulse": 0.25,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      },
+      "overdrive": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "wild": 0.01,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.6,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      }
+    }
+  },
+  "note": "Base payout plus independently sampled bonus expectation weighted by exact trigger probabilities. Normal approximation CI; natural entry payout and bonus cap correlation require full-round cross-check. Additional independent CORE/RIFT samples pooled; purchase returns divided by final prices. Outcome configuration equality verified excluding prices.",
+  "results": [
+    {
+      "scenario": "base",
+      "n": 150000,
+      "seed": 991226,
+      "bet": 0.1,
+      "mean": 0.15351666666665387,
+      "variance": 1.7070372799713274,
+      "seeds": [
+        991226
+      ]
+    },
+    {
+      "scenario": "hunt",
+      "n": 1150000,
+      "bet": 0.1,
+      "mean": 1.676426521740435,
+      "variance": 62.84192503184757,
+      "seeds": [
+        991227,
+        661026
+      ]
+    },
+    {
+      "scenario": "core",
+      "n": 650000,
+      "bet": 0.1,
+      "mean": 11.673598615384202,
+      "variance": 2908.7601134131232,
+      "seeds": [
+        991426,
+        771026
+      ]
+    },
+    {
+      "scenario": "rift",
+      "n": 400000,
+      "bet": 0.1,
+      "mean": 36.38287124999974,
+      "variance": 19036.071432059292,
+      "seeds": [
+        991427,
+        881026
+      ]
+    },
+    {
+      "scenario": "overdrive",
+      "n": 150000,
+      "seed": 991428,
+      "bet": 0.1,
+      "mean": 458.18281000000576,
+      "variance": 1021961.839555901,
+      "seeds": [
+        991428
+      ]
+    },
+    {
+      "scenario": "overdrive14",
+      "n": 150000,
+      "seed": 991429,
+      "bet": 0.1,
+      "mean": 574.4724966666652,
+      "variance": 1424883.977832948,
+      "seeds": [
+        991429
+      ]
+    }
+  ],
+  "summaries": {
+    "base": {
+      "rtp": 0.9585815249242153,
+      "ci95": [
+        0.9496756818165919,
+        0.9674873680318388
+      ],
+      "n": 1500000,
+      "withinRange": true,
+      "intervalWithinRange": true
+    },
+    "hunt": {
+      "rtp": 0.9613412697089257,
+      "ci95": [
+        0.955664659866225,
+        0.9670178795516265
+      ],
+      "n": 2500000,
+      "withinRange": true,
+      "intervalWithinRange": true
+    },
+    "core": {
+      "rtp": 0.9647602161474548,
+      "ci95": [
+        0.9539242416096958,
+        0.9755961906852137
+      ],
+      "n": 650000,
+      "withinRange": true,
+      "intervalWithinRange": true
+    },
+    "rift": {
+      "rtp": 0.9599702176780934,
+      "ci95": [
+        0.9486884921756702,
+        0.9712519431805167
+      ],
+      "n": 400000,
+      "withinRange": true,
+      "intervalWithinRange": true
+    },
+    "overdrive": {
+      "rtp": 0.9612034092185752,
+      "ci95": [
+        0.9535423832314094,
+        0.968864435205741
+      ],
+      "n": 300000,
+      "withinRange": true,
+      "intervalWithinRange": true
+    }
+  },
+  "componentSamples": [
+    {
+      "scenario": "base",
+      "n": 150000,
+      "seed": 991226,
+      "bet": 0.1,
+      "mean": 0.15351666666665387,
+      "variance": 1.7070372799713274
+    },
+    {
+      "scenario": "hunt",
+      "n": 150000,
+      "seed": 991227,
+      "bet": 0.1,
+      "mean": 1.7250573333338362,
+      "variance": 96.99310768403909
+    },
+    {
+      "scenario": "core",
+      "n": 150000,
+      "seed": 991426,
+      "bet": 0.1,
+      "mean": 11.716187333333513,
+      "variance": 3211.6290915642435
+    },
+    {
+      "scenario": "rift",
+      "n": 150000,
+      "seed": 991427,
+      "bet": 0.1,
+      "mean": 36.38896733333356,
+      "variance": 18199.18251756349
+    },
+    {
+      "scenario": "overdrive",
+      "n": 150000,
+      "seed": 991428,
+      "bet": 0.1,
+      "mean": 458.18281000000576,
+      "variance": 1021961.839555901
+    },
+    {
+      "scenario": "overdrive14",
+      "n": 150000,
+      "seed": 991429,
+      "bet": 0.1,
+      "mean": 574.4724966666652,
+      "variance": 1424883.977832948
+    },
+    {
+      "scenario": "core",
+      "n": 500000,
+      "seed": 771026,
+      "bet": 0.1,
+      "mean": 11.66082199999941,
+      "variance": 2817.904954134082
+    },
+    {
+      "scenario": "rift",
+      "n": 250000,
+      "seed": 881026,
+      "bet": 0.1,
+      "mean": 36.379213599999446,
+      "variance": 19538.279550643576
+    },
+    {
+      "scenario": "hunt",
+      "n": 1000000,
+      "seed": 661026,
+      "bet": 0.1,
+      "mean": 1.669131900001425,
+      "variance": 57.71893154925128
+    }
+  ]
+}

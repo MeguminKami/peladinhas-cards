@@ -1,8 +1,8 @@
 import { esc, modal, friendlyError } from "./ui.js";
 import { icon } from "./icons.js";
 import { createCasinoLocalWallet } from "./casino-local-wallet.js";
-import { CASINO_CATALOG, LOCAL_CASINO_TABLES } from "./casino-catalog.js";
-import { DJABUCOIN } from "./casino-economy.js";
+import { CASINO_CATALOG, CASINO_TABLES_ENABLED } from "./casino-catalog.js";
+import { DJABUCOIN, CASINO_EDITION } from "./casino-economy.js";
 
 const number = (value) =>
   new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 2 }).format(
@@ -41,12 +41,13 @@ export async function casinoPage(ctx) {
     slot,
     mounting = false, gameRun = 0;
   const uid = ctx.realUser?.uid || ctx.user.uid;
+  const playerId = `${uid}:${CASINO_EDITION}`;
   const localWallet = createCasinoLocalWallet(uid, (value) => {
     if (active && value) {
       wallet = value;
       if (!loading) drawWallet();
     }
-  }, { tables: LOCAL_CASINO_TABLES });
+  }, { tables: CASINO_TABLES_ENABLED });
   ctx.cleanup(() => {
     active = false;
     slot?.destroy();
@@ -82,10 +83,13 @@ export async function casinoPage(ctx) {
   );
   const root = document.querySelector(".casino-page");
   const appHeader = document.querySelector("#header");
+  const bottomNav = document.querySelector(".bottom-nav");
   const headerSize = new ResizeObserver(() => {
     root.style.setProperty("--casino-header-height", `${appHeader.getBoundingClientRect().height}px`);
+    root.style.setProperty("--casino-bottom-height", `${bottomNav?.getBoundingClientRect().height || 0}px`);
   });
   if (appHeader) headerSize.observe(appHeader);
+  if (bottomNav) headerSize.observe(bottomNav);
   ctx.cleanup(() => headerSize.disconnect());
   const walletRoot = root.querySelector(".casino-wallet");
   const toolbar = root.querySelector(".casino-toolbar");
@@ -146,7 +150,7 @@ export async function casinoPage(ctx) {
   root.querySelector("[data-center-game]").onclick = () => {
     const game = playArea.querySelector(".casino-slot-mount");
     if (!game) return;
-    const header = appHeader?.getBoundingClientRect().height || 0;
+    const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
     const nav = document.querySelector(".bottom-nav");
     const bottom = nav && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect().height : 0;
     const available = innerHeight - header - bottom;
@@ -155,9 +159,9 @@ export async function casinoPage(ctx) {
     window.scrollTo({ top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   };
   async function openSlot(button, game) {
-    if (LOCAL_CASINO_TABLES) {
+    if (CASINO_TABLES_ENABLED) {
       for (const table of CASINO_CATALOG.filter(item => item.category === "tables" && item.id !== game.id)) {
-        const saved = JSON.parse(localStorage.getItem(`atelier:${table.id}:website:${uid}`) || "null");
+        const saved = JSON.parse(localStorage.getItem(`atelier:${table.id}:website:${playerId}`) || "null");
         if (saved?.pending || saved?.state?.round) {
           modal("Retoma a tua mesa", `<p class="casino-session-note">Tens uma ronda ou operação pendente em ${esc(table.title)}. Abre essa mesa para recuperar antes de mudar de jogo.</p>`);
           return;
@@ -180,12 +184,12 @@ export async function casinoPage(ctx) {
     showGame(button);
     bindClose();
     root.querySelector(".casino-game-nav h2").textContent = game.title;
-    root.classList.toggle("is-table", game.category === "tables" || game.id === "rift");
+    root.classList.toggle("is-table", game.category === "tables" || game.id === "rift" || game.id === "cardoso-road");
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
       const [sdk, latest] = await Promise.all([
-        game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
-        localWallet.start(),
+        game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
+        localWallet.enterGame(),
       ]);
       if (!active || run !== gameRun) return;
       wallet = latest;
@@ -196,16 +200,20 @@ export async function casinoPage(ctx) {
         streamId = crypto.randomUUID();
         localStorage.setItem(key, streamId);
       }
-      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" ? " casino-table-mount" : ""}"></div>`;
-      if (game.id === "rift") {
-        if (!LOCAL_CASINO_TABLES) throw Error("Jogo apenas dispon\u00edvel no teste local.");
+      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}"></div>`;
+      if (game.id === "cardoso-road") {
+        slot = sdk.mountCardoso(playArea.querySelector(".casino-slot-mount"), localWallet);
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "rift") {
         slot = sdk.mountCasinoRift(playArea.querySelector(".casino-slot-mount"), localWallet);
         await slot.ready;
         if (!active || run !== gameRun) return;
       } else if (game.category === "tables") {
-        if (!LOCAL_CASINO_TABLES) throw Error("Mesa disponível apenas no teste local.");
+        if (!CASINO_TABLES_ENABLED) throw Error("Mesa disponível apenas no teste local.");
         slot = sdk.mountCasinoTable(playArea.querySelector(".casino-slot-mount"), {
-          game: game.id, playerId: uid,
+          game: game.id, playerId,
+          onRoundComplete: () => localWallet.checkpoint("table"),
           wallet: {
             getBalance: () => localWallet.balance(),
             settle: operation => {
@@ -219,7 +227,7 @@ export async function casinoPage(ctx) {
       } else slot = sdk.mountSlot(playArea.querySelector(".casino-slot-mount"), {
         src: new URL("../assets/games/futebol/embed.html", import.meta.url)
           .href,
-        playerId: uid,
+        playerId,
         // The SDK asks before each spin; this is intentionally a memory read.
         getBalance: () => localWallet.balance(),
         settle: async (transaction) => {
@@ -256,7 +264,7 @@ export async function casinoPage(ctx) {
   function history() {
     modal(
       "Movimentos Djabucoin",
-      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
+      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
     );
   }
   function drawWallet(error = "") {
@@ -309,6 +317,10 @@ export async function casinoPage(ctx) {
       const game = CASINO_CATALOG.find(
         (item) => item.id === button.dataset.casinoGame,
       );
+      if (game.demoUrl) {
+        window.open(new URL(game.demoUrl, document.baseURI).href, "_blank", "noopener,noreferrer");
+        return;
+      }
       if (game.available) {
         void openSlot(button, game);
         return;

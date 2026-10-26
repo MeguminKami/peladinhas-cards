@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {cameraLayout,ZONES} from '../scene.mjs';
+test('four-space camera keeps the hero at 30 percent at every step and width',()=>{assert.equal(ZONES.length,10);for(const width of [300,320,390,736,1400])for(let step=0;step<=10;step++){const c=cameraLayout(width,step);assert.equal(c.visibleStages,4);assert.ok(Math.abs(c.lane*4.7-width)<1e-9);assert.ok(Math.abs((c.anchor-c.camera+step*c.lane)/width-.3)<1e-12);}});

@@ -1,8 +1,6 @@
-// Presentation placeholders. A game becomes playable only with its own local
-// module AND an audited wallet settlement contract; never accept a client delta.
-import * as config from "./config.js";
-export const LOCAL_CASINO_TABLES = config.runtimeMode === "fixtures";
+export const CASINO_TABLES_ENABLED = true;
 export const CASINO_CATALOG = Object.freeze([
+  { id: "cardoso-road", category: "slots", title: "Cardoso Road", label: "Fuga ao Óleo. Arrisca o próximo passo.", description: "Dez passos até à Sofia. Sem óleo. Sem bolo. Só gains.", art: "reels", thumbnail: "assets/casino/covers/cardoso-road.webp", available: true },
   {
     id: "futebol",
     category: "slots",
@@ -16,7 +14,7 @@ export const CASINO_CATALOG = Object.freeze([
   },
   {
     id: "rift",
-    available: LOCAL_CASINO_TABLES,
+    available: CASINO_TABLES_ENABLED,
     category: "slots",
     title: "Rift Core Overdrive",
     label: "Abre a fenda. Liberta o núcleo.",
@@ -26,23 +24,23 @@ export const CASINO_CATALOG = Object.freeze([
   },
   {
     id: "blackjack",
-    available: LOCAL_CASINO_TABLES,
+    available: CASINO_TABLES_ENABLED,
     category: "tables",
     title: "Blackjack",
     label: "A próxima carta muda tudo.",
     description:
-      "Uma mesa para pensar a próxima jogada. O jogo será disponibilizado depois da integração.",
+      "Uma mesa para pensar a próxima jogada, com cinco lugares e divisões de mãos.",
     art: "cards",
     thumbnail: "assets/casino/covers/blackjack.webp",
   },
   {
     id: "roulette",
-    available: LOCAL_CASINO_TABLES,
+    available: CASINO_TABLES_ENABLED,
     category: "tables",
     title: "Roleta",
     label: "Todos os olhos na roda.",
     description:
-      "O clássico de mesa terá o seu lugar no salão. Disponível após a integração do jogo.",
+      "A roda europeia com apostas no tapete e saldo partilhado.",
     art: "wheel",
     thumbnail: "assets/casino/covers/roleta-europeia.webp",
   },

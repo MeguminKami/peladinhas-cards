@@ -45,4 +45,4 @@ return {...handle,destroy(){fit.destroy();handle.destroy();}};
 parent.postMessage({type:'peladinhas-table-ready'},location.origin);
 </script></body></html>`);
 }
-console.log("Mesas temporárias preparadas: Blackjack e Roleta (apenas fixtures).");
+console.log("SDKs integrados preparados: Blackjack e Roleta.");

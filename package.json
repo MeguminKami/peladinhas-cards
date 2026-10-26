@@ -9,6 +9,7 @@
   "scripts": {
     "build:casino": "node scripts/build-casino.mjs",
     "predev:casino": "node scripts/build-casino.mjs",
+    "test:casino:cardoso": "node tests/casino-cardoso.mjs",
     "test:casino:tables": "node tests/casino-tables.mjs",
     "test:casino:rift": "node --test tests/casino-rift.test.js",
     "test:casino": "node --test tests/casino.test.js tests/casino-session.test.js && node tests/casino-local-wallet.mjs && node tests/casino.mjs",

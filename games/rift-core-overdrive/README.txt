@@ -1,47 +1,78 @@
-# RIFT//CORE: OVERDRIVE — rift-4.3
+﻿# RIFT//CORE: OVERDRIVE — rift-4.14
 
-Executar npm.cmd start e abrir http://localhost:4173 para a demonstração local. A integração por iframe usa saldo e resultados confirmados pelo backend do site, sem nome nem símbolo de moeda. Ver INTEGRACAO.md para o agente do site. npm.cmd test executa 46 testes. Frontend sem dependências de instalação; backend de referência Node.js.
+## Preços fixos e bónus
 
-## Três compras de bónus
+Compras bloqueadas em CORE (3 Scatters) 80×, RIFT (4) 220× e OVERDRIVE (5) 450×
+a aposta-base. OVERDRIVE comprado mantém 33,33% de 6 Scatters/14 FS.
+Os preços não são recalibrados automaticamente. Perfis de FS foram reforçados
+para que estes preços correspondam a cerca de 96% de retorno esperado.
 
-| Bónus | Custo da aposta | FS iniciais | Global inicial | Global máximo | Retrigger 3+ portais |
-|---|---:|---:|---:|---:|---:|
-| CORE AWAKENING | 79× | 8 | ×1 | ×25 | +4 |
-| RIFT ASCENSION | 240× | 10 | ×3 | ×50 | +5 |
-| CRITICAL OVERDRIVE | 804× | 12 | ×5 | ×100 | +6 |
+Resultados locais de 2026-10-26, aposta-base 0,10, 50 000 compras independentes
+por bónus: CORE 95,15%, RIFT 96,93%, OVERDRIVE 96,50%.
+Ganhos médios por aposta-base: 76,12× / 213,25× / 434,27×.
+Poderes aleatórios em 48,77% / 53,93% / 58,56% dos FS, respetivamente;
+OVERDRIVE prepara ainda pelo menos um Wild em todos os FS.
 
-RIFT ASCENSION é o bónus intermédio, com apresentação verde, perfil próprio e música própria. Disponível na compra do menu inicial e dos controlos. Seleção/cancelamento não cobram; só a confirmação debita. As entradas naturais continuam: 4 portais→CORE, 5/6→OVERDRIVE. O RIFT é exclusivo da compra e coloca 4 portais apenas como apresentação da ativação; não paga prémios base nem consome um FS.
+Poderes por oportunidade (CORE / RIFT / OVERDRIVE):
+MEGA WILD DROP 1,5% / 2% / 2,5%; NEON STORM 8% / 10% / 12%;
+WILD SURGE 12% / 14% / 16%; RIFT LINK 10% / 12% / 14%;
+REACTOR PULSE 35% / 45% / 60% na terceira, sexta, nona… vitória.
+Wild natural dos FS 1,5% / 2% / 2%. Pesos fixos por coluna com bias
+2,8 / 3,415 / 5,88, aumentando as oportunidades de formar ways face à 4.13.
 
-Cascata: ×1, ×1, ×2, ×2… até ×10; reinicia por spin. Todos os bónus sobem o global +1 a cada três vitórias, acumulando progresso entre FS da mesma ronda. Prémios usam o global anterior ao aumento. Retriggers limitados a 40 FS concedidos e cap de ronda 25 000×. Só OVERDRIVE tem Wild preparatório obrigatório. CORE mantém a evolução ao atingir ×10; RIFT tem as probabilidades intermédias abaixo.
+CORE: 8 FS, global inicial ×1 / máximo ×25, retrigger +4.
+RIFT: 10 FS, global inicial ×3 / máximo ×50, retrigger +5.
+OVERDRIVE: 12 FS (14 com 6 Scatters), global inicial ×5 / máximo ×100,
+retrigger +6. Limite de 40 FS concedidos, cap acumulado da ronda de 25000×.
 
-## Poderes por oportunidade
+## Ways e pagamento
 
-| Modo | Mega Wild Drop | Neon Storm | Wild Surge | Rift Link | Reactor Pulse |
-|---|---:|---:|---:|---:|---:|
-| base | 0,17% | 1,3% | 1,9% | 1,3% | 4% |
-| hunt | 0,22% | 1,8% | 2,4% | 1,8% | 12% |
-| core | 0,6% | 3% | 5% | 4% | 20% |
-| rift | 0,8% | 4% | 6% | 5% | 25% |
-| overdrive | 1% | 5% | 7% | 6% | 30% |
+Prémio = ways × valor por way para o comprimento × aposta-base × global CORE.
+Sem multiplicador de cascata. Mínimo por way 0,1×, 3×3×3 são 27 ways.
+Comprimentos 3/4/5/6 no símbolo fraco: 0,10 / 0,125 / 0,15 / 0,20×.
+Símbolo forte: 0,70 / 0,875 / 1,05 / 1,40×. Comprimento 6 paga o dobro de 3
+para as mesmas ways. Exemplo: 27 ways fracas de 3 colunas × aposta 0,10 ×
+global 11 pagam 2,97; as mesmas 27 ways em 6 colunas pagam 5,94.
 
-Poderes precisam de alvos válidos. Mega/Storm/Surge/Link são sorteados inicialmente e após cada queda vencedora. Pulse apenas após a 3.ª/6.ª/9.ª… vitória. Podem repetir-se. Ícones têm cor própria, chamas durante a utilização e cor retida até ao fim do spin. Scatters são preservados pelos poderes e dividem os segmentos da queda.
+Normal/Hunt sem poderes. Frequências de Scatter preservadas:
+naturalScatterScale=1/2,47, huntScatterBoost=3. Hunt custa 3×.
+Qualquer bónus: média 1/616 Normal ou 1/205 Hunt; seis Scatters:
+1/4940 Normal ou 1/1647 Hunt. Sem garantias por contador ou resultado alvo.
 
-Símbolos sorteados individualmente, com os mesmos pesos nas seis colunas e premiums progressivamente mais raros; probabilidades efetivas nas regras. Scatters têm distribuição própria e transformações são eventos explícitos. Nenhum ajuste ao saldo/perdas.
+## RTP do jogo pago e interface
 
-## Verificação
+Estimativa principal Normal 96,17%, Hunt 95,68%, incluindo bónus naturais.
+Perfis pagos: bias por coluna 4,06 e 4,24, respetivamente; Wild 0,1% e 4,16%.
+Alvo 96%, intervalo pretendido 94–98%; estimativas locais, não certificação.
+Relatório, incerteza e conferências de rondas completas: RTP-v4.14.md.
 
-| Modo | Rondas completas | RTP observado | IC95% |
-|---|---:|---:|---:|
-| base | 100000 | 98.437% | 91.238%–105.636% |
-| hunt | 100000 | 104.863% | 98.828%–110.898% |
-| core | 100000 | 93.483% | 89.857%–97.110% |
-| rift | 100000 | 95.244% | 93.289%–97.199% |
-| overdrive | 100000 | 95.963% | 93.124%–98.801% |
+Barra Normal compacta, sem campo Ganho do bónus. A presença de uma futura
+ronda de bónus não altera o layout enquanto o spin base ainda é apresentado.
+Após recolher o resumo final, o estado do resultado anterior também não
+reativa o campo. O total do bónus aparece só quando o ecrã mostra o bónus.
 
-Estimativas Monte Carlo, não confirmação de RTP de 96%. O relatório RTP-v4.md contém parâmetros, sementes, hashes, pagamentos e limitações. Os ensaios anteriores não validam esta versão; históricos preservados em reports, incluindo RTP-v4.1.md e RTP-v4.2.md.
+## Reproduzir e verificar
 
-46 testes, incluindo cobrança/FS/retrigger/crescimento/serialização do RIFT, equivalência das modalidades existentes com a versão 4.2, transações do site, idempotência, concorrência, origens autorizadas, repetição após timeout e proteção após troca de conta. Bónus locais já iniciados mantêm a matemática original. QA de compra, sequência completa de FS, resumo, histórico e mobile em reports/v4/rift-browser.json. QA do iframe entre origens diferentes e recuperação após resposta perdida em reports/v4/site-wallet-browser.json.
+A partir da raiz do projeto:
 
-Gerar relatório: npm.cmd run report:rtp. Retomar/prolongar ensaios: npm.cmd run measure:rtp -- --rounds=100000 --workers=4. Cada lote termina rondas completas; não alterar motor/configuração durante ensaios.
+  node games/rift-core-overdrive/scripts/measure-purchases.mjs 50000 .1 751026 --validation
+  node games/rift-core-overdrive/scripts/audit-paid-rtp.mjs 1000000 .1 781026
+  node --test games/rift-core-overdrive/tests/scatters.test.mjs games/rift-core-overdrive/tests/ways.test.mjs
+  node games/rift-core-overdrive/tests/browser-smoke.mjs --layout
+  npm.cmd run test:casino:rift
+  npm.cmd run test:docs
 
-RIFT-CORE-OVERDRIVE-v4.zip contém a aplicação, adaptadores e INTEGRACAO.md; RIFT-CORE-OVERDRIVE-v4-source.zip inclui também testes e relatórios. Servir dist por HTTP/HTTPS. O agente do site deve ligar integration/host.js ao endpoint autenticado e integration/round-service.mjs à transação da carteira, conforme INTEGRACAO.md. Um iframe integrado não recorre ao saldo local se faltar a ligação; para uma demonstração explícita em iframe usar ?demo=1.
+A amostra atual purchases-50000.json mantém hashes da configuração paga
+anterior ao último ajuste de pesos. Os perfis FS e o motor são iguais;
+o relatório atual reutilizou a amostra com --reuse-bonus-sample, verificando
+essa igualdade. Reproduzir os comandos acima gera novos dados com todos os
+hashes finais; não escolher preços nem seeds a partir desse resultado.
+
+## Integração e publicação
+
+Preparar assets: node scripts/build-casino-rift.mjs.
+Frontend: npm.cmd run deploy:frontend. Não foi executado deploy.
+Nenhuma função Firebase atual importa integration/server-engine.mjs.
+Hosts externos devem atualizar motor e configuração em conjunto.
+Rondas iniciadas em 4.13 e anteriores preservam a matemática original.
+Não recalcular saldos ou históricos. Testes locais bloqueiam pedidos cloud.

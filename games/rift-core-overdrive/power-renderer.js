@@ -1,5 +1,4 @@
 import {symbol} from './symbols.js';
-import {NAMES} from './engine.js';
 import {activateProtocol,settleProtocol} from './protocols.js';
 
 export function createPowerRenderer({board,settings,mode,sound,assertGrid,cells,cell,setSymbol,setShown,pause,animate}){
@@ -12,10 +11,11 @@ export function createPowerRenderer({board,settings,mode,sound,assertGrid,cells,
   const first=event.targets[0],from=event.before[first.c][first.r].s;
   game.dataset.power=key;activateProtocol(protocol);
   banner.className='power-readable';
+  const result=event.dest===10?'Wild':event.dest>=5?'Premium':pt?'símbolo':'symbol';
   const caption=event.name==='RIFT LINK'
-   ?`${pt?'COLUNA':'REEL'} ${event.source.c+1} → ${first.c+1} · ${pt?'A ORIGEM MANTÉM-SE':'SOURCE STAYS'}`
-   :`${event.targets.length} ${pt?'POSIÇÕES':'POSITIONS'} · ${NAMES[event.dest]}`;
-  banner.innerHTML=`<span class="protocol-eyebrow">${pt?'PROTOCOLO ATIVO':'PROTOCOL ACTIVE'}</span><strong>${event.name}</strong><div class="power-preview">${symbol(from)}<span>→</span>${symbol(event.dest)}</div><div class="power-explanation">${caption}</div>`;
+   ?`${pt?'Colunas':'Reels'} ${event.source.c+1} → ${first.c+1} · ${pt?'cópia':'copy'}`
+   :`${event.targets.length} ${pt?'posições':'positions'} → ${result}`;
+  banner.innerHTML=`<div class="power-copy"><strong>${event.name}</strong><div class="power-explanation">${caption}</div></div><div class="power-preview" aria-hidden="true">${symbol(from)}<span>→</span>${symbol(event.dest)}</div>`;
   cells(event.targets,'target');if(event.source)cells([event.source],'source');
   sound(event.name);
   const effects=document.createElement('div');effects.className=`power-effects ${key}`;board.append(effects);
@@ -51,7 +51,7 @@ export function createPowerRenderer({board,settings,mode,sound,assertGrid,cells,
    if(event.name==='MEGA WILD DROP')await pause(45/speed);
   }
   if(event.name==='MEGA WILD DROP')sound('drop-impact');setShown(event.grid);
-  banner.querySelector('.power-explanation').textContent=pt?'TRANSFORMAÇÃO CONCLUÍDA':'TRANSFORMATION COMPLETE';
+  banner.querySelector('.power-explanation').textContent=pt?'Concluído':'Complete';
   await pause(settings().reduced?500:Math.max(430,650/speed));
   effects.remove();banner.className='';banner.replaceChildren();game.removeAttribute('data-power');settleProtocol(protocol);
   board.querySelectorAll('.tile').forEach(el=>el.className='tile');

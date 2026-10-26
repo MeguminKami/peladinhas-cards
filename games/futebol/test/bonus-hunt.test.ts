@@ -28,5 +28,5 @@ test('FS ganhos no Hunt são grátis, sem boost extra, e a simulação inclui o 
  assert(s.active);assert.equal(s.active.bonusHunt,undefined);const next=execute(s,{type:'next'},'fs','date');assert.equal(next.history[0].cost,60);assert.equal(next.balance,s.balance+next.history[0].spins.at(-1)!.paid);assert.equal(next.history[0].spins.at(-1)!.bonusHunt,false);
  assert.equal(round('base',20,new SeededRandom('hunt'),config,false,true).cost,60);
  const report=simulate('base',20,20,'hunt-report',config,true);assert.equal(report.bonusHunt,true);assert.equal(report.totalCostCents,'1200');
- const saved=createSession('old');saved.configVersion='0.5.1';assert.equal(restoreSession(saved).configVersion,'0.6.0');
+ const saved=createSession('old');saved.configVersion='0.5.1';assert.equal(restoreSession(saved).configVersion,config.version);
 });

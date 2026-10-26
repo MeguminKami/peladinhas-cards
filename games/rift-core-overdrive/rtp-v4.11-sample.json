@@ -1,0 +1,771 @@
+{
+  "purchaseSample": {
+    "reused": true,
+    "version": "rift-4.7",
+    "configurationHash": "4ad6097467393d5fbe555d4d901ce6c6e1e63c0f014ecdcb96a2d1f99a94108b",
+    "engineHash": "11c1d7a03dffb133cac4770a60083084ef7b2fd4837b5a91b116ba3e9bbcb6e0"
+  },
+  "date": "2026-10-26T16:55:11.226Z",
+  "version": "rift-4.11",
+  "bet": 0.1,
+  "configurationHash": "050f8c7768f90cbb27d0eabcad621811e783150b9d68fb7df19079c467fa6b21",
+  "engineHash": "4c3c4666f8b26e70787ca3c79a017e15bd6d4cd67401375341d6aa2dc426e515",
+  "configuration": {
+    "growth": {
+      "cascadeEvery": 2,
+      "core": {
+        "every": 3,
+        "step": 1
+      },
+      "rift": {
+        "every": 3,
+        "step": 1
+      },
+      "overdrive": {
+        "every": 3,
+        "step": 1
+      }
+    },
+    "target": 0.96,
+    "precision": [
+      0.94,
+      0.98
+    ],
+    "rng": "xoshiro128**",
+    "sampling": "independent-symbol-weights",
+    "payDenominator": 10000,
+    "payScale": 1,
+    "payBase": [
+      0.05,
+      0.15,
+      0.5,
+      2
+    ],
+    "payFactors": [
+      1,
+      1.1,
+      1.2,
+      1.3,
+      1.4,
+      2,
+      3,
+      4.5,
+      7,
+      10
+    ],
+    "prices": {
+      "core": 15.6,
+      "rift": 59.1,
+      "overdrive": 907.5
+    },
+    "bonuses": {
+      "core": {
+        "name": "CORE AWAKENING",
+        "spins": 8,
+        "startGlobal": 1,
+        "maxGlobal": 25,
+        "retrigger": 4,
+        "art": 8
+      },
+      "rift": {
+        "name": "RIFT ASCENSION",
+        "spins": 10,
+        "startGlobal": 3,
+        "maxGlobal": 50,
+        "retrigger": 5,
+        "art": 7
+      },
+      "overdrive": {
+        "name": "CRITICAL OVERDRIVE",
+        "spins": 12,
+        "startGlobal": 5,
+        "maxGlobal": 100,
+        "retrigger": 6,
+        "art": 9
+      }
+    },
+    "payOverrides": {},
+    "scatterChance": [
+      0.0011,
+      0.8516,
+      0.8516,
+      0.8516,
+      0.8516,
+      0.8643
+    ],
+    "huntScatterBoost": 3,
+    "naturalScatterScale": 0.4444444444444444,
+    "bonusScatters": {
+      "core": 3,
+      "rift": 4,
+      "overdrive": 5
+    },
+    "extraOverdriveSpins": 2,
+    "purchaseSixScatterChance": 0.3333,
+    "profiles": {
+      "base": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "reelWeights": [
+          [
+            121.44,
+            15,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            113.85,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            106.25999999999999,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            98.67,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            91.08,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            12,
+            75.9,
+            7.5,
+            5.5,
+            4,
+            3
+          ]
+        ],
+        "wild": 0.001,
+        "powers": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pulse": 0
+      },
+      "hunt": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "reelWeights": [
+          [
+            160,
+            15,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            150,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            140,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            130,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            120,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            12,
+            100,
+            7.5,
+            5.5,
+            4,
+            3
+          ]
+        ],
+        "wild": 0.0329,
+        "powers": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "pulse": 0
+      },
+      "core": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "reelWeights": [
+          [
+            160,
+            15,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            150,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            140,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            130,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            120,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            12,
+            100,
+            7.5,
+            5.5,
+            4,
+            3
+          ]
+        ],
+        "wild": 0.008,
+        "powers": [
+          0.006,
+          0.03,
+          0.05,
+          0.04
+        ],
+        "pulse": 0.2,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      },
+      "rift": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "reelWeights": [
+          [
+            160,
+            15,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            150,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            140,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            130,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            120,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            12,
+            100,
+            7.5,
+            5.5,
+            4,
+            3
+          ]
+        ],
+        "wild": 0.009,
+        "powers": [
+          0.008,
+          0.04,
+          0.06,
+          0.05
+        ],
+        "pulse": 0.25,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      },
+      "overdrive": {
+        "weights": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          10,
+          7.5,
+          5.5,
+          4,
+          3
+        ],
+        "reelWeights": [
+          [
+            160,
+            15,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            150,
+            14,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            140,
+            13,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            130,
+            12,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            120,
+            10,
+            7.5,
+            5.5,
+            4,
+            3
+          ],
+          [
+            16,
+            15,
+            14,
+            13,
+            12,
+            100,
+            7.5,
+            5.5,
+            4,
+            3
+          ]
+        ],
+        "wild": 0.01,
+        "powers": [
+          0.02,
+          0.1,
+          0.14,
+          0.12
+        ],
+        "pulse": 0.6,
+        "scatterK": [
+          0.8,
+          0.13,
+          0.05,
+          0.019,
+          0.0009,
+          0.00009,
+          0.00001
+        ]
+      }
+    }
+  },
+  "note": "Purchases: 50,000 complete rounds per mode, calibrated prices using the predeclared seeds. Reuse mode verifies that only paid profiles or natural entry Scatter parameters changed and the settlement engine is unchanged; original sample version/hashes remain in purchaseSample. Base/Hunt: independent paid-spin samples plus bonus expectations weighted by exact trigger probabilities, with conservative entry-cap correction. Confidence intervals are normal approximations, not certification; estimates share bonus samples.",
+  "results": [
+    {
+      "scenario": "base",
+      "n": 1000000,
+      "seed": 521026,
+      "bet": 0.1,
+      "mean": 0.7107852999992283,
+      "variance": 16.335538922805007,
+      "entryPaidMean": 0.0005125000000000002,
+      "entryPaidVariance": 0.0036946110383610496
+    },
+    {
+      "scenario": "hunt",
+      "n": 1000000,
+      "seed": 521027,
+      "bet": 0.1,
+      "mean": 1.9273125999994578,
+      "variance": 70.54328342517589,
+      "entryPaidMean": 0.004877499999999977,
+      "entryPaidVariance": 0.09178893178268141
+    }
+  ],
+  "bonusComponents": [
+    {
+      "scenario": "core",
+      "n": 50000,
+      "seed": 471026,
+      "bet": 0.1,
+      "mean": 14.968259999999868,
+      "variance": 6015.35369404635
+    },
+    {
+      "scenario": "rift",
+      "n": 50000,
+      "seed": 471027,
+      "bet": 0.1,
+      "mean": 56.76131800000021,
+      "variance": 31912.89495100211
+    },
+    {
+      "scenario": "overdrive",
+      "n": 33393,
+      "seed": 471028,
+      "bet": 0.1,
+      "mean": 811.207205102863,
+      "variance": 3150544.736563467
+    },
+    {
+      "scenario": "overdrive14",
+      "n": 16607,
+      "seed": 471028,
+      "bet": 0.1,
+      "mean": 991.6829710363118,
+      "variance": 3941600.803756733
+    }
+  ],
+  "probabilities": {
+    "base": [
+      0.9970747215119787,
+      0.0005710356976274623,
+      0.0005715628567524657,
+      0.0005692693596016989,
+      0.0005468010056168449,
+      0.00044437209494638914,
+      0.00022223747347654445
+    ],
+    "hunt": [
+      0.9912241645359356,
+      0.0017131070928823864,
+      0.0017146885702573969,
+      0.0017078080788050962,
+      0.0016404030168505343,
+      0.001333116284839167,
+      0.0006667124204296332
+    ],
+    "core": [
+      0.8,
+      0.13,
+      0.05,
+      0.019,
+      0.0009,
+      0.00009,
+      0.00001
+    ],
+    "rift": [
+      0.8,
+      0.13,
+      0.05,
+      0.019,
+      0.0009,
+      0.00009,
+      0.00001
+    ],
+    "overdrive": [
+      0.8,
+      0.13,
+      0.05,
+      0.019,
+      0.0009,
+      0.00009,
+      0.00001
+    ]
+  },
+  "summaries": {
+    "core": {
+      "rtp": 0.9595038461538462,
+      "ci95": [
+        0.9159248667598342,
+        1.0030828255478583
+      ],
+      "n": 50000,
+      "kind": "reused-purchased-bonus-sample",
+      "sampleVersion": "rift-4.7"
+    },
+    "rift": {
+      "rtp": 0.9604283925549916,
+      "ci95": [
+        0.9339332238229271,
+        0.986923561287056
+      ],
+      "n": 50000,
+      "kind": "reused-purchased-bonus-sample",
+      "sampleVersion": "rift-4.7"
+    },
+    "overdrive": {
+      "rtp": 0.9599453730027548,
+      "ci95": [
+        0.9420819253179183,
+        0.9778088206875913
+      ],
+      "n": 50000,
+      "kind": "reused-purchased-bonus-sample",
+      "sampleVersion": "rift-4.7"
+    },
+    "base": {
+      "rtp": 1.3312103806863052,
+      "ci95": [
+        1.317153358465049,
+        1.344635767615708
+      ],
+      "n": 1000000,
+      "kind": "stratified-paid-spin-plus-natural-bonus",
+      "naturalEntryCapCorrectionBound": 0.000631635291853287
+    },
+    "hunt": {
+      "rtp": 1.2628626140202293,
+      "ci95": [
+        1.24888987461038,
+        1.2750115817336294
+      ],
+      "n": 1000000,
+      "kind": "stratified-paid-spin-plus-natural-bonus",
+      "naturalEntryCapCorrectionBound": 0.0018237716964490383
+    }
+  }
+}

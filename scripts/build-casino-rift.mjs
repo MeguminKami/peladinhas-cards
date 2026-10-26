@@ -16,6 +16,7 @@ cpSync(resolve(source, "assets"), resolve(target, "assets"), {
 });
 mkdirSync(resolve(target, "integration"), { recursive: true });
 cpSync(resolve(source, "integration/host.js"), resolve(target, "integration/host.js"));
+cpSync(resolve(source, "local-math-report.json"), resolve(target, "local-math-report.json"));
 // Keep the temporary site fully local, including typography.
 const fonts = resolve(target, "assets/fonts");
 mkdirSync(fonts, { recursive: true });

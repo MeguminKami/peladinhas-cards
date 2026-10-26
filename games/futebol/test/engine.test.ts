@@ -67,20 +67,39 @@ test('P2 protege scatters, não cria roubo recursivo e permite sobreposição',(
   const b=blank();b[7]='W';b[6]='P2';b[1]='N1';b[13]='N1';b[0]='P4';const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.equal(r.board[13],'W');assert.equal(r.steals.length,1);assert.equal(r.global,1);
   b[13]='S';assert.equal(resolve(b,'superior',zero).board[13],'S');
 });
-test('P3 converte sem reposição e depois de expansões P2',()=>{
-  const b=blank();b[7]='W';b[6]='P2';b[1]='N1';b[13]='N2';b[10]='W';b[9]='P3';b[20]='N3';b[21]='N4';
-  const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.equal(r.board[13],'W');assert.equal(r.board[20],'P1');assert.equal(r.board[21],'P1');assert.equal(r.events.filter(e=>e.power==='P3')[0].targets.length,2);
-  const empty=blank();empty[7]='W';empty[6]='P3';assert.equal(resolve(empty,'superior',zero).events[0].targets.length,0);
+test('P3 converte depois de P2 e protege todos os Wilds',()=>{
+  const b=blank();b[7]='W';b[6]='P2';b[1]='N1';b[13]='N2';b[10]='W';b[9]='P3';
+  const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.equal(r.board[13],'W');
+  for(const e of r.events.filter(e=>e.power==='P3'))for(const p of e.targets)assert.notEqual(r.board[p],'W');
 });
+
 test('P4 soma incrementos ao global inicial ×1 e respeita distribuição',()=>{
   const b=blank();b[7]='W';b[6]='P4';b[10]='W';b[9]='P4';assert.equal(resolve(b,'superior',zero).global,5);
   let n=0;const rng={next:()=>++n<=4?0:0.99};assert.equal(resolve(b,'superior',rng).global,11);
   for(const [value,factor] of [[0,2],[0.8,3],[0.99,5]]){let i=0;assert.equal(resolve(b.map((s,p)=>p===10?'S':s),'superior',{next:()=>++i<=2?0:value}).global,1+factor);}
 });
-test('P3 escolhe uniformemente uma quantidade de 2 a 10 e limita aos normais existentes',()=>{
-  for(let amount=2;amount<=10;amount++){const b=Array(24).fill('N1') as Board;b[7]='W';b[6]='P3';let calls=0;const r=resolve(b,'superior',{next:()=>++calls===4?(amount-2+0.5)/9:0});assert.equal(r.events[0].requested,amount);assert.equal(r.events[0].targets.length,amount);assert.equal(new Set(r.events[0].targets).size,amount);}
-  const b=blank();b[7]='W';b[6]='P3';b[20]='N1';const r=resolve(b,'superior',zero);assert.equal(r.events[0].requested,2);assert.deepEqual(r.events[0].targets,[20]);
+test('P3 usa a distribuição aprovada e limita aos alvos não Wild',()=>{
+  const counts=Array(9).fill(0);
+  for(let roll=0;roll<100;roll++){
+    const b=Array(24).fill('N1') as Board;b[7]='W';b[6]='P3';let calls=0;
+    const r=resolve(b,'superior',{next:()=>++calls===4?(roll+.5)/100:0});
+    const e=r.events[0];counts[e.requested!-2]++;assert.equal(e.targets.length,e.requested);assert.equal(new Set(e.targets).size,e.requested);
+  }
+  assert.deepEqual(counts,[18,16,14,12,11,9,8,7,5]);
+  const b=Array(24).fill('W') as Board;b[6]='P3';const r=resolve(b,'superior',zero);
+  const targets=r.events.flatMap(e=>e.targets);assert.deepEqual(targets,[6]);assert.equal(r.board.filter(s=>s==='W').length,23);
 });
+
+test('P3 converte premiums e Scatters e preserva retrigger e ativação natural',()=>{
+  const b=Array(24).fill('W') as Board;b[0]='P3';b[2]='S';b[3]='S';b[4]='S';
+  for(const mode of ['base','superior'] as const){
+    const r=spin(start(mode),20,zero,config,true,b);
+    assert.equal(r.detail!.final[0],'P1');assert.equal(r.detail!.final[2],'P1');
+    assert.equal(r.scatters.length,3);assert.equal(r.next.mode,mode==='base'?'normal':'superior');
+    if(mode==='superior'){assert.equal(r.retrigger!.awarded,5);assert.equal(r.next.remaining,14);}
+  }
+});
+
 test('P1 multiplica pelo global final aditivo, sem somar ou aplicar global duas vezes',()=>{
   const b=blank();b[0]='N1';b[1]='W';b[2]='N1';b[7]='P1';b[10]='W';b[16]='P4';b[22]='W';
   const powers=resolve(b,'superior',zero);assert.equal(powers.global,5);assert.equal(powers.amplified.has(1),true);

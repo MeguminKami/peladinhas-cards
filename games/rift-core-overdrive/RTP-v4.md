@@ -1,3 +1,5 @@
+> Historical report before rift-4.4. Current local results: [SCATTERS.md](./SCATTERS.md).
+
 # RIFT//CORE — distribuição e verificação rift-4.3
 
 A distribuição foi reconstruída a pedido do utilizador. **Os RTPs aceites da versão 3 não validam esta versão.** O alvo histórico de 96% é uma referência, não uma certificação nem um resultado garantido. A última coluna abaixo só passa se todo o IC95% estiver dentro de 95,90%–96,10%.

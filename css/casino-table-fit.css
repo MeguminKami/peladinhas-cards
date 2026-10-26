@@ -25,7 +25,7 @@ html[data-casino-fit] .status.error { min-height: 0; margin: 0; padding: 6px 10p
 html[data-casino-fit] .blackjack-shell { grid-template-rows: 44px minmax(0, 1fr) auto auto auto; }
 html[data-casino-fit] .blackjack-shell .stage { border-radius: 12px; }
 html[data-casino-fit] .blackjack-shell .dealer-hud { top: 12px; }
-html[data-casino-fit] .blackjack-shell .table-floor { padding: 4px; min-height: 0; margin: 0; }
+html[data-casino-fit] .blackjack-shell .table-floor { padding: 4px; height: 104px; min-height: 104px; margin: 0; }
 html[data-casino-fit] .blackjack-shell .decision-dock { padding: 0; gap: 12px; }
 html[data-casino-fit] .blackjack-shell .decision-buttons,
 html[data-casino-fit] .blackjack-shell .betting-dock .controls { gap: 8px; }
@@ -45,9 +45,9 @@ html[data-casino-fit] .roulette-shell .wheel-result strong { font-size: 23px; }
 html[data-casino-fit] .roulette-shell .wheel-result small { letter-spacing: 1px; }
 html[data-casino-fit] .roulette-shell .roulette-table { min-height: 0; min-width: 0; padding: 12px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; }
 html[data-casino-fit] .roulette-shell .table-title { margin: 0; min-height: 18px; }
-html[data-casino-fit] .roulette-shell .felt-scroll { min-height: 0; padding: 0; overflow: visible; }
-html[data-casino-fit] .roulette-shell .felt-surface { min-width: 0; height: 100%; padding: 0; display: grid; grid-template-rows: minmax(0, 1fr) 20px 44px 44px; gap: 4px; }
-html[data-casino-fit] .roulette-shell .number-grid { min-height: 0; grid-template-columns: 30px repeat(12, minmax(0, 1fr)) 26px; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 2px; }
+html[data-casino-fit] .roulette-shell .felt-scroll { min-height: 0; padding: 0; overflow: auto; }
+html[data-casino-fit] .roulette-shell .felt-surface { min-width: 560px; height: auto; padding: 0; display: grid; grid-template-rows: auto 20px 44px 44px; gap: 4px; }
+html[data-casino-fit] .roulette-shell .number-grid { min-height: 0; grid-template-columns: 30px repeat(12, minmax(0, 1fr)) 26px; grid-template-rows: repeat(3, auto); gap: 2px; }
 html[data-casino-fit] .roulette-shell .number-grid button { font-size: clamp(13px, 1.8vw, 24px); }
 html[data-casino-fit] .roulette-shell .number-grid .column { font-size: 10px; letter-spacing: 0; }
 html[data-casino-fit] .roulette-shell .outside { margin-left: 32px; gap: 3px; }
@@ -55,7 +55,7 @@ html[data-casino-fit] .roulette-shell .outside button { padding: 4px 0; min-widt
 html[data-casino-fit] .roulette-shell .roulette-table > .control-bar { margin: 0; padding: 8px 0 0; gap: 8px; }
 html[data-casino-fit] .roulette-shell .roulette-table .controls button { min-height: 44px; padding: 8px 4px; }
 
-@media (max-width: 650px) {
+@media (max-width: 650px), (max-height: 250px) {
   html[data-casino-fit] .shell { padding: 4px; gap: 4px; }
   html[data-casino-fit] .intro { display: none; }
   html[data-casino-fit] .topbar { justify-content: center; }
@@ -81,6 +81,7 @@ html[data-casino-fit] .roulette-shell .roulette-table .controls button { min-hei
   html[data-casino-fit] .blackjack-shell .betting-dock button,
   html[data-casino-fit] .blackjack-shell .decision-button { min-width: 0; min-height: 44px; padding: 6px 3px; font-size: 12px; }
   html[data-casino-fit] .blackjack-shell .decision-button kbd { display: none; }
+  html[data-casino-fit] .blackjack-shell .table-floor { height: 116px; min-height: 116px; }
   html[data-casino-fit] .blackjack-shell .decision-caption { display: flex; gap: 8px; align-items: baseline; }
   html[data-casino-fit] .blackjack-shell .dealer-hud { top: 8px; min-width: 100px; }
   html[data-casino-fit] .blackjack-shell .dealer-hud .card { width: 40px; min-width: 40px; height: 58px; }
@@ -94,7 +95,7 @@ html[data-casino-fit] .roulette-shell .roulette-table .controls button { min-hei
   html[data-casino-fit] .roulette-shell .winning-number { width: 36px; height: 44px; font-size: 26px; }
   html[data-casino-fit] .roulette-shell .roulette-table { padding: 6px; gap: 4px; }
   html[data-casino-fit] .roulette-shell .table-title { font-size: 7px; letter-spacing: .5px; }
-  html[data-casino-fit] .roulette-shell .felt-surface { grid-template-rows: minmax(0, 1fr) 14px 34px 34px; gap: 2px; }
+  html[data-casino-fit] .roulette-shell .felt-surface { grid-template-rows: auto 14px 34px 34px; gap: 2px; }
   html[data-casino-fit] .roulette-shell .number-grid { grid-template-columns: 20px repeat(12, minmax(0, 1fr)) 18px; gap: 1px; }
   html[data-casino-fit] .roulette-shell .number-grid button { font-size: 12px; }
   html[data-casino-fit] .roulette-shell .number-grid .column { font-size: 8px; }
@@ -148,7 +149,7 @@ html[data-casino-fit] .roulette-shell .roulette-table .controls button { min-hei
   html[data-casino-fit] .casino-fit-chip select { min-height: 44px; padding: 6px; background: #261420; color: #fff0ce; border: 1px solid #b89a60; border-radius: 8px; }
   html[data-casino-fit] .roulette-shell .table-title { display: none; }
   html[data-casino-fit] .roulette-shell .roulette-table { grid-template-rows: minmax(0, 1fr) auto; padding: 6px; gap: 4px; }
-  html[data-casino-fit] .roulette-shell .felt-surface { grid-template-rows: minmax(0, 1fr) 10px 28px 28px; gap: 2px; }
+  html[data-casino-fit] .roulette-shell .felt-surface { grid-template-rows: auto 10px 28px 28px; gap: 2px; }
   html[data-casino-fit] .roulette-shell .roulette-table > .control-bar { padding: 4px 0 0; gap: 4px; }
   html[data-casino-fit] .roulette-shell .outside button { min-height: 28px; }
   html[data-casino-fit] .roulette-shell .betting-wallet { justify-content: space-between; }

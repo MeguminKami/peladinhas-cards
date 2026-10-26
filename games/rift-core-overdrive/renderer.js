@@ -1,5 +1,5 @@
 import {symbol} from './symbols.js';
-import {NAMES} from './engine.js';
+import {NAMES,CONFIG} from './engine.js';
 import {createPowerRenderer} from './power-renderer.js';
 
 export function createRenderer({board,settings,sound,mode,status,isActivation=()=>false,canRetrigger=()=>true}){
@@ -40,7 +40,7 @@ export function createRenderer({board,settings,sound,mode,status,isActivation=()
     const t=visualPool[((-r)+c)%visualPool.length];const filler=createTile({id:`visual-${c}-${r}`,s:t.s},0,r);filler.dataset.visual='true';filler.setAttribute('aria-hidden','true');strip.append(filler);
    }
    const arrivals=grid[c].map((t,r)=>{const el=createTile(t,0,r-turns);strip.append(el);return el;});
-   const possible=!isActivation()&&(mode()==='base'?visibleScatters>=3&&visibleScatters<5:canRetrigger()&&visibleScatters===2);
+   const possible=!isActivation()&&(mode()==='base'?visibleScatters>=2&&visibleScatters<6:canRetrigger()&&visibleScatters===2);
    const extra=possible?duration(450):0;
    let ms=duration(960+c*105)+extra;
    if(reels.length)ms=Math.max(ms,reels.at(-1).ms+duration(85));
@@ -108,13 +108,67 @@ export function createRenderer({board,settings,sound,mode,status,isActivation=()
   segments.forEach(el=>el.remove());board.querySelectorAll('.portal-barrier').forEach(el=>el.classList.remove('portal-barrier'));
   board.classList.remove('cascading');shown=structuredClone(event.grid);assertGrid(event.grid);
  }
+ async function bonusEntry(record){
+  if(reduced())return;
+  const bonusMode=record.intro||record.mode,b=CONFIG.bonuses[bonusMode];
+  const portals=record.start.flatMap((col,c)=>col.flatMap((t,r)=>t.s===11?[{c,r}]:[]));
+  if(!portals.length)return;
+  const rect=board.getBoundingClientRect(),layer=document.createElement('div');
+  layer.className='scatter-gather';layer.dataset.mode=bonusMode;layer.dataset.phase='align';layer.setAttribute('aria-hidden','true');
+  layer.innerHTML=`<div class="fusion-field"><i></i><i></i><i></i></div><div class="fusion-announcement"><small>${document.documentElement.lang.startsWith('pt')?'CONVERGÊNCIA DOS PORTAIS':'PORTAL CONVERGENCE'}</small><strong>${portals.length} SCATTERS</strong></div><div class="fusion-shockwave"></div>`;
+  const core=document.createElement('div');core.className='scatter-gather-core';core.append(art(b.art));layer.append(core);
+  const originals=[],flights=[];
+  const size=Math.min(rect.width,rect.height),radius=size*.22;
+  for(const [i,p] of portals.entries()){
+   const original=cell(p),box=original?.getBoundingClientRect();if(!box)continue;
+   const fly=document.createElement('div');fly.className='scatter-gather-flight';fly.append(art(11));
+   const x=box.left-rect.left,y=box.top-rect.top,w=box.width,h=box.height;
+   const angle=-Math.PI/2+i*Math.PI*2/portals.length;
+   const dx=rect.width/2-x-w/2,dy=rect.height/2-y-h/2;
+   Object.assign(fly.style,{left:`${x}px`,top:`${y}px`,width:`${w}px`,height:`${h}px`});
+   layer.append(fly);flights.push({fly,dx,dy,ox:Math.cos(angle)*radius,oy:Math.sin(angle)*radius});
+   original.classList.add('scatter-gather-source');originals.push(original);
+  }
+  board.append(layer);board.dataset.phase='bonus-entry';
+  const tempo=Math.max(.95,1/Math.sqrt(settings().speed));
+  const announce=(label,value)=>{layer.querySelector('.fusion-announcement small').textContent=label;layer.querySelector('.fusion-announcement strong').textContent=value;status(label,value);};
+  const pt=document.documentElement.lang.startsWith('pt');
+  try{
+   await animate(layer,[{opacity:0},{opacity:1}],{duration:220});
+   await pause(350);sound('suspense');
+   layer.dataset.phase='orbit';
+   await Promise.all(flights.map(({fly,dx,dy,ox,oy},i)=>animate(fly,[
+    {transform:'translate(0,0) scale(1)',opacity:1},
+    {transform:`translate(${dx+ox}px,${dy+oy}px) scale(.64)`,opacity:1}
+   ],{duration:850*tempo,delay:i*45,easing:'cubic-bezier(.18,.7,.2,1)'})));
+   layer.dataset.phase='synchronize';
+   announce(pt?'PORTAIS SINCRONIZADOS':'PORTALS SYNCHRONIZED',pt?'A FUNDIR ENERGIA':'FUSING ENERGY');
+   // Keep every Scatter visible around the same center before their simultaneous fusion.
+   await Promise.all(flights.map(({fly,dx,dy,ox,oy})=>animate(fly,[
+    {transform:`translate(${dx+ox}px,${dy+oy}px) scale(.64)`,opacity:1},
+    {transform:`translate(${dx-oy}px,${dy+ox}px) scale(.7)`,opacity:1}
+   ],{duration:520*tempo,easing:'ease-in-out'})));
+   layer.dataset.phase='fuse';
+   await Promise.all(flights.map(({fly,dx,dy,ox,oy})=>animate(fly,[
+    {transform:`translate(${dx-oy}px,${dy+ox}px) scale(.7)`,opacity:1,offset:0},
+    {transform:`translate(${dx}px,${dy}px) scale(.6)`,opacity:1,offset:.82},
+    {transform:`translate(${dx}px,${dy}px) scale(.08)`,opacity:0,offset:1}
+   ],{duration:620*tempo,easing:'cubic-bezier(.65,0,.85,.4)'})));
+   layer.dataset.phase='reveal';sound('entry');announce(pt?'BÓNUS MATERIALIZADO':'BONUS MATERIALIZED',b.name);
+   await animate(core,[{transform:'scale(.08) rotate(-35deg)',opacity:0,filter:'brightness(4)'},{transform:'scale(1.18) rotate(4deg)',opacity:1,filter:'brightness(1.6)',offset:.65},{transform:'scale(1) rotate(0)',opacity:1,filter:'brightness(1)'}],{duration:750,easing:'cubic-bezier(.15,.8,.2,1)'});
+   await pause(850);
+   await animate(layer,[{opacity:1},{opacity:0}],{duration:260});
+  }finally{layer.remove();originals.forEach(el=>el.classList.remove('scatter-gather-source'));board.dataset.phase='settled';}
+ }
  async function presentWin(event,format,onAward){
   assertGrid(event.grid);board.dataset.phase='win';sound('cascade',event.cm);
   const groupBudget=Math.max(220,Math.min(600,1000/Math.max(1,event.wins.length)))/Math.sqrt(settings().speed);
   for(const win of event.wins){
    board.querySelectorAll('.winner').forEach(el=>el.classList.remove('winner'));cells(win.positions,'winner');
    const pt=document.documentElement.lang.startsWith('pt');sound('symbol',win.symbol);
-   status(`${NAMES[win.symbol]} · ${win.ways} WAYS · ${pt?'COLUNAS':'REELS'} 1–${win.length}`,`${win.paidCents===0?(pt?'INCLUÍDO NO TOTAL':'INCLUDED IN TOTAL'):format(win.paid??win.amount*event.bet*event.cm*event.gm)} · ×${event.cm} CASCADE · ×${event.gm} CORE`);
+   const factor=win.value.toLocaleString(pt?'pt-PT':'en-GB',{maximumFractionDigits:4});
+   const legacyCascade=event.cm>1?` \u00d7${event.cm} CASCADE`:'';
+   status(`${NAMES[win.symbol]} \u00b7 ${win.ways} WAYS \u00b7 ${pt?'COLUNAS':'REELS'} 1\u2013${win.length}`,`${win.ways} \u00d7 ${factor} \u00d7 ${format(event.bet)} \u00d7${event.gm} CORE${legacyCascade} = ${format(win.paid??win.amount*event.bet*event.cm*event.gm)}`);
    await pause(reduced()?Math.max(300,groupBudget):Math.max(240,groupBudget));
   }
   cells(event.positions,'winner');onAward();await pause(reduced()?150:250);
@@ -128,5 +182,5 @@ export function createRenderer({board,settings,sound,mode,status,isActivation=()
   bursts.forEach(el=>el.remove());document.getElementById('floatingWin')?.classList.remove('on');board.dataset.phase='settled';
  }
  const power=createPowerRenderer({board,settings:()=>({...settings(),reduced:reduced()}),mode,sound,assertGrid,cells,cell,setSymbol,setShown:g=>{shown=structuredClone(g);},pause,animate});
- return {draw,cells,land,fall,power,assertGrid,presentWin,displayed:()=>structuredClone(shown)};
+ return {draw,cells,land,fall,power,assertGrid,presentWin,bonusEntry,displayed:()=>structuredClone(shown)};
 }

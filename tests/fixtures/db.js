@@ -170,7 +170,7 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
-  if(name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession') {
+  if(name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession' || name === 'grantCasinoCoins') {
     const {casinoFixture}=await import('../tests/fixtures/casino.js');
     return casinoFixture(name,data);
   }

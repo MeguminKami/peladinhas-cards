@@ -27,3 +27,26 @@ Interação: clicar no + do lugar livre para ocupar sem apostar. Selecionar fich
 Apresentação por eventos: carta e total do jogador visíveis antes de revelar/comprar cartas do dealer, sem expor o retorno antes da liquidação. Fichas 0,20/0,50/1/5/10/25/50/100/500, apenas com o valor inscrito. Saldo ao lado do seletor, logótipo centrado e botões bordô/dourado. Fontes locais Manrope/Cormorant em WOFF2, licenças em src/assets/fonts.
 
 Website principal: usar host-website.html com window.ATELIER_WEBSITE e os endpoints autenticados do site. O SDK exporta createHttpWallet; mode integrado exige carteira e playerId. Saldo sem nome/símbolo, escala 100, sem fundos locais de fallback. Ver INTEGRAR_COM_AI.md e reports/WEBSITE_INTEGRATION.md.
+
+
+## Totais nas fichas ? 2026-10-26
+
+Cada aposta, m?o e seguro apresenta uma ficha Three.js com o total exato
+na face. Por exemplo, tr?s fichas de 25 colocadas no lugar mostram 75,
+em vez de deixar vis?vel apenas a denomina??o 25 do topo da pilha.
+O mesmo construtor representa stakes, m?os divididas e retornos pagos.
+A decomposi??o contabil?stica das denomina??es mant?m-se dispon?vel.
+Materiais de totais que deixam a mesa s?o libertados.
+
+Depois de compilar as duas mesas com `npm.cmd run build` nas respetivas
+pastas, executar a partir de `games`:
+
+```sh
+node blackjack-3d/tests/chip-totals.mjs
+```
+
+O teste usa apenas SDKs locais e bloqueia rede externa. Verifica 75,
+75,50 e 75,70, desfazer/limpar, e captura desktop e mobile nas duas mesas.
+A roleta j? agregava o total por posi??o e n?o precisou de altera??o no
+c?digo. Matem?tica e carteira n?o foram alteradas. Publica??o do site:
+`npm.cmd run deploy:frontend`, na raiz; n?o foi executado deploy.

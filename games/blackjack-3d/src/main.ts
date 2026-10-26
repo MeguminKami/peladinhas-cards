@@ -33,9 +33,10 @@ export function mount(root:HTMLElement,options:MountOptions={}){
   const bettingWallet=document.createElement('div');bettingWallet.className='betting-wallet';q('.chips').before(bettingWallet);bettingWallet.append(q('.chips'),q('.wallet'));
   const logoURL=new URL('./assets/blackjack-logo.svg',import.meta.url).href;
   q('.intro').innerHTML=`<h1 class="logo-heading"><span class="visually-hidden">Blackjack</span><img class="game-logo" src="${logoURL}" alt="" aria-hidden="true"></h1>`;
-  q('.shell').classList.add('blackjack-shell');q('.stage').append(q('.seats'));q('.stage').insertAdjacentHTML('beforeend','<div class="decision-dock" aria-label="Decisões da mão ativa"></div><div class="pipeline-label" aria-hidden="true"></div>');q('.stage').append(q('.insurance'));
+  q('.shell').classList.add('blackjack-shell');q('.stage').append(q('.seats'));q('.stage').insertAdjacentHTML('beforeend','<div class="decision-dock" aria-label="Decisões da mão ativa"></div><div class="presentation-actions"></div><div class="pipeline-label" aria-hidden="true"></div>');q('.stage').append(q('.insurance'));
   const floor=document.createElement('div');floor.className='table-floor';q('.stage').after(floor);floor.append(q('.decision-dock'));
   const persistBets=()=>localStorage.setItem(`${key}:bets`,JSON.stringify(bets));
+  let presentingHand:string|undefined;
   function render(){
     const s=store.state,r=presentationRound||s.round||presentedRound;q('[data-balance]').textContent=ready?money(visualBalance??s.balance):'—';q('.chips').innerHTML=chipSelectorHTML(chip);q('.chips').querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=busy||!!s.round||!ready);q('[data-total-label]').textContent=s.round?'EXPOSIÇÃO DA RONDA':'APOSTA TOTAL';q('[data-total]').textContent=money(s.round?.cost||bets.reduce((a,b)=>a+b,0));
     q('.dealer-hud').innerHTML=r?`<small>DEALER ${r.dealer.length?(r.reveal?`· ${total(r.dealer).value}`:`· ${total([r.dealer[0]]).value} + ?`):'· a distribuir'}</small><div class="cards">${r.dealer.map((c,i)=>cardHTML(i===1&&!r.reveal?null:c)).join('')}</div>`:'<small>DEALER</small><div class="rules-note">Para em todo o 17</div>';
@@ -43,15 +44,16 @@ export function mount(root:HTMLElement,options:MountOptions={}){
       const p=r?.seats.find(p=>p.number===i+1),active=p?.hands.some(h=>h.id===r?.active),occupied=!!p||occupiedSeats[i];
       const stake=p?p.hands.reduce((a,h)=>a+h.stake,0):r?0:bets[i];
       const seatGross=p?p.hands.reduce((a,h)=>a+h.gross,0)+p.insuranceGross:0,seatCost=stake+(p?.insurance||0),net=seatGross-seatCost;
+      const shown=p?.hands.find(h=>h.id===(presentingHand||r?.active))||p?.hands.find(h=>!h.done)||p?.hands.at(-1);
       return `<article class="seat ${!s.round?'betting-seat':''} ${viewedSeat===i?'viewed':''} ${active?'active':''} ${occupied?'occupied':''} ${r?.phase==='summary'&&p?(net>0?'paid':net<0?'lost':'push'):''}" style="--seat-x:${[18,34,50,66,82][i]}%;--seat-y:${[48,64,70,64,48][i]}%;--seat-mobile-y:${[47,59,63,59,47][i]}%" aria-label="Lugar ${i+1}">
-        <div class="table-hands ${p&&p.hands.length>1?'split-hands':''}">${p?p.hands.map((h,j)=>`<div class="hand ${h.id===r?.active?'active':''}"><div class="cards">${h.cards.map(cardHTML).join('')}</div><span class="hand-total">${total(h.cards).soft?'S ':''}${total(h.cards).value}</span><span class="chip-anchor hand-chips" data-chip-hand="${h.id}" aria-hidden="true"></span>${p.hands.length>1?`<span class="split-label">${j+1} · ${money(h.stake)}</span>`:''}${h.result?`<span class="hand-result">${h.result}</span>`:''}</div>`).join(''):''}</div>
+        <div class="table-hands ${p&&p.hands.length>1?'split-hands':''}">${p?p.hands.map((h,j)=>`<div class="hand ${h.id===r?.active?'active':''} ${p.hands.length>1?(h===shown?'focused-hand':'ghost-hand'):''}" aria-label="Mão ${j+1}${h===shown?', em destaque':''}${h.done?', terminada':''}"><div class="cards">${h.cards.map(cardHTML).join('')}</div><span class="hand-total">${total(h.cards).soft?'S ':''}${total(h.cards).value}</span><span class="chip-anchor hand-chips" data-chip-hand="${h.id}" aria-hidden="true"></span>${p.hands.length>1?`<span class="split-label">M${j+1} · ${h===shown?money(h.stake):`${total(h.cards).value}${h.done?' ✓':' ···'}`}</span>`:''}${h.result?`<span class="hand-result">${h.result}</span>`:''}</div>`).join(''):''}</div>
         <div class="seat-person"><button class="avatar" ${occupied?'data-seat-focus':'data-seat-join'}="${i}" aria-label="${occupied?'Ver lugar':'Ocupar o lugar'} ${i+1}" aria-pressed="${viewedSeat===i}" ${busy||(!occupied&&s.round)?'disabled':''}>${occupied?avatarHTML(i):'<span class="empty-avatar">+</span>'}</button>${active?'<span class="turn-indicator">A SUA VEZ</span>':''}<span class="seat-name">Lugar 0${i+1}</span></div>
         <div class="table-stake">${!s.round&&occupied?`<button class="wager-zone" data-seat-bet="${i}" aria-label="Colocar ficha no lugar ${i+1}" ${busy?'disabled':''}><span class="chip-anchor" data-seat-chips="${i+1}" aria-hidden="true"></span><strong>${bets[i]?money(bets[i]):'Apostar'}</strong><small>${bets[i]?'Adicionar ficha':'Colocar ficha'}</small></button>`:stake?`<strong>${money(r?.phase==='summary'?seatGross:stake)}</strong>`:''}</div>
         ${r?.phase==='summary'&&p?`<span class="seat-settlement">${net>0?'+':''}${money(net)}<small>${net>0?'Ganho creditado':net<0?'Perda recolhida':'Aposta devolvida'}</small></span>`:''}
       </article>`;
     }).join('');
     q('.insurance').innerHTML=r?.phase==='insurance'?`<span class="rules-note">Dealer mostra A · Seguro opcional (paga 2:1)</span>${r.seats.filter(p=>p.insured===null).map(p=>`<button data-insure="${p.number}" ${s.balance<p.initial/2?'disabled':''}>L${p.number}: seguro ${money(p.initial/2)}</button><button data-decline="${p.number}">L${p.number}: recusar</button>`).join('')}<button data-action="declineAll">Recusar todos</button>`:'';
-    const avail=available(s);q('.controls').innerHTML=store.pending?'<button data-action="retry" class="primary">Recuperar operação</button>':!s.round?`<button data-action="undo" ${!undo[viewedSeat].length?'disabled':''} aria-label="Reset: desfazer ficha do lugar ${viewedSeat+1}">Reset</button><button data-action="clear" ${!bets[viewedSeat]?'disabled':''}>Limpar</button><button data-action="repeat">Repetir</button><button data-action="deal" class="primary" ${!bets.some(Boolean)?'disabled':''}>Jogar</button>`:r?.phase==='summary'?'<span class="rules-note">O dealer está a liquidar as fichas…</span>':r?.phase==='play'&&r.active?(['hit','stand','double','split'] as const).map((a,i)=>`<button data-action="${a}" ${avail[a]?'disabled':''} title="${avail[a]||['Comprar carta (H)','Parar (S)','Dobrar (D)','Dividir (P)'][i]}" ${a==='hit'?'class="primary"':''}>${['Carta','Parar','Dobrar','Dividir'][i]}</button>`).join(''):r?.phase==='play'?'<span class="rules-note">O dealer está a jogar…</span>':'<span class="rules-note">Decida o seguro de cada lugar.</span>';
+    const avail=available(s);q('.controls').innerHTML=store.pending?'<button data-action="retry" class="primary">Recuperar operação</button>':!s.round?`<button data-action="undo" ${!undo[viewedSeat].length?'disabled':''} aria-label="Reset: desfazer ficha do lugar ${viewedSeat+1}">Reset</button><button data-action="clear" ${!bets[viewedSeat]?'disabled':''}>Limpar</button><button data-action="repeat">Repetir</button><button data-action="deal" class="primary" ${!bets.some(Boolean)?'disabled':''}>Jogar</button>`:r?.phase==='summary'?'':r?.phase==='play'&&r.active?(['hit','stand','double','split'] as const).map((a,i)=>`<button data-action="${a}" ${avail[a]?'disabled':''} title="${avail[a]||['Comprar carta (H)','Parar (S)','Dobrar (D)','Dividir (P)'][i]}" ${a==='hit'?'class="primary"':''}>${['Carta','Parar','Dobrar','Dividir'][i]}</button>`).join(''):'';
     if(busy){q('.controls').querySelectorAll('button').forEach(b=>(b as HTMLButtonElement).disabled=true);q('.insurance').querySelectorAll('button').forEach(b=>(b as HTMLButtonElement).disabled=true);if(ready)q('.controls').insertAdjacentHTML('beforeend',`<button data-action="skip" ${store.busy?'disabled':''}>Saltar animação</button>`);}
     q('.control-bar').append(q('.controls'));
     q('.decision-dock').replaceChildren();
@@ -64,10 +66,11 @@ export function mount(root:HTMLElement,options:MountOptions={}){
     }
     if(r?.phase==='play'&&r.active&&ready){
       const seat=r.seats.find(p=>p.hands.some(h=>h.id===r.active))!;
-      q('.decision-dock').innerHTML=`<div class="decision-caption"><span>${busy?'A REVELAR A JOGADA':'É A SUA VEZ'}</span><strong>Lugar ${seat.number} · ${total(seat.hands.find(h=>h.id===r.active)!.cards).value} pontos</strong></div><div class="decision-buttons"></div>`;
+      q('.decision-dock').innerHTML=`<div class="decision-caption"><span>${busy?'A REVELAR A JOGADA':'É A SUA VEZ'}</span><strong>Lugar ${seat.number}${seat.hands.length>1?` · Mão ${seat.hands.findIndex(h=>h.id===r.active)+1}/${seat.hands.length}`:''} · ${total(seat.hands.find(h=>h.id===r.active)!.cards).value} pontos</strong></div><div class="decision-buttons"></div>`;
       const labels:Record<string,[string,string,string]>={hit:['+','Carta','H'],stand:['■','Parar','S'],double:['×2','Dobrar','D'],split:['⑂','Dividir','P']};
       q('.controls').querySelectorAll<HTMLButtonElement>('[data-action]').forEach(button=>{const action=button.dataset.action!;if(labels[action]){const [icon,label,key]=labels[action];button.className=`decision-button decision-${action}`;button.setAttribute('aria-label',label);button.innerHTML=`<span class="decision-icon" aria-hidden="true">${icon}</span><span>${label}</span><kbd>${key}</kbd>`;q('.decision-buttons').append(button);}});
     }
+    q('.presentation-actions').replaceChildren();const skip=q('.controls').querySelector('[data-action=skip]');if(skip)q('.presentation-actions').append(skip);
     if(!ready){q('.controls').innerHTML=busy?'<span>A sincronizar sessão…</span>':'<button data-action="retry" class="primary">Recuperar sessão</button>';q('.seats').querySelectorAll('button').forEach(b=>b.disabled=true);}
     q('.status').textContent=store.pending?'Operação de carteira pendente. Recuperar repete o mesmo ID, sem redistribuir cartas.':message;q('.status').classList.toggle('error',error||store.pending);
     q('.pipeline-label').textContent=presentationRound?message:'';
@@ -96,17 +99,17 @@ export function mount(root:HTMLElement,options:MountOptions={}){
         }
       }
       if(destroyed)return;
-      presentationRound=null;scene.sync(store.state,bets,false);render();
+      presentationRound=null;presentingHand=undefined;scene.sync(store.state,bets,false);render();
       if(r?.phase==='summary'){
         await settleAutomatically(r,visualBalance??balanceBefore,signal.aborted);
       }else if(r?.phase==='insurance')message='Seguro disponível: pode aceitar metade da aposta inicial ou recusar por lugar.';
       else if(r)message=`É a vez do lugar ${r.seats.find(p=>p.hands.some(h=>h.id===r.active))?.number}. Escolha a sua decisão.`;
       else message='Apostas abertas. Escolha os lugares e confirme o total.';
       error=false;
-    }finally{presentationRound=null;visualBalance=null;busy=false;if(!destroyed)render();}
+    }finally{presentationRound=null;presentingHand=undefined;visualBalance=null;busy=false;if(!destroyed)render();}
   }
   async function presentStep(step:PresentationStep,signal:AbortSignal){
-    presentationRound=step.round;
+    presentationRound=step.round;presentingHand=step.hand;
     const hand=step.round.seats.flatMap(p=>p.hands).find(h=>h.id===step.hand);
     message=step.type==='reveal'?`O dealer revela ${step.card?cardName(step.card):'a carta fechada'} · ${total(step.round.dealer).value} pontos.`:step.hidden?'O dealer recebe a carta fechada.':step.dealer?`Dealer recebe ${step.card?cardName(step.card):''} · ${total(step.round.dealer).value} pontos.`:`Lugar ${step.seat} recebe ${step.card?cardName(step.card):''} · ${hand?total(hand.cards).value:0} pontos${step.terminal?(hand&&total(hand.cards).value>21?' · Rebentou.':' · 21!'):'.'}`;
     render();audio.tone('card');

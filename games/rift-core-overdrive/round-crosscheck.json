@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-26T13:53:44.389Z",
+  "version": "rift-4.6",
+  "kind": "local-complete-round-sample",
+  "configurationHash": "55ccbc0f979b673349e37b2b9be96fe9cecb4e547ca0bb7db9ff791826f6412f",
+  "engineHash": "a6c555bce5af88dcbfd6316f7dbfacdcd37bcac3ca7932a558c9b63008b27836",
+  "note": "Diagnostic sample only; does not establish 96% RTP. No cloud reads.",
+  "scatterChance": [
+    0.0011,
+    0.8516,
+    0.8516,
+    0.8516,
+    0.8516,
+    0.8641
+  ],
+  "distribution": [
+    0.9934181234019519,
+    0.0012848303196617901,
+    0.001286016427693048,
+    0.0012808560591038225,
+    0.001230302262637901,
+    0.000999952922136913,
+    0.0004999186068146879
+  ],
+  "results": [
+    {
+      "scenario": "base",
+      "seed": 20261026,
+      "bet": 0.1,
+      "rounds": 100000,
+      "rtp": 0.9161630000000784,
+      "ci95": [
+        0.6881599143856942,
+        1.1441660856144626
+      ],
+      "cost": 10000.000000018848,
+      "freeSpins": 4474
+    },
+    {
+      "scenario": "hunt",
+      "seed": 20261027,
+      "bet": 0.1,
+      "rounds": 100000,
+      "rtp": 0.9396130000001706,
+      "ci95": [
+        0.8288799596482699,
+        1.0503460403520712
+      ],
+      "cost": 29999.999999950614,
+      "freeSpins": 6826
+    }
+  ]
+}

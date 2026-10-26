@@ -1,3 +1,4 @@
+import { casinoSpotlight } from "./casino-spotlight.js";
 import { componentWeeklyTopPlayers, matchAverageSummary } from "./match-rating-summary.js";
 import { policyAt, canManage, setPolicyDocument } from "./system-policy.js";
 import * as Firebase from "./firebase.js";
@@ -342,7 +343,7 @@ function home() {
     }).format(new Date()),
   );
   ctx.render(
-    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div></div><div id="home-podium"></div></section><div class="dashboard-columns">${homeCardPanel(me, ctx.league)}<section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${pendingMissions.length} ${pendingMissions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions)}${pendingMissions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
+    `<div class="dashboard-greeting"><div><p class="eyebrow">${ctx.league.cycle.weekId} / ${ctx.league.cycle.phase === "closed" ? "CARTAS FECHADAS" : "A TUA COMUNIDADE"}</p><h1>${hour < 12 ? "Bom dia" : hour < 19 ? "Boa tarde" : "Boa noite"}, ${esc(ctx.user.displayName || ctx.user.username)}.</h1><p>Pronto para mais uma Peladinha?</p></div>${["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "secondary", "plus") : ""}</div>${installSpotlight()}<section class="weekly-section"><div class="section-head"><div><p class="eyebrow">Os destaques da liga</p><h2>No topo da liga</h2></div></div><div id="home-podium"></div></section>${casinoSpotlight()}<div class="dashboard-columns">${homeCardPanel(me, ctx.league)}<section class="panel dashboard-missions content-stack"><div class="section-head"><h2>As tuas missões</h2><span class="pill">${pendingMissions.length} ${pendingMissions.length === 1 ? "pendente" : "pendentes"}</span></div>${missionList(visibleMissions)}${pendingMissions.length > 4 ? `<div class="missions-toolbar">${linkButton("#/missions", "Ver todas as missões", "secondary")}</div>` : ""}</section></div><section><div class="section-head"><h2>Últimas Peladinhas</h2>${linkButton("#/games", "Todos os jogos", "ghost")}</div>${ctx.league.games.length ? gameRows(ctx.league.games.slice(0, 3)) : empty("O próximo jogo começa aqui", ["admin", "dbs"].includes(ctx.user.role) ? "Cria uma Peladinha e reúne os teus colegas." : "Assim que a liga marcar uma Peladinha, encontras aqui as equipas e os detalhes.", ["admin", "dbs"].includes(ctx.user.role) ? linkButton("#/game/new", "Criar jogo", "primary", "plus") : "", "games")}</section>`,
   );
   const main = document.querySelector("#main");
   bindMissionClaims(ctx, main);
@@ -505,7 +506,7 @@ async function route({ cachedOnly = false } = {}) {
     authPage(ctx);
     return;
   }
-  // The hidden casino needs identity and its own wallet, never league scans,
+  // The casino needs identity and its own wallet, never league scans,
   // card recalculation or mission/notification subscriptions.
   if (location.hash === '#/casino') {
     setMain(skeleton());

@@ -1,4 +1,13 @@
-# Integração da RIFT//CORE no site principal
+﻿# Integração da RIFT//CORE no site principal
+
+Matemática atual: **rift-4.14**. Entradas 3→CORE (8 FS), 4→RIFT (10 FS),
+5→OVERDRIVE (12 FS), 6→OVERDRIVE (14 FS). Compras usam os mesmos portais;
+OVERDRIVE comprado tem 33,33% de chance de 6. Consultar
+[pagamentos, probabilidades e RTP atuais](./RTP-v4.14.md).
+Atualizar motor e configuração em conjunto no host Node, quando aplicável.
+Os bónus usam perfis próprios reforçados de Wilds e poderes, definidos em math-config.js. O ganho da rodada e
+o ganho acumulado do bónus são separados; o saldo visual só inclui este
+último após continuar no resumo final. A liquidação da carteira não muda.
 
 Este documento é para o agente que gere o site. O pacote inclui a slot e os adaptadores; é necessário ligar o adaptador ao backend, autenticação e base de dados existentes. Não foi feita nenhuma ligação a um site externo nesta entrega.
 
@@ -8,7 +17,7 @@ Este documento é para o agente que gere o site. O pacote inclui a slot e os ada
 - O site é a autoridade do saldo. O iframe não pode criar créditos, escolher os ganhos ou efetuar uma liquidação local.
 - O backend calcula cada resultado e confirma o débito e o ganho na mesma transação. O navegador recebe os símbolos/eventos já confirmados e apresenta as animações.
 - Apostas: débito por spin pago. Compra de bónus: débito único na confirmação. Free spins: custo zero, com ganhos liquidados pelo backend.
-- Preços atuais: CORE 79×, RIFT ASCENSION 240×, OVERDRIVE 804×. Usar sempre a configuração do motor, sem duplicar preços no site.
+- Preços atuais: CORE 80×, RIFT ASCENSION 220×, OVERDRIVE 450×. Usar sempre a configuração do motor, sem duplicar preços no site.
 
 ## Ficheiros do ZIP da aplicação
 
@@ -173,3 +182,12 @@ Verificar na infraestrutura real do site:
 - Todos os montantes mostram apenas o número, inclusive no histórico e na compra.
 
 Na entrega, os testes incluem transações, idempotência, concorrência, saldo insuficiente, FS e ausência de confiança em ganhos do cliente. O QA no navegador usa iframe entre origens diferentes, perde intencionalmente uma resposta após o débito e confirma recuperação sem nova cobrança. A base de dados e a autenticação reais do site ainda precisam da implementação acima.
+
+
+
+
+
+
+
+
+

@@ -15,7 +15,7 @@ const server = createServer((req, res) => {
   else if (["js/auth.js", "js/db.js"].includes(path))
     body = readFileSync(resolve(root, "tests/fixtures", path.slice(3)), "utf8").replaceAll("../../js/", "./");
   else if (path === "tests/fixtures/casino.js")
-    body = readFileSync(absolute, "utf8").replace("wallet: newCasinoWallet(),", "wallet: {...newCasinoWallet(),balance:100000},");
+    body = readFileSync(absolute, "utf8").replace("wallet: {...newCasinoWallet(), balance:10000},", "wallet: {...newCasinoWallet(),balance:100000},");
   else if (path === "wallet-test.html") body = "<!doctype html><title>Carteira de teste</title>";
   else if (existsSync(absolute)) body = readFileSync(absolute);
   else { res.writeHead(404); res.end(); return; }
@@ -93,7 +93,7 @@ try {
       await page.screenshot({ path: `test-results/${game}-integrated-${width}.png`, fullPage: true });
     }
     const iframe = await page.locator(".casino-table-mount iframe").elementHandle();
-    const rng = await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro`)).state.rng, game);
+    const rng = await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`)).state.rng, game);
     await page.locator("[data-center-game]").click();
     for (const [width, height] of [[1366, 768], [768, 1024], [390, 844], [320, 740], [844, 390]]) {
       await page.setViewportSize({ width, height });
@@ -109,7 +109,7 @@ try {
       assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height + 1, "centered frame fits viewport");
       await page.screenshot({ path: `test-results/${game}-centered-${width}.png` });
     }
-    assert.deepEqual(await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro`)).state.rng, game), rng, "centering does not reset the engine");
+    assert.deepEqual(await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`)).state.rng, game), rng, "centering does not reset the engine");
     await page.locator("[data-center-game]").click();
     assert.ok(await iframe.evaluate(node => node === document.querySelector(".casino-table-mount iframe")), "same iframe after centering");
     await page.locator("[data-center-game]").click();
@@ -119,6 +119,7 @@ try {
     await frame.getByLabel("Valor da ficha").selectOption("100");
     await page.setViewportSize({ width: 1440, height: 1000 });
     const beforeCalls = await page.evaluate(() => window.__casinoCalls.length);
+    const beforeSync = await page.evaluate(() => window.__casinoCalls.filter(x => x.input?.action === "sync").length);
     if (game === "roulette") {
       await frame.locator(".number-grid [data-bet-id]").first().click();
       await frame.locator('[data-action="spin"]').click();
@@ -127,13 +128,13 @@ try {
       await frame.locator('[data-seat-bet="0"]').click();
       await frame.locator('[data-action="deal"]').click();
       // A natural may settle immediately; only decisions have a stable leave guard.
-      const phase = await page.evaluate(() => JSON.parse(localStorage.getItem("atelier:blackjack:website:pedro")).state.round?.phase);
+      const phase = await page.evaluate(() => JSON.parse(localStorage.getItem("atelier:blackjack:website:pedro:official-2026-10-26-cardoso-reset")).state.round?.phase);
       if (["play", "insurance"].includes(phase)) {
         await page.locator("[data-close-slot]").last().click();
         assert.equal(await page.locator(".casino-table-mount iframe").count(), 1);
       }
       for (let i = 0; i < 30; i++) {
-        const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("atelier:blackjack:website:pedro")));
+        const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("atelier:blackjack:website:pedro:official-2026-10-26-cardoso-reset")));
         if (!saved.state.round && !saved.pending) break;
         if (await frame.locator('[data-action="declineAll"]:not(:disabled)').count()) await frame.locator('[data-action="declineAll"]').click();
         else if (await frame.locator('[data-action="stand"]:not(:disabled)').count()) await frame.locator('[data-action="stand"]').click();
@@ -141,20 +142,21 @@ try {
       }
     }
     await page.waitForFunction(game => {
-      const saved = JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro`));
+      const saved = JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`));
       return saved?.state.history.length === 1 && !saved.state.round && !saved.pending;
     }, game);
     const balance = await frame.locator("[data-balance]").innerText();
-    const hostBalance = await page.locator(".casino-balance strong").innerText();
+    const hostBalance = await page.evaluate(async () => String((await (await import("./js/casino-local-store.js")).readCasinoLocal("pedro")).balance / 100));
     assert.equal(Number(balance.replaceAll(/\s/g, "").replace(",", ".")), Number(hostBalance.replaceAll(/\s/g, "").replace(",", ".")));
-    assert.equal(await page.evaluate(() => window.__casinoCalls.length), beforeCalls, "rounds stay local");
+    await page.waitForFunction(before => window.__casinoCalls.filter(x => x.input?.action === "sync").length > before, beforeSync);
+    assert.equal(await page.evaluate(() => window.__casinoCalls.length), beforeCalls + 1, "one checkpoint per complete round");
     await page.locator("[data-center-game]").click();
     assert.equal(await page.locator(".casino-table-mount iframe").count(), 1);
     await page.locator("[data-close-slot]").last().click();
     await page.locator(".casino-salon").waitFor({ state: "visible" });
   }
   assert.deepEqual(errors, []);
-  console.log("Mesas locais: saldo partilhado, rondas completas, idempotência, limites, concorrência, recuperação, bloqueio de saída, 320/390/768/1440 px e zero chamadas por jogada passaram.");
+  console.log("Mesas locais: saldo partilhado, rondas completas, idempotência, limites, concorrência, recuperação, bloqueio de saída, 320/390/768/1440 px e uma confirmação por ronda passaram.");
 } finally {
   await browser.close();
   await new Promise(resolve => server.close(resolve));

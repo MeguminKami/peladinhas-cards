@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-10-26T18:43:47.864Z",
+  "clips": [
+    {
+      "clip": "zero_oleo",
+      "duration": 1.3935,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    },
+    {
+      "clip": "mais_um_pre",
+      "duration": 1.5535,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    },
+    {
+      "clip": "uma_chupadela_de_cada_vez",
+      "duration": 2.2535,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    },
+    {
+      "clip": "fui_frito",
+      "duration": 1.4935,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 0.9964034557342529
+    },
+    {
+      "clip": "e_so_gains",
+      "duration": 2.2735,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    },
+    {
+      "clip": "proteina_pura",
+      "duration": 2.4335,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    },
+    {
+      "clip": "grito_de_cashout",
+      "duration": 3.0335,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    },
+    {
+      "clip": "isso_nao_tem_oleo",
+      "duration": 2.5535,
+      "sampleRate": 48000,
+      "channels": 1,
+      "peak": 1
+    }
+  ]
+}

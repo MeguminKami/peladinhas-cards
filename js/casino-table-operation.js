@@ -1,4 +1,4 @@
-// Temporary local integration only. This validates accounting, not game outcomes.
+// Validate local accounting before the cumulative server checkpoint.
 export function tableOperation(game, input) {
   if (!["blackjack", "roulette"].includes(game) || !input ||
       typeof input.id !== "string" || !input.id.length || input.id.length > 4096 ||

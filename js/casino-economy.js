@@ -1,13 +1,15 @@
 // Integer coins only. Casino outcomes never award participation coins.
+import { matchPerformance } from "./utils.js";
+export const CASINO_EDITION = "official-2026-10-26-cardoso-reset";
 export const DJABUCOIN = Object.freeze({
   scale: 100,
-  initial: 10000,
+  initial: 25000,
   perMatch: 2000,
   recentLimit: 12,
 });
 
 export const SLOT_RULES = Object.freeze({
-  version: "0.6.0",
+  version: "0.7.0",
   bets: [20, 40, 60, 80, 100, 150, 200, 300, 400, 500, 750, 1000],
   cap: 10000,
 });
@@ -107,6 +109,8 @@ export function settleCasinoSlot(wallet, input, round, now = Date.now()) {
 
 export function newCasinoWallet(now = Date.now()) {
   return {
+    edition: CASINO_EDITION,
+    sessionProtocol: 5,
     balance: DJABUCOIN.initial,
     earned: 0,
     matches: 0,
@@ -117,16 +121,32 @@ export function newCasinoWallet(now = Date.now()) {
   };
 }
 
-export function awardCasinoMatch(wallet, gameId, now = Date.now()) {
-  const current = wallet || newCasinoWallet(now);
+export function currentCasinoWallet(wallet, now = Date.now()) {
+  return wallet?.edition === CASINO_EDITION ? wallet : newCasinoWallet(now);
+}
+
+export function casinoMatchReward(game, uid) {
+  const side = ["teamA", "teamB"].find(key =>
+    [...(game[key]?.starters || []), ...(game[key]?.bench || [])].includes(uid));
+  if (!side || game.status !== "closed") return 0;
+  const rival = side === "teamA" ? "teamB" : "teamA";
+  const margin = Number(game.score?.[side] || 0) - Number(game.score?.[rival] || 0);
+  const { goals, assists } = matchPerformance(uid, game);
+  const coins = 50 + (margin > 0 ? 40 : margin === 0 ? 15 : 0)
+    + Math.max(-30, Math.min(30, margin * 6)) + goals * 15 + assists * 10;
+  return Math.max(20, Math.min(200, coins)) * DJABUCOIN.scale;
+}
+
+export function awardCasinoMatch(wallet, gameId, now = Date.now(), amount = DJABUCOIN.perMatch) {
+  const current = currentCasinoWallet(wallet, now);
   return {
     ...current,
-    balance: current.balance + DJABUCOIN.perMatch,
-    earned: current.earned + DJABUCOIN.perMatch,
+    balance: current.balance + amount,
+    earned: current.earned + amount,
     matches: current.matches + 1,
     revision: current.revision + 1,
     recent: [
-      { id: gameId, kind: "match", amount: DJABUCOIN.perMatch, at: now },
+      { id: gameId, kind: "match", amount, at: now },
       ...current.recent,
     ].slice(0, DJABUCOIN.recentLimit),
   };

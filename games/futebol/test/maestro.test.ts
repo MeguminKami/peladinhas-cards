@@ -32,3 +32,11 @@ test('restauro 0.5.0 preserva retrigger, RNG e histórico confirmado',()=>{
  assert.equal(restored.configVersion,config.version);assert.equal(restored.rngState,saved.rngState);assert.equal(restored.balance,saved.balance);
  assert.deepEqual(restored.pendingRetrigger,saved.pendingRetrigger);assert.deepEqual(restored.active,saved.active);assert.deepEqual(restored.history[0].spins,saved.history[0].spins);
 });
+
+
+test('restauro 0.6.0 preserva estado e resultados confirmados',()=>{
+ const saved=execute(createSession('migration-maestro'),{type:'start',mode:'superior'},'start','date');
+ saved.configVersion='0.6.0';const restored=restoreSession(saved);
+ assert.equal(restored.configVersion,config.version);assert.equal(restored.balance,saved.balance);assert.equal(restored.rngState,saved.rngState);
+ assert.deepEqual(restored.active,saved.active);assert.deepEqual(restored.pendingRetrigger,saved.pendingRetrigger);assert.deepEqual(restored.history[0].spins,saved.history[0].spins);
+});

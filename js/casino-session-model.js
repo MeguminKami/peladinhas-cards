@@ -1,5 +1,6 @@
 // A checkpoint contains cumulative totals, never a batch of spins. Game state
 // and RNG stay on the device. This is a fictional, client-computed economy.
+import { CASINO_EDITION } from "./casino-economy.js";
 export function casinoSessionInput(value) {
   if (
     !value ||
@@ -27,7 +28,7 @@ export function casinoSessionInput(value) {
       typeof value.release !== "boolean")
   )
     throw Error("Confirmação de saldo inválida.");
-  return Object.fromEntries(keys.map((key) => [key, value[key]]));
+  return Object.fromEntries(keys.filter(key => value[key] !== undefined).map((key) => [key, value[key]]));
 }
 
 export function applyCasinoSession(wallet, session, input, now = Date.now()) {
@@ -42,8 +43,7 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
   });
   if (body.action === "open") {
     if (session) {
-      if (!session.closed && wallet.activeCasinoSession !== body.id)
-        throw Error("A carteira pertence a outra sessão.");
+      if (session.edition !== CASINO_EDITION) throw Error("Atualiza a página para a nova carteira.");
       return {
         write: false,
         wallet,
@@ -51,11 +51,8 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
         response: reply(wallet, session),
       };
     }
-    if (wallet.activeCasinoSession)
-      throw Error(
-        "O casino está aberto noutro dispositivo. Regressa a esse dispositivo para guardar e sair.",
-      );
     const record = {
+      edition: CASINO_EDITION,
       sequence: 0,
       spent: 0,
       won: 0,
@@ -65,8 +62,8 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
     };
     const next = {
       ...wallet,
-      activeCasinoSession: body.id,
-      sessionProtocol: 2,
+      activeCasinoSession: null,
+      sessionProtocol: 5,
     };
     return {
       write: true,
@@ -76,6 +73,7 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
     };
   }
   if (!session) throw Error("A sessão não existe. Reabre o casino.");
+  if (session.edition !== CASINO_EDITION) throw Error("Atualiza a página para a nova carteira.");
   const fingerprint = JSON.stringify([
     body.sequence,
     body.spent,
@@ -89,7 +87,6 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
   }
   if (
     session.closed ||
-    wallet.activeCasinoSession !== body.id ||
     body.sequence !== session.sequence + 1 ||
     body.spent < session.spent ||
     body.won < session.won
@@ -97,8 +94,13 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
     throw Error("A sequência da carteira não corresponde à sessão.");
   const amount = body.won - session.won - (body.spent - session.spent);
   const balance = wallet.balance + amount;
-  if (!Number.isSafeInteger(balance) || balance < 0 || balance > 1e12)
+  if (!Number.isSafeInteger(balance) || balance > 1e12)
     throw Error("Saldo da sessão inválido.");
+  if (balance < 0) {
+    const error = Error("O saldo foi utilizado noutro dispositivo. O lote está guardado; atualiza o saldo antes de continuar.");
+    error.reason = "insufficient-balance";
+    throw error;
+  }
   const record = {
     ...session,
     sequence: body.sequence,
@@ -113,7 +115,7 @@ export function applyCasinoSession(wallet, session, input, now = Date.now()) {
     ...wallet,
     balance,
     revision: wallet.revision + 1,
-    activeCasinoSession: body.release ? null : body.id,
+    activeCasinoSession: null,
     recent: amount
       ? [
           { id: `${body.id}:${body.sequence}`, kind: "slot", amount, at: now },

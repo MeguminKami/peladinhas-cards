@@ -69,7 +69,7 @@ try {
       return {
         id,
         streamId,
-        configVersion: "0.6.0",
+        configVersion: "0.7.0",
         bet: 20,
         mode,
         bonusHunt: false,
@@ -96,6 +96,7 @@ try {
     for (let i = 1; i <= 1000; i++) {
       last = operation(i);
       await wallet.settle(last);
+      if (i % 15 === 0) await wallet.checkpoint("test-drain");
     }
     const after = window.__casinoCalls.length;
     const local = await readCasinoLocal(uid);
@@ -123,9 +124,9 @@ try {
     };
   });
   assert.equal(
-    result.before,
-    result.after,
-    "1000 spins must make zero remote calls",
+    result.after - result.before,
+    66,
+    "1000 normal spins checkpoint every 15",
   );
   assert.equal(
     result.duringBonus,
@@ -150,8 +151,8 @@ try {
         window.__casinoCalls.filter((call) => call.input?.action === "sync")
           .length,
     ),
-    1,
-    "one final bonus checkpoint",
+    67,
+    "66 batches and one final bonus checkpoint",
   );
 
   // A slow server confirmation must not block or overwrite later local spins.
@@ -165,7 +166,7 @@ try {
   await page.waitForFunction(
     () =>
       window.__casinoCalls.filter((call) => call.input?.action === "sync")
-        .length === 2,
+        .length === 68,
   );
   const concurrent = await page.evaluate(async () => {
     const balance = window.__wallet.view().balance;
@@ -194,7 +195,7 @@ try {
   assert.equal(
     concurrent.after,
     concurrent.local + 2000,
-    "new football reward and unconfirmed local spins both survive",
+    "external rewards and unconfirmed local spins survive",
   );
   assert.equal(concurrent.dirty, true);
   assert.equal(concurrent.remaining, 20);
@@ -286,7 +287,7 @@ try {
     await window.__wallet.settle({
       id,
       streamId,
-      configVersion: "0.6.0",
+      configVersion: "0.7.0",
       bet: 20,
       mode: "base",
       bonusHunt: false,
@@ -327,136 +328,72 @@ try {
     lost.server,
     "lost response never reapplies delta",
   );
-  // Upgrade an old online-per-spin pending purchase, already in a real bonus.
-  const legacyContext = await browser.newContext({ serviceWorkers: "block" });
-  await legacyContext.route("**/js/db.js", (route) =>
-    route.fulfill({
-      contentType: "text/javascript",
-      body: `import {casinoFixture} from '../tests/fixtures/casino.js';export const callAdmin=casinoFixture;`,
-    }),
-  );
-  const legacyPage = await legacyContext.newPage();
-  await legacyPage.goto(url);
-  const initial = createSession("session");
-  initial.balance = 10000;
-  const first = execute(
-    initial,
-    { type: "start", mode: "normal" },
-    "legacy-operation-000001",
-    "2026-10-25T10:00:00Z",
-  );
-  const next = execute(
-    first,
-    { type: "next" },
-    "new-local-operation-000002",
-    "2026-10-25T10:01:00Z",
-  );
-  const third = execute(
-    next,
-    { type: "next" },
-    "new-local-operation-000003",
-    "2026-10-25T10:02:00Z",
-  );
-  const migrated = await legacyPage.evaluate(
-    async ({ initial, first, next, third }) => {
-      const key = "slot-local-v1:player:pedro",
-        streamId = "migration-stream-000001";
-      localStorage.setItem("peladinhas:casino:stream:pedro", streamId);
-      localStorage.setItem(key, JSON.stringify(initial));
-      const row = first.history[0],
-        spin = row.spins.at(-1);
-      localStorage.setItem(
-        key + ":wallet-pending",
-        JSON.stringify({
-          before: initial.revision,
-          next: first,
-          transaction: {
-            id: first.requestIds[0],
-            debit: row.cost,
-            credit: spin.paid,
-            roundId: row.id,
-            spin: 1,
-            configVersion: first.configVersion,
-            bet: row.bet,
-            mode: row.mode,
-            bonusHunt: false,
-          },
-        }),
-      );
-      const { createCasinoLocalWallet } =
-        await import("./js/casino-local-wallet.js");
-      const wallet = createCasinoLocalWallet("pedro");
-      await wallet.start();
-      const entered = JSON.parse(localStorage.getItem(key));
-      const calls = window.__casinoCalls.length;
-      const paid = next.history[0].spins.at(-1).paid;
-      const local = await wallet.settle({
-        id: next.requestIds[0],
-        streamId,
-        debit: 0,
-        credit: paid,
-        roundId: 1,
-        spin: 2,
-        configVersion: next.configVersion,
-        bet: 20,
-        mode: "normal",
-        bonusHunt: false,
-        progress: next,
-        bonusComplete: false,
-      });
-      const after = window.__casinoCalls.length;
-      await wallet.close();
-      const resumed = createCasinoLocalWallet("pedro");
-      await resumed.start();
-      const resumedProgress = JSON.parse(localStorage.getItem(key));
-      await resumed.settle({
-        id: third.requestIds[0],
-        streamId,
-        debit: 0,
-        credit: third.history[0].spins.at(-1).paid,
-        roundId: 1,
-        spin: 3,
-        configVersion: third.configVersion,
-        bet: 20,
-        mode: "normal",
-        bonusHunt: false,
-        progress: third,
-        bonusComplete: false,
-      });
-      await resumed.close();
-      return {
-        resumedProgress,
-        entered,
-        local,
-        calls,
-        after,
-        pending: localStorage.getItem(key + ":wallet-pending"),
-        server: JSON.parse(sessionStorage.getItem("casino-fixture-wallet"))
-          .wallet.balance,
-      };
-    },
-    { initial, first, next, third },
-  );
-  assert.equal(migrated.entered.rngState, first.rngState);
-  assert.equal(migrated.entered.active.remaining, 9);
-  assert.equal(migrated.local.balance, next.balance);
-  assert.equal(migrated.pending, null);
-  assert.equal(migrated.resumedProgress.rngState, next.rngState);
-  assert.equal(migrated.resumedProgress.active.remaining, 8);
-  assert.equal(
-    migrated.after,
-    migrated.calls,
-    "continuing a migrated bonus remains local",
-  );
-  assert.equal(
-    migrated.server,
-    third.balance,
-    "legacy purchase and free spins across reentry are each counted once",
-  );
-  await legacyContext.close();
+  // The official edition does not replay legacy balances or pending purchases.
+  const freshContext = await browser.newContext({serviceWorkers: "block"});
+  await freshContext.route("**/js/db.js", route => route.fulfill({contentType:"text/javascript",body:`import {casinoFixture} from '../tests/fixtures/casino.js';export const callAdmin=casinoFixture;`}));
+  const freshPage = await freshContext.newPage();
+  await freshPage.goto(url);
+  const reset = await freshPage.evaluate(async () => {
+    localStorage.setItem("slot-local-v1:player:old-player", JSON.stringify({balance:999999}));
+    const { createCasinoLocalWallet } = await import("./js/casino-local-wallet.js");
+    const wallet = createCasinoLocalWallet("old-player");
+    const result = await wallet.start();
+    await wallet.close();
+    return {balance: result.balance, calls: window.__casinoCalls.map(x=>x.name)};
+  });
+  assert.equal(reset.balance, 10000);
+  assert.ok(!reset.calls.includes("settleCasinoSlot"));
+  await freshContext.close();
+  const sharedContext = await browser.newContext({serviceWorkers:"block"});
+  await sharedContext.route("**/js/db.js", route => route.fulfill({contentType:"text/javascript",body:`import {casinoFixture} from '../tests/fixtures/casino.js';export const callAdmin=casinoFixture;`}));
+  const sharedPage = await sharedContext.newPage();
+  await sharedPage.goto(url);
+  const shared = await sharedPage.evaluate(async () => {
+    const {createCasinoLocalWallet} = await import("./js/casino-local-wallet.js");
+    const {readCasinoLocal} = await import("./js/casino-local-store.js");
+    const wallet = createCasinoLocalWallet("shared-player",()=>{},{tables:true});
+    await wallet.start();
+    const setRemote = balance => {
+      const state=JSON.parse(sessionStorage.getItem("casino-fixture-wallet"));
+      state.wallet.balance=balance;
+      sessionStorage.setItem("casino-fixture-wallet",JSON.stringify(state));
+    };
+    setRemote(7000);
+    const entered=await wallet.enterGame();
+    window.__casinoFail=true;
+    let entryFailed=false;
+    try {await wallet.enterGame();}catch{entryFailed=true;}
+    window.__casinoFail=false;
+    await wallet.enterGame();
+    const operation={id:"shared-operation-00001",debit:6000,credit:0,entries:[{id:"debit",amount:-6000,label:"Aposta"}]};
+    await wallet.settleTable("roulette",operation);
+    setRemote(5000);
+    let conflict=false;
+    try{await wallet.checkpoint("game-entry",{strict:true});}catch(error){conflict=error.details.reason==='insufficient-balance';}
+    const pending=(await readCasinoLocal("shared-player")).pending.body;
+    let stopped=false;
+    try{await wallet.settleTable("roulette",{...operation,id:"another-operation-0001"});}catch(error){stopped=error.applied===false;}
+    const blockedBalance=await wallet.balance();
+    setRemote(8000);
+    await wallet.checkpoint("game-entry",{strict:true});
+    const recovered=await readCasinoLocal("shared-player");
+    const remote=JSON.parse(sessionStorage.getItem("casino-fixture-wallet")).wallet.balance;
+    await wallet.close();
+    return {entered:entered.balance,entryFailed,conflict,stopped,blockedBalance,pending,recovered,remote};
+  });
+  assert.equal(shared.entered,7000);
+  assert.equal(shared.entryFailed,true);
+  assert.equal(shared.conflict,true);
+  assert.equal(shared.stopped,true);
+  assert.equal(shared.blockedBalance,0);
+  assert.equal(shared.pending.spent,6000);
+  assert.equal(shared.recovered.pending,null);
+  assert.equal(shared.recovered.balance,2000);
+  assert.equal(shared.remote,2000);
+  await sharedContext.close();
   assert.deepEqual(errors, []);
   console.log(
-    "Local wallet: 1000 spins without server calls, final-bonus checkpoint, lost open/reply, offline exit/reentry, duplicate operation, full storage and exclusive tabs passed.",
+    "Local wallet: 15-spin batches, final-bonus checkpoint, lost open/reply, offline exit/reentry, duplicate operation, full storage and exclusive tabs passed.",
   );
 } finally {
   await browser.close();

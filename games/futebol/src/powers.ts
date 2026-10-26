@@ -20,10 +20,11 @@ export function resolve(initial:Board,mode:Mode,rng:Random,c:Config=config,initi
   }
   // One uniform premium choice shared by all Maestro activations in this spin.
   const conversionSymbol:SymbolId|null=steals.some(s=>s.power==='P3')?(['P1','P2','P3','P4'] as const)[index(4,rng)]:null;
+  const converted=new Set<number>();
   for(const s of steals)if(s.power==='P3'){
-    const available=board.flatMap((v,p)=>v.startsWith('N')?[p]:[]),targets:number[]=[];
-    const requested=c.conversionMin+index(c.conversionMax-c.conversionMin+1,rng);
-    for(let k=0;k<requested&&available.length;k++){const p=available.splice(index(available.length,rng),1)[0];board[p]=conversionSymbol!;targets.push(p);}
+    const available=board.flatMap((v,p)=>v!=='W'&&!converted.has(p)?[p]:[]),targets:number[]=[];
+    const requested=c.conversionMin+pick(c.conversionWeights,rng);
+    for(let k=0;k<requested&&available.length;k++){const p=available.splice(index(available.length,rng),1)[0];board[p]=conversionSymbol!;targets.push(p);converted.add(p);}
     events.push({power:'P3',position:s.position,targets,factor:1,requested,conversionSymbol:conversionSymbol!});
   }
   for(const s of steals)if(s.power==='P4'){const factor=c.overloadValues[pick(c.overloadWeights,rng)];global+=factor;events.push({power:'P4',position:s.position,targets:[],factor,operation:'add'});}

@@ -2,7 +2,7 @@
 
 Guia reutilizável para novos projetos: [guia-prompt de desenvolvimento completo de uma slot](docs/GUIA_DESENVOLVIMENTO_SLOT.md), com bloco de input, metodologia, produção de assets, simulação, GUI e integração.
 
-Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Configuração matemática **0.6.0**, RTP desta versão ainda não medido.
+Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Configuração matemática **0.7.0**, RTP desta versão ainda não medido.
 
 ## Executar e testar
 
@@ -83,7 +83,7 @@ Estas rotas são um contrato de exemplo; o repositório não inclui uma API de c
   "credit": 36,
   "roundId": 12,
   "spin": 1,
-  "configVersion": "0.6.0"
+  "configVersion": "0.7.0"
 }
 ```
 
@@ -170,3 +170,37 @@ Neste repositório, a fonte publicada é `games/futebol`; `casino_temp` é apena
 | `dist/` | Resultado publicável de `npm run build` |
 
 O README anterior foi preservado em `docs/HISTORICO_README.md`; os seus números e versões são históricos. As regras atuais estão em `docs/MATEMATICA.md` e `docs/MAESTRO_0_5_1.md`. Os sons são sintetizados no browser, conforme `docs/AUDIO.md`.
+
+
+## Transi??es dos bónus ? 2026-10-26
+
+Na compra, ativação natural e retrigger, os Scatters vis?veis convergem
+para o centro do campo antes da explica??o. No fim do bónus, a transi??o
+?Apito final? dura 2 segundos antes do resumo; conserva a grelha da ?ltima
+jogada. Movimento reduzido dispensa a espera. Interromper a apresentação
+remove os efeitos sem alterar resultados, saldo ou RNG.
+
+O contador avan?a após a apresentação dos rolos. Num retrigger, o total
+adicional s? aparece quando abre a explica??o do prolongamento. Novos
+spins ficam bloqueados enquanto decorre a transi??o de fecho.
+
+Os testes visuais precisam do servidor deste projeto. A configuração
+recusa reutilizar automaticamente um servidor que já ocupe a porta.
+Pode escolher outra porta em PowerShell:
+
+```powershell
+$env:FOOTBALL_TEST_PORT='5177'
+npm.cmd run test:gui -- e2e/bonus-transitions.spec.ts e2e/retrigger.spec.ts e2e/bonus-pipeline.spec.ts e2e/reel-fluid.spec.ts e2e/reel-start-continuity.spec.ts
+```
+
+Valida??o local e build não significam publica??o. Para publicar atrav?s
+do site principal, usar `npm.cmd run deploy:frontend` na raiz do reposit?rio.
+
+Valida??o local em 2026-10-26: TypeScript, build, 50 testes unit?rios e
+16 testes de browser sobre transi??es, retrigger, fecho e continuidade dos
+rolos. Capturas inspecionadas a 320, 390, 768 e 1440 px, em Edge headless.
+Não houve altera??o da matem?tica nem verifica??o num aparelho real.
+
+## Maestro 0.7.0
+
+P3 converte qualquer símbolo exceto Wild, incluindo premiums e Scatters, sem repetir alvos na mesma jogada. As quantidades 2?10 t?m pesos 18/16/14/12/11/9/8/7/5%. Mant?m o destino premium equiprov?vel partilhado. Scatters iniciais preservam bónus e retriggers, apresentados no final do spin. Ver [regras 0.7.0](docs/MAESTRO_0_7_0.md).

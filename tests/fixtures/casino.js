@@ -8,18 +8,22 @@ export async function casinoFixture(name, input) {
   if (window.__casinoGate) await window.__casinoGate;
   const key = "casino-fixture-wallet";
   const state = JSON.parse(sessionStorage.getItem(key) || "null") || {
-    wallet: newCasinoWallet(),
+    wallet: {...newCasinoWallet(), balance:10000},
     operations: {},
     rounds: {},
     sessions: {},
   };
   if (name === "casinoSession") {
     state.sessions ||= {};
-    const result = applyCasinoSession(
+    let result;
+    try { result = applyCasinoSession(
       state.wallet,
       state.sessions[input.id],
       input,
-    );
+    ); } catch (error) {
+      error.details = { definitive: true, reason: error.reason || "invalid-checkpoint" };
+      throw error;
+    }
     if (result.write) {
       state.wallet = result.wallet;
       state.sessions[input.id] = result.session;
@@ -30,6 +34,15 @@ export async function casinoFixture(name, input) {
         throw Error("Resposta de entrada perdida.");
     }
     return { data: structuredClone(result.response) };
+  }
+  if (name === "grantCasinoCoins") {
+    const grantKey = `casino-fixture-grants:${input.uid}`;
+    const grants = JSON.parse(sessionStorage.getItem(grantKey) || "{}");
+    if (!grants[input.id]) {
+      grants[input.id] = input.amount;
+      sessionStorage.setItem(grantKey, JSON.stringify(grants));
+    }
+    return { data: { balance: 10000 + Object.values(grants).reduce((sum, amount) => sum + amount, 0) } };
   }
   if (name === "settleCasinoSlot") {
     if (!state.operations[input.id]) {
