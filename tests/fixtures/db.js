@@ -164,6 +164,10 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if(name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession') {
+    const {casinoFixture}=await import('../tests/fixtures/casino.js');
+    return casinoFixture(name,data);
+  }
   if(name === "ratingSubmissionStatus" || name === "sendRatingReminders" || name === "ratingWaiverAction") {
     const {gameRatingFixture} = await import("../tests/fixtures/game-ratings.js");
     return {data:gameRatingFixture(state,name,data)};

@@ -23,6 +23,7 @@ const entries = [
   "package-lock.json",
   "firebase.json",
   "firebase.backend.json",
+  "firebase.casino.json",
   "firestore.rules",
   "firestore.indexes.json",
   "storage.rules",
@@ -35,12 +36,13 @@ const entries = [
   "design",
   "docs",
   "functions",
+  "games",
   "js",
   "scripts",
   "tests",
 ];
 const privatePath = (path) =>
-  relative(root, path)
+  /^(?:games\/futebol\/dist|assets\/games)(?:\/|$)/.test(relative(root,path).replaceAll('\\','/')) || relative(root, path)
     .split(sep)
     .some(
       (part) =>

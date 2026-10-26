@@ -1,4 +1,5 @@
 import { ratingQuorum, ratingWaiverTimes } from "../js/rating-quorum.js";
+import { casinoFunctions } from './casino.js';
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
 import { homeFunctions } from "./home-cache.js";
@@ -72,6 +73,7 @@ initializeApp(emulatorAppOptions());
 setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
+export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession } = casinoFunctions();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {
   pushDeviceAction,

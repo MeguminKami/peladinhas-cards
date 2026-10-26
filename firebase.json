@@ -18,6 +18,8 @@
         "css",
         "assets",
         "design",
+        "games",
+        "casino_temp",
         "docs",
         ".repository-export",
         "README.md",
@@ -28,6 +30,7 @@
         "test-results",
         "*-debug.log",
         "firebase.backend.json",
+        "firebase.casino.json",
         ".firebase",
         ".env*",
         ".secret.local",
@@ -55,6 +58,7 @@
     }
   },
   "hosting": {
+    "redirects": [{ "source": "/casino", "destination": "/#/casino", "type": 302 }],
     "public": ".firebase/site",
     "ignore": [
       "firebase.json",

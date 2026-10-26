@@ -1,0 +1,74 @@
+/* One continuous celebration. Only transform/opacity animate on the effects. */
+.win-finish[hidden]{display:block!important;visibility:hidden;pointer-events:none}
+.win-backdrops,.win-backdrop{position:absolute;inset:0;pointer-events:none}
+.win-backdrop{background:radial-gradient(ellipse at 50% 40%,rgba(var(--glow),.85),#07152b 80%);opacity:0;transition:opacity 1.5s ease}
+.win-celebration[data-tier='4'] .win-backdrop-4,.win-celebration[data-tier='5'] .win-backdrop-5,.win-celebration[data-tier='6'] .win-backdrop-6,.win-celebration[data-tier='7'] .win-backdrop-7,.win-celebration[data-tier='8'] .win-backdrop-8{opacity:1}
+.win-celebration .win-stadium:before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,var(--win-secondary),transparent 70%);opacity:.25;transition:background 1.4s ease,opacity 1.4s ease;pointer-events:none}
+.win-celebration .win-money,.win-celebration .win-multiple{contain:layout style;min-height:1.1em}
+.win-celebration .win-content{transition:color 1.2s ease}
+.win-celebration .win-stadium{contain:strict}
+.win-celebration .win-rays{inset:-20%;will-change:transform}
+.win-celebration .win-particles i{will-change:transform,opacity}
+.win-celebration[data-phase=final] .win-finish{animation:win-continue-in .6s ease both}
+@keyframes win-continue-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.compact-win{position:absolute;left:12px;right:10px;top:8px;z-index:3;pointer-events:none;color:#ffe4a1;animation:compact-goal .7s ease-out both}
+.current-win:has(.compact-win)>span{opacity:0}
+.compact-win .win-stage-name{font-family:var(--display);font-size:clamp(10px,1.1vw,15px);font-weight:800;letter-spacing:0;color:inherit;margin:0;text-shadow:0 0 10px #ffb94388}
+.compact-win[data-tier='1']{color:#bcf0d0}.compact-win[data-tier='2']{color:#ffeaa7}
+.win-reaction .cell.win{animation:goal-cell-reaction .65s ease-out both!important}
+.win-reaction .cell.win .symbol-art{animation:goal-symbol-reaction .65s ease-out both!important}
+@keyframes compact-goal{0%{opacity:0;transform:translateY(8px) scale(.8)}25%{opacity:1;transform:translateY(0) scale(1.08)}70%,100%{opacity:1;transform:none}}
+@keyframes goal-cell-reaction{35%{border-color:#fff0b7;box-shadow:inset 0 0 0 2px #ffe5a7,inset 0 0 25px #e6bc4b44}100%{transform:none}}
+@keyframes goal-symbol-reaction{35%{transform:scale(.95)}70%{transform:scale(1.02)}100%{transform:none}}
+dialog.win-celebration{--win-color:#ffe1a0;--win-secondary:#dc9b37;position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;border:0;border-radius:0;padding:20px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#2d4264e8,#07152bee 70%);color:var(--win-color);cursor:pointer;isolation:isolate;box-shadow:none}
+.win-celebration::backdrop{background:#031024aa;backdrop-filter:blur(3px)}
+.win-celebration .win-content{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;position:relative;z-index:2;text-align:center}
+.win-eyebrow{font-family:var(--body);font-size:12px;letter-spacing:5px;color:#c7d7e8}
+.win-stage-name{font-family:var(--display);font-size:clamp(26px,5vw,64px);font-weight:900;line-height:1.1;text-transform:uppercase;margin:0 0 15px;text-shadow:0 3px #08172d,0 0 25px var(--win-secondary);max-width:95vw}
+.win-value-label{font-family:var(--body);font-size:12px;letter-spacing:4px;color:#d4e1ed}
+.win-money{font-family:var(--display);font-size:clamp(48px,10vw,140px);font-variant-numeric:tabular-nums;font-weight:900;letter-spacing:-.04em;line-height:1.1;white-space:nowrap;text-shadow:0 4px #664b20,0 0 35px #c1943e77;max-width:96vw}
+.win-multiple{font-family:var(--display);font-size:clamp(13px,2vw,23px);letter-spacing:2px;color:#f5e8c8}
+.win-hint{font-size:14px;color:#acc5df;margin-top:10px}.win-finish{min-width:220px;min-height:47px;padding:10px 24px;border:1px solid #fff0b5;border-radius:0;background:linear-gradient(#ffe9b0,#c89743);color:#132942;font-family:var(--display);font-size:12px;font-weight:800;letter-spacing:1px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.win-celebration .win-finish:hover{background:linear-gradient(#fff1c9,#dfb65f);color:#132942;border-color:#fff3d4}
+.win-stadium{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.win-rays{position:absolute;inset:-60%;background:repeating-conic-gradient(from 0deg,transparent 0deg 12deg,#fff3bf0b 12deg 20deg,transparent 20deg 35deg);animation:win-ray-rotation 28s linear infinite;opacity:.5}
+.win-goal-net{position:absolute;left:10%;right:10%;bottom:-15%;height:50%;background:repeating-linear-gradient(0deg,transparent 0 30px,#c9dfff0d 30px 31px),repeating-linear-gradient(90deg,transparent 0 30px,#c9dfff0d 30px 31px);transform:perspective(500px) rotateX(52deg);border:3px solid #c3d9f444;border-radius:8px}
+.win-cup{position:absolute;left:calc(50% - 100px);top:5%;width:200px;height:170px;color:var(--win-color);opacity:.12;transform:scale(.8);transition:opacity .3s,transform .3s}.win-cup svg{width:100%;height:100%}
+.win-ring{position:absolute;left:15%;right:15%;top:15%;bottom:15%;border:2px solid var(--win-color);border-radius:50%;opacity:0}
+.tier-impact .win-ring{animation:win-ring-impact .8s ease-out both}.tier-impact .win-stage-name{animation:win-title-impact .6s ease-out both}
+.win-particles{position:absolute;inset:0;opacity:.35;transition:opacity .3s}
+.win-particles i{position:absolute;left:calc(var(--x)*1%);top:-10%;width:6px;height:13px;background:var(--win-color);opacity:0;animation:win-confetti-fall 3.4s linear infinite;animation-delay:var(--delay);border-radius:1px}
+.win-particles i:nth-child(3n){background:#fff5d9;width:4px;height:4px;border-radius:50%}.win-particles i:nth-child(n+17){display:none}
+.win-celebration[data-tier='4']{--win-color:#cdf0df;--win-secondary:#52bda0}.win-celebration[data-tier='4'] .win-particles{opacity:.6}.win-celebration[data-tier='4'] .win-particles i:nth-child(-n+28){display:block}
+.win-celebration[data-tier='5']{--win-color:#ffe296;--win-secondary:#e7b03f;background:radial-gradient(ellipse,#5c4936e8,#07152bf2 75%)}
+.win-celebration[data-tier='5'] .win-cup,.win-celebration[data-tier='6'] .win-cup,.win-celebration[data-tier='7'] .win-cup,.win-celebration[data-tier='8'] .win-cup{opacity:.4;transform:scale(1)}
+.win-celebration[data-tier='5'] .win-particles,.win-celebration[data-tier='6'] .win-particles,.win-celebration[data-tier='7'] .win-particles,.win-celebration[data-tier='8'] .win-particles{opacity:.85}
+.win-celebration[data-tier='5'] .win-particles i:nth-child(-n+40),.win-celebration[data-tier='6'] .win-particles i:nth-child(-n+48),.win-celebration[data-tier='7'] .win-particles i,.win-celebration[data-tier='8'] .win-particles i{display:block}
+.win-celebration[data-tier='6']{--win-color:#c4e8ff;--win-secondary:#6caeff;background:radial-gradient(ellipse,#244f83ec,#07152bf5 75%)}
+.win-celebration[data-tier='7']{--win-color:#e5c8ff;--win-secondary:#bc82ef;background:radial-gradient(ellipse,#503674e8,#07152bf5 75%)}
+.win-celebration[data-tier='8']{--win-color:#fff4c7;--win-secondary:#ffe4a1;background:radial-gradient(ellipse,#6e5a36ee,#07152bf5 80%)}
+.win-celebration[data-tier='6'] .win-rays,.win-celebration[data-tier='7'] .win-rays,.win-celebration[data-tier='8'] .win-rays{opacity:1}
+.win-celebration[data-phase='final'] .win-money{animation:win-final-breath 1.1s ease-in-out infinite alternate}
+@keyframes win-ray-rotation{to{transform:rotate(360deg)}}
+@keyframes win-confetti-fall{0%{opacity:0;transform:translate3d(0,-10vh,0) rotate(0)}10%,85%{opacity:.85}100%{opacity:0;transform:translate3d(var(--drift),115vh,0) rotate(380deg)}}
+@keyframes win-ring-impact{0%{opacity:.6;transform:scale(.45)}100%{opacity:0;transform:scale(1.35)}}
+@keyframes win-title-impact{0%{opacity:.3;transform:scale(.8) translateY(12px)}60%{opacity:1;transform:scale(1.04)}100%{transform:none}}
+@keyframes win-final-breath{to{transform:scale(1.025)}}
+.win-celebration.reduced *,.board.reduced.win-reaction *{animation:none!important;transition:none!important}.win-celebration.reduced .win-particles,.win-celebration.reduced .win-rays,.win-celebration.reduced .win-ring{display:none}
+.compact-win.reduced,.compact-win.reduced *{animation:none!important;transition:none!important}
+@media(max-width:700px){dialog.win-celebration{padding:12px}.win-celebration .win-content{gap:12px}.win-eyebrow{font-size:8px;letter-spacing:2px}.win-stage-name{font-size:29px;margin-bottom:10px}.win-money{font-size:clamp(39px,12vw,76px)}.win-multiple{font-size:14px}.win-cup{top:8%;width:150px;height:130px;left:calc(50% - 75px)}.compact-win{left:4px;right:4px;top:6px;text-align:center}.compact-win .win-stage-name{font-size:8px}.win-finish{min-width:190px}}
+@media(max-height:560px) and (orientation:landscape){.win-celebration .win-content{gap:6px}.win-eyebrow{font-size:8px}.win-stage-name{font-size:27px;margin-bottom:0}.win-money{font-size:56px}.win-cup{top:1%;width:100px;height:85px;left:calc(50% - 50px)}.win-hint{margin-top:0;font-size:11px}.win-multiple{font-size:13px}.win-finish{min-height:34px;font-size:10px}.win-value-label{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.win-celebration *,.compact-win,.win-reaction *{animation:none!important;transition:none!important}.win-particles,.win-rays{display:none}}
+/* Crossfade the stadium layers instead of replacing the dialog background. */
+dialog.win-celebration[data-tier]{background:radial-gradient(ellipse at 50% 40%,#2d4264f5,#07152bf5 70%)}
+.win-celebration .win-rays{inset:-20%}
+
+/* Keep number updates out of the fullscreen effects' paint and layout work. */
+.win-celebration::backdrop{backdrop-filter:none;background:#031024ee}
+.win-celebration .win-money{display:block;width:10ch;max-width:96vw;height:1.12em;min-height:1.12em;contain:strict;transform:translateZ(0);text-shadow:0 3px #664b20;overflow:visible}
+.win-celebration .win-multiple{display:block;width:24ch;height:1.3em;min-height:1.3em;contain:strict;font-variant-numeric:tabular-nums;transform:translateZ(0);overflow:visible}
+.win-celebration .win-content{contain:layout style}
+.win-celebration .win-backdrops,.win-celebration .win-rays,.win-celebration .win-particles{transform:translateZ(0);backface-visibility:hidden}
+.win-celebration .win-content{transition:none}
+.win-celebration .win-stadium:before{display:none}
+.win-celebration .win-backdrop{will-change:opacity}

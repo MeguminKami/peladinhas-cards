@@ -47,6 +47,7 @@ import {
 import { authPage } from "./onboarding.js";
 import { playerPage, editProfile } from "./profile.js";
 import { pathsPage } from "./paths.js";
+import { casinoPage } from './casino.js';
 import { pathAdminPage } from "./path-admin.js";
 import { gamesPage, gamePage, gameRows } from "./games.js";
 import { initialMission, feedbackPage } from "./ratings.js";
@@ -297,7 +298,14 @@ function header() {
   document.querySelector("#logout")?.addEventListener("click", async (e) => {
     const signedOutUid = ctx.realUser?.uid;
     try {
-      await busy(e.currentTarget, logout);
+      await busy(e.currentTarget, async () => {
+        const preparations=[];
+        window.dispatchEvent(new CustomEvent('peladinhas-before-logout', {
+          detail: { waitUntil: task => preparations.push(task) },
+        }));
+        await Promise.allSettled(preparations);
+        await logout();
+      });
       if (signedOutUid)
         sessionStorage.removeItem(`peladinhas-perspective:${signedOutUid}`);
       ctx.user = null;
@@ -493,6 +501,37 @@ async function route({ cachedOnly = false } = {}) {
     ctx.loadedAt = 0;
     header();
     authPage(ctx);
+    return;
+  }
+  // The hidden casino needs identity and its own wallet, never league scans,
+  // card recalculation or mission/notification subscriptions.
+  if (location.hash === '#/casino') {
+    setMain(skeleton());
+    try {
+      const [user, casinoPolicy] = await Promise.all([
+        loadProfile(), ctx.cached('casino-policy', () => DB.read('settings/system')),
+      ]);
+      if (!isCurrent()) return;
+      setPolicyDocument(casinoPolicy);
+      await Firebase.configureAppCheck?.(policyAt());
+      if (!isCurrent()) return;
+      ctx.realUser = user;
+      ctx.user = user;
+      header();
+      if (!user || user.disabled) {
+        pageCtx.render(empty('Conta indisponível', 'Contacta o apoio da liga.', '', 'shield'));
+        return;
+      }
+      const casinoTask = casinoPage(pageCtx);
+      if (isCurrent()) {
+        document.title = 'Casino · Peladinhas Cards';
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.querySelector('#main').focus({ preventScroll: true });
+      }
+      await casinoTask;
+    } catch (error) {
+      if (isCurrent()) errorPage(error, route);
+    }
     return;
   }
   const homeOnly = !location.hash || location.hash === "#/" || location.hash === "#";

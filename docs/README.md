@@ -16,6 +16,10 @@
 
 ## Por onde começar
 
+[Casino, Djabucoin e integração da slot](guides/casino.md) · [Validação local de 24/10/2026](reports/casino-2026-10-24.md).
+
+[Carteira local sem chamadas por spin — 25/10/2026](reports/casino-local-2026-10-25.md).
+
 [Manutenção por páginas, horários semanais e histórico de alterações — 22/10/2026](reports/maintenance-pages-2026-10-22.md).
 
 [Missões concluídas: destaque e resgate na própria caixa — 22/10/2026](reports/mission-completion-2026-10-22.md).
