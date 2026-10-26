@@ -1,0 +1,55 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-10-24",
+  "normalSymbols": "See PROMPTS_NORMAIS.md for the four separately generated normal symbols.",
+  "entries": [
+    {
+      "id": "BG-BASE",
+      "file": "public/assets/football/backgrounds/neighborhood-night-v1.png",
+      "transparent_background": false,
+      "prompt": "Use case: stylized-concept. Asset type: production background for an original browser slot game 'Futebol de Bairro — Noite de Glória'. Create one polished 3D stylized illustration, landscape 16:9 composition, of a fictional neighborhood football pitch at night, framed symmetrically from the sideline at modest eye level. Dark navy blue sky with a tiny last warm sunset on horizon, deep green artificial grass, modest apartment buildings on left and right edges, metal mesh fences, original abstract football murals with NO writing, small spectator bleachers at outer sides, stadium floodlights in upper outside corners casting beautiful white-blue light with soft warm orange accents. The center 65 percent must remain visually calm, low contrast, dark and mostly open pitch/sky, because a separate 6-column 4-row slot grid will cover it. Interesting detail only at edges. Atmospheric premium animated-feature 3D illustration, tactile worn painted metal, chunky appealing shapes, rich material clarity, sophisticated night lighting, balanced navy #101E3C, blue #2457B7, green #226B49, warm orange #F28A36 and restrained gold #E4BC63. No interface, no grid, no slot symbols, no text, no logos, no lettering, no identifiable city, no real team branding, no foreground people. Keep the bottom corners available for UI. This is a usable game environment plate, not a screenshot or promotional poster. Requested output high quality wide landscape."
+    },
+    {
+      "id": "p1-ball",
+      "file": "public/assets/football/symbols/p1-ball.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Production game symbol for the original neighborhood football slot 'Futebol de Bairro — Noite de Glória'. One isolated object composition on a genuinely TRANSPARENT background, square canvas, 14 percent empty margin, optical center centered. Premium stylized 3D animated-feature illustration, expressive chunky volumes, clean silhouette readable at 48px, tactile physically plausible materials but clearly stylized, frontal slight three-quarter view, broad white stadium light from upper left, subtle cool blue rim on right, restrained golden bounce. Balanced navy blue #101E3C, blue #2457B7, green #226B49, orange #F28A36, gold #E4BC63. No environment, no floor plane, no checkerboard painted in the image, no border or tile, no logos, no watermarks, no accidental text. Output one finished usable transparent PNG asset. Subject: one dynamic slightly lifted football, white panels with deep navy blue geometric panels, visible stitched seams, subtle scuffs from street games, rounded rich clean shading. Compact round silhouette, no logo. Not black and white traditional tiny panel pattern: bold white and navy panels.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16b4c-8b01-7870-a0bd-db67b0a4c32d\\exec-710582d1-602c-42db-b4ef-7ddcbe37007e.png"
+    },
+    {
+      "id": "p2-boots",
+      "file": "public/assets/football/symbols/p2-boots.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Production game symbol for the original neighborhood football slot 'Futebol de Bairro — Noite de Glória'. One isolated object composition on a genuinely TRANSPARENT background, square canvas, 14 percent empty margin, optical center centered. Premium stylized 3D animated-feature illustration, expressive chunky volumes, clean silhouette readable at 48px, tactile physically plausible materials but clearly stylized, frontal slight three-quarter view, broad white stadium light from upper left, subtle cool blue rim on right, restrained golden bounce. Balanced navy blue #101E3C, blue #2457B7, green #226B49, orange #F28A36, gold #E4BC63. No environment, no floor plane, no checkerboard painted in the image, no border or tile, no logos, no watermarks, no accidental text. Output one finished usable transparent PNG asset. Subject: a compact pair of brilliant orange and coral football boots, one front shoe angled to show toe and laces, the second overlapping behind with a portion of studded sole visible, sculpted dynamic sports shape. Individual white laces, appealing clean stylized premium finish, slight worn edges, no brand. Entire pair centered and compact, feet absent.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16b4c-8b01-7870-a0bd-db67b0a4c32d\\exec-2222690f-6b20-4bf5-9960-8bf75a24dd63.png"
+    },
+    {
+      "id": "p3-jersey",
+      "file": "public/assets/football/symbols/p3-jersey.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Production game symbol for the original neighborhood football slot 'Futebol de Bairro — Noite de Glória'. One isolated object composition on a genuinely TRANSPARENT background, square canvas, 14 percent empty margin, optical center centered. Premium stylized 3D animated-feature illustration, expressive chunky volumes, clean silhouette readable at 48px, tactile physically plausible materials but clearly stylized, frontal slight three-quarter view, broad white stadium light from upper left, subtle cool blue rim on right, restrained golden bounce. Balanced navy blue #101E3C, blue #2457B7, green #226B49, orange #F28A36, gold #E4BC63. No environment, no floor plane, no checkerboard painted in the image, no border or tile, no logos, no watermarks, no accidental text. Output one finished usable transparent PNG asset. Subject: one rich royal blue football jersey with gold collar and gold sleeve edges, stylized thick fabric, expressive folded sleeves, gently wind-filled body, no hanger, no person. The front central chest must be EMPTY blue fabric with room for a separately rendered number 10, no generated numbers, letters, sponsors, emblems, logos. Broad recognizable jersey silhouette. Gold piping subtle.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16b4c-8b01-7870-a0bd-db67b0a4c32d\\exec-449d7092-aaf4-4055-b627-3389cc1a5a26.png"
+    },
+    {
+      "id": "p4-trophy",
+      "file": "public/assets/football/symbols/p4-trophy.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Production symbol for original premium browser slot 'Futebol de Bairro — Noite de Glória'. One isolated compact object centered on genuinely TRANSPARENT background, square canvas with 14 percent safe empty margin. High-end stylized 3D game illustration with expressive chunky readable shapes, rich materials, broad white stadium light from upper left, cool blue rim, golden bounce, premium navy/royal blue/orange/gold palette. Readable at 48px. No environment, no floor plane, no painted checkerboard, no watermark, no brand, no accidental words or numbers. Finished usable transparent PNG. Subject: impressive golden neighborhood football trophy with broad curved handles, a small football on top, elegant short black navy pedestal, rich polished gold, blue and orange ribbons draping beside the handles. Entire trophy fits square with wide compact silhouette. Large readable forms, restrained engraved detail, no text or inscriptions. Clearly the highest value symbol. No extra objects.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16b4c-8b01-7870-a0bd-db67b0a4c32d\\exec-fd725585-59ff-4917-9852-c4b57481bf1c.png"
+    },
+    {
+      "id": "w-player",
+      "file": "public/assets/football/symbols/w-player.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Production symbol for original premium browser slot 'Futebol de Bairro — Noite de Glória'. One isolated compact object centered on genuinely TRANSPARENT background, square canvas with 14 percent safe empty margin. High-end stylized 3D game illustration with expressive chunky readable shapes, rich materials, broad white stadium light from upper left, cool blue rim, golden bounce, premium navy/royal blue/orange/gold palette. Readable at 48px. No environment, no floor plane, no painted checkerboard, no watermark, no brand, no accidental words or numbers. Finished usable transparent PNG. Subject: one special football player card with a completely fictional original ADULT male neighborhood footballer, age around 28, warm brown skin, short dark curly hair, expressive confident friendly face, royal blue jersey with gold collar, holding a white/navy football tucked under left arm. Waist-up portrait integrated into one compact upright gold metallic player card, rounded architectural sports-frame corners, soft stadium-light halo within card. Not any celebrity or real footballer, not a real sports card franchise design. Keep bottom gold banner EMPTY for a separate vector WILD label. No actual letters, no numbers, no team crest, no sponsor. Entire card isolated and comfortably centered within square transparent canvas.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16b4c-8b01-7870-a0bd-db67b0a4c32d\\exec-f42eec12-374d-4845-bd5d-88f69814c100.png"
+    },
+    {
+      "id": "s-ticket",
+      "file": "public/assets/football/symbols/s-ticket.png",
+      "transparent_background": true,
+      "prompt": "Use case: stylized-concept. Production symbol for original premium browser slot 'Futebol de Bairro — Noite de Glória'. One isolated compact object centered on genuinely TRANSPARENT background, square canvas with 14 percent safe empty margin. High-end stylized 3D game illustration with expressive chunky readable shapes, rich materials, broad white stadium light from upper left, cool blue rim, golden bounce, premium navy/royal blue/orange/gold palette. Readable at 48px. No environment, no floor plane, no painted checkerboard, no watermark, no brand, no accidental words or numbers. Finished usable transparent PNG. Subject: one tournament final entry ticket with clipped notched edges, diagonally tilted a little, horizontal compact rectangular silhouette, holographic blue and violet material with metallic silver edges. In the center a tiny stylized floodlit neighborhood football pitch emblem, no people. A wide central/lower banner left EMPTY for a separate vector SCATTER label. Rich appealing 3D volume, controlled glints, distinct from a vertical player card. No actual letters, no digits, no logos, no QR codes, no barcode, no extra objects.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16b4c-8b01-7870-a0bd-db67b0a4c32d\\exec-319dd172-1106-4a05-844d-7eda7cbd2050.png"
+    }
+  ]
+}

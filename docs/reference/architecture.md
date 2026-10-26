@@ -23,6 +23,7 @@ flowchart TB
 | Páginas e interações    | `js/`                               |
 | Layout, temas e cartas  | `css/`                              |
 | Operações protegidas    | `functions/`                        |
+| Casino e slot isolada   | `js/casino.js` · `games/futebol/` ([guia](../guides/casino.md)) |
 | Permissões de dados     | `firestore.rules` · `storage.rules` |
 | Recursos públicos       | `assets/`                           |
 | Fontes de trabalho      | `design/sources/`                   |

@@ -4,6 +4,8 @@
 
 ## Escolher pelo tipo de alteração
 
+Casino: `npm.cmd run test:casino` verifica economia, sessões e interface com fixtures; requer `npm.cmd run build:casino`. Inclui 1 000 operações locais sem chamadas, resposta perdida, disco cheio, rede lenta sem bloquear spins, migração e bónus interrompido. `npm.cmd run test:casino:backend` verifica carteira, concorrência, segurança e prémios num emulador demo dedicado. [Contrato e limites do modelo local](casino.md).
+
 Manutenção por páginas: `npm.cmd run test:maintenance-pages` verifica o esquema, o calendário e o formulário com fixtures. `npm.cmd run test:maintenance-calendar:backend` verifica publicação/ativação do dia e minuto no emulador Firestore. [Âmbito e publicação](../reports/maintenance-pages-2026-10-22.md).
 
 Conclusão e resgate de missões: `npm.cmd run test:mission-completion` verifica o modelo partilhado e o botão na lista em quatro temas/larguras, incluindo erro, repetição do clique, cache antiga e recompensa em espera. Usa fixtures locais. [Comportamento e publicação](../reports/mission-completion-2026-10-22.md).

@@ -9,3 +9,5 @@ playwright-report/
 .repository-export/
 __pycache__/
 *.pyc
+games/futebol/dist/
+assets/games/

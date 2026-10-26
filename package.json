@@ -7,6 +7,9 @@
     "node": "22"
   },
   "scripts": {
+    "build:casino": "node scripts/build-casino.mjs",
+    "test:casino": "node --test tests/casino.test.js tests/casino-session.test.js && node tests/casino-local-wallet.mjs && node tests/casino.mjs",
+    "test:casino:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.casino.json --project demo-peladinhas-casino --only firestore \"node --test tests/casino.backend.test.js\"",
     "audit:path-difficulty": "node scripts/audit-path-difficulty.mjs",
     "dev": "node scripts/dev-server.mjs",
     "dev:emulator": "node scripts/dev-server.mjs --mode emulator",
@@ -18,7 +21,7 @@
     "docs:images": "node scripts/capture-doc-images.mjs",
     "export:repo": "node scripts/export-repository.mjs",
     "preexport:repo": "npm run test:docs",
-    "test": "node --test tests/scrap-card.test.js tests/performance-week.test.js tests/rating-quorum.test.js tests/logic.test.js tests/card-achievements.test.js tests/progression.test.js tests/events.test.js tests/youtube.test.js tests/team-balance.test.js tests/card-week.test.js tests/match-time.test.js tests/push-config.test.js tests/activity-categories.test.js tests/system-policy.test.js tests/maintenance-pages.test.js tests/paths.test.js tests/path-window.test.js tests/path-variety.test.js tests/statistics.test.js",
+    "test": "node --test tests/scrap-card.test.js tests/performance-week.test.js tests/rating-quorum.test.js tests/logic.test.js tests/card-achievements.test.js tests/progression.test.js tests/events.test.js tests/youtube.test.js tests/team-balance.test.js tests/card-week.test.js tests/match-time.test.js tests/push-config.test.js tests/activity-categories.test.js tests/system-policy.test.js tests/maintenance-pages.test.js tests/paths.test.js tests/path-window.test.js tests/path-variety.test.js tests/statistics.test.js tests/casino.test.js tests/casino-session.test.js",
     "test:rules": "node scripts/emulator-cli.mjs emulators:exec --project demo-peladinhas-rules --only firestore \"node --test tests/firestore.rules.test.js\"",
     "test:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.backend.json --project demo-peladinhas-backend --only firestore \"node --test --test-concurrency=1 tests/feedback-queue.backend.test.js tests/backend.test.js tests/maintenance-calendar.backend.test.js tests/card-collection.backend.test.js tests/events.backend.test.js tests/push.backend.test.js tests/game-workspace.backend.test.js tests/game-rating-admin.backend.test.js tests/paths.backend.test.js tests/path-early-settlement.backend.test.js tests/path-variety.backend.test.js tests/game-flow.backend.test.js tests/admin-messages.backend.test.js tests/home-cache.backend.test.js\"",
     "test:push": "node tests/push-worker.mjs && node tests/push-ui.mjs",

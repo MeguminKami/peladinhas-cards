@@ -211,6 +211,7 @@ try {
       ).flat();
     });
     assert.ok(cachedURLs.length > 60);
+    assert.ok(!cachedURLs.some(url => url.includes('/assets/games/')), 'hidden casino assets load on demand');
     assert.ok(
       !cachedURLs.some(
         (url) =>

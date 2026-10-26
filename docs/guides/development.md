@@ -7,6 +7,7 @@
 | Requisito              | Quando é necessário                                          |
 | :--------------------- | :----------------------------------------------------------- |
 | **Node.js 22**         | Instalar dependências, executar scripts e servir o frontend. |
+| **Node.js 24.16+**     | Compilar e testar a slot independente, incluindo builds de Hosting. |
 | **Java 21**            | Testes com emulador Firestore.                               |
 | **Python + fonttools** | Apenas para regenerar fontes.                                |
 
@@ -14,6 +15,8 @@
 npm.cmd ci
 npm.cmd run dev
 ```
+
+Para preparar também o casino, usar Node.js 24.16+ e executar `npm.cmd ci --prefix games/futebol` e `npm.cmd run build:casino`. A slot mantém o seu próprio lockfile e dependências. [Integração, carteira e testes](casino.md).
 
 **Abrir:** `http://localhost:8080` · **Outra porta:** `npm.cmd run dev -- --port 8081`
 

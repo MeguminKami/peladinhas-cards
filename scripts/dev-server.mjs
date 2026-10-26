@@ -40,7 +40,12 @@ const server = createServer(async (req, res) => {
       new URL(req.url, "http://localhost").pathname,
     );
     const localModule = path.replace(/^\//, "");
-    if (mode === "fixtures" && ["tests/fixtures/game-ratings.js", "tests/fixtures/maintenance.js"].includes(localModule)) {
+    if (path === '/casino') {
+      res.writeHead(302, { Location: '/#/casino' });
+      res.end();
+      return;
+    }
+    if (mode === "fixtures" && ["tests/fixtures/game-ratings.js", "tests/fixtures/maintenance.js", "tests/fixtures/casino.js"].includes(localModule)) {
       res.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" });
       res.end(await readFile(resolve(root, localModule), "utf8"));
       return;

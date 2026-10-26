@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "date": "2026-10-24",
+  "tool": "image_gen integrado",
+  "notes": "Seis gerações independentes. Masters PNG alpha copiados sem alteração raster. Sem texto nos símbolos. Quatro normais mantêm assets existentes.",
+  "assets": [
+    {
+      "key": "p1-player-v2",
+      "prompt": "Use case: stylized-concept. Asset: one transparent PNG alpha game symbol for Futebol de Bairro — Noite de Glória, premium sports slot. Premium stylized 3D collectible player card, fictional adult character, crisp bold silhouette legible at 64 pixels, front view slight three-quarter depth. One broad compact card, width about 85% of height, centered, fills 90–94% of square canvas, genuine transparent background outside card, corners transparent. Character half-body bust fills entire card, prominent face and shoulders, no blank lower nameplate. Studio white key light upper left, blue rim, polished metal, sports fabric, night blue/orange/gold family. NO letters, words, numbers, logos, club marks, watermark, signature or real celebrity likeness. No scene surrounding card. Lowest of four premium tiers: young adult fair-skinned male neighborhood footballer, short brown hair, cheerful determined face, green football kit, holding a football near lower chest. Simple bronze and copper thick shield-card frame, restrained single angular detail, no gemstones. Broad sturdy silhouette. Bronze tier unmistakable.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16d1c-f960-7e43-8be4-b1e61510e33e\\exec-caed269c-b770-49d8-87a8-b624449cbcf4.png",
+      "destination": "public/assets/football/symbols/p1-player-v2.png"
+    },
+    {
+      "key": "p2-player-v2",
+      "prompt": "Use case: stylized-concept. Asset: one transparent PNG alpha game symbol for Futebol de Bairro — Noite de Glória, premium sports slot. Premium stylized 3D collectible player card, fictional adult character, crisp bold silhouette legible at 64 pixels, front view slight three-quarter depth. One broad compact card, width about 85% of height, centered, fills 90–94% of square canvas, genuine transparent background outside card, corners transparent. Character half-body bust fills entire card, prominent face and shoulders, no blank lower nameplate. Studio white key light upper left, blue rim, polished metal, sports fabric, night blue/orange/gold family. NO letters, words, numbers, logos, club marks, watermark, signature or real celebrity likeness. No scene surrounding card. Second premium tier: adult Black female footballer, athletic strong build, tied-back dark braided hair, bright orange/coral kit, dynamic sideways sprint-ready bust and arm gesture. Elaborate silver and icy blue metal shield-card frame with exactly two geometric blue gemstone accents. Clearly different silhouette and pose from male players, second tier silver.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16d1c-f960-7e43-8be4-b1e61510e33e\\exec-847be68a-61d9-4b48-96ee-110541ab51bd.png",
+      "destination": "public/assets/football/symbols/p2-player-v2.png"
+    },
+    {
+      "key": "p3-player-v2",
+      "prompt": "Use case: stylized-concept. Asset: one transparent PNG alpha game symbol for Futebol de Bairro — Noite de Glória, premium sports slot. Premium stylized 3D collectible player card, fictional adult character, crisp bold silhouette legible at 64 pixels, front view slight three-quarter depth. One broad compact card, width about 85% of height, centered, fills 90–94% of square canvas, genuine transparent background outside card, corners transparent. Character half-body bust fills entire card, prominent face and shoulders, no blank lower nameplate. Studio white key light upper left, blue rim, polished metal, sports fabric, night blue/orange/gold family. NO letters, words, numbers, logos, club marks, watermark, signature or real celebrity likeness. No scene surrounding card. Third premium tier: adult olive-skinned male playmaker, long dark hair in a high man-bun, clean-shaven angular face, royal blue football kit, expressive passing gesture with forearm and open hand. Elaborate sculpted gold shield-card frame with exactly three emerald/blue gemstones and heroic angular cutouts. Rich gold tier, unmistakably stronger than silver.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16d1c-f960-7e43-8be4-b1e61510e33e\\exec-fbf5b153-12bd-4fc1-a2ee-ed5ef450cc54.png",
+      "destination": "public/assets/football/symbols/p3-player-v2.png"
+    },
+    {
+      "key": "p4-player-v2",
+      "prompt": "Use case: stylized-concept. Asset: one transparent PNG alpha game symbol for Futebol de Bairro — Noite de Glória, premium sports slot. Premium stylized 3D collectible player card, fictional adult character, crisp bold silhouette legible at 64 pixels, front view slight three-quarter depth. One broad compact card, width about 85% of height, centered, fills 90–94% of square canvas, genuine transparent background outside card, corners transparent. Character half-body bust fills entire card, prominent face and shoulders, no blank lower nameplate. Studio white key light upper left, blue rim, polished metal, sports fabric, night blue/orange/gold family. NO letters, words, numbers, logos, club marks, watermark, signature or real celebrity likeness. No scene surrounding card. Highest fourth premium tier: powerful adult Black male football captain, short hair and neatly trimmed full beard, violet and white football kit with gold trim, authoritative front facing arms crossed bust. Most luxurious thick prismatic gold shield-card frame, exactly four violet diamond gemstones, geometric crown integrated into upper frame. Violet luminous accents. Exceptionally premium, clearly strongest of all tiers.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16d1c-f960-7e43-8be4-b1e61510e33e\\exec-3deec5bb-cef9-4eb8-8232-3005aebd5302.png",
+      "destination": "public/assets/football/symbols/p4-player-v2.png"
+    },
+    {
+      "key": "w-player-v2",
+      "prompt": "Use case: stylized-concept. Asset: one transparent PNG alpha game symbol for Futebol de Bairro — Noite de Glória, premium sports slot. Premium stylized 3D collectible player card, fictional adult character, crisp bold silhouette legible at 64 pixels, front view slight three-quarter depth. One broad compact card, width about 85% of height, centered, fills 90–94% of square canvas, genuine transparent background outside card, corners transparent. Character half-body bust fills entire card, prominent face and shoulders, no blank lower nameplate. Studio white key light upper left, blue rim, polished metal, sports fabric, night blue/orange/gold family. NO letters, words, numbers, logos, club marks, watermark, signature or real celebrity likeness. No scene surrounding card. WILD hero card: original adult tan-skinned male football superstar, curly black hair, light stubble and expressive confident smile, white football kit with royal blue and gold panels. One massive luminous golden five-point star integrated behind shoulders, broad thick radiant gold frame with sculpted angular wings, powerful expansive silhouette. Upper torso and face occupy almost all card. Energetic gold spark accents confined tightly to silhouette. No text or letters whatsoever, no W, no nameplate. Broad compact golden star hero, stronger graphic mass than any ordinary symbol.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16d1c-f960-7e43-8be4-b1e61510e33e\\exec-3f37e049-3f9f-4cb8-b607-40fb4b9927b8.png",
+      "destination": "public/assets/football/symbols/w-player-v2.png"
+    },
+    {
+      "key": "s-ticket-v2",
+      "prompt": "Use case: stylized-concept. Asset: one very bold SCATTER game symbol for Futebol de Bairro — Noite de Glória, transparent PNG alpha. A single large luxurious holographic football final ticket, almost square slightly vertical wide rectangular ticket silhouette, NOT a thin horizontal ticket. Front facing with modest 3D depth, fills 92% of square canvas. Big central sculpted white and gold football inside an iconic miniature stadium floodlight crest; football dominates composition. Thick layered metallic violet and cyan holographic frame with notched ticket edges and luminous corner facets, night blue inner surface, gold highlights, crisp readable silhouette at 64 pixels. Premium stylized 3D render matching sports collectible player cards, white upper-left key light and blue rim. Genuine transparent background outside object and transparent corners. Absolutely NO words, numbers, letters, barcode, QR code, logo, watermark or branded marks. No nameplate, no landscape scene, no other objects. Strong broad silhouette and oversized football focal point.",
+      "source": "C:\\Users\\Joao\\.codex\\generated_images\\01a16d1c-f960-7e43-8be4-b1e61510e33e\\exec-2ff95702-3405-48a1-99f7-d709bc25d4cd.png",
+      "destination": "public/assets/football/symbols/s-ticket-v2.png"
+    }
+  ]
+}

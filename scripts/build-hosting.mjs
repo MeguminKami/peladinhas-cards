@@ -9,6 +9,7 @@ import {
 import { createHash } from "node:crypto";
 import { resolve, relative, join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import './build-casino.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const target = resolve(root, ".firebase/site");
 if (relative(root, target) !== join(".firebase", "site"))
@@ -53,6 +54,8 @@ const digest = createHash("sha256");
 for (const path of inventory)
   digest.update(path).update(readFileSync(join(target, path)));
 const worker = readFileSync(join(target, "sw.js"), "utf8");
+// Hidden games load on demand; never download all casino art during PWA install.
+const precache = inventory.filter(path => !path.startsWith('assets/games/'));
 digest.update(worker);
 const version = digest.digest("hex").slice(0, 16);
 const versionPattern = /const VERSION = ["'][^"']+["'];/;
@@ -64,7 +67,7 @@ writeFileSync(
     .replace(versionPattern, `const VERSION = '${version}';`)
     .replace(
       /const PRECACHE = \[[\s\S]*?\];/,
-      `const PRECACHE = ${JSON.stringify(inventory)};`,
+      `const PRECACHE = ${JSON.stringify(precache)};`,
     ),
 );
 console.log(

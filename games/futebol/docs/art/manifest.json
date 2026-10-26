@@ -1,0 +1,540 @@
+{
+  "theme": "Futebol de Bairro — Noite de Glória",
+  "artVersion": "p2-wild-identities-v3",
+  "mathVersion": "0.6.0",
+  "date": "2026-10-24",
+  "sourceImages": "Originals copied unmodified; generated alpha preserved.",
+  "entries": [
+    {
+      "id": "n1-cone",
+      "path": "public/assets/football/symbols/n1-cone.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 1266602,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_NORMAIS.md"
+    },
+    {
+      "id": "n2-whistle",
+      "path": "public/assets/football/symbols/n2-whistle.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 1910320,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_NORMAIS.md"
+    },
+    {
+      "id": "n3-bottle",
+      "path": "public/assets/football/symbols/n3-bottle.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 1305500,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_NORMAIS.md"
+    },
+    {
+      "id": "n4-sock",
+      "path": "public/assets/football/symbols/n4-sock.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 1969784,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_NORMAIS.md"
+    },
+    {
+      "id": "p1-ball",
+      "path": "docs/art/archive/symbols/p1-ball.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 1910293,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json"
+    },
+    {
+      "id": "p2-boots",
+      "path": "docs/art/archive/symbols/p2-boots.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2034615,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json"
+    },
+    {
+      "id": "p3-jersey",
+      "path": "docs/art/archive/symbols/p3-jersey.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 1963752,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json"
+    },
+    {
+      "id": "p4-trophy",
+      "path": "docs/art/archive/symbols/p4-trophy.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2177027,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json"
+    },
+    {
+      "id": "s-ticket",
+      "path": "public/assets/football/symbols/s-ticket.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1536,
+      "height": 1024,
+      "pngColorType": 6,
+      "bytes": 2716935,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json"
+    },
+    {
+      "id": "w-player",
+      "path": "docs/art/archive/symbols/w-player.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2239004,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json",
+      "label": "WILD rendered by symbolMarkup"
+    },
+    {
+      "id": "BG-BASE",
+      "path": "public/assets/football/backgrounds/neighborhood-night-v1.png",
+      "role": "background",
+      "alpha": false,
+      "width": 1672,
+      "height": 941,
+      "pngColorType": 2,
+      "bytes": 2796132,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_MASTER.json"
+    },
+    {
+      "id": "BRAND-01",
+      "path": "public/assets/football/brand-mark.svg",
+      "role": "code-native-vector",
+      "status": "integrated",
+      "tool": "authored SVG"
+    },
+    {
+      "id": "p1-player-v2",
+      "path": "docs/art/archive/symbols/p1-player-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2307341,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_SIMBOLOS_V2.json"
+    },
+    {
+      "id": "p2-player-v2",
+      "path": "docs/art/archive/symbols/p2-player-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2468096,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_SIMBOLOS_V2.json"
+    },
+    {
+      "id": "p3-player-v2",
+      "path": "docs/art/archive/symbols/p3-player-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2509547,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_SIMBOLOS_V2.json"
+    },
+    {
+      "id": "p4-player-v2",
+      "path": "docs/art/archive/symbols/p4-player-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2516399,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_SIMBOLOS_V2.json"
+    },
+    {
+      "id": "w-player-v2",
+      "path": "docs/art/archive/symbols/w-player-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2687897,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_SIMBOLOS_V2.json"
+    },
+    {
+      "id": "s-ticket-v2",
+      "path": "docs/art/archive/symbols/s-ticket-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 3129247,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPTS_SIMBOLOS_V2.json"
+    },
+    {
+      "id": "p3-maestra-v4",
+      "path": "docs/art/archive/symbols/p3-maestra-v4.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2373641,
+      "status": "archived-not-shipped",
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPT_P3_MAESTRA_V4.json"
+    },
+    {
+      "id": "p4-queen-inform-v5",
+      "path": "docs/art/archive/symbols/p4-queen-inform-v5.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2520095,
+      "status": "archived-not-shipped",
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPT_P4_INFORM_V5.json"
+    },
+    {
+      "id": "bonus-four-scatter-v1",
+      "path": "public/assets/football/symbols/bonus-four-scatter-v1.png",
+      "role": "superior-bonus-emblem",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2956426,
+      "status": "integrated-static-master",
+      "tool": "built-in image_gen",
+      "promptRecord": "PROMPT_BONUS_4_SCATTERS.json"
+    },
+    {
+      "id": "p1-personal-v1",
+      "path": "docs/art/archive/symbols/p1-personal-v1.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2195209,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS.md"
+    },
+    {
+      "id": "p2-personal-v1",
+      "path": "docs/art/archive/symbols/p2-personal-v1.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2377690,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS.md"
+    },
+    {
+      "id": "p3-personal-v1",
+      "path": "docs/art/archive/symbols/p3-personal-v1.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2372849,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS.md"
+    },
+    {
+      "id": "p4-personal-v1",
+      "path": "docs/art/archive/symbols/p4-personal-v1.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2488384,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS.md"
+    },
+    {
+      "id": "p1-personal-v2",
+      "path": "public/assets/football/symbols/p1-personal-v2.png",
+      "activeSymbol": "P1",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2104711,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS_V2.md"
+    },
+    {
+      "id": "p2-personal-v2",
+      "path": "docs/art/archive/symbols/p2-personal-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2334990,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS_V2.md"
+    },
+    {
+      "id": "p3-personal-v2",
+      "path": "public/assets/football/symbols/p3-personal-v2.png",
+      "activeSymbol": "P3",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2462739,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS_V2.md"
+    },
+    {
+      "id": "p4-personal-v2",
+      "path": "docs/art/archive/symbols/p4-personal-v2.png",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2480091,
+      "status": "archived-not-shipped",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "PREMIUM_PESSOAS_V2.md"
+    },
+    {
+      "id": "p4-personal-v3",
+      "path": "public/assets/football/symbols/p4-personal-v3.png",
+      "activeSymbol": "P4",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2469121,
+      "status": "integrated-static-master",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "tool": "built-in image_gen",
+      "promptRecord": "P4_DESPORTIVA_V3.md"
+    },
+    {
+      "id": "p2-personal-v3",
+      "path": "public/assets/football/symbols/p2-personal-v3.png",
+      "activeSymbol": "P2",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2268299,
+      "status": "integrated-static-master",
+      "tool": "built-in image_gen",
+      "promptRecord": "P2_WILD_IDENTIDADES_V3.md"
+    },
+    {
+      "id": "w-personal-v3",
+      "path": "public/assets/football/symbols/w-personal-v3.png",
+      "activeSymbol": "W",
+      "role": "symbol",
+      "alpha": true,
+      "width": 1254,
+      "height": 1254,
+      "pngColorType": 6,
+      "bytes": 2133224,
+      "status": "integrated-static-master",
+      "tool": "built-in image_gen",
+      "promptRecord": "P2_WILD_IDENTIDADES_V3.md"
+    },
+    {
+      "id": "thumbnail-v1",
+      "path": "public/assets/football/marketing/thumbnail-v1.png",
+      "role": "catalog-thumbnail",
+      "alpha": false,
+      "width": 1672,
+      "height": 941,
+      "bytes": 3133117,
+      "status": "ready-static-marketing",
+      "tool": "built-in image_gen",
+      "promptRecord": "THUMBNAIL_V1.md"
+    }
+  ],
+  "animationStatus": "WAAPI reel strips, scatter anticipation, power transfer and impacts, sticky acquisition and persistent gold aura. No exported GIF, Spine rigs or audio.",
+  "sceneVariants": "Same background with mode-dependent code lighting; layered environment masters pending."
+}

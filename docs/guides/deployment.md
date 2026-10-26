@@ -22,6 +22,8 @@ Combinar apenas os seletores necessários. Quando cliente e servidor mudam, exec
 
 ## Preparar e validar
 
+O build de Hosting também compila a slot isolada. Usar Node.js 24.16+ na máquina de publicação e instalar uma vez as dependências com `npm.cmd ci --prefix games/futebol`. O runtime das Functions mantém Node.js 22. [Casino e seletores de publicação](casino.md).
+
 ```powershell
 npm.cmd ci
 npx.cmd firebase login --reauth
