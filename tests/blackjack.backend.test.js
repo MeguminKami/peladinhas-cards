@@ -23,6 +23,16 @@ const req = (uid, data) => ({
   auth: { uid, token: { auth_time: Math.floor(Date.now() / 1000) } },
   data,
 });
+
+test("an edition reset replaces the old table without refunding its wagers", async () => {
+  const uid = `reset-${randomUUID()}`;
+  await db.doc(`users/${uid}`).set({uid, role:"member", disabled:false});
+  await db.doc(`casinoWallets/${uid}`).set({edition:"official-2026-10-26-cardoso-reset",balance:999999});
+  await db.doc(BLACKJACK_PRIVATE).set({edition:"official-2026-10-26-cardoso-reset",id:"old-table",players:[]});
+  const result = await blackjackAction.run(req(uid,{action:"join",id:randomUUID()}));
+  assert.equal(result.balance,20000);
+  assert.notEqual((await db.doc(BLACKJACK_PRIVATE).get()).data().id,"old-table");
+});
 test("multiple seats transact against one wallet and competing claims cannot overwrite an owner", async () => {
   await db.doc(BLACKJACK_PRIVATE).delete();
   await db.doc(BLACKJACK_PUBLIC).delete();
@@ -119,7 +129,7 @@ test("real transactions: simultaneous joins, wallet reservations, retries, permi
   ]);
   assert.equal(
     (await db.doc(`casinoWallets/${ids[0]}`).get()).data().balance,
-    24900,
+    19900,
   );
   // Existing session checkpoints apply their delta to the actual server wallet.
   await casinoSession.run(

@@ -10,7 +10,8 @@ export function connectBlackjack(uid, onBalance, onExit) {
     deadline,
     observer,
     pending,
-    inFlight;
+    inFlight,
+    retryTimer;
   let offset = 0,
     syncedRound;
   const key = `peladinhas:blackjack:pending:${uid}`;
@@ -54,6 +55,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
   }
   async function command(action, amount, seat) {
     if (stopped || inFlight) return;
+    clearTimeout(retryTimer);
     if (!pending) {
       pending = {
         action,
@@ -85,6 +87,11 @@ export function connectBlackjack(uid, onBalance, onExit) {
         ) {
           pending = undefined;
           sessionStorage.removeItem(key);
+        } else if (!stopped) {
+          // Repeat the persisted ID: the server can return the original result safely.
+          retryTimer = setTimeout(() => {
+            if (pending && !stopped) void command().catch(() => {});
+          }, 2000);
         }
         throw error;
       })
@@ -96,6 +103,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
   }
   function schedule() {
     clearTimeout(deadline);
+    clearTimeout(retryTimer);
     if (!state || stopped) return;
     const nextDeadline = Math.min(
       state.deadline || Infinity,

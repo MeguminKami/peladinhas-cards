@@ -4,15 +4,19 @@ import { walletCall } from "./casino.js";
 import { SHOP_CARDS } from "../js/casino-shop-catalog.js";
 import { currentCasinoWallet, DJABUCOIN } from "../js/casino-economy.js";
 import { cardWeek } from "../js/card-week.js";
+import { weeklyComparison } from "../js/weekly-comparison.js";
 
 const owned = (collection) =>
   (collection?.awards || [])
     .filter((a) => a.source === "casino-shop" && !a.revokedAt)
     .map((a) => a.id);
-const playerView = (weekly, user) => ({
+const previousCardRef = (db, uid) => db.doc(`users/${uid}/cardHistory/${cardWeek(new Date(+cardWeek().opensAt - 1)).weekId}`);
+const playerView = (weekly, user, previous) => ({
   displayName: user.displayName || user.username || "Jogador",
   photoURL: weekly?.cardPhoto?.photoURL || user.photoURL || "",
   photoDesign: weekly?.cardPhoto?.design || null,
+  countryCode: weekly?.appearance?.countryCode || user.countryCode || "",
+  ...weeklyComparison(weekly, previous, { uid: user.uid }),
   primaryPosition: weekly?.primaryPosition || user.primaryPosition || "ALA",
   stats: weekly?.stats || {},
   hasCard:
@@ -30,15 +34,16 @@ export function casinoShopFunctions() {
         throw new HttpsError("invalid-argument", "Pedido inválido.");
       const db = getFirestore(),
         uid = request.auth.uid;
-      const [wallet, collection, weekly] = await db.getAll(
+      const [wallet, collection, weekly, previous] = await db.getAll(
         db.doc(`casinoWallets/${uid}`),
         db.doc(`cardCollections/${uid}`),
         db.doc(`weeklyCards/${uid}`),
+        previousCardRef(db, uid),
       );
       return {
         balance: currentCasinoWallet(wallet.data()).balance,
         owned: owned(collection.data()),
-        player: playerView(weekly.data(), user),
+        player: playerView(weekly.data(), user, previous.data()),
       };
     },
     { read: true },
@@ -60,14 +65,15 @@ export function casinoShopFunctions() {
     const walletRef = db.doc(`casinoWallets/${uid}`),
       collectionRef = db.doc(`cardCollections/${uid}`);
     return db.runTransaction(async (tx) => {
-      const [walletSnap, collectionSnap, weekly] = await tx.getAll(
+      const [walletSnap, collectionSnap, weekly, previous] = await tx.getAll(
         walletRef,
         collectionRef,
         db.doc(`weeklyCards/${uid}`),
+        previousCardRef(db, uid),
       );
       const wallet = currentCasinoWallet(walletSnap.data()),
         collection = collectionSnap.data();
-      const player = playerView(weekly.data(), user),
+      const player = playerView(weekly.data(), user, previous.data()),
         ids = owned(collection);
       // Ownership itself is the durable receipt: retries can never debit twice.
       if (ids.includes(card.id))

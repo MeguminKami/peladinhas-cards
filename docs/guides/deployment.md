@@ -8,6 +8,8 @@ Para publicar o conjunto acumulado desde o commit das fusões `b3af042`, incluin
 
 Executar na raiz do projeto, com Node.js 22 e acesso ao Firebase **pedalinhas-cards**. Cliente e Functions usam `europe-west1`; a codebase das Functions chama-se `peladinhas`.
 
+Criar todas as funções depois de `setGlobalOptions({ region: "europe-west1", ... })` em `functions/index.js`. A ordem é importante: funções criadas antes dessa configuração usam a região predefinida. `npm.cmd run check` também inspeciona localmente os metadados de todas as funções e rejeita qualquer região diferente de `europe-west1`, sem consultar a cloud.
+
 | Alteração                                       | Comando                                                                                                             |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | Só HTML, CSS, JavaScript do navegador ou assets | `npm.cmd run deploy:frontend`                                                                                       |

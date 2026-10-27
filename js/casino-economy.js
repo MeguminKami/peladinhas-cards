@@ -9,7 +9,7 @@ export const DJABUCOIN = Object.freeze({
 });
 
 export const SLOT_RULES = Object.freeze({
-  version: "0.7.0",
+  version: "0.7.1",
   bets: [20, 40, 60, 80, 100, 150, 200, 300, 400, 500, 750, 1000],
   cap: 10000,
 });
@@ -36,7 +36,8 @@ export function validateSlotTransaction(input) {
     typeof input.streamId !== "string" ||
     !/^[\w-]{16,80}$/.test(input.id || "") ||
     !/^[\w-]{16,80}$/.test(input.streamId || "") ||
-    input.configVersion !== SLOT_RULES.version ||
+    // Keep already queued 0.7.0 receipts valid across the sticky update.
+    ![SLOT_RULES.version, "0.7.0"].includes(input.configVersion) ||
     !SLOT_RULES.bets.includes(input.bet) ||
     !["base", "normal", "superior"].includes(input.mode) ||
     typeof input.bonusHunt !== "boolean" ||

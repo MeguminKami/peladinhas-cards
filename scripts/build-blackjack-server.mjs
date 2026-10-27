@@ -19,7 +19,8 @@ for (const [source, target] of [
       .replace("'../shared/core'", "'./blackjack-core.js'");
   const path = new URL(`../functions/${target}.js`, import.meta.url);
   if (process.argv.includes("--check")) {
-    if (readFileSync(path, "utf8") !== output)
+    // Git may check generated files out with CRLF on Windows.
+    if (readFileSync(path, "utf8").replace(/\r\n/g, "\n") !== output.replace(/\r\n/g, "\n"))
       throw Error(`${target} is stale`);
   } else writeFileSync(path, output);
 }

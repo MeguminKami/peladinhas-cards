@@ -37,3 +37,19 @@ Cada operação da loja lê três documentos de domínio: carteira, coleção e 
 Não foram alteradas regras, índices nem cálculos partilhados de OVR. Não há migração de compras fictícias do navegador, recálculo de jogadores ou reescrita de semanas fechadas.
 
 Funções novas a publicar: `getCasinoShop` e `buyCasinoCard`. Publicar primeiro essas funções e depois o frontend, conforme o [guia da loja](../guides/casino-shop.md#publicação). A configuração e os dados cloud não foram consultados nem confirmados nesta tarefa.
+
+## Correção do acesso à loja no início · 27/10/2026
+
+Os acessos ao salão e à loja passaram a um contentor de ações com `gap` de 12 px, altura mínima de 48 px e ícones de 20 px. A loja usa um botão com contorno dourado; os dois botões quebram para uma coluna quando falta largura. A regra avulsa da página da loja foi removida e a composição pertence agora aos estilos do casino.
+
+Verificação local em 320, 390, 768 e 1440 px: sem sobreposições, corte de texto ou overflow, com foco visível, entrada na loja por teclado e movimento reduzido. Capturas em `artifacts/casino-shop/home-actions-*.png`. Correção apenas de frontend, ainda sem publicação.
+
+## Fotografia e conteúdo oficial das cartas · 27/10/2026
+
+Corrigida a reutilização das coordenadas da fotografia da carta normal no desenho da loja. Todas as edições passam a ter uma área quadrada de fotografia, menor e com recorte limitado, preservando foco, zoom e modo de ajuste. Sem fotografia usa-se o avatar padrão.
+
+O conteúdo partilhado em `js/card-player-content.js` assegura oito atributos oficiais, valores sem substituição pelo OVR, evolução permanente e playstyles nas cartas normais e da loja. As edições da loja apresentam também OVR, posição e país. O backend devolve a identidade e compara a carta semanal com o histórico anterior através de `weeklyComparison`, sem alterar o cálculo existente nem reescrever semanas fechadas. Cada operação passa a ler quatro documentos de domínio, em vez de três, além dos controlos existentes; o quarto é exclusivamente o histórico da semana anterior do próprio jogador.
+
+Validação local: 30 testes de conteúdo/catálogo/conquistas/semana e seis testes de backend passaram. O teste integrado passou em 320, 390, 768, 1024 e 1440 px, incluindo fotografia quadrada com coordenadas extremas, oito atributos, confirmação/cancelamento, compra, abertura do seletor no perfil e seleção da carta comprada. Pré-visualização operada por teclado com movimento reduzido. Capturas atualizadas em `artifacts/casino-shop/square-*.png`, inspecionadas em desktop e telemóvel. Sintaxe, regiões das funções, documentação e build de Hosting passaram.
+
+Publicar `getCasinoShop` e `buyCasinoCard` e depois o frontend, conforme o [procedimento da loja](../guides/casino-shop.md#publicação). Sem leituras de dados reais nem deploy nesta verificação; não é necessário recalcular cartas ou migrar compras existentes.

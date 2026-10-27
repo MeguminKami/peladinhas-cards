@@ -25,7 +25,7 @@ export function casinoArt(kind) {
 }
 function gameCard(game) {
   const artwork = game.thumbnail
-    ? `<img class="casino-game-thumbnail" src="${esc(game.thumbnail)}" alt="" width="800" height="1200" loading="lazy" decoding="async">`
+    ? `<img class="casino-game-thumbnail" src="${esc(new URL("../"+game.thumbnail,import.meta.url).href)}" alt="" width="800" height="1200" loading="eager" decoding="async">`
     : casinoArt(game.art);
   return `<article class="casino-game${game.thumbnail ? " casino-game-has-thumbnail" : ""}"><div class="casino-game-art casino-art-${game.art}">${artwork}<span class="casino-coming ${game.available ? "is-available" : ""}">${game.available ? "Disponível" : "Em breve"}</span></div><div class="casino-game-copy"><span class="casino-kicker">${game.category === "slots" ? "ROLOS & COMBINAÇÕES" : "JOGOS DE MESA"}</span><h3>${esc(game.title)}</h3><p>${esc(game.label)}</p><button class="casino-text-button" type="button" data-casino-game="${game.id}" ${game.available ? 'aria-controls="casino-play-area"' : 'aria-haspopup="dialog"'}>${game.available ? "Jogar agora" : `Conhecer ${esc(game.title)}`} ${icon("arrow")}</button></div></article>`;
 }
@@ -92,6 +92,7 @@ export async function casinoPage(ctx) {
   const headerSize = new ResizeObserver(() => {
     root.style.setProperty("--casino-header-height", `${appHeader.getBoundingClientRect().height}px`);
     root.style.setProperty("--casino-bottom-height", `${bottomNav?.getBoundingClientRect().height || 0}px`);
+    sizeCenteredGame();
   });
   if (appHeader) headerSize.observe(appHeader);
   if (bottomNav) headerSize.observe(bottomNav);
@@ -100,6 +101,7 @@ export async function casinoPage(ctx) {
   const toolbar = root.querySelector(".casino-toolbar");
   const toolbarSize = new ResizeObserver(() => {
     root.style.setProperty("--casino-toolbar-height", `${toolbar.getBoundingClientRect().height}px`);
+    sizeCenteredGame();
   });
   toolbarSize.observe(toolbar);
   ctx.cleanup(() => toolbarSize.disconnect());
@@ -154,16 +156,30 @@ export async function casinoPage(ctx) {
       button.onclick = () => { if (canCloseGame()) window.history.back(); };
     });
   }
+  function sizeCenteredGame() {
+    if (!root.classList.contains("is-centered")) return;
+    const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
+    const bottom = bottomNav && getComputedStyle(bottomNav).display !== "none" ? bottomNav.getBoundingClientRect().height : 0;
+    const height = `${Math.max(160, innerHeight - header - bottom - 16)}px`;
+    if (root.style.getPropertyValue("--casino-fit-height") !== height) root.style.setProperty("--casino-fit-height", height);
+  }
+  window.addEventListener("resize", sizeCenteredGame);
+  ctx.cleanup(() => window.removeEventListener("resize", sizeCenteredGame));
   root.querySelector("[data-center-game]").onclick = () => {
     const game = playArea.querySelector(".casino-slot-mount");
     if (!game) return;
-    const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
-    const nav = document.querySelector(".bottom-nav");
-    const bottom = nav && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect().height : 0;
-    const available = innerHeight - header - bottom;
-    const box = game.getBoundingClientRect();
-    const top = scrollY + box.top - header - Math.max(0, (available - box.height) / 2);
-    window.scrollTo({ top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    if (game.classList.contains("casino-blackjack-mount")) {
+      root.classList.add("is-centered");
+      sizeCenteredGame();
+    }
+    requestAnimationFrame(() => {
+      const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
+      const bottom = bottomNav && getComputedStyle(bottomNav).display !== "none" ? bottomNav.getBoundingClientRect().height : 0;
+      const available = innerHeight - header - bottom;
+      const box = game.getBoundingClientRect();
+      const top = scrollY + box.top - header - Math.max(0, (available - box.height) / 2);
+      window.scrollTo({ top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    });
   };
   async function openSlot(button, game) {
     // Let pre-multiplayer rounds finish through their original wallet adapter.
@@ -193,7 +209,7 @@ export async function casinoPage(ctx) {
     button.setAttribute("aria-busy", "true");
     showGame(button);
     bindClose();
-    root.querySelector(".casino-game-nav h2").textContent = game.title;
+    root.querySelector(".casino-game-nav h2").innerHTML = game.id === "cardoso-road" ? '<span class="cardoso-toolbar-logo">CARDOSO<em>ROAD</em></span>' : esc(game.title);
     root.classList.toggle("is-table", game.category === "tables" || game.id === "rift" || game.id === "cardoso-road");
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
@@ -210,7 +226,7 @@ export async function casinoPage(ctx) {
         streamId = crypto.randomUUID();
         localStorage.setItem(key, streamId);
       }
-      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}"></div>`;
+      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}${game.id === "blackjack" ? " casino-blackjack-mount" : ""}"></div>`;
       if (game.id === "blackjack" && !legacyBlackjack) {
         slot = sdk.mountBlackjackMultiplayer(playArea.querySelector(".casino-slot-mount"), {
           uid,

@@ -1,6 +1,6 @@
 // Every eligible cell is an independent draw from fixed per-reel weights.
 // No target outcomes, quotas, retries or player-dependent adjustments.
-export const MATH_VERSION='rift-4.15';
+export const MATH_VERSION='rift-4.16';
 const weights=[16,15,14,13,12,10,7.5,5.5,4,3];
 const reels=bias=>Array.from({length:6},(_,c)=>weights.map((w,i)=>w*(i===c?bias:1)));
 const reelWeights=reels(10);

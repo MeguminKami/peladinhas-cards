@@ -1,6 +1,6 @@
 import { SHOP_CARDS, buyShopCard } from "../../js/casino-shop-catalog.js";
 import { cardWeek } from "../../js/card-week.js";
-import { newCasinoWallet, settleCasinoSlot } from "../../js/casino-economy.js";
+import { currentCasinoWallet, newCasinoWallet, settleCasinoSlot } from "../../js/casino-economy.js";
 import { applyCasinoSession } from "../../js/casino-session-model.js";
 export async function casinoFixture(name, input) {
   window.__casinoCalls ||= [];
@@ -15,12 +15,13 @@ export async function casinoFixture(name, input) {
     rounds: {},
     sessions: {},
   };
+  state.wallet = currentCasinoWallet(state.wallet);
   if (name === "getCasinoShop" || name === "buyCasinoCard") {
     const league = window.__testState;
     const uid = "pedro";
     const user = league.users.find(u=>u.uid===uid);
     const weekly = (league.weeklyCards || []).find(row=>row.uid===uid);
-    const player = {...user, ovr:weekly?.ovr || 0, stats:weekly?.stats || {}, hasCard:!!weekly && weekly.weekId===cardWeek().weekId && weekly.hasCard!==false};
+    const player = {...user, photoURL:weekly?.cardPhoto?.photoURL || user.photoURL, photoDesign:weekly?.cardPhoto?.design || null, permanentStats:weekly?.permanentStats ?? weekly?.stats ?? null, previousStats:weekly?.previousStats ?? null, ovrDelta:weekly?.ovrDelta ?? null, primaryPosition:weekly?.primaryPosition || user.primaryPosition, ovr:weekly?.ovr || 0, stats:weekly?.stats || {}, hasCard:!!weekly && weekly.weekId===cardWeek().weekId && weekly.hasCard!==false};
     league.cardCollections ||= [];
     let collection = league.cardCollections.find(c=>(c.uid||c.id)===uid);
     if(!collection){collection={uid,awards:[]};league.cardCollections.push(collection);}
@@ -58,6 +59,11 @@ export async function casinoFixture(name, input) {
     }
     return { data: structuredClone(result.response) };
   }
+  if (name === "getCasinoPlayerBalance") {
+    const grants = JSON.parse(sessionStorage.getItem(`casino-fixture-grants:${input.uid}`) || "{}");
+    const balance = (window.__casinoPlayerBalances?.[input.uid] ?? 10000) + Object.values(grants).reduce((sum, amount) => sum + amount, 0);
+    return {data:{uid:input.uid,balance}};
+  }
   if (name === "grantCasinoCoins") {
     const grantKey = `casino-fixture-grants:${input.uid}`;
     const grants = JSON.parse(sessionStorage.getItem(grantKey) || "{}");
@@ -65,7 +71,7 @@ export async function casinoFixture(name, input) {
       grants[input.id] = input.amount;
       sessionStorage.setItem(grantKey, JSON.stringify(grants));
     }
-    return { data: { balance: 10000 + Object.values(grants).reduce((sum, amount) => sum + amount, 0) } };
+    return { data: { balance: (window.__casinoPlayerBalances?.[input.uid] ?? 10000) + Object.values(grants).reduce((sum, amount) => sum + amount, 0) } };
   }
   if (name === "settleCasinoSlot") {
     if (!state.operations[input.id]) {

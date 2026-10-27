@@ -1,5 +1,6 @@
 import "./main"; // Reuse the established table, typography, chips and interaction styles.
 import "./multiplayer.css";
+import { patchHTML } from "./live-dom";
 import { BlackjackScene } from "./scene";
 import { cardHTML, avatarHTML } from "./cards";
 import { chipSelectorHTML } from "./chip-selector";
@@ -47,6 +48,12 @@ const escape = (s: string) =>
         c
       ]!,
   );
+const actionIcons: Record<string,string> = {
+ undo:'M8 4 3 9l5 5M3 9h11a6 6 0 0 1 0 12',clear:'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7',
+ repeat:'M20 4v6h-6M4 20v-6h6M5 9a7 7 0 0 1 12-4l3 5M4 14l3 5a7 7 0 0 0 12-4',
+ 'double-bet':'M4 6h7v12H4ZM14 6h6v12h-6M7 3v3m10-3v3',bet:'m5 12 4 4L19 6',hit:'M12 3v18M3 12h18',stand:'M5 5h14v14H5Z',double:'M4 6h7v12H4ZM14 6h6v12h-6',split:'M12 21V11M12 11 5 4M12 11l7-7M5 10V4h6m2 0h6v6',insure:'M12 2 3 6v7l9 9 9-9V6Z',decline:'m6 6 12 12M6 18 18 6',skip:'m8 5 10 7-10 7Z'
+};
+const actionIcon=(name:string)=>`<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${actionIcons[name]||actionIcons.bet}"/></svg>`;
 const shortName = (name: string) =>
   name.length > 14 ? name.split(/\s+/)[0] : name;
 
@@ -65,11 +72,12 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     abort = new AbortController(),
     offset = 0;
   const drafts = Array(5).fill(0);
+  const previousBets = Array(5).fill(0);
   const undo = Array.from({ length: 5 }, () => [] as number[]);
   const audio = new AudioBus("atelier:blackjack:audio");
   root.innerHTML = `<main class="shell blackjack-shell multiplayer-shell"><header class="topbar"><div class="brand">PELADINHAS<small>MESA · <span data-people>0/5</span></small></div><div class="top-actions"><button data-action="rules">Regras</button><button data-action="settings" aria-label="Som e definições">♫</button></div></header><div class="stage"><span class="stage-label">BLACKJACK · 4 BARALHOS · S17</span><div class="dealer-hud"></div><section class="seats" aria-label="Jogadores à mesa"></section></div><section class="table-floor"><div class="decision-dock"></div></section><section class="control-bar"><div class="betting-wallet"><div class="chips" aria-label="Selecionar ficha"></div><div class="wallet"><small>O TEU SALDO · DJC</small><strong data-balance>—</strong></div></div><div class="stat"><small>A TUA APOSTA</small><strong data-bet>0,00</strong></div></section><div class="status" role="status" aria-live="polite"></div></main>`;
   const q = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
-  const scene = new BlackjackScene(q(".stage"));
+  const scene = new BlackjackScene(q(".stage"), true);
   const session = (round: Round | null): Session => ({
     ...fresh(),
     balance: view?.balance || 0,
@@ -111,14 +119,14 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
         0,
       ),
     );
-    q(".chips").innerHTML = chipSelectorHTML(chip);
+    patchHTML(q(".chips"), chipSelectorHTML(chip));
     q(".chips")
       .querySelectorAll<HTMLButtonElement>("button")
       .forEach((b) => (b.disabled = locked || !!t.round || !!p?.bet));
-    q(".dealer-hud").innerHTML = r
+    patchHTML(q(".dealer-hud"), r
       ? `<small>DEALER</small><div class="cards">${r.dealer.map((c, i) => cardHTML(i === 1 && !r.reveal ? null : c)).join("")}</div><output class="dealer-total" data-dealer-total aria-label="Total do dealer">${r.reveal ? total(r.dealer).value : r.dealer[0] ? total([r.dealer[0]]).value + " + ?" : "A distribuir"}</output>`
-      : '<small>DEALER</small><div class="rules-note">Blackjack paga 3:2 · Para em 17</div>';
-    q(".seats").innerHTML = Array.from({ length: 5 }, (_, i) => {
+      : '<small>DEALER</small>');
+    patchHTML(q(".seats"), Array.from({ length: 5 }, (_, i) => {
       const owner = t.players.find((p) => p.seat === i + 1),
         seat = r?.seats.find((s) => s.number === i + 1),
         active = seat?.hands.some((h) => h.id === r?.active),
@@ -127,8 +135,8 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
         seat?.hands.find((h) => h.id === r?.active) ||
         seat?.hands.find((h) => !h.done) ||
         seat?.hands.at(-1);
-      return `<article class="seat ${owner ? "occupied" : ""} ${own && owner.seat === p?.seat ? "viewed" : ""} ${active ? "active" : ""} ${!r ? "betting-seat" : ""}" aria-label="${owner ? escape(owner.name) : "Lugar livre"}" style="--seat-x:${[18, 34, 50, 66, 82][i]}%;--seat-y:${[48, 64, 70, 64, 48][i]}%;--seat-mobile-y:${[47, 59, 63, 59, 47][i]}%"><div class="table-hands ${seat && seat.hands.length > 1 ? "split-hands" : ""}">${seat?.hands.map((h, j) => `<div class="hand ${[h.id === r?.active ? "active" : "", h === shown ? "focused-hand" : ""].join(" ")} ${seat.hands.length > 1 && h !== shown ? "ghost-hand" : ""}" aria-label="Mão ${j + 1}"><div class="cards">${h.cards.map(cardHTML).join("")}</div><span class="hand-total">${total(h.cards).value}</span><span class="chip-anchor hand-chips" data-chip-hand="${h.id}" aria-hidden="true"></span>${h.result ? `<span class="hand-result">${escape(h.result)}</span>` : ""}${seat.hands.length > 1 ? `<span class="split-label">M${j + 1} · ${total(h.cards).value}</span>` : ""}</div>`).join("") || ""}</div><div class="seat-person">${!owner || own ? `<button class="avatar" data-action="${owner ? `focus-${i + 1}` : `occupy-${i + 1}`}" aria-label="${owner ? `Selecionar o teu lugar ${i + 1}` : `Ocupar lugar ${i + 1}`}" aria-pressed="${own && owner.seat === p?.seat}" ${locked ? "disabled" : ""}>${owner ? avatarHTML(i) : '<span class="empty-avatar">+</span>'}</button>` : `<div class="avatar">${avatarHTML(i)}</div>`}${active ? `<span class="turn-indicator">${own ? "A TUA VEZ" : "A JOGAR"}</span>` : ""}<span class="seat-name" title="${escape(owner?.name || "Lugar livre")}">${owner ? escape(shortName(owner.name)) + (own ? " · Tu" : "") : "Livre"}</span></div><div class="table-stake">${!t.round && own ? `<button class="wager-zone" data-action="add-${i + 1}" aria-label="Adicionar ficha à aposta do lugar ${i + 1}" ${locked || owner?.bet ? "disabled" : ""}><span class="chip-anchor" data-seat-chips="${i + 1}" aria-hidden="true"></span><strong>${money(owner?.bet || (owner?.seat === p?.seat ? bet : drafts[i]))}</strong><small>${owner?.bet ? "Pronto" : "Apostar"}</small></button>` : owner?.bet ? `<strong>${money(owner.bet)}</strong>` : ""}</div></article>`;
-    }).join("");
+      return `<article data-seat="${i+1}" class="seat ${owner ? "occupied" : ""} ${own && owner.seat === p?.seat ? "viewed" : ""} ${active ? "active" : ""} ${!r ? "betting-seat" : ""}" aria-label="${owner ? escape(owner.name) : "Lugar livre"}" style="--seat-x:${[18, 34, 50, 66, 82][i]}%;--seat-y:${[48, 64, 70, 64, 48][i]}%;--seat-mobile-y:${[47, 59, 63, 59, 47][i]}%"><div class="table-hands ${seat && seat.hands.length > 1 ? "split-hands" : ""}">${seat?.hands.map((h, j) => `<div data-hand="${h.id}" class="hand ${[h.id === r?.active ? "active" : "", h === shown ? "focused-hand" : ""].join(" ")} ${seat.hands.length > 1 && h !== shown ? "ghost-hand" : ""}" aria-label="Mão ${j + 1}"><div class="cards">${h.cards.map(cardHTML).join("")}</div><span class="hand-total">${total(h.cards).value}</span><span class="chip-anchor hand-chips" data-chip-hand="${h.id}" aria-hidden="true"></span>${h.result ? `<span class="hand-result">${escape(h.result)}</span>` : ""}${seat.hands.length > 1 ? `<span class="split-label">M${j + 1} · ${total(h.cards).value}</span>` : ""}</div>`).join("") || ""}</div><div class="seat-person">${!owner || own ? `<button class="avatar" data-action="${owner ? `focus-${i + 1}` : `occupy-${i + 1}`}" aria-label="${owner ? `Selecionar o teu lugar ${i + 1}` : `Ocupar lugar ${i + 1}`}" aria-pressed="${own && owner.seat === p?.seat}" ${locked ? "disabled" : ""}>${owner ? avatarHTML(i) : '<span class="empty-avatar">+</span>'}</button>` : `<div class="avatar">${avatarHTML(i)}</div>`}${active ? `<span class="turn-indicator">${own ? "A TUA VEZ" : "A JOGAR"}</span>` : ""}<span class="seat-name" title="${escape(owner?.name || "Lugar livre")}">${owner ? escape(shortName(owner.name)) + (own ? " · Tu" : "") : "Livre"}</span></div><div class="table-stake">${!t.round && own ? `<button class="wager-zone" data-action="add-${i + 1}" aria-label="Adicionar ficha à aposta do lugar ${i + 1}" ${locked || owner?.bet ? "disabled" : ""}><span class="chip-anchor" data-seat-chips="${i + 1}" aria-hidden="true"></span><strong>${money(owner?.bet || (owner?.seat === p?.seat ? bet : drafts[i]))}</strong><small>${owner?.bet ? "Pronto" : "Apostar"}</small></button>` : owner?.bet ? `<strong>${money(owner.bet)}</strong>` : ""}</div></article>`;
+    }).join(""));
     const activeOwner = t.players.find((p) =>
       t.round?.seats
         .find((s) => s.number === p.seat)
@@ -139,14 +147,14 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
         items
           .map(
             ([action, label, disabled]) =>
-              `<button data-action="${action}" ${(action === "retry" ? working : locked) || disabled ? "disabled" : ""}>${label}</button>`,
+              `<button data-action="${action}" ${locked || disabled ? "disabled" : ""}>${actionIcon(action)}<span>${label}</span></button>`,
           )
           .join("");
     let caption = "",
       controls = "";
     if (view.pending) {
       caption = "A confirmar a tua jogada";
-      controls = buttons([["retry", "Recuperar pedido"]]);
+      controls = "";
     } else if (t.round && presenting) {
       caption = "A distribuir as cartas…";
       controls = buttons([["skip", "Ver mesa"]]);
@@ -157,6 +165,8 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       controls = buttons([
         ["undo", "Reset", !p || !undo[p.seat - 1].length || !!p?.bet],
         ["clear", "Limpar", !bet || !!p?.bet],
+        ["repeat", "Repetir", !p || !previousBets[p.seat - 1] || !!p?.bet || previousBets[p.seat-1] > view.balance],
+        ["double-bet", "Dobrar aposta", !p || !previousBets[p.seat-1] || !!p?.bet || previousBets[p.seat-1]*2 > Math.min(view.balance,100000)],
         ["bet", p?.bet ? "Pronto ✓" : "Pronto", !bet || !!p?.bet],
       ]);
     } else if (t.round.phase === "insurance") {
@@ -199,13 +209,12 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       ]);
     } else
       caption = activeOwner
-        ? `${activeOwner.name} está a jogar. Acompanha a mesa.`
+        ? `${shortName(activeOwner.name)} está a jogar. Acompanha a mesa.`
         : "Entras na próxima ronda.";
-    q(".decision-dock").innerHTML =
-      `<div class="decision-caption"><strong>${escape(caption)}</strong><span data-countdown></span></div><div class="controls">${controls}</div>`;
-    q(".status").textContent =
-      message ||
-      "Cada pessoa joga contra o dealer. A sala fecha após 1 min sem jogo.";
+    patchHTML(q(".decision-dock"),
+      `<div class="decision-caption"><strong>${escape(caption)}</strong><span data-countdown></span></div><div class="controls">${controls}</div>`);
+    q(".status").textContent = message;
+    q(".status").tabIndex = message ? 0 : -1;
     scene.chipTable.sync(
       session(r),
       t.players.reduce((bets, p) => {
@@ -252,9 +261,11 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       t.round &&
       t.round.phase !== "summary" &&
       t.round.seats.some((s) => owned().some((p) => p.seat === s.number));
-    if (p && !playing && p.activeUntil - now < 25000 && !message)
+    if (p && !playing && p.activeUntil - now < 25000 && !message) {
+      q(".status").tabIndex = 0;
       q(".status").textContent =
         "Vais sair por inatividade. Participa na próxima ronda para continuar.";
+    }
   }
   async function receive(next: View) {
     if (destroyed) return;
@@ -270,6 +281,8 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       return;
     }
     lastRevision = view.table.revision;
+    // Presence/balance metadata must not replay or cancel a card in flight.
+    if (JSON.stringify(view.table.round) === JSON.stringify(lastRound)) { render(); return; }
     abort.abort();
     abort = new AbortController();
     const signal = abort.signal;
@@ -315,20 +328,20 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
           const animation = card.animate(
             step.type === "reveal"
               ? [
-                  { transform: "scaleX(.05)", opacity: 0.5 },
-                  { transform: "scaleX(1)", opacity: 1 },
+                  { transform: "perspective(800px) rotateY(-90deg)", opacity: 1 },
+                  { transform: "perspective(800px) rotateY(0)", opacity: 1 },
                 ]
               : [
                   {
                     transform: `translate(${stage.left + source.x - rect.left - rect.width / 2}px,${stage.top + source.y - rect.top - rect.height / 2}px) rotate(-12deg) scale(.7)`,
-                    opacity: 0.2,
+                    opacity: .9,
                   },
                   {
                     transform: "translate(0,0) rotate(0) scale(1)",
                     opacity: 1,
                   },
                 ],
-            { duration: 320, easing: "cubic-bezier(.2,.65,.3,1)" },
+            { duration: step.type === "reveal" ? 300 : 340, easing: "cubic-bezier(.16,.7,.25,1)" },
           );
           const cancel = () => animation.cancel();
           signal.addEventListener("abort", cancel, { once: true });
@@ -341,7 +354,7 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
         }
       }
       await pausePresentation(
-        audio.settings.reduced ? 0 : step.terminal ? 300 : 160,
+        audio.settings.reduced ? 0 : step.terminal ? 180 : 40,
         signal,
       );
     }
@@ -365,11 +378,23 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       await scene.chipTable.settle(round, audio.settings.reduced, signal);
     }
   }
+  let queued: View | undefined, receiving = false;
+  async function drain() {
+    if (receiving) return;
+    receiving = true;
+    try {
+      while (queued && !destroyed) {
+        const next = queued; queued = undefined;
+        await receive(next);
+      }
+    } catch (e) {
+      message = e instanceof Error ? e.message : String(e); render();
+    } finally { receiving = false; }
+  }
   const unsubscribe = connection.subscribe((next) => {
-    void receive(next).catch((e) => {
-      message = e.message;
-      render();
-    });
+    if(!view){try {const saved=JSON.parse(localStorage.getItem(`atelier:blackjack:previous:${next.uid}`)||"[]");for(let i=0;i<5;i++)if(Number.isSafeInteger(saved[i])&&saved[i]>0&&saved[i]<=100000)previousBets[i]=saved[i];}catch{}}
+    queued = next;
+    void drain();
   });
   async function action(name: string) {
     audio.unlock();
@@ -415,13 +440,18 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       return;
     }
     if (working) return;
-    if (["add", "undo", "clear"].includes(name)) {
+    if (["add", "undo", "clear", "repeat", "double-bet"].includes(name)) {
       if (view.table?.round || mine()?.bet || view.pending) return;
       if (name === "add") {
         if (bet + chip > view.balance || bet + chip > 100000)
           throw Error("Saldo ou limite de aposta excedido.");
         undo[mine()!.seat - 1].push(bet);
         bet += chip;
+      }
+      if (name === "repeat" || name === "double-bet") {
+        const amount=previousBets[mine()!.seat-1]*(name==="double-bet"?2:1);
+        if (!amount || amount>view.balance || amount>100000) throw Error("Saldo ou limite de aposta excedido.");
+        undo[mine()!.seat-1].push(bet);bet=amount;
       }
       if (name === "undo") bet = undo[mine()!.seat - 1].pop() ?? bet;
       if (name === "clear") {
@@ -439,8 +469,9 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     message = "";
     render();
     try {
+      const confirmedBet=bet, confirmedSeat=mine()?.seat;
       await connection.command(
-        name === "retry" ? undefined : name,
+        name,
         name === "bet" ? bet : undefined,
         ["hit", "stand", "double", "split"].includes(name)
           ? view.table?.round?.seats.find((s) =>
@@ -448,6 +479,10 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
             )?.number
           : mine()?.seat,
       );
+      if(name==="bet" && confirmedSeat) {
+        previousBets[confirmedSeat-1]=confirmedBet;
+        try { localStorage.setItem(`atelier:blackjack:previous:${view.uid}`,JSON.stringify(previousBets)); } catch {}
+      }
     } finally {
       working = false;
       render();

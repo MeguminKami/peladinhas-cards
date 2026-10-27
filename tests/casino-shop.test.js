@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { card } from "../js/cards.js";
+import { ATTRIBUTES, flag } from "../js/utils.js";
+import { cardStatsMarkup } from "../js/card-player-content.js";
 import {
   SHOP_CARDS,
   SHOP_ARCHIVED_CARDS,
@@ -10,6 +13,31 @@ import {
   CASINO_SHOP_ART_IDS,
   renderCasinoShopCard,
 } from "../js/casino-shop-art.js";
+test("every shop finish shares official values, eight attributes, country, trends and playstyles", () => {
+  const player = {
+    displayName: "Jogador", name: "Jogador", ovr: 87, primaryPosition: "GR", countryCode: "PT",
+    stats: Object.fromEntries(ATTRIBUTES.map(([key], i) => [key, 93 - i])),
+    previousStats: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 75])),
+    ovrDelta: 2, photoURL: "./assets/default-avatar.svg",
+    photoDesign: { photoX: -50, photoY: 100, photoWidth: 160, photoHeight: 120, photoScale: 200 },
+  };
+  const stats = cardStatsMarkup(player);
+  assert.ok(card(player, { preview: true, theme: "gold-common" }).includes(stats));
+  for (const edition of SHOP_CARDS) {
+    const markup = renderCasinoShopCard(edition, player);
+    assert.ok(markup.includes(stats), edition.id);
+    assert.ok(markup.includes(flag("PT")), edition.id);
+    assert.ok(markup.includes("87 OVR, GR"), edition.id);
+    assert.equal((markup.match(/data-playstyle=/g) || []).length, 3);
+    assert.ok(markup.includes('class="sca-photo-frame"'));
+    assert.ok(!markup.includes("left:-50%"));
+    assert.ok(!markup.includes("width:160%"));
+    const missing = renderCasinoShopCard(edition, { ...player, hasCard: false });
+    assert.ok(missing.includes(cardStatsMarkup({ ...player, hasCard: false })));
+    assert.ok(!missing.includes("data-playstyle="));
+  }
+  assert.ok(renderCasinoShopCard(SHOP_CARDS[0], { ovr: 80 }).includes('<b>0</b><small>GR</small>'));
+});
 test("catalogue starts at 1000; every edition has an OVR requirement", () => {
   assert.equal(Math.min(...SHOP_CARDS.map((card) => card.price)), 1000);
   assert.equal(
@@ -101,7 +129,7 @@ test("card preview escapes identity and repeated previews have unique paint ids"
     position: "<script>",
   });
   const second = renderCasinoShopCard(card);
-  assert.ok(!first.includes("<img"));
+  assert.ok(!first.includes("<img src=x"));
   assert.ok(first.includes("&lt;img"));
   assert.notEqual(
     first.match(/id="([^"]+)-metal"/)[1],

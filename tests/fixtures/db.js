@@ -182,7 +182,7 @@ export const callAdmin = async (name, data) => {
     if(!response.ok){const error=new Error(body.error);error.code='functions/failed-precondition';throw error;}
     return {data:body};
   }
-  if(name === 'getCasinoShop' || name === 'buyCasinoCard' || name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession' || name === 'grantCasinoCoins') {
+  if(name === 'getCasinoPlayerBalance' || name === 'getCasinoShop' || name === 'buyCasinoCard' || name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession' || name === 'grantCasinoCoins') {
     const {casinoFixture}=await import('../tests/fixtures/casino.js');
     return casinoFixture(name,data);
   }

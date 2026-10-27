@@ -1,3 +1,9 @@
+.blackjack-shell.multiplayer-shell .table-floor {
+  height: auto;
+  min-height: 104px;
+  margin-top: 0;
+  padding: 8px;
+}
 .multiplayer-shell .decision-dock {
   display: flex !important;
   flex-wrap: wrap;
@@ -27,12 +33,24 @@
 .multiplayer-shell .controls {
   display: flex;
   gap: 8px;
+  flex: 1 1 600px;
+  min-width: 0;
   flex-wrap: wrap;
   justify-content: center;
 }
 .multiplayer-shell .controls button {
-  min-width: 100px;
-  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  flex: 1 1 104px; min-width: 100px; min-height: 54px; padding: 10px 12px;
+  font-family: 'Atelier Manrope', system-ui, sans-serif; font-size: 14px; font-weight: 650; line-height: 1.25;
+  transition: filter 160ms, transform 160ms;
+}
+.multiplayer-shell .controls:has([data-action="split"]) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.multiplayer-shell .controls:has([data-action="split"]) button {
+  min-width: 0;
+  padding-inline: 8px;
 }
 .multiplayer-shell .controls [data-action="bet"] {
   background: linear-gradient(145deg, #276d4a, #153d2d);
@@ -162,13 +180,15 @@
   .multiplayer-shell .controls {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .multiplayer-shell .controls button {
     min-width: 0;
     padding: 10px 6px;
     font-size: 12px;
   }
+  .multiplayer-shell .controls [data-action="bet"] { grid-column: 1 / -1; }
+  .multiplayer-shell .controls:has([data-action="split"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .multiplayer-shell .seat-name {
     max-width: 62px;
     font-size: 9px;
@@ -194,3 +214,13 @@
     scroll-behavior: auto !important;
   }
 }
+
+.multiplayer-shell .action-icon { width: 19px; height: 19px; flex: 0 0 19px; }
+.multiplayer-shell .controls [data-action="repeat"] { background: linear-gradient(145deg,#286b75,#163c48); border-color:#8ce4e6; color:#eaffff; }
+.multiplayer-shell .controls :is([data-action="double-bet"],[data-action="double"]) { background:linear-gradient(145deg,#654293,#362450); border-color:#d6b3ff; color:#faf0ff; }
+.multiplayer-shell .controls [data-action="hit"] { background:linear-gradient(145deg,#287453,#173b30); border-color:#9ce7be; color:#eefff5; }
+.multiplayer-shell .controls :is([data-action="stand"],[data-action="decline"]) { background:linear-gradient(145deg,#8a394b,#48202c); border-color:#f2a6b6; color:#fff1f5; }
+.multiplayer-shell .controls :is([data-action="split"],[data-action="insure"]) { background:linear-gradient(145deg,#856125,#493816); border-color:#f2d399; color:#fff7df; }
+.multiplayer-shell .controls button:active:not(:disabled) { transform:translateY(1px); }
+.multiplayer-shell .controls button:focus-visible { outline:3px solid #fff0b6; outline-offset:3px; }
+@media(prefers-reduced-motion:reduce){.multiplayer-shell .controls button{transition:none;}}

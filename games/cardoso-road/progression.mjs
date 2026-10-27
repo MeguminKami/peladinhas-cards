@@ -1,6 +1,6 @@
 // Visual coordinates: 0 is the safe starting area; prizes occupy 1 through 10.
 export const stagePosition=stage=>stage+1;
-export const visualDestination=round=>round?(round.step+(round.status==='lost'?1:0)):0;
+export const visualDestination=round=>round&&round.status!=='paid'?(round.step+(round.status==='lost'?1:0)):0;
 export const TRAVEL_MS=420;
 export const FIGHT_MS=300;
 export function progressionPose({round,event='idle',age=Infinity,from=visualDestination(round),reduced=false}){

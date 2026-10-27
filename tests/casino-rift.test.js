@@ -108,3 +108,20 @@ test("Rift resumes a 4.13 bonus with its original price and feature profile", as
   assert.equal(next.balance, balance + next.credit);
   assert.equal(next.result.state.history[0].mathVersion, "rift-4.13");
 });
+
+test("every power preserves Wild cells, including Rift Link in each bonus", async () => {
+ const {play}=await import('../games/rift-core-overdrive/engine.js');
+ let links=0,checked=0;
+ for(let seed=1;seed<=80;seed++){
+  const state=fresh(seed);state.balance=1000000;
+  for(let spin=0;spin<20;spin++){
+   state.pending=null;
+   const record=play(state,{buy:state.round?null:['core','rift','overdrive'][seed%3],capture:true});
+   for(const event of record.events||[])if(event.type==='power'&&event.before&&event.grid){
+    if(event.name==='RIFT LINK')links++;
+    for(let c=0;c<6;c++)for(let r=0;r<5;r++)if(event.before[c][r].s===10){assert.equal(event.grid[c][r].s,10,event.name);checked++;}
+   }
+  }
+ }
+ assert.ok(links>0);assert.ok(checked>0);
+});

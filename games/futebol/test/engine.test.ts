@@ -157,3 +157,11 @@ test('CLI valida argumentos e mostra tabuleiro manual',()=>{
   for(const args of [['simulate','--rounds','1.5'],['simulate','--bet','0.21'],['buy','--mode','base'],['spin','--mode','superior'],['spin','--unknown','x']]){const r=spawnSync(process.execPath,['src/cli.ts',...args],{encoding:'utf8'});assert.equal(r.status,1);assert.match(r.stderr,/Erro:/);}
   const r=spawnSync(process.execPath,['src/cli.ts','evaluate','--board','examples/board.json','--seed','test'],{encoding:'utf8'});assert.equal(r.status,0);assert.match(r.stdout,/Inicial/);assert.match(r.stdout,/Final/);assert.match(r.stdout,/depuração/);
 });
+
+test('sticky: aumento relativo de 50% fixa Wild abaixo de 18% e não no limite',()=>{
+ assert.equal(config.sticky,18);
+ const board=Array(24).fill('N1') as Board;board[7]='W';
+ const below=spin(start('superior'),20,{next:()=>.17999},config,true,board);
+ const boundary=spin(start('superior'),20,{next:()=>.18},config,true,board);
+ assert.deepEqual(below.next.sticky,[7]);assert.deepEqual(boundary.next.sticky,[]);
+});

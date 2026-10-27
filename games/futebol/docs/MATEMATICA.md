@@ -152,7 +152,7 @@ Vários wilds P1 numa linha multiplicam os seus fatores, limitados a ×8 por lin
 
 - 10 free spins, aposta de referência fixa.
 - Pesos da coluna superior e roubo a 100% quando existe premium elegível.
-- Cada wild sorteado diretamente tem 12% de chance de ficar sticky até terminar o bónus.
+- Cada wild sorteado diretamente tem 18% de chance de ficar sticky até terminar o bónus.
 - A decisão de sticky ocorre uma única vez quando esse wild nasce, após o spin. Não se volta a tentar em cada spin se falhar.
 - Sticky conserva a posição e a função de substituição; poderes roubados e multiplicadores duram apenas o spin em que foram obtidos.
 - Em cada spin seguinte, o sticky pode roubar novamente a um premium elegível da nova grelha.

@@ -83,6 +83,26 @@ test("shop debit and permanent ownership are atomic and retries never charge twi
   const wallet = (await db.doc(`casinoWallets/${uid}`).get()).data();
   assert.equal(wallet.recent.filter((r) => r.kind === "shop").length, 1);
 });
+
+test("shop returns the weekly identity, portrait, all attributes and permanent weekly comparison", async () => {
+  const uid = await seed();
+  await db.doc(`users/${uid}`).update({ countryCode: "PT", primaryPosition: "ALA" });
+  const stats = { pace: 91, shooting: 79, passing: 78, dribbling: 77, defending: 76, physical: 75, goalkeeping: 94, stamina: 73 };
+  const cardPhoto = { photoURL: "https://example.com/player.png", design: { focusX: 45, photoScale: 120 } };
+  await db.doc(`weeklyCards/${uid}`).update({ stats, primaryPosition: "GR", cardPhoto, permanentStats: stats, permanentOvr: 80 });
+  const previousWeek = cardWeek(new Date(+cardWeek().opensAt - 1)).weekId;
+  await db.doc(`users/${uid}/cardHistory/${previousWeek}`).set({ uid, weekId: previousWeek, stats, permanentStats: { ...stats, pace: 89 }, permanentOvr: 78, ovr: 78 });
+  const { player } = await getCasinoShop.run(req(uid));
+  assert.equal(player.countryCode, "PT");
+  assert.equal(player.primaryPosition, "GR");
+  assert.deepEqual(player.stats, stats);
+  assert.deepEqual(player.photoDesign, cardPhoto.design);
+  assert.equal(player.photoURL, cardPhoto.photoURL);
+  assert.equal(player.previousStats.pace, 89);
+  assert.equal(player.ovrDelta, 2);
+  const bought = await buyCasinoCard.run(req(uid, { cardId: "football-p1" }));
+  assert.deepEqual(bought.player, player);
+});
 test("server rejects forged prices, unavailable editions, missing official card, OVR and balance failures", async () => {
   const uid = await seed(69);
   await assert.rejects(

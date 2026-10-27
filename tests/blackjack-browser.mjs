@@ -89,7 +89,10 @@ try {
   await frame.locator("[data-people]").filter({ hasText: "5/5" }).waitFor();
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
+    await page.locator('[data-center-game]').click();
     await page.waitForTimeout(450);
+    assert.ok(await frame.locator('.control-bar').evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight+1), `Chips outside centered frame at ${width}`);
+    assert.ok(await page.locator('iframe').evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight-(getComputedStyle(document.querySelector('.bottom-nav')).display==='none'?0:document.querySelector('.bottom-nav').getBoundingClientRect().height)+1), `Centered frame clipped at ${width}`);
     const box = await frame
       .locator("body")
       .evaluate((el) => ({ width: el.clientWidth, scroll: el.scrollWidth }));
@@ -121,6 +124,11 @@ try {
       fullPage: true,
     });
     results.push({ width, box, buttons });
+    const layout = await frame.locator('.decision-dock').evaluate(dock => {
+      const d=dock.getBoundingClientRect(),f=document.querySelector('.table-floor').getBoundingClientRect(),c=document.querySelector('.control-bar').getBoundingClientRect();
+      return {dock:{top:d.top,bottom:d.bottom},floor:{top:f.top,bottom:f.bottom},control:c.top,style:document.querySelector(".table-floor").getAttribute("style"),layout:getComputedStyle(document.querySelector(".shell")).display,floorHeight:getComputedStyle(document.querySelector(".table-floor")).height};
+    });
+    assert.ok(layout.dock.top>=layout.floor.top-1&&layout.dock.bottom<=layout.floor.bottom+1&&layout.dock.bottom<=layout.control+1, `Action dock overlaps controls at ${width}px: ${JSON.stringify(layout)}`);
   }
   await frame.locator('[data-action^="add-"]').click();
   await frame.locator('[data-action="bet"]').click();
@@ -206,6 +214,15 @@ try {
   });
   await page.reload();
   await page.locator('[data-casino-game="blackjack"]').click({ force: true });
+  await frame.locator('[data-action="repeat"]:enabled').waitFor();
+  await frame.locator('[data-action="repeat"]').click();
+  assert.equal(await frame.locator('[data-bet]').innerText(),'1,00');
+  await frame.locator('[data-action="double-bet"]').click();
+  assert.equal(await frame.locator('[data-bet]').innerText(),'2,00');
+  await frame.locator('[data-action="undo"]').click();
+  assert.equal(await frame.locator('[data-bet]').innerText(),'1,00');
+  await frame.locator('[data-action="clear"]').click();
+  assert.equal(await frame.locator('[data-bet]').innerText(),'0,00');
   await frame.locator('[data-action="occupy-2"]').click();
   await frame.locator("[data-people]").filter({ hasText: "2/5" }).waitFor();
   assert.equal(
@@ -227,8 +244,8 @@ try {
       );
     assert.equal(
       new Set(colors).size,
-      3,
-      "Reset, Limpar and Pronto have distinct colors",
+      5,
+      "Reset, Limpar, Repetir, Dobrar aposta and Pronto have distinct colors",
     );
     await page.screenshot({
       path: `test-results/blackjack/${width}-two-places.png`,

@@ -2,7 +2,7 @@ export type Mode = 'base' | 'normal' | 'superior';
 export const symbols = ['N1','N2','N3','N4','P1','P2','P3','P4','W','S'] as const;
 export type SymbolId = typeof symbols[number];
 export const config = {
-  version: '0.7.0', targetRtpPercent:65,
+  version: '0.7.1', targetRtpPercent:65,
   // Static payout factors in basis points; selected before play, never adaptive.
   payoutScaleBps:{base:27200,normal:117700,superior:30000},
   bets: [20,40,60,80,100,150,200,300,400,500,750,1000],
@@ -14,7 +14,7 @@ export const config = {
   huntScatterWeights:[12500,6000,1395,96,9], huntCostMultiplier:3,
   bonusScatterWeights:[8000,1400,500,100], retriggerFreeSpins:5,
   steal: {base:12,normal:35,superior:100},
-  sticky:12, freeSpins:10, prices:{normal:90,superior:220}, cap:10000,
+  sticky:18, freeSpins:10, prices:{normal:90,superior:220}, cap:10000,
   overloadWeights:[75,23,2], overloadValues:[2,3,5], conversionMin:2,conversionMax:10,conversionWeights:[18,16,14,12,11,9,8,7,5],localCap:8,
 };
 export type Config = typeof config;

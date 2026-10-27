@@ -16,3 +16,10 @@ test('migração 0.3.1 preserva saldo, RNG e global da ronda em curso',()=>{
  assert.equal(next.balance,old.balance);assert.equal(next.rngState,old.rngState);assert.equal(next.counter,old.counter);
  assert.equal(next.history[0].spins.length,1);assert.deepEqual(restoreSession(next),next);
 });
+
+test('restauro 0.7.0 preserva saldo, RNG, escolhas e bónus ao atualizar sticky',()=>{
+ const original=createSession('sticky-070');original.configVersion='0.7.0';
+ const upgraded=restoreSession(original);
+ assert.equal(upgraded.configVersion,'0.7.1');assert.equal(upgraded.balance,original.balance);
+ assert.deepEqual(upgraded.rngState,original.rngState);assert.deepEqual(upgraded.seed,original.seed);
+});

@@ -32,7 +32,7 @@ const transaction = (values = {}) => ({
   credit: 8,
   roundId: 1,
   spin: 1,
-  configVersion: "0.7.0",
+  configVersion: "0.7.1",
   bet: 20,
   mode: "base",
   bonusHunt: false,
@@ -65,8 +65,8 @@ test("local casino checkpoints allow devices, survive lost responses and preserv
     casinoSession.run(request(uid, input)),
     casinoSession.run(request(uid, input)),
   ]);
-  assert.equal(results[0].wallet.balance, 24300);
-  assert.equal(results[1].wallet.balance, 24300);
+  assert.equal(results[0].wallet.balance, 19300);
+  assert.equal(results[1].wallet.balance, 19300);
   await db.doc(`casinoWallets/${uid}`).update({ balance: 26300 });
   const repeated = await casinoSession.run(request(uid, input));
   assert.equal(repeated.wallet.balance, 26300);
@@ -140,7 +140,7 @@ test("admin grants authorize, validate boundaries and replay without duplicates"
  assert.equal((await getCasinoWallet.run(request(uid))).balance,1020000);
  await assert.rejects(grantCasinoCoins.run(request(admin,{...input,amount:1})),e=>e.code==='already-exists');
  assert.equal((await grantCasinoCoins.run(request(admin,{uid:admin,id:randomUUID(),amount:0}))).balance,20000);
- assert.equal((await grantCasinoCoins.run(request(admin,{uid:admin,id:randomUUID(),amount:2500}))).balance,27500);
+ assert.equal((await grantCasinoCoins.run(request(admin,{uid:admin,id:randomUUID(),amount:2500}))).balance,22500);
 });
 test("wallet checks revocation, App Check, read-only mode and its transactional quota", async (t) => {
   const settings = db.doc("settings/system");
@@ -211,7 +211,7 @@ test("football rewards include bench, skip disabled users and survive duplicate/
   await onCasinoGame.run(event({ status: "closed" }));
   for (const id of [uid, bench]) {
     const wallet = await getCasinoWallet.run(request(id));
-    assert.equal(wallet.balance, 31500);
+    assert.equal(wallet.balance, 26500);
     assert.equal(wallet.matches, 1);
   }
   assert.equal((await db.doc(`casinoWallets/${disabled}`).get()).exists, false);

@@ -8,7 +8,7 @@ export interface Session {schema:1;configVersion:string;revision:number;balance:
 export type Command={type:'start';mode:Mode;bonusHunt?:boolean}|{type:'next'};
 export function createSession(seed:string):Session{return {schema:1,configVersion:config.version,revision:0,balance:100000,bet:20,rngState:new SeededRandom(seed).state(),seed:{value:seed,generation:1,renewedAt:null},counter:0,active:null,pendingRetrigger:null,history:[],requestIds:[],topups:0};}
 export function restoreSession(input:Session):Session{
-  if(input?.schema===1&&['0.5.0','0.5.1','0.6.0'].includes(input.configVersion)){
+  if(input?.schema===1&&['0.5.0','0.5.1','0.6.0','0.7.0'].includes(input.configVersion)){
     const s=structuredClone(input);s.configVersion=config.version;s.revision++;
     if(s.active)s.history[0].configVersion=input.configVersion+' → '+config.version;
     validateSession(s);return s;

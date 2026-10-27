@@ -4,6 +4,10 @@ A loja está integrada no site em `#/shop`. O menu superior, o menu Mais no tele
 
 ## Catálogo e propriedade
 
+Todas as edições seguem o conteúdo da carta oficial: país, posição, OVR, oito atributos (VEL, FIN, PAS, DRI, DEF, FIS, GR e RES), evolução permanente e playstyles. As cartas normais e da loja partilham [as regras de conteúdo](../../js/card-player-content.js); só muda o desenho. Valores ausentes não são preenchidos com o OVR.
+
+A fotografia ocupa a mesma área quadrada em todas as edições. O foco, zoom e modo de ajuste guardados são aplicados dentro desse quadrado; as coordenadas e dimensões da carta normal não deslocam a fotografia para fora dele. Sem fotografia, usa-se o avatar padrão. Comprar disponibiliza a edição em **Perfil → Escolher carta**, sem a selecionar automaticamente.
+
 O catálogo estático em [casino-shop-catalog.js](../../js/casino-shop-catalog.js) contém 17 edições: oito metais, cinco jogos e quatro premium do Futebol de Bairro. Consultá-lo e filtrar cartas não faz pedidos à base de dados.
 
 | Edição | OVR mínimo | DJC |
@@ -34,7 +38,7 @@ O catálogo de tipos do ADMIN inclui as 17 edições, com arte, OVR e preço. O 
 
 [getCasinoShop e buyCasinoCard](../../functions/casino-shop.js) usam as mesmas verificações de identidade, conta, revogação de sessão, App Check e modo global da carteira do casino. O servidor determina o preço e confirma a carta oficial da semana em `weeklyCards`, o OVR e o saldo confirmado em `casinoWallets`. Um pedido não pode escolher o preço, o saldo, o jogador ou os atributos.
 
-A compra é uma transação de três documentos: carteira, coleção e carta semanal. Debita `preço × 100` unidades internas, regista um movimento da loja e acrescenta um prémio permanente com origem `casino-shop`. A propriedade é o recibo duradouro: repetir o pedido ou perder a resposta não volta a debitar. Uma falha não deixa débito sem carta nem carta sem débito. Conquistas anteriores e campos da coleção são preservados.
+A compra é uma transação de quatro documentos: carteira, coleção, carta semanal e histórico da semana anterior. Debita `preço × 100` unidades internas, regista um movimento da loja e acrescenta um prémio permanente com origem `casino-shop`. A propriedade é o recibo duradouro: repetir o pedido ou perder a resposta não volta a debitar. Uma falha não deixa débito sem carta nem carta sem débito. Conquistas anteriores e campos da coleção são preservados.
 
 Antes de abrir a loja, a carteira local recupera e confirma lotes pendentes. Não se joga nesta página. Ao sair, o fecho da sessão aplica o delta de jogo, sem substituir o saldo atualizado pela compra. Num dispositivo diferente, o saldo confirmado no servidor continua a ser a autoridade; lotes de jogo ainda não enviados não são saldo disponível da loja.
 
@@ -43,8 +47,8 @@ A GUI apresenta confirmação com o preço, cancelamento, estado de compra, suce
 ## Leituras
 
 - Catálogo, filtros, arte e preços: zero leituras.
-- `getCasinoShop`: três documentos de domínio, mais os controlos de identidade/política da infraestrutura existente.
-- `buyCasinoCard`: três documentos por tentativa da transação, mais os mesmos controlos. Conflitos podem repetir a transação.
+- `getCasinoShop`: quatro documentos de domínio, mais os controlos de identidade/política da infraestrutura existente.
+- `buyCasinoCard`: quatro documentos por tentativa da transação, mais os mesmos controlos. Conflitos podem repetir a transação.
 - Entrada/saída: operações normais de sincronização da carteira local, que leem carteira e sessão. A loja não sincroniza de novo a cada filtro ou pré-visualização.
 - Álbum e detentores: zero consultas adicionais às que a liga já usa para carregar as coleções. A compra invalida a cache local da liga; o próximo destino carrega o estado atualizado. O mecanismo existente de cache do início já acompanha alterações em `cardCollections`.
 

@@ -40,6 +40,7 @@ export function mountCasinoShop(root, options = {}) {
           : "Edições metálicas";
   const preview = (card) =>
     renderCasinoShopCard(card, {
+      ...state.player,
       name: state.player?.displayName || "O TEU JOGADOR",
       ovr: state.player?.ovr ?? card.minOvr,
       position: state.player?.primaryPosition || "MC",

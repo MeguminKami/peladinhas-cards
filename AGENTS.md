@@ -1,5 +1,11 @@
 # Instruções do projeto
 
+## Modelo base obrigatório das cartas
+
+- Antes de criar, redesenhar ou alterar uma carta, ler e seguir o [Modelo base de uma carta](docs/reference/modelo-base-carta.md). Esta regra aplica-se às cartas normais, especiais, de eventos, percursos e loja, incluindo pré-visualizações, catálogo, perfil e histórico.
+- O desenho pode variar; a identidade do jogador, os dados, os atributos, as regras de evolução, os playstyles, a propriedade e a seleção devem seguir o mesmo contrato. Reutilizar os componentes partilhados indicados nesse documento, sem criar regras paralelas por edição.
+- Se uma alteração autorizada mudar esse contrato, atualizar o guia e os consumidores afetados na mesma tarefa. Uma nova aparência não autoriza alterar cálculos ou dados de cartas existentes.
+
 ## Leituras da base de dados e serviços cloud
 
 - Antes de fazer pedidos de leitura à base de dados real, pedir autorização explícita ao utilizador e aguardar a resposta. Explicar por que a leitura é necessária, que dados/coleções serão consultados e a estimativa ou o limite de leituras. Se não for possível estimar, indicar essa incerteza e propor uma consulta limitada.

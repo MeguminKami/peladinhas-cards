@@ -37,7 +37,11 @@ try {
         weekId: cardWeek().weekId,
         hasCard: true,
         ovr: 80,
-        stats: { pace: 80 },
+        primaryPosition: "GR",
+        stats: { pace: 91, shooting: 79, passing: 78, dribbling: 77, defending: 76, physical: 75, goalkeeping: 94, stamina: 73 },
+        previousStats: { pace: 89 },
+        ovrDelta: 1,
+        cardPhoto: { photoURL: "./assets/default-avatar.svg", design: { photoX: -50, photoY: 100, photoWidth: 160, photoHeight: 120, photoScale: 125 } },
       },
     ];
   });
@@ -57,11 +61,19 @@ try {
       throw error;
     });
   assert.equal(await page.locator(".shop-item").count(), 17);
+  assert.equal(await page.locator(".shop-item").first().locator(".sca-stats > span").count(), 8);
+  assert.deepEqual(await page.locator(".shop-item").first().locator(".sca-stats small").allTextContents(), ["VEL", "FIN", "PAS", "DRI", "DEF", "FIS", "GR", "RES"]);
+  assert.match(await page.locator(".shop-item").first().locator(".sca-rating").innerText(), /OVR[\s\S]*GR/);
   assert.equal(await page.locator('#header a[href="#/shop"]').count(), 1);
   assert.ok((await page.locator(".shop-wallet .djabucoin").count()) > 0);
   await mkdir("artifacts/casino-shop", { recursive: true });
   for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
+    for (const photo of await page.locator(".sca-photo-frame").all()) {
+      const bounds = await photo.boundingBox();
+      assert.ok(Math.abs(bounds.width - bounds.height) < 1, `square portrait ${width}`);
+      assert.equal(await photo.evaluate(el => getComputedStyle(el).overflow), "hidden");
+    }
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth,
@@ -69,10 +81,22 @@ try {
       false,
       `overflow ${width}`,
     );
+    await page.locator(".shop-item").first().scrollIntoViewIfNeeded();
     await page.screenshot({
-      path: `artifacts/casino-shop/integrated-${width}.png`,
+      path: `artifacts/casino-shop/square-integrated-${width}.png`,
     });
   }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.locator('[data-filter="games"]').click();
+  await page.locator('[data-preview="roulette-european"]').focus();
+  await page.keyboard.press("Enter");
+  await page.locator(".shop-preview-dialog[open] .sca-photo-frame").waitFor();
+  await page.screenshot({ path: "artifacts/casino-shop/square-preview-1440.png" });
+  await page.keyboard.press("Escape");
+  await page.locator('[data-buy="roulette-european"]').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "artifacts/casino-shop/square-games-1440.png" });
+  await page.setViewportSize({ width: 320, height: 1000 });
   await page.locator('[data-filter="premium"]').click();
   await page.locator('[data-buy="football-p1"]').click();
   await page.locator('.shop-confirm [value="cancel"]').click();
@@ -82,6 +106,15 @@ try {
   await page.locator(".shop-toast.is-success").waitFor();
   await page.locator('[data-buy="football-p1"]:disabled').waitFor();
   assert.match(await page.locator("#shop-balance").textContent(), /22/);
+  await page.evaluate(() => (location.hash = "#/profile"));
+  await page.locator("#choose-weekly-card").click();
+  const purchased = page.locator('[data-select-card="football-p1"]');
+  await purchased.waitFor();
+  assert.equal(await purchased.locator(".sca-stats > span").count(), 8);
+  await purchased.click();
+  await page.locator(".player-hero .sca-football-p1").waitFor();
+  assert.equal(await page.locator(".player-hero .sca-stats > span").count(), 8);
+  await page.screenshot({ path: "artifacts/casino-shop/square-purchased-profile-320.png" });
   await page.evaluate(() => (location.hash = "#/players/cards"));
   await page.locator(".catalog-entry h3", { hasText: "P1" }).waitFor();
   const tile = page
@@ -114,7 +147,7 @@ try {
   await page.locator("#modal-root .sca-football-p4").waitFor();
   await page
     .locator("#modal-root .modal")
-    .screenshot({ path: "artifacts/casino-shop/integrated-admin.png" });
+    .screenshot({ path: "artifacts/casino-shop/square-integrated-admin.png" });
   assert.equal(
     await page.evaluate(
       () =>

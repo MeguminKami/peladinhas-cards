@@ -32,11 +32,16 @@ const transaction = (values = {}) => ({
   credit: 8,
   roundId: 1,
   spin: 1,
-  configVersion: "0.7.0",
+  configVersion: "0.7.1",
   bet: 20,
   mode: "base",
   bonusHunt: false,
   ...values,
+});
+
+test("sticky update accepts queued 0.7.0 receipts, rejects unknown versions", () => {
+  assert.doesNotThrow(() => validateSlotTransaction(transaction({configVersion:"0.7.0"})));
+  assert.throws(() => validateSlotTransaction(transaction({configVersion:"0.7.2"})));
 });
 test("DJC uses exact hundredths; welcome is 200 and each football match adds 20", () => {
   const wallet = newCasinoWallet(1),

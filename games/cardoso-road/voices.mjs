@@ -8,7 +8,7 @@ export const VOICE_CLIPS=Object.freeze({
  grito_de_cashout:'Gains no bolso!',
  isso_nao_tem_oleo:'Isso não tem óleo!',
 });
-const STEP_CLIPS=['mais_um_pre','proteina_pura','e_so_gains','isso_nao_tem_oleo','zero_oleo'];
+export const STEP_CLIPS=['mais_um_pre','proteina_pura','e_so_gains','isso_nao_tem_oleo','zero_oleo'];
 export function voiceForEvent(event,step=0){
  if(event==='start')return 'uma_chupadela_de_cada_vez';
  if(event==='step')return STEP_CLIPS[(Math.max(1,Math.trunc(step)||1)-1)%STEP_CLIPS.length];

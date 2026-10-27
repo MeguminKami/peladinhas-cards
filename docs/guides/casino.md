@@ -23,6 +23,8 @@ Exemplos: derrota por cinco sem contribuições = 20; empate sem contribuições
 
 Em Administração → Jogadores, **Moedas** permite adicionar de 0 a 10 000 DJC, incluindo ao próprio administrador. O servidor verifica o perfil e o destinatário. O identificador do envio e o recibo impedem duplicações. O diálogo conserva o pedido pendente para recuperar respostas perdidas. Não são transferências entre jogadores.
 
+O popup **Moedas** consulta o saldo apenas quando é aberto, pela callable administrativa `getCasinoPlayerBalance`. Não há consultas de carteiras na lista de jogadores nem atualização automática. A consulta é apenas leitura e usa três documentos: política global, perfil do administrador e carteira do destinatário. Detalhes e testes no [relatório de saldo administrativo](../reports/admin-casino-balance-2026-10-27.md).
+
 100 unidades inteiras = 1 DJC. Aposta mínima da slot: 0,20 DJC. Não existe dinheiro real, depósito ou levantamento.
 
 ## Sincronização
@@ -46,10 +48,10 @@ Nos jogos com checkpoints, o estado fica no navegador: o servidor verifica ident
 
 [casino-economy.js](../../js/casino-economy.js) contém a edição e as recompensas; [casino-session-model.js](../../js/casino-session-model.js) define as confirmações; [casino-local-wallet.js](../../js/casino-local-wallet.js) guarda o progresso e agenda checkpoints. As funções ficam em [functions/casino.js](../../functions/casino.js).
 
-Alterar estes cálculos exige publicar todos os consumidores: `getCasinoWallet`, `settleCasinoSlot`, `casinoSession`, `onCasinoGame` e `grantCasinoCoins`, além do frontend. O endpoint antigo por spin rejeita novas operações nas carteiras oficiais.
+Alterar estes cálculos exige publicar todos os consumidores: `getCasinoWallet`, `settleCasinoSlot`, `casinoSession`, `onCasinoGame`, `grantCasinoCoins`, `blackjackAction`, `blackjackSweep`, `getCasinoShop` e `buyCasinoCard`, além do frontend. O endpoint antigo por spin rejeita novas operações nas carteiras oficiais.
 
 ```powershell
-npx.cmd firebase deploy --only "functions:peladinhas:getCasinoWallet,functions:peladinhas:settleCasinoSlot,functions:peladinhas:casinoSession,functions:peladinhas:onCasinoGame,functions:peladinhas:grantCasinoCoins"
+npx.cmd firebase deploy --only "functions:peladinhas:getCasinoWallet,functions:peladinhas:settleCasinoSlot,functions:peladinhas:casinoSession,functions:peladinhas:onCasinoGame,functions:peladinhas:grantCasinoCoins,functions:peladinhas:blackjackAction,functions:peladinhas:blackjackSweep,functions:peladinhas:getCasinoShop,functions:peladinhas:buyCasinoCard"
 npm.cmd run deploy:frontend
 ```
 
@@ -91,4 +93,8 @@ O jogo usa a carteira partilhada em Djabucoin. Cada aposta, passo e levantamento
 
 O reset por edição invalida os snapshots e sessões anteriores dos cinco jogos; não apaga fisicamente o arquivo da base de dados. `scripts/reset-casino.mjs` permite materializar o saldo nas contas existentes, com limite de 500 documentos por coleção e precondições para não sobrescrever alterações concorrentes. O modo real exige autorização prévia para as leituras e os argumentos `--live --repair --apply --scope DESCRICAO --max-reads 1500`. Não repetir o reset mudando a edição sem um novo pedido explícito.
 
-Validação local da integração: `npm.cmd run test:casino:cardoso`.
+Entre avanços existe um intervalo mínimo de 500 ms, também pela tecla Espaço. Depois de uma confirmação, o botão volta a ficar disponível ao terminar esse intervalo. O rodapé reúne áudio e ferramentas; não inclui cashout automático, valores rápidos ou mensagens de fala.
+
+Validação local da integração: `npm.cmd run test:casino:cardoso`. Acrescentar `--motion` a `node tests/casino-cardoso.mjs` para verificar animações normais.
+
+Reset de 27/10/2026: a edição `official-2026-10-27-reset-200` começa com 200 DJC. As sessões e progressos dos jogos anteriores não recuperam saldo; a mesa multiplayer antiga é descartada ao mudar de edição, sem reembolsar apostas antigas. As cartas compradas mantêm-se em `cardCollections`. O reset é aplicado no primeiro acesso após publicar todos os consumidores e o frontend; não implica uma leitura global nem apaga arquivos.

@@ -1,8 +1,8 @@
 import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
 import { ratingQuorum, ratingWaiverTimes } from "../js/rating-quorum.js";
 import { casinoFunctions } from './casino.js';
+import { adminCasinoFunctions } from './admin-casino.js';
 import { casinoShopFunctions } from './casino-shop.js';
-export const { getCasinoShop, buyCasinoCard } = casinoShopFunctions();
 import { blackjackFunctions } from './blackjack.js';
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
@@ -77,6 +77,8 @@ import {
 assertTestEmulator();
 initializeApp(emulatorAppOptions());
 setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
+export const { getCasinoShop, buyCasinoCard } = casinoShopFunctions();
+export const { getCasinoPlayerBalance } = adminCasinoFunctions();
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
 export const { communityRatingAction } = communityRatingFunctions(async () => {});

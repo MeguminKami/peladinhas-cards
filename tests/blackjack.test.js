@@ -48,7 +48,7 @@ test("five players share one shoe, preserve ownership and settle exactly once", 
     const c = h.command(uid, "bet", { amount: 100 });
     h.send(uid, c, deck());
     h.send(uid, c);
-    assert.equal(h.wallets[uid].balance, 24900);
+    assert.equal(h.wallets[uid].balance, 19900);
   }
   const view = tableView(h.table);
   assert.equal(view.round.seats.length, 5);
@@ -84,7 +84,7 @@ test("five players share one shoe, preserve ownership and settle exactly once", 
   for (const p of r.seats)
     assert.equal(
       h.wallets[`p${p.number - 1}`].balance,
-      24900 + p.hands.reduce((n, h) => n + h.gross, 0) + p.insuranceGross,
+      19900 + p.hands.reduce((n, h) => n + h.gross, 0) + p.insuranceGross,
     );
   h.advance(BJ.summary + 1);
   h.send(null, h.command(null, "tick"));
@@ -108,8 +108,8 @@ test("one player owns multiple places, pays their combined exposure and controls
   const shoe = ordered([2, 2, 2, 2, 2, 10, 8, 8, 8, 8, 8, 7, 9, 9, 9, 9, 9]);
   for (const p of [...h.table.players])
     h.send(p.uid, h.command(p.uid, "bet", { seat: p.seat, amount: 100 }), shoe);
-  assert.equal(h.wallets.p0.balance, 24700);
-  assert.equal(h.wallets.p1.balance, 24800);
+  assert.equal(h.wallets.p0.balance, 19700);
+  assert.equal(h.wallets.p1.balance, 19800);
   while (h.table.session.round.phase === "play") {
     const round = h.table.session.round,
       s = round.seats.find((s) => s.hands.some((x) => x.id === round.active)),
@@ -127,14 +127,14 @@ test("one player owns multiple places, pays their combined exposure and controls
     h.send(p.uid, c);
     h.send(p.uid, h.command(p.uid, "stand", { seat: p.seat }));
   }
-  assert.equal(h.wallets.p0.balance, 25300);
-  assert.equal(h.wallets.p1.balance, 25200);
+  assert.equal(h.wallets.p0.balance, 20300);
+  assert.equal(h.wallets.p1.balance, 20200);
   h.advance(BJ.summary + 1);
   h.send(null, h.command(null, "tick"));
   h.send("p0", h.command("p0", "bet", { seat: 1, amount: 100 }));
   h.send("p0", h.command("p0", "bet", { seat: 3, amount: 100 }));
   h.send("p0", h.command("p0", "leave"));
-  assert.equal(h.wallets.p0.balance, 25300);
+  assert.equal(h.wallets.p0.balance, 20300);
   assert.ok(h.table.players.every((p) => p.uid !== "p0"));
 });
 test("multiple places share presence, and insurance cannot be used on another owner", () => {
@@ -161,10 +161,10 @@ test("multiple places share presence, and insurance cannot be used on another ow
     /inatividade/,
   );
   h.send("p0", h.command("p0", "insure", { seat: 1 }));
-  assert.equal(h.wallets.p0.balance, 24750);
+  assert.equal(h.wallets.p0.balance, 19750);
   h.send("p0", h.command("p0", "decline", { seat: 3 }));
   h.send("p1", h.command("p1", "decline", { seat: 2 }));
-  assert.equal(h.wallets.p0.balance, 24900);
+  assert.equal(h.wallets.p0.balance, 19900);
 });
 test("room closes after one idle minute despite presence; a live round is protected and completion restarts the minute", () => {
   const empty = harness();
@@ -232,7 +232,7 @@ test("disconnects and no remaining browser eventually settle and close, presence
     h.send(null, h.command(null, "tick"));
   }
   assert.equal(h.table, null);
-  assert.ok(h.wallets.p0.balance >= 24900);
+  assert.ok(h.wallets.p0.balance >= 19900);
 });
 test("new arrivals wait for the next round, timeout commits before rejecting a stale decision", () => {
   const h = harness();
@@ -305,15 +305,15 @@ test("split and doubles charge only their owner, with independent returns", () =
     ordered([8, 5, 10, 8, 6, 7, 2, 3, 10, 10]),
   );
   h.send("p0", h.command("p0", "split"));
-  assert.equal(h.wallets.p0.balance, 24800);
-  assert.equal(h.wallets.p1.balance, 24900);
+  assert.equal(h.wallets.p0.balance, 19800);
+  assert.equal(h.wallets.p1.balance, 19900);
   h.send("p0", h.command("p0", "double"));
-  assert.equal(h.wallets.p0.balance, 24700);
+  assert.equal(h.wallets.p0.balance, 19700);
   h.send("p0", h.command("p0", "stand"));
   h.send("p1", h.command("p1", "double"));
   assert.equal(h.table.session.round.phase, "summary");
-  assert.equal(h.wallets.p0.balance, 25100);
-  assert.equal(h.wallets.p1.balance, 25200);
+  assert.equal(h.wallets.p0.balance, 20100);
+  assert.equal(h.wallets.p1.balance, 20200);
 });
 test("insurance and failed plans preserve all input wallets", () => {
   const h = harness();
@@ -325,8 +325,8 @@ test("insurance and failed plans preserve all input wallets", () => {
     ordered([2, 3, 1, 4, 5, 9]),
   );
   h.send("p0", h.command("p0", "insure"));
-  assert.equal(h.wallets.p0.balance, 24850);
-  assert.equal(h.wallets.p1.balance, 24900);
+  assert.equal(h.wallets.p0.balance, 19850);
+  assert.equal(h.wallets.p1.balance, 19900);
   const before = structuredClone(h.wallets);
   assert.throws(() => h.send("p0", h.command("p0", "insure")), /decidido/);
   assert.deepEqual(h.wallets, before);

@@ -1,7 +1,7 @@
 import { mountCasinoShop } from "./casino-shop.js";
 import { createCasinoLocalWallet } from "./casino-local-wallet.js";
 import * as DB from "./db.js";
-import { empty, esc } from "./ui.js";
+import { empty, esc, friendlyError } from "./ui.js";
 import { djabucoin } from "./djabucoin.js";
 import { DJABUCOIN } from "./casino-economy.js";
 
@@ -54,7 +54,9 @@ export async function casinoShopPage(ctx) {
       ctx.render(
         empty(
           "Não foi possível abrir a loja",
-          esc(error.message),
+          error.code === "functions/internal" || /^internal$/i.test(error.message || "")
+            ? "A loja está temporariamente indisponível. Tenta novamente dentro de instantes."
+            : friendlyError(error),
           '<button class="btn btn-primary" id="shop-retry">Tentar novamente</button>',
           "cards",
         ),

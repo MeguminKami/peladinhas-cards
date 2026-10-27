@@ -1,4 +1,4 @@
-﻿import {createVoicePlayer,voiceForEvent} from './voices.mjs';
+import {createVoicePlayer,voiceForEvent,STEP_CLIPS} from './voices.mjs';
 // Music has its own volume. All game feedback shares one replaceable channel.
 export function createAudio(getSettings){
  const track=new Audio();track.loop=true;track.preload='none';
@@ -42,6 +42,12 @@ export function createAudio(getSettings){
  function event(kind,step){
   stopFeedback();if(destroyed||document.hidden||volume()<=0)return;
   const settings=getSettings();
+  if(kind==='step'){
+   const choices=[...(settings.voices?STEP_CLIPS.map(voice=>({voice})):[]),...(settings.effects?['unlearnthematrix','maluco'].map(recording=>({recording})):[])];
+   const choice=choices.length?choices[Math.floor(Math.random()*choices.length)]:null;
+   if(choice?.recording){recording(choice.recording,generation);return;}
+   if(choice?.voice){voicePending=true;voices.voice(choice.voice);mix();return;}
+  }
   // Supplied recordings replace legacy voices and synthesized fanfares.
   const name=kind==='start'?'starrt_1':kind==='lost'?`perdeu_${1+lossIndex++%2}`:['won','paid'].includes(kind)?'win_1':null;
   if(name&&settings.effects){recording(name,generation);return;}

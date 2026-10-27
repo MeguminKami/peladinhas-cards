@@ -734,11 +734,7 @@ body:has(> #casino-shop) {
   display: inline-flex;
   gap: 10px;
 }
-.casino-spotlight .casino-text-button {
-  display: inline-flex;
-  gap: 8px;
-  margin: 12px 0;
-}
+
 
 .shop-wallet.is-large > strong { font-size: 24px; overflow-wrap: anywhere; }
 @media (max-width: 600px) {

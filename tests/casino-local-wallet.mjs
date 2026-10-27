@@ -69,7 +69,7 @@ try {
       return {
         id,
         streamId,
-        configVersion: "0.7.0",
+        configVersion: "0.7.1",
         bet: 20,
         mode,
         bonusHunt: false,
@@ -287,7 +287,7 @@ try {
     await window.__wallet.settle({
       id,
       streamId,
-      configVersion: "0.7.0",
+      configVersion: "0.7.1",
       bet: 20,
       mode: "base",
       bonusHunt: false,
