@@ -851,6 +851,62 @@ try {
       window.__testState.communityRatings.filter(
         (r) => !r.id?.startsWith("bulk-"),
       );
+    window.__testState.users.push(
+        { uid: "sorttest-target-low", username: "target-low", ovr: 90 },
+        { uid: "sorttest-target-high", username: "target-high", ovr: 50 },
+    );
+    window.__testState.communityRatings.push(
+      {
+        id: "sort-new-high-ovr",
+        raterId: "sorttest-newest",
+        targetId: "sorttest-target-high",
+        ratings20: { pace: 18, passing: 18 },
+        submitted: true,
+        updatedAt: "2026-10-15T12:00:00.000Z",
+      },
+      {
+        id: "sort-old-low-ovr",
+        raterId: "sorttest-oldest",
+        targetId: "sorttest-target-low",
+        ratings20: { pace: 2, passing: 2 },
+        submitted: true,
+        updatedAt: "2026-10-10T12:00:00.000Z",
+      },
+    );
+  });
+  await navigate("#/admin/ratings", "Avaliações");
+  await page.locator("#raw-search").fill("sorttest");
+  assert.equal(
+    (
+      await page
+        .locator(".ratings-table tbody tr")
+        .first()
+        .locator('td[data-label="Jogador"]')
+        .textContent()
+    ).trim(),
+    "@target-high",
+  );
+  await page.locator("#raw-sort").selectOption("mean-asc");
+  assert.equal(
+    (
+      await page
+        .locator(".ratings-table tbody tr")
+        .first()
+        .locator('td[data-label="Jogador"]')
+        .textContent()
+    ).trim(),
+    "@target-low",
+  );
+  await page.evaluate(() => {
+    const state = window.__testState;
+    state.communityRatings = state.communityRatings.filter(
+      (rating) => !rating.id?.startsWith("sort-"),
+    );
+    state.users.splice(
+      0,
+      state.users.length,
+      ...state.users.filter((user) => !user.uid.startsWith("sorttest-target-")),
+    );
   });
   await page.evaluate(() => {
     window.__testState.tickets = [

@@ -1,4 +1,4 @@
-import { createServer } from "node:http";
+﻿import { createServer } from "node:http";
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, relative, extname } from "node:path";
 import assert from "node:assert/strict";
@@ -123,24 +123,21 @@ try {
       window.__notifyRoulette();
     });
     await frame.locator(".online-player").filter({ hasText: "João" }).waitFor();
+    const otherChip = frame.locator(".others-layer .other-chip");
+    await otherChip.first().waitFor();
+    assert.match(await otherChip.first().getAttribute("title"), /João/, "other players' chips are visible on the felt");
     const iframe = await page.locator(".casino-table-mount iframe").elementHandle();
     const beforeCalls = await page.evaluate(() => window.__casinoCalls.length);
     await frame.locator('.number-grid [data-bet-id="straight:0"]').click();
     await frame.locator('[data-action="spin"]').click();
     await frame.locator(".winning-number").filter({ hasText: "0" }).waitFor();
-    assert.equal(await frame.locator(".online-player").filter({ hasText: "João" }).locator("b").innerText(), "1,00");
+    assert.equal(await frame.locator(".online-player").filter({ hasText: "João" }).locator("b").innerText(), "0,00");
     await page.waitForFunction(() => {
       const saved = JSON.parse(localStorage.getItem("atelier:roulette:online:pedro"));
       return saved?.state.history.length === 1 && !saved.state.round;
     });
-    assert.equal(await frame.locator('.number-grid [data-bet-id="straight:0"]').isDisabled(), true, "betting remains locked during the shared result");
-    await page.evaluate(() => {
-      window.__rouletteRoom.deadline = Date.now() + 300;
-      window.__rouletteRoom.revision++;
-      window.__notifyRoulette();
-    });
-    await page.waitForFunction(() => window.__rouletteRoom.phase === "betting", null, { timeout: 5000 });
-    assert.equal(await frame.locator('.number-grid [data-bet-id="straight:0"]').isDisabled(), false, "betting reopens after the shared result");
+    assert.equal(await page.evaluate(() => window.__rouletteRoom.phase), "betting", "the table reopens as soon as the round is paid");
+    assert.equal(await frame.locator('.number-grid [data-bet-id="straight:0"]').isDisabled(), false, "betting is available right after the shared result");
     const balance = await frame.locator("[data-balance]").innerText();
     const hostBalance = await page.locator(".casino-wallet .casino-balance strong").innerText();
     assert.equal(Number(balance.replaceAll(/\s/g, "").replace(",", ".")), Number(hostBalance.replaceAll(/\s/g, "").replace(",", ".")));

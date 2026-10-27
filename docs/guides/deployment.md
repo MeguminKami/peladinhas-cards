@@ -1,5 +1,8 @@
 # Publicação
 
+Para acompanhar pendências entre conversas, usar o [tracker local e tutorial DEPLOY.md](../../DEPLOY.md). Este fluxo mantém recibos por alvo; os comandos antigos abaixo não atualizam esses recibos.
+
+
 [← Documentação](../README.md) · [Testes](testing.md) · [PWA](pwa.md) · [Push](notifications.md)
 
 ## Escolher o menor âmbito

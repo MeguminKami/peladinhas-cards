@@ -1,4 +1,4 @@
-import { SHOP_CARDS, buyShopCard } from "../../js/casino-shop-catalog.js";
+﻿import { SHOP_CARDS, buyShopCard } from "../../js/casino-shop-catalog.js";
 import { cardWeek } from "../../js/card-week.js";
 import { currentCasinoWallet, newCasinoWallet, settleCasinoSlot } from "../../js/casino-economy.js";
 import { applyCasinoSession } from "../../js/casino-session-model.js";
@@ -143,20 +143,9 @@ export async function rouletteFixture(input) {
     room.revision++;
   } else if (input.action === "balance") {
     balance = state.wallet.balance;
-  } else if (input.action === "tick" && room.phase === "result" && room.deadline <= now) {
-    room.phase = "betting";
-    room.deadline = 0;
-    room.result = null;
-    room.players.forEach((player) => {
-      player.plan = null;
-      player.total = 0;
-      player.ready = false;
-    });
-    room.revision++;
   } else if (input.action === "spin") {
     const player = room.players.find((entry) => entry.uid === uid);
     if (!player) throw Error("Entra primeiro na mesa.");
-    if (room.phase === "result") throw Error("Aguarda o próximo giro.");
     player.plan = input.plan;
     player.total = Object.values(input.plan).reduce((sum, amount) => sum + amount, 0);
     player.ready = true;
@@ -187,8 +176,8 @@ export async function rouletteFixture(input) {
     state.wallet.revision++;
     sessionStorage.setItem(key, JSON.stringify(state));
     room.roundId++;
-    room.phase = "result";
-    room.deadline = now + 12000;
+    room.phase = "betting";
+    room.deadline = 0;
     room.result = {
       id: room.roundId,
       number,
@@ -196,6 +185,11 @@ export async function rouletteFixture(input) {
       at: now,
       players: roundPlayers,
     };
+    room.players.forEach((entry) => {
+      entry.plan = null;
+      entry.total = 0;
+      entry.ready = false;
+    });
     balance = state.wallet.balance;
     room.revision++;
   } else if (input.action === "chat") {

@@ -1,4 +1,4 @@
-import { getFirestore, Timestamp } from "firebase-admin/firestore";
+﻿import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { HttpsError } from "firebase-functions/v2/https";
 import { randomInt } from "node:crypto";
@@ -112,8 +112,13 @@ function resolveRound(table, wallets, walletChanged, now, number) {
       lines: outcome.lines,
     };
   });
-  table.phase = "result";
-  table.deadline = now + ROULETTE.resultWindow;
+  table.phase = "betting";
+  table.deadline = 0;
+  table.players.forEach((player) => {
+    player.plan = null;
+    player.total = 0;
+    player.ready = false;
+  });
   table.result = {
     id: table.roundId,
     number,
@@ -122,17 +127,6 @@ function resolveRound(table, wallets, walletChanged, now, number) {
     players: results,
   };
   return true;
-}
-
-function resetResult(table) {
-  table.phase = "betting";
-  table.deadline = 0;
-  table.result = null;
-  table.players.forEach((player) => {
-    player.plan = null;
-    player.total = 0;
-    player.ready = false;
-  });
 }
 
 function activePlayers(table, now) {
@@ -198,6 +192,7 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       const wallet = walletFor({}, uid, walletSnapshot);
       return {
         table: rouletteTableView(table, now),
+        roundId: previousCommand.roundId,
         balance: wallet.balance,
         serverNow: now,
       };
@@ -227,6 +222,7 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
     let changed = !original;
     let publicChanged = !original;
     let stale = false;
+    let spinRoundId = null;
     let balance = uid ? wallets[uid]?.balance ?? null : null;
 
     if (table.phase === "closing" && table.deadline <= now) {
@@ -235,11 +231,6 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       publicChanged = true;
       stale = input.action === "spin";
       if (stale) input.action = "tick";
-    } else if (table.phase === "result" && table.deadline <= now) {
-      resetResult(table);
-      changed = true;
-      publicChanged = true;
-      table.revision++;
     }
 
     if (input.action === "join") {
@@ -268,10 +259,6 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
           lastChatAt: 0,
           leaving: false,
         });
-      }
-      if (table.phase === "result") {
-        const player = table.players.find((entry) => entry.uid === uid);
-        if (player) player.plan = null;
       }
       changed = true;
       publicChanged = true;
@@ -327,8 +314,6 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
     } else if (input.action === "spin") {
       const player = table.players.find((entry) => entry.uid === uid);
       if (!player) throw new HttpsError("failed-precondition", "Entra primeiro na mesa.");
-      if (table.phase === "result")
-        throw new HttpsError("failed-precondition", "Aguarda o próximo giro.");
       if (player.plan)
         throw new HttpsError("already-exists", "A tua aposta já está fechada nesta ronda.");
       const { plan, total } = validatedPlan(input.plan);
@@ -336,6 +321,7 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       if (wallet.balance < total)
         throw new HttpsError("failed-precondition", "Saldo insuficiente.");
       table.roundId = table.phase === "betting" ? nextRoundId(table) : table.roundId;
+      const roundId = table.roundId;
       player.plan = plan;
       player.total = total;
       player.ready = true;
@@ -364,6 +350,7 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       table.commands.push({
         uid,
         id: input.id,
+        roundId,
         fingerprint: fingerprint(plan),
       });
       table.commands = table.commands.slice(-300);
@@ -371,16 +358,12 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       publicChanged = true;
       table.revision++;
       balance = wallets[uid].balance;
+      spinRoundId = roundId;
     } else if (input.action === "tick") {
       const player = table.players.find((entry) => entry.uid === uid);
       if (player) player.seenAt = now;
       if (table.phase === "closing" && table.deadline <= now) {
         resolveRound(table, wallets, walletChanged, now, forcedNumber ?? randomInt(37));
-        table.revision++;
-        changed = true;
-        publicChanged = true;
-      } else if (table.phase === "result" && table.deadline <= now) {
-        resetResult(table);
         table.revision++;
         changed = true;
         publicChanged = true;
@@ -401,6 +384,7 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       table: rouletteTableView(table, now),
       balance,
       stale,
+      roundId: spinRoundId,
       serverNow: now,
     };
   });
@@ -423,7 +407,7 @@ export function rouletteFunctions() {
       if (!snapshot.exists) return;
       const table = snapshot.data();
       if (
-        ["closing", "result"].includes(table.phase) &&
+        table.phase === "closing" &&
         table.deadline <= Date.now()
       )
         await runRoulette(

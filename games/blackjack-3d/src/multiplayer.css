@@ -247,6 +247,13 @@
 .multiplayer-shell .seat-person { overflow: visible; }
 .multiplayer-shell .seat-badge { position: absolute; top: -4px; left: calc(50% - 40px); z-index: 3; min-width: 26px; height: 26px; display: grid; place-items: center; border-radius: 13px; background: #e3c57d; color: #13271c; border: 2px solid #13271c; font: 800 14px/1 'Atelier Manrope', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 .multiplayer-shell .seat.active .seat-badge { background: #fff0b6; }
+.multiplayer-shell .seat-leave { position: absolute; top: -4px; left: calc(50% + 14px); z-index: 5; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: #c8352d; color: #fff; border: 2px solid #13271c; font: 800 13px/1 'Atelier Manrope', system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 8px #0008; transition: transform 160ms, background 160ms; }
+.multiplayer-shell .seat-leave::after { content: ''; position: absolute; inset: -9px; }
+.multiplayer-shell .seat-leave:hover { background: #e2453c; transform: scale(1.1); }
+.multiplayer-shell .seat-leave:active { transform: scale(.94); }
+.multiplayer-shell .seat-leave:focus-visible { outline: 3px solid #fff0b6; outline-offset: 2px; }
+.multiplayer-shell .seat-leave:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+@media (prefers-reduced-motion: reduce) { .multiplayer-shell .seat-leave { transition: none; } }
 .multiplayer-shell .seat.waiting .avatar,
 .multiplayer-shell .seat.waiting .table-hands { opacity: .55; filter: saturate(.6); transition: opacity 200ms, filter 200ms; }
 .multiplayer-shell .seat.active .avatar { animation: seat-pulse 1.4s ease-in-out infinite; border-color: #fff0b6; }
@@ -256,6 +263,7 @@
 @keyframes seat-pulse { 50% { box-shadow: 0 0 0 5px #fff0b655, 0 0 30px #ffe39aaa; } }
 @media (max-width: 650px) {
   .multiplayer-shell .seat-badge { left: calc(50% - 30px); top: -6px; min-width: 20px; height: 20px; font-size: 11px; }
+  .multiplayer-shell .seat-leave { left: calc(50% + 10px); top: -6px; width: 22px; height: 22px; font-size: 11px; }
   .multiplayer-shell .seat-person .turn-indicator { font-size: 8px; padding: 3px 6px; top: auto; bottom: -15px; left: 50%; transform: translateX(-50%); }
 }
 

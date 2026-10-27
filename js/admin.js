@@ -296,15 +296,32 @@ export async function rawRatings(ctx, uid) {
     ...feedback.flat().map((r) => ({ ...r, kind: "Pós-jogo" })),
   ].filter((r) => !uid || r.targetId === uid);
   ctx.render(
-    `${pageHead("Administração", "Avaliações", "Pesquisa e compara votos. Identidades visíveis apenas a administradores.", linkButton("#/admin", "Administração", "ghost"))}<section class="panel ratings-browser"><div class="ratings-toolbar"><label>Pesquisar<input id="raw-search" placeholder="Jogador, avaliador ou jogo"></label><label>Origem<select id="raw-kind"><option value="">Todas</option><option>Comunidade</option><option>Pós-jogo</option></select></label><label>Estado<select id="raw-status"><option value="">Todos</option><option value="sent">Enviadas</option><option value="draft">Rascunhos</option><option value="null">Nulas</option></select></label></div><div id="raw-list"></div><div class="ratings-pagination"><button id="raw-prev" type="button" class="btn btn-secondary">${icon("arrow")}Anterior</button><span id="raw-count" aria-live="polite"></span><button id="raw-next" type="button" class="btn btn-secondary">Seguinte${icon("arrow")}</button></div></section>`,
+    `${pageHead("Administração", "Avaliações", "Pesquisa e compara votos. Identidades visíveis apenas a administradores.", linkButton("#/admin", "Administração", "ghost"))}<section class="panel ratings-browser"><div class="ratings-toolbar"><label>Pesquisar<input id="raw-search" placeholder="Jogador, avaliador ou jogo"></label><label>Ordenar por<select id="raw-sort"><option value="recent">Mais recentes</option><option value="mean-asc">Menor avaliação</option></select></label><label>Origem<select id="raw-kind"><option value="">Todas</option><option>Comunidade</option><option>Pós-jogo</option></select></label><label>Estado<select id="raw-status"><option value="">Todos</option><option value="sent">Enviadas</option><option value="draft">Rascunhos</option><option value="null">Nulas</option></select></label></div><div id="raw-list"></div><div class="ratings-pagination"><button id="raw-prev" type="button" class="btn btn-secondary">${icon("arrow")}Anterior</button><span id="raw-count" aria-live="polite"></span><button id="raw-next" type="button" class="btn btn-secondary">Seguinte${icon("arrow")}</button></div></section>`,
   );
   const name = (id) =>
     ctx.league.users.find((p) => p.uid === id)?.username || id;
+  const ratingTimestamp = (rating) => {
+    const value = rating.updatedAt ?? rating.submittedAt ?? rating.createdAt;
+    const date =
+      typeof value?.toDate === "function"
+        ? value.toDate()
+        : value instanceof Date
+          ? value
+          : null;
+    const timestamp =
+      date
+        ? date.getTime()
+        : typeof value === "number"
+          ? value
+          : Date.parse(value);
+    return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+  };
   let page = 0;
   const draw = () => {
     const q = document.querySelector("#raw-search").value.toLowerCase(),
       kind = document.querySelector("#raw-kind").value,
-      status = document.querySelector("#raw-status").value;
+      status = document.querySelector("#raw-status").value,
+      sort = document.querySelector("#raw-sort").value;
     const filtered = rows.filter(
       (r) =>
         (!kind || r.kind === kind) &&
@@ -312,6 +329,30 @@ export async function rawRatings(ctx, uid) {
         JSON.stringify([r.gameId, name(r.raterId), name(r.targetId)])
           .toLowerCase()
           .includes(q),
+    );
+    const normalizedMean = (r) => {
+      if (r.kind === "Pós-jogo") {
+        const mean = matchComponentAverages(r.ratings).withoutGoalkeeping;
+        return mean === null ? null : mean / 5;
+      }
+      const values = Object.values(r.ratings || r.ratings20 || {}).filter(Number.isFinite);
+      return values.length
+        ? values.reduce((s, v) => s + v, 0) / values.length / 20
+        : null;
+    };
+    const byTime = (a, b) => {
+      const aTimestamp = ratingTimestamp(a),
+        bTimestamp = ratingTimestamp(b);
+      return aTimestamp === bTimestamp ? 0 : aTimestamp > bTimestamp ? -1 : 1;
+    };
+    const byMean = (a, b) => {
+      const aMean = normalizedMean(a),
+        bMean = normalizedMean(b);
+      if (aMean === null || bMean === null) return aMean === bMean ? 0 : aMean === null ? 1 : -1;
+      return aMean - bMean;
+    };
+    filtered.sort((a, b) =>
+      sort === "mean-asc" ? byMean(a, b) || byTime(a, b) : byTime(a, b),
     );
     page = Math.max(0, Math.min(page, Math.ceil(filtered.length / 20) - 1));
     const shown = filtered.slice(page * 20, page * 20 + 20);
@@ -391,15 +432,16 @@ export async function rawRatings(ctx, uid) {
       };
     });
   };
-  document
-    .querySelectorAll(".ratings-toolbar input,.ratings-toolbar select")
-    .forEach(
-      (input) =>
-        (input.oninput = () => {
-          page = 0;
-          draw();
-        }),
-    );
+  const resetPage = () => {
+    page = 0;
+    draw();
+  };
+  document.querySelectorAll(".ratings-toolbar input").forEach((input) => {
+    input.oninput = resetPage;
+  });
+  document.querySelectorAll(".ratings-toolbar select").forEach((select) => {
+    select.onchange = resetPage;
+  });
   document.querySelector("#raw-prev").onclick = () => {
     page--;
     draw();

@@ -10,6 +10,9 @@
 
 </div>
 
+[Deploy: ver pendências, publicar e retomar](../DEPLOY.md)
+
+
 [Novos critérios das cartas e mínimo de sete avaliações — 21/10/2026](reports/card-criteria-2026-10-21.md).
 
 [Início atualizado e recuperação horária com menos leituras — 21/10/2026](reports/home-read-cache-2026-10-21.md) · [Funcionamento](reference/home-data.md).

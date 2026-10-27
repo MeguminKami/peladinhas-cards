@@ -1,9 +1,9 @@
-import { randomInt, randomUUID } from "node:crypto";
+﻿import { randomInt, randomUUID } from "node:crypto";
 import { CASINO_EDITION, DJABUCOIN } from "../js/casino-economy.js";
 
 export const ROULETTE = Object.freeze({
   lease: 75000,
-  bettingWindow: 10000,
+  bettingWindow: 30000,
   resultWindow: 12000,
   chatWindow: 30 * 60 * 1000,
   chatLimit: 100,
@@ -90,12 +90,12 @@ const assert = (ok, message) => {
 export function validateRoulettePlan(plan) {
   assert(
     plan && typeof plan === "object" && !Array.isArray(plan),
-    "Apostas inválidas.",
+    "Apostas invÃ¡lidas.",
   );
   const entries = Object.entries(plan);
   assert(
     entries.length > 0 && entries.length <= ROULETTE.maxPlanEntries,
-    "Coloque apostas válidas na mesa.",
+    "Coloque apostas vÃ¡lidas na mesa.",
   );
   let total = 0;
   for (const [id, amount] of entries) {
@@ -105,25 +105,25 @@ export function validateRoulettePlan(plan) {
         amount >= 20 &&
         amount <= ROULETTE.maxBet &&
         amount % 10 === 0,
-      "Aposta inválida.",
+      "Aposta invÃ¡lida.",
     );
     total += amount;
   }
   assert(
     Number.isSafeInteger(total) && total <= ROULETTE.maxTotal,
-    "Exposição máxima: 5 000,00.",
+    "ExposiÃ§Ã£o mÃ¡xima: 5 000,00.",
   );
   return { plan: Object.fromEntries(entries), total };
 }
 
 export function settleRoulettePlan(plan, number) {
-  assert(Number.isInteger(number) && number >= 0 && number <= 36, "Número inválido.");
+  assert(Number.isInteger(number) && number >= 0 && number <= 36, "NÃºmero invÃ¡lido.");
   const { plan: validPlan, total } = validateRoulettePlan(plan);
   const lines = Object.entries(validPlan).map(([id, stake]) => {
     const selected = bets.get(id);
     const won = selected.includes(number);
     const gross = won ? (stake * 36) / selected.length : 0;
-    assert(Number.isSafeInteger(gross), "Retorno inválido.");
+    assert(Number.isSafeInteger(gross), "Retorno invÃ¡lido.");
     return { id, stake, won, gross };
   });
   const gross = lines.reduce((sum, line) => sum + line.gross, 0);
@@ -201,7 +201,7 @@ export function nextRoundId(table) {
 export function newChatMessage(uid, name, color, message, now = Date.now()) {
   const user = Array.from(String(name || "Jogador").trim()).slice(0, 30).join("");
   const body = String(message || "").trim();
-  assert(user && body && body.length <= ROULETTE.chatLength, "Mensagem inválida.");
+  assert(user && body && body.length <= ROULETTE.chatLength, "Mensagem invÃ¡lida.");
   return {
     uid,
     user,

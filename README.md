@@ -27,6 +27,9 @@ Perfis individuais · Equipas e resultados · Cartas de jogador · Estatísticas
 
 </div>
 
+[Deploy: ver pendências, publicar e retomar](DEPLOY.md)
+
+
 ## O projeto
 
 **Peladinhas Cards** reúne num único website a gestão de uma comunidade de futebol amador. A organização prepara os encontros e regista o que acontece em campo; os jogadores consultam as equipas, avaliam os colegas e acompanham o seu desempenho.

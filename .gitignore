@@ -13,3 +13,6 @@ games/futebol/dist/
 games/blackjack-3d/dist/
 games/roleta-europeia-3d/dist/
 assets/games/
+
+# Local deployment receipts and lock
+.deploy/

@@ -1,4 +1,4 @@
-import { callAdmin, watchRoulette, watchRouletteChat } from "./db.js";
+﻿import { callAdmin, watchRoulette, watchRouletteChat } from "./db.js";
 
 const transient = (error) =>
   [
@@ -114,7 +114,7 @@ export function connectRoulette(uid, onBalance, onExit) {
           pendingSpin = undefined;
           sessionStorage.removeItem(pendingKey);
           if (data.stale) throw Error("A ronda avançou. Confirma a tua próxima aposta.");
-          const roundId = data.table?.roundId;
+          const roundId = data.roundId ?? data.table?.roundId;
           const own = data.table?.result?.players?.find((player) => player.uid === uid);
           if (own && data.table.result.id === roundId)
             return {
@@ -159,7 +159,7 @@ export function connectRoulette(uid, onBalance, onExit) {
 
   function schedule() {
     clearTimeout(deadline);
-    if (stopped || !["closing", "result"].includes(state?.phase) || !state.deadline) return;
+    if (stopped || state?.phase !== "closing" || !state.deadline) return;
     deadline = setTimeout(
       () => void request("tick").catch((error) => {
         if (!stopped && !transient(error)) onExit(`A ronda não foi atualizada: ${error.message}`);

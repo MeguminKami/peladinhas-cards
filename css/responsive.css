@@ -985,8 +985,29 @@ main.wide-layout {
 
 .ratings-toolbar {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+  gap: 16px 20px;
+}
+.ratings-toolbar > label {
+  grid-column: span 3;
+  min-width: 0;
+}
+.ratings-toolbar > label:first-child {
+  grid-column: 1 / -1;
+}
+@media (min-width: 1100px) {
+  .ratings-toolbar > label:first-child {
+    grid-column: span 6;
+  }
+  .ratings-toolbar > label:not(:first-child) {
+    grid-column: span 2;
+  }
+}
+@media (min-width: 801px) and (max-width: 1099px) {
+  .ratings-toolbar > label:not(:first-child) {
+    grid-column: span 4;
+  }
 }
 .ratings-pagination #raw-prev .ui-icon {
   transform: rotate(180deg);
@@ -1092,6 +1113,10 @@ main.wide-layout {
   .admin-overview-columns,
   .ratings-toolbar {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .ratings-toolbar > label,
+  .ratings-toolbar > label:first-child {
+    grid-column: auto;
   }
   .ratings-table,
   .ratings-table tbody {

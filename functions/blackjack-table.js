@@ -429,13 +429,16 @@ export function tableCommand(
       player.bet = input.amount;
       if (!table.deadline) table.deadline = now + BJ.betting;
     } else if (input.action === "leave") {
-      owned.forEach((p) => {
+      // Without a seat the whole table is left; with one, only that seat is released.
+      const leaving = input.seat === undefined ? owned : owned.filter((p) => p.seat === input.seat);
+      check(leaving.length, "Lugar inválido.");
+      leaving.forEach((p) => {
         p.leaving = true;
         p.seenAt = now - BJ.lease;
       });
       if (!table.session.round) {
-        for (const p of owned) if (p.bet) money(uid, p.bet, "refund");
-        table.players = table.players.filter((p) => p.uid !== uid);
+        for (const p of leaving) if (p.bet) money(uid, p.bet, "refund");
+        table.players = table.players.filter((p) => !leaving.includes(p));
       }
     } else if (input.action !== "heartbeat") {
       const round = table.session.round;

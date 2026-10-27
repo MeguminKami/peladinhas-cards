@@ -47,6 +47,34 @@ test("chat stores short-lived text with the server-assigned color, idempotently 
   await db.doc(BLACKJACK_PRIVATE).delete();
   await db.doc(BLACKJACK_PUBLIC).delete();
 });
+test("leaving one seat releases only that seat and refunds its bet", async () => {
+  await db.doc(BLACKJACK_PRIVATE).delete();
+  await db.doc(BLACKJACK_PUBLIC).delete();
+  const uid = `leave-${randomUUID()}`;
+  await db.doc(`users/${uid}`).set({ uid, displayName: uid, role: "member", disabled: false });
+  const command = async (action, extra = {}) => {
+    const table = (await db.doc(BLACKJACK_PRIVATE).get()).data();
+    return blackjackAction.run(req(uid, {
+      action,
+      id: randomUUID(),
+      ...(table ? { table: table.id, revision: table.revision } : {}),
+      ...extra,
+    }));
+  };
+  await command("join");
+  await command("occupy", { seat: 4 });
+  const seats = async () => (await db.doc(BLACKJACK_PRIVATE).get()).data().players.map((p) => p.seat).sort();
+  assert.equal((await seats()).length, 2);
+  await command("bet", { seat: 4, amount: 100 });
+  const before = (await db.doc(`casinoWallets/${uid}`).get()).data().balance;
+  await command("leave", { seat: 4 });
+  assert.equal((await seats()).includes(4), false);
+  assert.equal((await seats()).length, 1);
+  assert.equal((await db.doc(`casinoWallets/${uid}`).get()).data().balance, before + 100);
+  await assert.rejects(command("leave", { seat: 5 }), /Lugar inválido/);
+  await db.doc(BLACKJACK_PRIVATE).delete();
+  await db.doc(BLACKJACK_PUBLIC).delete();
+});
 test("an edition reset replaces the old table without refunding its wagers", async () => {
   const uid = `reset-${randomUUID()}`;
   await db.doc(`users/${uid}`).set({uid, role:"member", disabled:false});

@@ -1,4 +1,4 @@
-import '../shared/style.css';
+﻿import '../shared/style.css';
 import './premium.css';
 import '../shared/chip-selector.css';
 import {money,clone} from '../shared/core';
@@ -15,11 +15,11 @@ import {outcome,spinPhase,pause,type VisualPhase} from './presentation';
 interface OnlinePlayer {uid:string;name:string;color:string;plan:Plan|null;total:number;ready:boolean;activeUntil:number}
 interface OnlineOutcome {uid:string;name:string;color:string;plan:Plan;total:number;gross:number;net:number;lines:Round['lines']}
 interface OnlineRound {id:number;number:number;color:string;at:number;players:OnlineOutcome[]}
-interface OnlineTable {id:string;revision:number;phase:'betting'|'closing'|'result';deadline:number;roundId:number;result:OnlineRound|null;players:OnlinePlayer[];serverNow?:number}
+interface OnlineTable {id:string;revision:number;phase:'betting'|'closing';deadline:number;roundId:number;result:OnlineRound|null;players:OnlinePlayer[];serverNow?:number}
 interface OnlineSnapshot {table:OnlineTable|null;balance:number;uid:string;now:number;pending:boolean}
 interface OnlineConnection {
   uid:string;
-  ready:Promise<{table:OnlineTable|null;balance:number}>;
+  ready:Promise<{table:OnlineTable|null;balance:number;serverNow?:number}>;
   subscribe(fn:(snapshot:OnlineSnapshot)=>void):()=>void;
   subscribeChat(fn:(messages:OnlineMessage[])=>void,onError?:(error:Error)=>void):()=>void;
   spin(plan:Plan):Promise<OnlineOutcome&{roundId:number;number:number;winningColor:string;balance:number}>;
@@ -42,14 +42,15 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
   let lastShown:Round|null=null,focused:string|null=null,scope:'bet'|'table'='table',preview:string|null=null;
   let kind='split',selected=BETS.find(b=>b.kind==='split')!.id,neighbourNumber=0,neighbourCount=2;
   let message=options.online?'Entra na mesa e prepara a tua aposta.':'Selecione uma ficha e clique no tapete. Faça o seu jogo.';
-  let onlineState:OnlineTable|null=null,onlineMessages:OnlineMessage[]=[],onlineTab:'players'|'chat'='players',stopChat:(()=>void)|undefined,stopOnline:(()=>void)|undefined,chatSending=false,handledOnlineRound=0,chatExpiryTimer=0;
+  let onlineState:OnlineTable|null=null,onlineMessages:OnlineMessage[]=[],onlineTab:'players'|'chat'='players',stopChat:(()=>void)|undefined,stopOnline:(()=>void)|undefined,chatSending=false,handledOnlineRound=0,chatExpiryTimer=0,presentedOnline:OnlineRound|null=null;
+  const RESULT_FRESH_MS=15000,freshResult=(result:OnlineRound|null|undefined,now:number)=>!!result&&now-result.at<RESULT_FRESH_MS;
   let settlementAbort:AbortController|undefined,skipRequested=false,heldBet:string|null=null,holdTimer=0,animatePlacement=false;
   const undo:{plan:Plan;histories:[string,number[]][]}[]=[],betUndo=new Map<string,number[]>();
   const checkpoint=()=>({plan:clone(plan),histories:[...betUndo].map(([id,h])=>[id,[...h]] as [string,number[]])});
   const logo=new URL('./assets/roulette-logo.svg',import.meta.url).href;
   root.innerHTML=`<main class="shell roulette-shell"><header class="topbar"><div class="brand">ATELIER CASINO<small>A ARTE DE JOGAR À MESA</small></div><div class="top-actions"><span class="badge">EUROPEIA · ZERO ÚNICO</span><button data-action="bet-tools" class="quiet">Apostas</button><button data-action="rules" class="quiet">Regras</button><button data-action="history" class="quiet">Histórico</button><button data-action="settings" aria-label="Som e definições">♫</button><button data-action="expand" aria-label="Expandir a mesa">⛶</button></div></header><section class="intro"><h1 class="logo-heading"><span class="visually-hidden">Roleta Europeia</span><img class="game-logo" src="${logo}" alt="" aria-hidden="true"></h1></section>
     <div class="roulette-layout"><section class="wheel-panel"><div class="stage"><span class="stage-label">MESA 02 · EUROPEAN WHEEL</span><div class="wheel-result" aria-live="polite"></div></div><div class="recent"></div></section>
-    <section class="roulette-table" aria-label="Tapete de apostas"><div class="table-title"><span data-table-title>FAITES VOS JEUX</span><span>37 CASAS · PLENO 35:1</span></div><div class="felt-scroll"><div class="felt-surface"><div class="number-grid"></div><div class="street-margin"></div><div class="outside dozens"></div><div class="outside even-money"></div><div class="combination-hits"></div></div></div><div class="advanced-bets" hidden>
+    <section class="roulette-table" aria-label="Tapete de apostas"><div class="table-title"><span data-table-title>FAITES VOS JEUX</span><span>37 CASAS · PLENO 35:1</span></div><div class="felt-scroll"><div class="felt-surface"><div class="number-grid"></div><div class="street-margin"></div><div class="outside dozens"></div><div class="outside even-money"></div><div class="combination-hits"></div><div class="others-layer" aria-hidden="true"></div></div></div><div class="advanced-bets" hidden>
     <div class="bet-focus"><button data-action="focus-table" class="scope-button">Mesa</button><div class="focus-copy"></div></div><div class="coverage" aria-live="polite"></div>
     <details class="bet-editor"><summary>Combinações e vizinhos da roda</summary><div class="row"><select data-kind aria-label="Tipo de aposta"><option value="split">Cavalo</option><option value="street">Rua / trio do zero</option><option value="corner">Quadro</option><option value="six">Seisena</option><option value="neighbours">Vizinhos da roda</option></select><select data-bet aria-label="Cobertura da aposta"></select><button data-action="add-selected">Colocar ficha</button></div><div class="neighbour-controls"><button data-action="less-neighbours" aria-label="Menos vizinhos">−</button><span data-neighbours></span><button data-action="more-neighbours" aria-label="Mais vizinhos">+</button></div></details>
     <details class="placed-bets"><summary data-plan-summary>Apostas colocadas</summary><div class="plan-list" aria-label="Apostas colocadas"></div></details></div></section></div>
@@ -65,14 +66,14 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
   const persist=()=>localStorage.setItem(`${key}:plan`,JSON.stringify(plan));
   const activeRound=()=>store.state.round||lastShown;
   const numberVisible=()=>['number','collecting','paying'].includes(phase)||phase==='ready'&&!!lastShown;
-  const locked=()=>busy||!ready||store.pending||!!store.state.round||!!(options.online&&onlineState?.phase==='result');
+  const locked=()=>busy||!ready||store.pending||!!store.state.round;
   const label=(id:string)=>BY_ID[id].kind==='straight'?`Pleno ${BY_ID[id].label}`:BY_ID[id].label;
   const escapeHtml=(value:unknown)=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));
   function renderOnline(){
     const panel=q<HTMLElement>('[data-online]');panel.hidden=!options.online;if(!options.online)return;clearTimeout(chatExpiryTimer);
     const state=onlineState,players=state?.players||[];
     q('[data-online-count]').textContent=`${players.length} ${players.length===1?'jogador':'jogadores'}`;
-    q('[data-online-phase]').textContent=state?.phase==='closing'?'Apostas a fechar':state?.phase==='result'?'Resultado partilhado':'Apostas abertas';
+    q('[data-online-phase]').textContent=state?.phase==='closing'?'Apostas a fechar':'Apostas abertas';
     root.querySelectorAll<HTMLButtonElement>('[data-online-tab]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.onlineTab===onlineTab)));
     const content=q<HTMLElement>('.online-content');
     if(onlineTab==='players'){
@@ -129,9 +130,20 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
     q('.focus-copy').innerHTML=scope==='bet'&&focused?`<small>APOSTA EM FOCO · LUCRO ${BY_ID[focused].multiplier-1}:1</small><strong>${label(focused)} <span>${money(plan[focused]||0)}</span></strong>`:`<small>EXPOSIÇÃO DA MESA</small><strong>${Object.keys(plan).length} apostas <span>${money(cost(plan))}</span></strong>`;
     q<HTMLButtonElement>('[data-action="add-selected"]').disabled=isLocked;q<HTMLSelectElement>('[data-kind]').disabled=isLocked;q<HTMLSelectElement>('[data-bet]').disabled=isLocked;q('.neighbour-controls').classList.toggle('visible',kind==='neighbours');q('[data-neighbours]').textContent=`${neighbourCount} de cada lado · ${neighbourCount*2+1} fichas`;
     q('.status').textContent=store.pending?'Liquidação pendente. Recuperar utiliza o mesmo ID e o mesmo número, sem voltar a sortear.':options.online&&onlineState?.phase==='closing'&&!busy?'Apostas a fechar. Confirma agora para participar nesta ronda.':message;q('.status').classList.toggle('error',error||store.pending);
-    renderOnline();
+    renderOnline();renderOthers();
     updateCoverage();
     if(chipLayer&&!['collecting','paying'].includes(phase)){chipLayer.sync(lastShown&&!s.round?Object.fromEntries(lastShown.lines.filter(l=>l.gross).map(l=>[l.id,l.gross])):s.round?.plan||plan,animatePlacement);animatePlacement=false;}
+  }
+  const compactValue=(value:number)=>value>=1000?(+(value/1000).toFixed(1)+'k').replace('.',','):Number.isInteger(value)?String(value):value.toFixed(2).replace('.',',');
+  function renderOthers(){
+    const layer=q<HTMLElement>('.others-layer');
+    if(!options.online){layer.replaceChildren();return;}
+    const source:{uid:string;name:string;color:string;plan:Plan|null}[]=presentedOnline?presentedOnline.players:onlineState?.players||[],groups=new Map<string,{name:string;color:string;value:number}[]>();
+    for(const player of source){if(player.uid===options.online.uid||!player.plan)continue;for(const [id,value] of Object.entries(player.plan)){if(!BY_ID[id]||!(value>0))continue;const list=groups.get(id)||[];list.push({name:player.name,color:player.color,value});groups.set(id,list);}}
+    layer.classList.toggle('settling',['collecting','paying'].includes(phase));
+    const nodes:HTMLElement[]=[];
+    for(const [id,list] of groups){const point=board.point(id);list.forEach((entry,index)=>{const chip=document.createElement('span');chip.className='other-chip';chip.style.setProperty('--c',entry.color);chip.style.left=(point.x+12+(index-(list.length-1)/2)*24)+'px';chip.style.top=(point.y-(id.startsWith('straight:')?12:17))+'px';chip.textContent=compactValue(entry.value);chip.title=entry.name+' · '+label(id)+' '+money(entry.value);nodes.push(chip);});}
+    layer.replaceChildren(...nodes);
   }
   function updateCoverage(){
     const shown=activeRound();
@@ -164,8 +176,14 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
     await store.commit(acknowledge(store.state));lastShown=round;plan={};undo.length=0;betUndo.clear();persist();visualBalance=null;phase='ready';guard=performance.now();message=`${round.number}, ${result.colorLabel.toLowerCase()} · ${result.title} Retorno ${money(round.gross)}, líquido ${round.net>=0?'+':''}${money(round.net)}. Fichas liquidadas automaticamente. Faça o seu jogo.`;
   }
   async function presentOnlineResult(result:OnlineRound|(OnlineOutcome&{roundId:number;number:number;winningColor:string;balance:number})){
+    const id='players'in result?result.id:result.roundId;
+    if(handledOnlineRound===id||destroyed)return;
+    presentedOnline='players'in result?result:onlineState?.result?.id===id?onlineState.result:null;renderOthers();
+    try{await presentOnlineRound(result);}finally{presentedOnline=null;if(!destroyed)renderOthers();}
+  }
+  async function presentOnlineRound(result:OnlineRound|(OnlineOutcome&{roundId:number;number:number;winningColor:string;balance:number})){
     const shared='players'in result,id=shared?result.id:result.roundId;
-    if(handledOnlineRound===id||destroyed)return;handledOnlineRound=id;
+    handledOnlineRound=id;
     const personal=shared?result.players.find(player=>player.uid===options.online?.uid):result;
     const number=result.number,winningColor=shared?result.color:result.winningColor;
     const resultPlan=personal?.plan||{},total=personal?.total||0,gross=personal?.gross||0,net=personal?.net||0,lines=personal?.lines||[];
@@ -233,8 +251,8 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
       if(options.online){
         const joined=await options.online.ready;if(destroyed)return;
         onlineState=joined.table;store.state.balance=joined.balance;ready=true;
-        if(onlineState?.result){skipRequested=audio.settings.reduced;await presentOnlineResult(onlineState.result);}
-        else{phase='ready';visualBalance=null;}
+        if(freshResult(onlineState?.result,joined.serverNow??Date.now())){skipRequested=audio.settings.reduced;await presentOnlineResult(onlineState!.result!);}
+        else{if(onlineState?.result)handledOnlineRound=onlineState.result.id;phase='ready';visualBalance=null;}
       }else{
         await store.initialize();if(destroyed)return;ready=true;const r=store.state.round;
         if(r){visualBalance=store.state.balance-r.gross;scene.restore(r.number,r.rotor);if(r.phase==='spinning')await store.commit(reveal(store.state,r.rotor));message='Resultado confirmado recuperado. A liquidação não foi repetida.';skipRequested=audio.settings.reduced;await presentResult(store.state.round!);}
@@ -243,14 +261,15 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
     }finally{busy=false;if(!destroyed)render();}
   }
   renderBoard();chipLayer=new RouletteChips(q('.felt-surface'),board);populate();
-  const resize=new ResizeObserver(()=>{if(!destroyed){board.layout();chipLayer.reflow();}});resize.observe(q('.felt-surface'));
+  const resize=new ResizeObserver(()=>{if(!destroyed){board.layout();chipLayer.reflow();renderOthers();}});resize.observe(q('.felt-surface'));
   root.addEventListener('click',click);root.addEventListener('submit',sendChat);root.addEventListener('change',change);root.addEventListener('pointerover',hover);root.addEventListener('pointerout',leave);root.addEventListener('focusin',hover);root.addEventListener('pointerdown',down);root.addEventListener('pointerup',up);root.addEventListener('pointercancel',up);root.addEventListener('contextmenu',context);q('.bet-editor').addEventListener('toggle',updateCoverage);document.addEventListener('keydown',keyboard);
   stopOnline=options.online?.subscribe(snapshot=>{
     onlineState=snapshot.table;
     if(Number.isSafeInteger(snapshot.balance)){store.state.balance=snapshot.balance;if(!busy&&phase==='ready')visualBalance=null;}
     render();
     const result=onlineState?.result;
-    if(ready&&!busy&&result&&handledOnlineRound!==result.id){
+    if(ready&&!busy&&result&&handledOnlineRound!==result.id&&!freshResult(result,snapshot.now))handledOnlineRound=result.id;
+    else if(ready&&!busy&&result&&handledOnlineRound!==result.id){
       busy=true;phase='locking';render();
       void presentOnlineResult(result).catch(fail).finally(()=>{busy=false;if(!store.state.round){phase='ready';visualBalance=null;}if(!destroyed)render();});
     }

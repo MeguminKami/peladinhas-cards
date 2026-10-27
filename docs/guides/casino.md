@@ -1,4 +1,4 @@
-# Casino e Djabucoin
+﻿# Casino e Djabucoin
 
 [Documentação](../README.md) · [Desenvolvimento](development.md) · [Publicação](deployment.md)
 
@@ -48,7 +48,7 @@ Nos jogos com checkpoints, o estado fica no navegador: o servidor verifica ident
 
 No casino do website, todos entram na mesma sala online, mesmo quando só há uma pessoa. A aposta é debitada no servidor; o número é sorteado com `node:crypto` e o retorno de todos os participantes é aplicado atomicamente nas respetivas carteiras. A animação do browser apenas apresenta o resultado confirmado pelo servidor. Sem ligação, não há sorteio offline nem prémio local: a operação pendente conserva o identificador para recuperação.
 
-Com uma pessoa ativa, cada aposta resolve imediatamente. Com várias, a primeira aposta abre uma janela comum de **10 segundos**; a ronda resolve antes se todos os jogadores ativos apostarem, ou no prazo pelo cliente/sweep. O resultado partilhado fica visível durante **12 segundos**. Uma presença expira após 75 segundos; browsers visíveis enviam heartbeat a cada 30 segundos. A mesa aceita até 12 jogadores.
+Com uma pessoa ativa, cada aposta resolve imediatamente. Com várias, a primeira aposta abre uma janela comum de **30 segundos**; a ronda resolve antes se todos os jogadores ativos apostarem, ou no prazo pelo cliente/sweep. Assim que a ronda resolve, a mesa volta imediatamente a «apostas abertas» e limpa as apostas ativas; o resultado fica no documento apenas para ser animado (15 segundos de validade no cliente) e quem entra mais tarde não repete resultados antigos. As fichas dos outros jogadores aparecem no tapete com a cor e o valor de cada um, e o pedido de aposta repetido devolve o `roundId` original. Uma presença expira após 75 segundos; browsers visíveis enviam heartbeat a cada 30 segundos. A mesa aceita até 12 jogadores.
 
 O separador **Chat** subscreve mensagens apenas enquanto está aberto. Mostra o nome e a mensagem, sem horário; as próprias ficam à direita, as restantes à esquerda, com uma cor atribuída pelo servidor a cada jogador. O texto tem até 180 caracteres e o servidor limita cada jogador a uma mensagem por segundo. A consulta apresenta as 100 mensagens mais recentes dos últimos 30 minutos; a interface também remove mensagens expiradas enquanto está aberta. O TTL do Firestore elimina os documentos mais tarde, de forma assíncrona.
 

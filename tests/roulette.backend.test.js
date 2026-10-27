@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { getFirestore } from "firebase-admin/firestore";
@@ -56,7 +56,7 @@ test("a solo spin is server-drawn, paid atomically, and idempotent", async () =>
       number,
     );
   const result = await spin(1);
-  assert.equal(result.table.phase, "result");
+  assert.equal(result.table.phase, "betting");
   assert.equal(result.table.result.number, 1);
   assert.equal(result.balance, 20700);
   assert.equal((await db.doc(`casinoWallets/${uid}`).get()).data().balance, 20700);
@@ -97,7 +97,9 @@ test("players share one number and receive their own atomic returns", async () =
     db,
     0,
   );
-  assert.equal(result.table.phase, "result");
+  assert.equal(result.table.phase, "betting");
+  assert.equal(result.table.deadline, 0);
+  assert.ok(result.table.players.every((entry) => !entry.plan && !entry.ready));
   assert.equal(result.table.result.number, 0);
   assert.equal(result.table.result.players.length, 2);
   assert.equal(result.balance, 20700);
@@ -134,36 +136,34 @@ test("chat stores short-lived text with the server-assigned player color", async
   await db.doc(ROULETTE_PUBLIC).delete();
 });
 
-test("the result window expires and reopens betting", async () => {
+test("betting reopens immediately after the result and closes after 30 seconds", async () => {
   await clearRoom();
-  const uid = `roulette-expiry-${randomUUID()}`;
+  const first = `roulette-fast-a-${randomUUID()}`,
+    second = `roulette-fast-b-${randomUUID()}`;
   const startedAt = Date.now();
-  await player(uid);
-  const joined = await runRoulette(
-    { action: "join", id: randomUUID() },
-    uid,
-    uid,
-    startedAt,
-    db,
-  );
-  const result = await runRoulette(
-    { action: "spin", id: randomUUID(), table: joined.table.id, plan: { "straight:0": 20 } },
-    uid,
-    uid,
-    startedAt + 1,
+  await Promise.all([player(first), player(second)]);
+  const joined = await runRoulette({ action: "join", id: randomUUID() }, first, first, startedAt, db);
+  await runRoulette({ action: "join", id: randomUUID() }, second, second, startedAt, db);
+  const table = joined.table.id;
+  const plan = { "straight:0": 20 };
+  const bet = (uid, at) =>
+    runRoulette({ action: "spin", id: randomUUID(), table, plan }, uid, uid, at, db, 0);
+  const closing = await bet(first, startedAt + 1);
+  assert.equal(closing.table.phase, "closing");
+  assert.equal(closing.table.deadline, startedAt + 1 + 30000);
+  const resolved = await runRoulette(
+    { action: "tick", id: randomUUID(), table },
+    second,
+    second,
+    startedAt + 30002,
     db,
     0,
   );
-  assert.equal(result.table.phase, "result");
-  const reopened = await runRoulette(
-    { action: "tick", id: randomUUID(), table: joined.table.id },
-    uid,
-    uid,
-    startedAt + 12001,
-    db,
-  );
-  assert.equal(reopened.table.phase, "betting");
-  assert.equal(reopened.table.result, null);
+  assert.equal(resolved.table.phase, "betting");
+  assert.equal(resolved.table.result.players.length, 1);
+  const next = await bet(first, startedAt + 30003);
+  assert.equal(next.table.phase, "closing");
+  assert.equal(next.table.roundId, resolved.table.result.id + 1);
 });
 
 test("the authenticated callable exposes the online room action", async () => {
