@@ -988,13 +988,19 @@ main.wide-layout {
   grid-template-columns: 2fr 1fr 1fr;
   gap: 16px;
 }
+.ratings-pagination #raw-prev .ui-icon {
+  transform: rotate(180deg);
+}
 .ratings-pagination {
-  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: 20px;
   font-size: 0.8rem;
+}
+.ratings-browser .actions .btn {
+  min-height: 44px;
+  white-space: normal;
 }
 .rating-average {
   color: var(--accent);
@@ -1087,12 +1093,71 @@ main.wide-layout {
   .ratings-toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
+  .ratings-table,
+  .ratings-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .ratings-table thead {
+    display: none;
+  }
+  .ratings-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ratings-table tr:last-child {
+    border-bottom: 0;
+  }
+  .admin-layout .ratings-browser .ratings-table td {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: 6px;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+  .ratings-table td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .ratings-table td:last-child {
+    grid-column: 1 / -1;
+    justify-items: stretch;
+  }
+  .ratings-table .actions {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
   .rating-detail-grid,
   .correction-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 540px) {
+  .ratings-pagination {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ratings-pagination #raw-count {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+  .ratings-pagination .btn {
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 8px;
+    gap: 6px;
+    white-space: nowrap;
+  }
   .game-details-panel .form-grid,
   .game-teams-frame .team-builder.has-available {
     grid-template-columns: minmax(0, 1fr);
@@ -2475,3 +2540,20 @@ main.wide-layout {
 .football-card :is(.card-stat-trend,.card-ovr-trend).negative { color: #f01f3d; --trend-glow: #ff244766; }
 .football-card.card-special :is(.card-stat-trend,.card-ovr-trend).positive { color: #22f586; }
 .football-card.card-special :is(.card-stat-trend,.card-ovr-trend).negative { color: #ff3958; }
+
+/* Mobile admin players: one card per player, actions always labelled. */
+@media (max-width: 700px) {
+  .admin-players-table { overflow: visible; border: 0; background: transparent; }
+  .admin-players-table :is(table, tbody, tr, td) { display: block; }
+  .admin-players-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .admin-players-table tbody { display: grid; gap: 12px; }
+  .admin-players-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-surface); }
+  .admin-layout .admin-players-table td { padding: 0; border: 0; min-width: 0; }
+  .admin-players-table td:nth-child(1) { font-size: .95rem; font-weight: 650; overflow-wrap: anywhere; }
+  .admin-players-table td:nth-child(2) { grid-row: 2; color: var(--text-muted); }
+  .admin-players-table td:nth-child(3) { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .admin-players-table td:nth-child(4) { grid-column: 1 / -1; margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .admin-players-table .admin-player-actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; width: 100%; }
+  .admin-layout .admin-players-table .admin-player-actions .btn { width: 100%; justify-content: flex-start; gap: 8px; padding: 10px 12px; }
+  .admin-players-table .admin-action-caption { max-width: none; margin: 0; opacity: 1; transform: none; font-size: .78rem; overflow: hidden; text-overflow: ellipsis; }
+}

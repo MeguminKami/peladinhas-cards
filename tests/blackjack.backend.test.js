@@ -24,6 +24,29 @@ const req = (uid, data) => ({
   data,
 });
 
+test("chat stores short-lived text with the server-assigned color, idempotently and rate limited", async () => {
+  await db.doc(BLACKJACK_PRIVATE).delete();
+  await db.doc(BLACKJACK_PUBLIC).delete();
+  const uid = `bj-chat-${randomUUID()}`;
+  await db.doc(`users/${uid}`).set({ uid, displayName: uid, role: "member", disabled: false });
+  const joined = await blackjackAction.run(req(uid, { action: "join", id: randomUUID() }));
+  const id = randomUUID();
+  const body = { action: "chat", id, table: joined.table.id, message: "  Olá, mesa!  " };
+  await blackjackAction.run(req(uid, body));
+  await blackjackAction.run(req(uid, body));
+  const stored = (await db.doc(BLACKJACK_PUBLIC).collection("blackjackMessages").doc(`${uid}_${id}`).get()).data();
+  assert.equal(stored.message, "Olá, mesa!");
+  assert.equal(stored.color, joined.table.players[0].color);
+  assert.equal(stored.expireAt.toMillis() - stored.createdAt, 30 * 60 * 1000);
+  assert.equal((await db.doc(BLACKJACK_PUBLIC).collection("blackjackMessages").get()).size, 1);
+  await assert.rejects(blackjackAction.run(req(uid, { ...body, id: randomUUID() })), /Aguarda um instante/);
+  await assert.rejects(
+    blackjackAction.run(req(uid, { ...body, id: randomUUID(), message: "x".repeat(181) })),
+    /Mensagem inválida|Aguarda/,
+  );
+  await db.doc(BLACKJACK_PRIVATE).delete();
+  await db.doc(BLACKJACK_PUBLIC).delete();
+});
 test("an edition reset replaces the old table without refunding its wagers", async () => {
   const uid = `reset-${randomUUID()}`;
   await db.doc(`users/${uid}`).set({uid, role:"member", disabled:false});

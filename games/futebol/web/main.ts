@@ -265,7 +265,7 @@ async function play(command:Command){
   if(!assetsReady||busy||reviewPending||session.pendingRetrigger||$<HTMLDialogElement>('modal').open)return;cancelAuto();selectedPayline=undefined;linesPresented=false;busy=true;render();
   unlockAudio();stopEffects();if(session.active?.remaining===1)audioCue('last');
   try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
-    const controller=new AbortController();finishAnimation=()=>{controller.abort();stopEffects();};interruptPresentation=()=>{controller.abort();stopEffects();};
+    let controller=new AbortController();const bindController=(grace=0)=>{const current=controller,since=performance.now();finishAnimation=()=>{if(performance.now()-since<grace)return;current.abort();stopEffects();};interruptPresentation=()=>{current.abort();stopEffects();};};bindController();
     if(command.type==='start'&&command.mode!=='base'){
       document.querySelector<HTMLElement>('.machine')!.dataset.presentation='purchase-activation';$('round-note').textContent='Ativação da compra · '+(command.mode==='normal'?3:4)+' bilhetes';
       await presentBonusActivation(command.mode,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message});
@@ -273,6 +273,8 @@ async function play(command:Command){
       document.querySelector<HTMLElement>('.machine')!.dataset.mode='base';$('mode').textContent=modeName('base');$('round-note').textContent='Free spin 1 de '+config.freeSpins+' · aposta '+money(session.bet);
       await presentBonusTransition({kind:'entry',mode:command.mode,reduced:prefs.reduced,signal:controller.signal});
       await showBonusEntry(command.mode);
+      // Skipping the purchase presentation must never skip the first free spin.
+      controller=new AbortController();bindController(700);
     }
     await presentSpin(result,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message,onReelsStart:()=>{
       if(result.mode!=='base'&&bonusView){bonusView={...result.next};if(result.retrigger){bonusView.remaining-=result.retrigger.awarded;bonusView.totalFreeSpins-=result.retrigger.awarded;}renderFreeSpins();}

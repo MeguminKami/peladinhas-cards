@@ -36,6 +36,18 @@ test('Space confirma entrada sem impor 500 ms ao próximo FS',async({page})=>{
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('slot-local-v1')!).history[0].spins.length)).toBe(2);
 });
 
+test('Space na compra de bónus não salta o primeiro free spin',async({page})=>{
+ await setup(page,createSession('buy-1'));
+ await page.evaluate(()=>document.getElementById('buy-normal')!.click());await page.locator('#confirm-buy').click();
+ for(let i=0;i<4;i++){await page.keyboard.press('Space');await page.waitForTimeout(60);}
+ await expect(page.locator('#enter-bonus')).toBeVisible();await page.waitForTimeout(550);
+ await page.keyboard.press('Space');await expect(page.locator('#modal')).not.toBeVisible();
+ const start=Date.now();
+ for(let i=0;i<4;i++){await page.keyboard.press('Space');await page.waitForTimeout(60);}
+ expect(Date.now()-start).toBeLessThan(600);
+ await expect(page.locator('#spin')).toHaveText('CONCLUIR');
+});
+
 test('Space revela contagem, confirma vitória e não dispara um spin ao fechar',async({page})=>{
  await setup(page,createSession('space-victory'));const original=await page.evaluate(()=>localStorage.getItem('slot-local-v1'));
  const showing=page.evaluate(async()=>{const path=performance.getEntriesByType('resource').find(entry=>entry.name.includes('/web/win-celebration.ts'))!.name;const {celebrateWin}=await import(path);await celebrateWin(18000,100,{speed:'super',reduced:false,signal:new AbortController().signal,control:()=>{},cue:()=>{}});});

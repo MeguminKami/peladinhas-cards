@@ -97,3 +97,119 @@ export async function casinoFixture(name, input) {
   sessionStorage.setItem(key, JSON.stringify(state));
   return { data: structuredClone(state.wallet) };
 }
+
+export async function rouletteFixture(input) {
+  const key = "casino-fixture-wallet";
+  const state = JSON.parse(sessionStorage.getItem(key) || "null") || {
+    wallet: { ...newCasinoWallet(), balance: 10000 },
+    operations: {},
+    rounds: {},
+    sessions: {},
+  };
+  state.wallet = currentCasinoWallet(state.wallet);
+  const uid = "pedro";
+  const now = Date.now();
+  const room =
+    window.__rouletteRoom ||
+    (window.__rouletteRoom = {
+      id: "fixture-roulette-room",
+      revision: 0,
+      phase: "betting",
+      deadline: 0,
+      roundId: 0,
+      result: null,
+      players: [],
+    });
+  let balance = null;
+  if (input.action === "join") {
+    if (!room.players.some((player) => player.uid === uid))
+      room.players.push({
+        uid,
+        name: "Pedro",
+        color: "#74c0fc",
+        activeUntil: now + 75000,
+        plan: null,
+        total: 0,
+        ready: false,
+      });
+    balance = state.wallet.balance;
+    room.revision++;
+  } else if (input.action === "heartbeat") {
+    const player = room.players.find((entry) => entry.uid === uid);
+    if (player) player.activeUntil = now + 75000;
+    room.revision++;
+  } else if (input.action === "leave") {
+    room.players = room.players.filter((player) => player.uid !== uid);
+    room.revision++;
+  } else if (input.action === "balance") {
+    balance = state.wallet.balance;
+  } else if (input.action === "tick" && room.phase === "result" && room.deadline <= now) {
+    room.phase = "betting";
+    room.deadline = 0;
+    room.result = null;
+    room.players.forEach((player) => {
+      player.plan = null;
+      player.total = 0;
+      player.ready = false;
+    });
+    room.revision++;
+  } else if (input.action === "spin") {
+    const player = room.players.find((entry) => entry.uid === uid);
+    if (!player) throw Error("Entra primeiro na mesa.");
+    if (room.phase === "result") throw Error("Aguarda o próximo giro.");
+    player.plan = input.plan;
+    player.total = Object.values(input.plan).reduce((sum, amount) => sum + amount, 0);
+    player.ready = true;
+    const number = 0;
+    const roundPlayers = room.players.filter((entry) => entry.plan).map((entry) => {
+      const planTotal = Object.values(entry.plan).reduce((sum, amount) => sum + amount, 0);
+      const lines = Object.entries(entry.plan).map(([id, stake]) => ({
+        id,
+        stake,
+        won: id === "straight:0",
+        gross: id === "straight:0" ? stake * 36 : 0,
+      }));
+      const gross = lines.reduce((sum, line) => sum + line.gross, 0);
+      return {
+        uid: entry.uid,
+        name: entry.name,
+        color: entry.color,
+        plan: entry.plan,
+        total: planTotal,
+        gross,
+        net: gross - planTotal,
+        lines,
+      };
+    });
+    const personal = roundPlayers.find((entry) => entry.uid === uid);
+    state.wallet.balance -= personal.total;
+    state.wallet.balance += personal.gross;
+    state.wallet.revision++;
+    sessionStorage.setItem(key, JSON.stringify(state));
+    room.roundId++;
+    room.phase = "result";
+    room.deadline = now + 12000;
+    room.result = {
+      id: room.roundId,
+      number,
+      color: "green",
+      at: now,
+      players: roundPlayers,
+    };
+    balance = state.wallet.balance;
+    room.revision++;
+  } else if (input.action === "chat") {
+    const messages = (window.__rouletteMessages ||= []);
+    messages.push({
+      id: input.id,
+      uid,
+      user: "Pedro",
+      color: "#74c0fc",
+      message: String(input.message).trim(),
+      createdAt: now,
+    });
+  }
+  window.__rouletteRoom = room;
+  window.__notifyRoulette?.();
+  return { table: structuredClone(room), balance, serverNow: now };
+}

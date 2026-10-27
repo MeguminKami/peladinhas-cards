@@ -86,6 +86,8 @@ Neste exemplo, o saldo anterior era 12550: `12550 - 1500 + 36000 = 47050`.
 
 O backend deve autenticar, validar jogo/montantes, verificar que as somas das entries correspondem a debit/credit e aplicar as suas regras de autorização. Deve serializar por conta, verificar saldo >= debit antes do retorno, debitar/creditar numa única transação e guardar o recibo por conta e ID. Mesmo ID e conteúdo devolvem o recibo original; conteúdo diferente com o mesmo ID é rejeitado. Não confiar em identidade, saldo, resultado ou crédito propostos pelo browser; a autoridade é o website. Os motores puros em src/engine.ts e regras versionadas estão incluídos para validação pelo integrador. Não foi implementada aqui a autoridade de sorteio/estado do servidor do website.
 
+Esta limitação aplica-se à integração genérica descrita neste guia. O casino Peladinhas tem uma implementação própria de Roleta multiplayer em `functions/roulette.js`, com sala, sorteio, apostas, pagamentos e chat no servidor; não reutiliza os endpoints de demonstração `createHttpWallet` para essa mesa.
+
 Blackjack pode enviar entrada inicial, extras de seguro/split/double e retorno em operações distintas; uma ação pode agrupar extra e retorno. Roleta envia custo do plano e retorno na mesma operação. O site não deve lançar um segundo débito/crédito por fora de settle.
 
 ### Rejeição confirmada sem aplicação

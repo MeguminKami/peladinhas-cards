@@ -4,6 +4,7 @@ import { casinoFunctions } from './casino.js';
 import { adminCasinoFunctions } from './admin-casino.js';
 import { casinoShopFunctions } from './casino-shop.js';
 import { blackjackFunctions } from './blackjack.js';
+import { rouletteFunctions } from "./roulette.js";
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
 import { homeFunctions, invalidateHome } from "./home-cache.js";
@@ -81,9 +82,10 @@ export const { getCasinoShop, buyCasinoCard } = casinoShopFunctions();
 export const { getCasinoPlayerBalance } = adminCasinoFunctions();
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
-export const { communityRatingAction } = communityRatingFunctions(async () => {});
+export const { communityRatingAction, grantCommunityRatingRetry, listCommunityRatingsForAdmin } = communityRatingFunctions(aggregateCommunity);
 export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession, grantCasinoCoins } = casinoFunctions();
 export const { blackjackAction, blackjackSweep } = blackjackFunctions();
+export const { rouletteAction, rouletteSweep } = rouletteFunctions();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {
   pushDeviceAction,
@@ -259,7 +261,7 @@ async function aggregateCommunity(uid) {
     const rows = data(voteSnapshot);
     for (const row of rows.filter(row => row.submitted && completeInitial(row.ratings20) && !eligibleCommunityRating(row) && !row.reviewState)) {
       tx.update(db.doc(`communityRatings/${row.id}`),requiredCommunityReview());
-      writeCommunityNotice(tx,db,row,target.data()?.displayName || target.data()?.username || "este jogador","required");
+      writeCommunityNotice(tx,db,row,target.data()?.displayName || target.data()?.username || "este jogador","invalid");
     }
     const votes = rows.filter(eligibleCommunityRating);
     const ref = db.doc(`communitySummaries/${uid}`);

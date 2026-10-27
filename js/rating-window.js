@@ -8,7 +8,8 @@ export function ratingEditDeadline(rating, initial = false) {
   return new Date(+submittedAt + (rating.editDays ?? 7) * 86400000);
 }
 export function canEditRating(rating, date = new Date(), initial = false) {
-  if (!initial && ((rating?.reviewAttempts || 0) >= 2 || rating?.reviewState === "ignored")) return false;
+  if (!initial && ((rating?.reviewAttempts || 0) >= 2 || ["ignored", "invalid"].includes(rating?.reviewState) ||
+      (rating?.reviewState === "required" && !rating?.reviewGrantedAt))) return false;
   const deadline = ratingEditDeadline(rating, initial);
   return !deadline || +date < +deadline;
 }

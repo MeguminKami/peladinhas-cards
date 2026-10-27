@@ -6,11 +6,18 @@ export function eligibleCommunityRating(row) {
   return (
     row?.submitted === true &&
     completeInitial(row.ratings20) &&
-    ATTRIBUTES.reduce((sum, [key]) => sum + row.ratings20[key], 0) + 1e-9 >=
-      MINIMUM_MEAN * ATTRIBUTES.length
+    !["invalid", "required", "ignored"].includes(row.reviewState) &&
+    ATTRIBUTES.reduce((sum, [key]) => sum + row.ratings20[key], 0) >
+      MINIMUM_MEAN * ATTRIBUTES.length + 1e-9
   );
 }
 export function communityReviewNotice(name, state = "required") {
+  if (state === "invalid")
+    return {
+      type: "COMMUNITY_RATING_NULL",
+      title: "Avaliação nula",
+      body: `A tua avaliação de ${name} foi considerada nula e não está a ser considerada. A administração pode autorizar uma última tentativa.`,
+    };
   if (state === "accepted")
     return {
       type: "COMMUNITY_RATING_ACCEPTED",

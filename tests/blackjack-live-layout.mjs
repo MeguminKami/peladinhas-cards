@@ -54,6 +54,39 @@ try{
   assert.ok(await page.evaluate(()=>document.querySelector('.control-bar').getBoundingClientRect().bottom<=innerHeight&&document.documentElement.scrollWidth<=innerWidth));
   await page.screenshot({path:`test-results/blackjack/live-stable-${width}.png`});
  }
+ // Chat: same panel behaviour as the roulette, without moving the table.
+ await page.goto(origin+'/assets/games/blackjack/embed.html');
+ await page.waitForFunction(()=>window.mountBlackjackMultiplayer);
+ await page.evaluate(({base})=>{
+  localStorage.setItem('atelier:blackjack:audio',JSON.stringify({master:0,effects:0,music:0,muted:true,reduced:true}));
+  window.chatSubscribers=[];window.chatLog=[];window.sent=[];
+  window.game=window.mountBlackjackMultiplayer({uid:'test',subscribe(fn){fn(base);return()=>{};},command:async()=>{},
+   subscribeChat(fn){window.chatSubscribers.push(fn);fn(window.chatLog);return()=>{};},
+   sendChat:async text=>{window.sent.push(text);window.chatLog=[...window.chatLog,{id:'m'+window.sent.length,uid:'test',user:'Jogador local',color:'#74c0fc',message:text,createdAt:Date.now()}];window.chatSubscribers.forEach(fn=>fn(window.chatLog));}});
+  window.setCasinoFit(true);
+ },{base});
+ await page.locator('[data-action="chat"]').click();
+ await page.locator('.online-chat-input').fill('Olá, mesa!');
+ await page.locator('.online-chat-input').press('Enter');
+ await page.locator('.online-message.is-mine').filter({hasText:'Olá, mesa!'}).waitFor();
+ await page.evaluate(()=>{
+  const other={id:'o',uid:'joao',user:'João com nome comprido 🏆',color:'#da77f2',message:'Boa sorte!',createdAt:Date.now()};
+  const stale={...other,id:'old',message:'Mensagem antiga',createdAt:Date.now()-31*60*1000};
+  window.chatLog=[...window.chatLog,other];window.chatSubscribers.forEach(fn=>fn([...window.chatLog,stale]));
+ });
+ await page.locator('.online-message:not(.is-mine)').filter({hasText:'Boa sorte!'}).waitFor();
+ assert.equal(await page.locator('.online-message').filter({hasText:'Mensagem antiga'}).count(),0,'old chat ignored');
+ await page.locator('[data-online-tab="players"]').click();
+ await page.locator('.online-player').filter({hasText:'Jogador local'}).waitFor();
+ await page.locator('[data-online-tab="chat"]').click();
+ for(const [width,height] of [[1440,900],[768,900],[390,844],[320,740]]){
+  await page.setViewportSize({width,height});await page.waitForTimeout(250);
+  const fit=await page.evaluate(()=>{const r=document.querySelector('.bj-online').getBoundingClientRect(),f=document.querySelector('.online-chat-form').getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,formRight:f.right,overflow:document.documentElement.scrollWidth-innerWidth,w:innerWidth,h:innerHeight};});
+  assert.ok(fit.overflow<=1&&fit.left>=0&&fit.right<=fit.w+1&&fit.top>=0&&fit.bottom<=fit.h+1&&fit.formRight<=fit.right,`chat layout ${width}: ${JSON.stringify(fit)}`);
+  await page.screenshot({path:`test-results/blackjack/chat-${width}.png`});
+ }
+ await page.keyboard.press('Escape');
+ assert.equal(await page.locator('.bj-online').isHidden(),true,'Escape closes chat');
  // Real motion: metadata arriving mid-deal cannot replace animated cards or cancel flights.
  await page.setViewportSize({width:1440,height:900});await open(false);
  await emit(round);

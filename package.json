@@ -16,7 +16,7 @@
     "predev:casino": "node scripts/build-casino.mjs",
     "test:casino:cardoso": "node tests/casino-cardoso.mjs",
     "test:casino:tables": "node tests/casino-tables.mjs",
-    "test:casino:rift": "node --test tests/casino-rift.test.js",
+    "test:casino:rift": "node --test tests/casino-rift.test.js && node scripts/build-casino-rift.mjs && node tests/casino-rift-mobile.mjs",
     "test:casino": "node --test tests/casino.test.js tests/casino-session.test.js && node tests/casino-local-wallet.mjs && node tests/casino.mjs",
     "test:casino:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.casino.json --project demo-peladinhas-casino --only firestore \"node --test --test-concurrency=1 tests/casino.backend.test.js tests/admin-casino.backend.test.js\"",
     "test:admin:casino": "node tests/admin-casino.mjs",

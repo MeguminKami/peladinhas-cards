@@ -51,6 +51,7 @@ export const endpointCapability = (name) =>
                 ? "operations"
                 : null;
 const reads = new Set([
+  "listCommunityRatingsForAdmin",
   "getHome",
   "getPath",
   "getEvent",

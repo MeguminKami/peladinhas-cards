@@ -32,7 +32,7 @@ O popup **Moedas** consulta o saldo apenas quando é aberto, pela callable admin
 - Cada jogada é primeiro guardada atomicamente em IndexedDB, com saldo, RNG/progresso e recibo local.
 - A entrada no casino consulta o saldo do utilizador. Entrar em qualquer jogo confirma primeiro os lotes pendentes e obtém o saldo comum atualizado antes de montar o SDK. Se essa consulta falhar, o jogo apresenta erro e permite tentar novamente; não abre com um saldo antigo como alternativa.
 - As slots confirmam os totais após **15 spins normais**, sem confirmar a meio de um bónus. O fim de um bónus confirma o resultado completo, incluindo retriggers.
-- O Blackjack abre agora uma [mesa pública multiplayer](blackjack-multiplayer.md): apostas reservadas online, decisões validadas no servidor e pagamentos atómicos por jogador. Rondas locais antigas podem terminar pelo adaptador anterior. A Roleta confirma no fim de cada ronda.
+- O Blackjack abre agora uma [mesa pública multiplayer](blackjack-multiplayer.md): apostas reservadas online, decisões validadas no servidor e pagamentos atómicos por jogador. Rondas locais antigas podem terminar pelo adaptador anterior. A Roleta usa uma mesa partilhada e liquidação autoritativa no servidor.
 - Sair do jogo, navegar, ocultar a página, logout e recuperação de entrada também tentam guardar alterações pendentes. Não existe polling nem gravação por temporizador.
 - Cada dispositivo abre uma sessão independente. Não existe bloqueio global por dispositivo. Na mesma origem, a proteção entre abas impede alterações simultâneas ao mesmo snapshot.
 - Os jogos com checkpoints usam o saldo comum completo do utilizador, sem parcelas nem distribuição manual. O Blackjack multiplayer reserva cada aposta no servidor antes de distribuir.
@@ -43,6 +43,22 @@ O popup **Moedas** consulta o saldo apenas quando é aberto, pela callable admin
 - Falhas de rede não provocam tentativas em todos os spins: uma nova tentativa automática por quantidade só acontece após outros 15 spins normais. Fim de bónus, fim de ronda, atualização manual e entrada são também pontos de recuperação. Não existe repetição infinita por temporizador.
 
 Nos jogos com checkpoints, o estado fica no navegador: o servidor verifica identidade, sequência e contabilidade, sem provar a origem do resultado. No Blackjack multiplayer, o servidor controla também o motor, o baralho privado, os turnos e os resultados. As regras negam acesso direto a carteiras e recibos, incluindo por administradores.
+
+## Roleta multiplayer e chat
+
+No casino do website, todos entram na mesma sala online, mesmo quando só há uma pessoa. A aposta é debitada no servidor; o número é sorteado com `node:crypto` e o retorno de todos os participantes é aplicado atomicamente nas respetivas carteiras. A animação do browser apenas apresenta o resultado confirmado pelo servidor. Sem ligação, não há sorteio offline nem prémio local: a operação pendente conserva o identificador para recuperação.
+
+Com uma pessoa ativa, cada aposta resolve imediatamente. Com várias, a primeira aposta abre uma janela comum de **10 segundos**; a ronda resolve antes se todos os jogadores ativos apostarem, ou no prazo pelo cliente/sweep. O resultado partilhado fica visível durante **12 segundos**. Uma presença expira após 75 segundos; browsers visíveis enviam heartbeat a cada 30 segundos. A mesa aceita até 12 jogadores.
+
+O separador **Chat** subscreve mensagens apenas enquanto está aberto. Mostra o nome e a mensagem, sem horário; as próprias ficam à direita, as restantes à esquerda, com uma cor atribuída pelo servidor a cada jogador. O texto tem até 180 caracteres e o servidor limita cada jogador a uma mensagem por segundo. A consulta apresenta as 100 mensagens mais recentes dos últimos 30 minutos; a interface também remove mensagens expiradas enquanto está aberta. O TTL do Firestore elimina os documentos mais tarde, de forma assíncrona.
+
+### Leituras Firestore estimadas
+
+As contagens seguintes são leituras dos documentos da mesa, não uma fatura total. Uma entrada lê o documento privado da sala e a carteira do jogador (2); um heartbeat lê a sala (1); uma aposta individual lê a sala e a carteira (2). A liquidação de uma ronda partilhada lê a sala e as carteiras de quem apostou, até 13 documentos no máximo. Quem recebe o resultado pelo listener e não pela resposta da aposta consulta depois o saldo (sala + carteira, 2 leituras); a resposta da própria aposta já traz o saldo quando disponível. O cliente também lê o documento público ao subscrever e em cada atualização.
+
+Os heartbeats atualizam o documento público, pelo que cada escrita é entregue a cada listener. Com 12 jogadores visíveis e 12 listeners, o ritmo máximo normal de heartbeat representa aproximadamente **24 leituras transacionais + 288 entregas a listeners + 1 leitura do sweep por minuto**, cerca de **18 780 leituras por hora** ou **450 720 por dia**. Com apenas uma pessoa, a mesma presença e o sweep representam cerca de 5 leituras por minuto (300 por hora). Estes valores excluem autenticação/políticas das callables, entradas, apostas/liquidações, confirmações de saldo, chat, reconexões e leituras das regras; não são uma estimativa do consumo total.
+
+Cada envio de chat lê a sala e o documento de idempotência da mensagem; cada listener do chat recebe uma leitura por nova mensagem. Abrir o separador lê até 100 mensagens. `rouletteSweep` consulta um documento fixo uma vez por minuto mesmo quando não há ronda, isto é, **1 440 leituras por dia**, além da execução agendada. O modo multiplayer não é polling de jogo: as atualizações chegam por listeners Firestore.
 
 ## Código e publicação
 
@@ -56,6 +72,15 @@ npm.cmd run deploy:frontend
 ```
 
 Estes comandos publicam a economia e os checkpoints. Para o Blackjack multiplayer, seguir também os [seletores das novas funções e regras](blackjack-multiplayer.md#código-testes-e-publicação). Não são necessários índices, Storage ou recálculo histórico. Publicar é separado dos testes locais; estes comandos não foram executados durante a implementação.
+
+Para a Roleta multiplayer, publicar as duas funções novas, regras de leitura e TTL do chat, e frontend:
+
+```powershell
+npx.cmd firebase deploy --only "functions:peladinhas:rouletteAction,functions:peladinhas:rouletteSweep,firestore:rules,firestore:indexes"
+npm.cmd run deploy:frontend
+```
+
+O frontend recompila o SDK da Roleta a partir de `games/roleta-europeia-3d`; não publicar apenas o jogo standalone. O deploy não foi executado.
 
 ## Desenvolvimento offline
 

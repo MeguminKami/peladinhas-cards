@@ -31,6 +31,14 @@ O catálogo não subscreve o estado da mesa. Os relógios e as animações são 
 
 O modo antigo continua disponível apenas para concluir uma ronda local anterior à atualização. Depois de terminar e voltar a abrir o Blackjack, entra-se na mesa partilhada. Os restantes jogos conservam os checkpoints existentes; o Blackjack partilhado faz reservas e pagamentos online.
 
+## Chat da mesa
+
+O botão **Chat** abre um painel com os separadores **Jogadores** e **Chat**, com o mesmo comportamento do chat da Roleta (ver [casino.md](./casino.md)). O painel flutua sobre a mesa (canto superior direito no computador, folha inferior no telemóvel) e não altera a composição do jogo; Escape ou ✕ fecha-o.
+
+- O chat só subscreve `casinoBlackjack/main/blackjackMessages` enquanto o separador Chat está aberto: as 100 mensagens mais recentes dos últimos 30 minutos. A interface remove mensagens expiradas; o TTL do Firestore (`expireAt`) apaga os documentos mais tarde.
+- O envio usa a ação `chat` de `blackjackAction`, sem leitura de carteiras e sem alterar a revisão da mesa, o documento público nem a inatividade do jogador. O servidor atribui uma cor por jogador (partilhada pelos seus lugares), limita o texto a 180 caracteres e uma mensagem por segundo, e é idempotente pelo identificador do pedido (`{uid}_{id}`). Quem já saiu ou expirou tem de voltar a entrar para conversar.
+- Mensagens próprias ficam à direita e as restantes à esquerda, com o nome na cor do jogador.
+
 ## Código, testes e publicação
 
 O estado e a contabilidade estão em [blackjack-table.js](../../functions/blackjack-table.js); transações e recuperação em [blackjack.js](../../functions/blackjack.js). O transporte fica em [casino-blackjack.js](../../js/casino-blackjack.js), com apresentação em [multiplayer.ts](../../games/blackjack-3d/src/multiplayer.ts). O servidor importa cópias geradas do motor original; após mudar as regras ou utilitários TypeScript, executar `npm.cmd run build:blackjack:server` e rever as diferenças geradas. O teste verifica que as cópias estão atualizadas.
@@ -49,8 +57,8 @@ O primeiro comando prepara o SDK usado no browser. Os testes de browser iniciam 
 Publicar primeiro as funções e a regra de leitura do documento público; depois, o frontend:
 
 ```powershell
-npx.cmd firebase deploy --only "functions:peladinhas:blackjackAction,functions:peladinhas:blackjackSweep,firestore:rules"
+npx.cmd firebase deploy --only "functions:peladinhas:blackjackAction,functions:peladinhas:blackjackSweep,firestore:rules,firestore:indexes"
 npm.cmd run deploy:frontend
 ```
 
-Não são necessários índices, Storage ou recálculos históricos. As alterações ao módulo de casino apenas exportam o wrapper já existente; não alteram o comportamento das funções antigas. Este guia não confirma publicação nem configuração cloud verificada.
+Não são necessários Storage ou recálculos históricos. O chat exige publicar também `firestore:indexes` (TTL de `blackjackMessages.expireAt`). As alterações ao módulo de casino apenas exportam o wrapper já existente; não alteram o comportamento das funções antigas. Este guia não confirma publicação nem configuração cloud verificada.

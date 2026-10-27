@@ -12,7 +12,7 @@ Os escritores de avaliações submetidas registam uma geração em `feedbackWork
 
 Sem entradas pendentes, esta fila não consulta jogos ou avaliações brutas. Consultas vazias, checkpoints, validações e outros passos continuam a ter custo. Não existe uma percentagem de poupança cloud medida para esta alteração.
 
-Avaliações comunitárias submetidas usam `communityWork/{uid}`. As avaliações iniciais e a posição atual são lidas na publicação das cartas; os seus triggers deixam de reconstruir históricos. A aplicação deixa de chamar `ensureHistory` ao navegar.
+Avaliações comunitárias submetidas usam `communityWork/{uid}`. A validação de nulidade e o resumo comunitário são atualizados ao submeter, antes da resposta; a publicação de cartas permanece no ciclo. A segunda tentativa de uma avaliação nula exige autorização do ADMIN. [Regras e compatibilidade](cards-and-ratings.md). As avaliações iniciais e a posição atual são lidas na publicação das cartas; os seus triggers deixam de reconstruir históricos. A aplicação deixa de chamar `ensureHistory` ao navegar.
 
 ## Prazos e percursos
 

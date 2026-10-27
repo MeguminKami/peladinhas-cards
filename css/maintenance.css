@@ -108,11 +108,13 @@
   .maintenance-pages { position:static; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
   .maintenance-pages button { padding:10px; font-size:.8rem; }
   .maintenance-pages button > svg:last-child { display:none; }
-  .maintenance-tabs { flex-wrap:nowrap; overflow-x:auto; scrollbar-color:var(--accent) var(--bg-panel); }
-  .maintenance-tabs .btn { flex:none; white-space:nowrap; }
+  .maintenance-tabs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .maintenance-tabs .btn { min-width:0; justify-content:center; text-align:center; }
 }
 @media(max-width:540px) {
   .maintenance-heading { padding-top:0; }
+  .maintenance-body .table-wrap table { min-width:480px; }
+  .maintenance-body .table-wrap :is(th,td) { overflow-wrap:normal; word-break:normal; hyphens:none; padding:12px; }
   .maintenance-heading > .pill { font-size:.7rem; }
   .maintenance-editor { padding:16px; border-radius:16px; }
   .maintenance-fields { grid-template-columns:minmax(0,1fr); gap:18px; }

@@ -214,7 +214,7 @@ export async function casinoPage(ctx) {
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
       const [sdk, latest] = await Promise.all([
-        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
+        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "roulette" ? import("./casino-roulette.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
         localWallet.enterGame(),
       ]);
       if (!active || run !== gameRun) return;
@@ -232,6 +232,14 @@ export async function casinoPage(ctx) {
           uid,
           onBalance: balance => { if (active && run === gameRun) { onlineBalance = balance; wallet = { ...wallet, balance }; drawWallet(); } },
           onExit: message => { if (active && run === gameRun) { closeGame(); modal("Mesa de Blackjack", `<p>${esc(message)}</p>`); void loadWallet(true); } },
+        });
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "roulette") {
+        slot = sdk.mountRouletteMultiplayer(playArea.querySelector(".casino-slot-mount"), {
+          uid,
+          onBalance: balance => { if (active && run === gameRun) { onlineBalance = balance; wallet = { ...wallet, balance }; drawWallet(); } },
+          onExit: message => { if (active && run === gameRun) { closeGame(); modal("Mesa de Roleta", `<p>${esc(message)}</p>`); void loadWallet(true); } },
         });
         await slot.ready;
         if (!active || run !== gameRun) return;

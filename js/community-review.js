@@ -1,7 +1,13 @@
 import { esc } from "./ui.js";
 import { icon } from "./icons.js";
 
+export function isNullCommunityRating(rating) {
+  return ["invalid", "required", "ignored"].includes(rating?.reviewState);
+}
+
 export function communityReviewMessage(name, state) {
+  if (state === "invalid")
+    return `A tua avaliação de ${name} foi considerada nula e não está a ser considerada. A administração pode autorizar uma última tentativa.`;
   if (state === "ignored")
     return `A revisão da tua avaliação de ${name} foi recebida. Esta avaliação não está a ser considerada e já não pode ser alterada.`;
   if (state === "accepted")
@@ -10,6 +16,6 @@ export function communityReviewMessage(name, state) {
 }
 export function communityReviewBanner(name, rating, href) {
   if (!rating?.reviewState) return "";
-  const pending = rating.reviewState === "required";
-  return `<aside class="community-review-notice ${pending ? "is-pending" : ""}"><span class="community-review-symbol">${icon(pending ? "edit" : "info")}</span><div><p class="eyebrow">${pending ? "AVALIAÇÃO POR REVER" : "REVISÃO CONCLUÍDA"}</p><p>${esc(communityReviewMessage(name, rating.reviewState))}</p></div>${pending && href ? `<a class="btn btn-secondary" href="${esc(href)}">Rever avaliação ${icon("arrow")}</a>` : ""}</aside>`;
+  const pending = rating.reviewState === "required" && !!rating.reviewGrantedAt;
+  return `<aside class="community-review-notice ${pending ? "is-pending" : ""}"><span class="community-review-symbol">${icon(pending ? "edit" : "info")}</span><div><p class="eyebrow">${pending ? "AVALIAÇÃO POR REVER" : ["invalid", "ignored", "required"].includes(rating.reviewState) ? "AVALIAÇÃO NULA" : "REVISÃO CONCLUÍDA"}</p><p>${esc(communityReviewMessage(name, rating.reviewState === "required" && !pending ? "invalid" : rating.reviewState))}</p></div>${pending && href ? `<a class="btn btn-secondary" href="${esc(href)}">Rever avaliação ${icon("arrow")}</a>` : ""}</aside>`;
 }

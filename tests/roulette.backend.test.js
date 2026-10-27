@@ -1,0 +1,183 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
+import { getFirestore } from "firebase-admin/firestore";
+import { newCasinoWallet } from "../js/casino-economy.js";
+import { rouletteAction } from "../functions/index.js";
+import {
+  runRoulette,
+} from "../functions/roulette.js";
+import { ROULETTE_PRIVATE, ROULETTE_PUBLIC } from "../functions/roulette-table.js";
+
+const db = getFirestore();
+
+async function clearRoom() {
+  await Promise.all([
+    db.doc(ROULETTE_PRIVATE).delete(),
+    db.doc(ROULETTE_PUBLIC).delete(),
+  ]);
+}
+
+async function player(uid) {
+  await db.doc(`users/${uid}`).set({
+    uid,
+    username: uid,
+    displayName: uid,
+    disabled: false,
+    role: "member",
+  });
+  await db.doc(`casinoWallets/${uid}`).set(newCasinoWallet());
+}
+
+function request(uid, action, table, extra = {}) {
+  return runRoulette(
+    { action, id: randomUUID(), ...(table ? { table } : {}), ...extra },
+    uid,
+    uid,
+    Date.now(),
+    db,
+  );
+}
+
+test("a solo spin is server-drawn, paid atomically, and idempotent", async () => {
+  await clearRoom();
+  const uid = `roulette-solo-${randomUUID()}`;
+  await player(uid);
+  const joined = await request(uid, "join");
+  const plan = { "straight:1": 20 };
+  const id = randomUUID();
+  const spin = (number) =>
+    runRoulette(
+      { action: "spin", id, table: joined.table.id, plan },
+      uid,
+      uid,
+      Date.now(),
+      db,
+      number,
+    );
+  const result = await spin(1);
+  assert.equal(result.table.phase, "result");
+  assert.equal(result.table.result.number, 1);
+  assert.equal(result.balance, 20700);
+  assert.equal((await db.doc(`casinoWallets/${uid}`).get()).data().balance, 20700);
+  assert.equal((await spin(1)).balance, 20700);
+});
+
+test("players share one number and receive their own atomic returns", async () => {
+  await clearRoom();
+  const first = `roulette-first-${randomUUID()}`,
+    second = `roulette-second-${randomUUID()}`;
+  await Promise.all([player(first), player(second)]);
+  const [a, b] = await Promise.all([
+    request(first, "join"),
+    request(second, "join"),
+  ]);
+  assert.equal(a.table.id, b.table.id);
+  assert.notEqual(
+    a.table.players.find((player) => player.uid === first).color,
+    a.table.players.find((player) => player.uid === second).color,
+  );
+  const table = a.table.id;
+  const plan = { "straight:0": 20 };
+  const closing = await runRoulette(
+    { action: "spin", id: randomUUID(), table, plan },
+    first,
+    first,
+    Date.now(),
+    db,
+    0,
+  );
+  assert.equal(closing.table.phase, "closing");
+  assert.equal(closing.balance, 19980);
+  const result = await runRoulette(
+    { action: "spin", id: randomUUID(), table, plan },
+    second,
+    second,
+    Date.now() + 100,
+    db,
+    0,
+  );
+  assert.equal(result.table.phase, "result");
+  assert.equal(result.table.result.number, 0);
+  assert.equal(result.table.result.players.length, 2);
+  assert.equal(result.balance, 20700);
+  assert.equal((await db.doc(`casinoWallets/${first}`).get()).data().balance, 20700);
+  assert.equal((await db.doc(`casinoWallets/${second}`).get()).data().balance, 20700);
+});
+
+test("chat stores short-lived text with the server-assigned player color", async () => {
+  await clearRoom();
+  const uid = `roulette-chat-${randomUUID()}`;
+  await player(uid);
+  const joined = await request(uid, "join");
+  const id = randomUUID();
+  const sent = await runRoulette(
+    { action: "chat", id, table: joined.table.id, message: "Olá, mesa!" },
+    uid,
+    uid,
+    Date.now(),
+    db,
+  );
+  const message = (
+    await db
+      .doc(ROULETTE_PUBLIC)
+      .collection("rouletteMessages")
+      .doc(`${uid}_${id}`)
+      .get()
+  ).data();
+  assert.equal(message.user, joined.table.players[0].name);
+  assert.equal(message.message, "Olá, mesa!");
+  assert.equal(message.color, joined.table.players[0].color);
+  assert.equal(message.expireAt.toMillis() - message.createdAt, 30 * 60 * 1000);
+  assert.equal(sent.table.id, joined.table.id);
+  await db.doc(ROULETTE_PRIVATE).delete();
+  await db.doc(ROULETTE_PUBLIC).delete();
+});
+
+test("the result window expires and reopens betting", async () => {
+  await clearRoom();
+  const uid = `roulette-expiry-${randomUUID()}`;
+  const startedAt = Date.now();
+  await player(uid);
+  const joined = await runRoulette(
+    { action: "join", id: randomUUID() },
+    uid,
+    uid,
+    startedAt,
+    db,
+  );
+  const result = await runRoulette(
+    { action: "spin", id: randomUUID(), table: joined.table.id, plan: { "straight:0": 20 } },
+    uid,
+    uid,
+    startedAt + 1,
+    db,
+    0,
+  );
+  assert.equal(result.table.phase, "result");
+  const reopened = await runRoulette(
+    { action: "tick", id: randomUUID(), table: joined.table.id },
+    uid,
+    uid,
+    startedAt + 12001,
+    db,
+  );
+  assert.equal(reopened.table.phase, "betting");
+  assert.equal(reopened.table.result, null);
+});
+
+test("the authenticated callable exposes the online room action", async () => {
+  await clearRoom();
+  const uid = `roulette-call-${randomUUID()}`;
+  await player(uid);
+  const response = await rouletteAction.run({
+    auth: {
+      uid,
+      token: { auth_time: Math.floor(Date.now() / 1000) },
+    },
+    data: { action: "join", id: randomUUID() },
+  });
+  assert.equal(response.table.players[0].uid, uid);
+  assert.equal(response.balance, 20000);
+  await clearRoom();
+});

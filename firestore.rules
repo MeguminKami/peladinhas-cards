@@ -5,6 +5,18 @@ service cloud.firestore {
   match /casinoBlackjack/{id} {
    allow get: if id == 'main' && active();
    allow list, write: if false;
+   match /blackjackMessages/{messageId} {
+    allow read: if id == 'main' && active();
+    allow write: if false;
+   }
+  }
+  match /casinoRoulette/{id} {
+   allow get: if id == 'main' && active();
+   allow list, write: if false;
+   match /rouletteMessages/{messageId} {
+    allow read: if id == 'main' && active();
+    allow write: if false;
+   }
   }
   match /homeSignals/{uid} {
    allow get: if active() && (uid == 'global' || uid == request.auth.uid);
