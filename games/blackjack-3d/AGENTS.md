@@ -10,7 +10,7 @@ Apresentação: projetar eventos confirmados um a um; revelar carta e atualizar 
 
 Controlos de aposta: Reset (desfazer última ficha do foco), Limpar, Repetir e Jogar na mesma zona flutuante das decisões, sobre o chão prolongado abaixo da mesa. Foco assinalado com halo dourado no avatar, sem legenda textual de foco.
 
-Revisão de preferência: os quatro controlos de aposta usam a mesma paleta bordô/dourado, sem cores por ação. Dock compacto, com pouco espaço entre botões e chão reduzido.
+Revisão de preferência (2026-10-27): no multiplayer, distinguir Reset em azul, Limpar em vermelho e Pronto em verde, preservando contornos dourados, texto legível e foco visível. Cada jogador pode ocupar vários lugares livres; aposta e seguro identificam o lugar e todas as mãos usam a mesma carteira. Dock compacto, com separação percetível entre botões.
 
 Lugares e zonas de aposta acompanham o arco do rebordo, com ajuste próprio em mobile. A zona de fichas fica próxima e à frente do avatar, dentro do feltro; não colocar abaixo do nome nem demasiado avançada para o centro da mesa.
 

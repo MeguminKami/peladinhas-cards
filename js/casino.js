@@ -3,6 +3,7 @@ import { icon } from "./icons.js";
 import { createCasinoLocalWallet } from "./casino-local-wallet.js";
 import { CASINO_CATALOG, CASINO_TABLES_ENABLED } from "./casino-catalog.js";
 import { DJABUCOIN, CASINO_EDITION } from "./casino-economy.js";
+import * as casinoRuntime from "./config.js";
 
 const number = (value) =>
   new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 2 }).format(
@@ -82,6 +83,13 @@ export async function casinoPage(ctx) {
     `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">${catalogCount()}</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
   );
   const root = document.querySelector(".casino-page");
+  if (casinoRuntime.runtimeMode === 'fixtures') {
+    const shopLink = document.createElement('a');
+    shopLink.href = './assets/casino/shop/';
+    shopLink.className = 'casino-button casino-button-outline';
+    shopLink.innerHTML = `${icon('cards')} Loja de cartas · Pré-visualização local`;
+    root.querySelector('.casino-filters').after(shopLink);
+  }
   const appHeader = document.querySelector("#header");
   const bottomNav = document.querySelector(".bottom-nav");
   const headerSize = new ResizeObserver(() => {

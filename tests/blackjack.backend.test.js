@@ -23,6 +23,65 @@ const req = (uid, data) => ({
   auth: { uid, token: { auth_time: Math.floor(Date.now() / 1000) } },
   data,
 });
+test("multiple seats transact against one wallet and competing claims cannot overwrite an owner", async () => {
+  await db.doc(BLACKJACK_PRIVATE).delete();
+  await db.doc(BLACKJACK_PUBLIC).delete();
+  const a = `multi-${randomUUID()}`,
+    b = `multi-${randomUUID()}`;
+  for (const uid of [a, b])
+    await db
+      .doc(`users/${uid}`)
+      .set({ uid, displayName: uid, role: "member", disabled: false });
+  const command = async (uid, action, extra = {}, shoe) => {
+    const table = (await db.doc(BLACKJACK_PRIVATE).get()).data();
+    const body = {
+      action,
+      id: randomUUID(),
+      ...(table ? { table: table.id, revision: table.revision } : {}),
+      ...extra,
+    };
+    return shoe
+      ? runBlackjack(body, uid, uid, Date.now(), db, shoe)
+      : blackjackAction.run(req(uid, body));
+  };
+  await command(a, "join");
+  await command(b, "join");
+  const claims = await Promise.allSettled([
+    command(a, "occupy", { seat: 3 }),
+    command(b, "occupy", { seat: 3 }),
+  ]);
+  assert.equal(claims.filter((r) => r.status === "fulfilled").length, 1);
+  const third = (await db.doc(BLACKJACK_PRIVATE).get())
+    .data()
+    .players.find((p) => p.seat === 3).uid;
+  const shoe = deck(),
+    ordered = [];
+  for (const rank of [2, 2, 2, 10, 8, 8, 8, 7, 9, 9, 9])
+    ordered.push(
+      ...shoe.splice(
+        shoe.findIndex((c) => c.rank === rank),
+        1,
+      ),
+    );
+  await command(a, "bet", { seat: 1, amount: 100 });
+  await command(b, "bet", { seat: 2, amount: 100 });
+  await command(third, "bet", { seat: 3, amount: 100 }, [...ordered, ...shoe]);
+  for (const seat of [1, 2, 3]) {
+    const uid = seat === 1 ? a : seat === 2 ? b : third;
+    await command(uid, "hit", { seat });
+    await command(uid, "stand", { seat });
+  }
+  assert.equal(
+    (await db.doc(`casinoWallets/${a}`).get()).data().balance,
+    25000 + (third === a ? 200 : 100),
+  );
+  assert.equal(
+    (await db.doc(`casinoWallets/${b}`).get()).data().balance,
+    25000 + (third === b ? 200 : 100),
+  );
+  await db.doc(BLACKJACK_PRIVATE).delete();
+  await db.doc(BLACKJACK_PUBLIC).delete();
+});
 test("real transactions: simultaneous joins, wallet reservations, retries, permissions and orphan recovery", async () => {
   await db.doc(BLACKJACK_PRIVATE).delete();
   await db.doc(BLACKJACK_PUBLIC).delete();

@@ -90,6 +90,82 @@ test("five players share one shoe, preserve ownership and settle exactly once", 
   h.send(null, h.command(null, "tick"));
   assert.equal(h.table.session.round, null);
 });
+test("one player owns multiple places, pays their combined exposure and controls each hand", () => {
+  const h = harness();
+  h.send("p0", h.command("p0", "join"));
+  h.send("p1", h.command("p1", "join"));
+  for (const seat of [3, 4]) h.send("p0", h.command("p0", "occupy", { seat }));
+  h.send("p1", h.command("p1", "occupy", { seat: 5 }));
+  assert.equal(h.table.players.filter((p) => p.uid === "p0").length, 3);
+  assert.throws(
+    () => h.send("p1", h.command("p1", "occupy", { seat: 3 })),
+    /ocupado/,
+  );
+  assert.throws(
+    () => h.send("p0", h.command("p0", "bet", { amount: 100 })),
+    /lugar/,
+  );
+  const shoe = ordered([2, 2, 2, 2, 2, 10, 8, 8, 8, 8, 8, 7, 9, 9, 9, 9, 9]);
+  for (const p of [...h.table.players])
+    h.send(p.uid, h.command(p.uid, "bet", { seat: p.seat, amount: 100 }), shoe);
+  assert.equal(h.wallets.p0.balance, 24700);
+  assert.equal(h.wallets.p1.balance, 24800);
+  while (h.table.session.round.phase === "play") {
+    const round = h.table.session.round,
+      s = round.seats.find((s) => s.hands.some((x) => x.id === round.active)),
+      p = h.table.players.find((p) => p.seat === s.number);
+    assert.throws(
+      () =>
+        h.send(
+          p.uid === "p0" ? "p1" : "p0",
+          h.command(p.uid === "p0" ? "p1" : "p0", "hit", { seat: p.seat }),
+        ),
+      /inatividade|vez/,
+    );
+    const c = h.command(p.uid, "hit", { seat: p.seat });
+    h.send(p.uid, c);
+    h.send(p.uid, c);
+    h.send(p.uid, h.command(p.uid, "stand", { seat: p.seat }));
+  }
+  assert.equal(h.wallets.p0.balance, 25300);
+  assert.equal(h.wallets.p1.balance, 25200);
+  h.advance(BJ.summary + 1);
+  h.send(null, h.command(null, "tick"));
+  h.send("p0", h.command("p0", "bet", { seat: 1, amount: 100 }));
+  h.send("p0", h.command("p0", "bet", { seat: 3, amount: 100 }));
+  h.send("p0", h.command("p0", "leave"));
+  assert.equal(h.wallets.p0.balance, 25300);
+  assert.ok(h.table.players.every((p) => p.uid !== "p0"));
+});
+test("multiple places share presence, and insurance cannot be used on another owner", () => {
+  const h = harness();
+  h.send("p0", h.command("p0", "join"));
+  h.send("p1", h.command("p1", "join"));
+  h.send("p0", h.command("p0", "occupy", { seat: 3 }));
+  h.advance(30000);
+  const r = h.send("p0", h.command("p0", "heartbeat"));
+  assert.equal(r.publicChanged, false);
+  assert.ok(
+    h.table.players
+      .filter((p) => p.uid === "p0")
+      .every((p) => p.seenAt === h.now),
+  );
+  for (const p of [...h.table.players])
+    h.send(
+      p.uid,
+      h.command(p.uid, "bet", { seat: p.seat, amount: 100 }),
+      ordered([2, 3, 4, 1, 5, 6, 7, 10]),
+    );
+  assert.throws(
+    () => h.send("p0", h.command("p0", "insure", { seat: 2 })),
+    /inatividade/,
+  );
+  h.send("p0", h.command("p0", "insure", { seat: 1 }));
+  assert.equal(h.wallets.p0.balance, 24750);
+  h.send("p0", h.command("p0", "decline", { seat: 3 }));
+  h.send("p1", h.command("p1", "decline", { seat: 2 }));
+  assert.equal(h.wallets.p0.balance, 24900);
+});
 test("room closes after one idle minute despite presence; a live round is protected and completion restarts the minute", () => {
   const empty = harness();
   empty.send("p0", empty.command("p0", "join"));
@@ -185,6 +261,40 @@ function ordered(ranks) {
   }
   return [...first, ...remaining];
 }
+test("expiring one idle place preserves the same owners other place and reserved bet", () => {
+  const h = harness();
+  h.send("p0", h.command("p0", "join"));
+  h.send("p1", h.command("p1", "join"));
+  h.send("p0", h.command("p0", "occupy", { seat: 3 }));
+  h.send("p0", h.command("p0", "bet", { seat: 3, amount: 100 }));
+  h.table.players.find((p) => p.seat === 1).activeAt = h.now - BJ.idle - 1;
+  h.send(null, h.command(null, "tick"));
+  assert.equal(
+    h.table.players.some((p) => p.seat === 1),
+    false,
+  );
+  assert.equal(h.table.players.find((p) => p.seat === 3).bet, 100);
+  h.send("p0", h.command("p0", "leave"));
+  assert.equal(h.wallets.p0.balance, 25000);
+});
+test("an immediate dealer blackjack leaves time for the whole five-place deal before reopening", () => {
+  const h = harness();
+  for (let i = 0; i < 5; i++) h.send(`p${i}`, h.command(`p${i}`, "join"));
+  for (let i = 0; i < 5; i++)
+    h.send(
+      `p${i}`,
+      h.command(`p${i}`, "bet", { amount: 100 }),
+      ordered([2, 2, 2, 2, 2, 10, 8, 8, 8, 8, 8, 1]),
+    );
+  assert.equal(h.table.session.round.phase, "summary");
+  const steps = h.table.session.round.events.filter((e) =>
+    ["card", "reveal"].includes(e.type),
+  ).length;
+  assert.ok(h.table.deadline - h.now >= steps * 480 + 1800);
+  h.advance(BJ.summary + 1);
+  h.send(null, h.command(null, "tick"));
+  assert.equal(h.table.session.round.phase, "summary");
+});
 test("split and doubles charge only their owner, with independent returns", () => {
   const h = harness();
   for (const uid of ["p0", "p1"]) h.send(uid, h.command(uid, "join"));

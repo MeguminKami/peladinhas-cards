@@ -6,11 +6,15 @@
 
 O Blackjack do casino abre uma única mesa pública com cinco lugares, atribuídos automaticamente. O primeiro jogador cria a mesa. Não há códigos nem anfitrião; sair não transfere controlo para outro browser. Com cinco lugares ocupados, uma nova entrada recebe a indicação de mesa cheia; esta versão não inclui espectadores adicionais.
 
-Cada pessoa escolhe fichas no seu lugar e confirma em **Pronto**. A edição atual usa DJC da carteira comum. Confirmar reserva imediatamente a aposta no servidor. A primeira confirmação abre 15 segundos; se todos confirmarem antes, a ronda começa. Quem não confirmou ou entrou durante uma ronda participa na seguinte. Ajustar fichas antes de confirmar não faz pedidos ao servidor.
+Cada pessoa pode ocupar vários dos cinco lugares: clicar num **+** livre ocupa o lugar e clicar no próprio avatar escolhe onde apostar. O primeiro lugar é atribuído na entrada; regressar à aplicação não ocupa lugares adicionais. Lugares ocupados durante uma ronda entram na seguinte. Confirmar em **Pronto** reserva apenas a aposta do lugar selecionado. Todos os lugares da mesma pessoa usam a mesma carteira DJC, com controlo do saldo agregado no servidor. Sair da mesa liberta todos os seus lugares após resolver as apostas.
+
+A primeira confirmação abre 15 segundos; se todos os lugares ocupados confirmarem antes, a ronda começa. Quem não confirmou ou entrou durante uma ronda participa na seguinte. Ajustar fichas e alternar o lugar selecionado são operações locais. As decisões identificam o lugar da mão ativa; seguro e aposta identificam o lugar escolhido. Os retornos de todos os lugares do mesmo dono são creditados atomicamente na mesma carteira.
+
+As cartas são apresentadas uma a uma, com movimento de cerca de 320 ms e uma pausa curta entre entregas. Um som procedural de papel acompanha cada carta; som e movimento reduzido respeitam as definições existentes. **Ver mesa** permite saltar a sequência. Atualizações recebidas durante a distribuição retomam a partir da última carta apresentada. O total do dealer fica abaixo das cartas, ocultando o valor da carta fechada. **Reset**, **Limpar** e **Pronto** distinguem-se por azul, vermelho e verde, mantendo texto e foco acessível.
 
 As regras são as mesmas do modo individual: quatro baralhos, S17, natural 3:2, seguro, dobrar e até quatro mãos por lugar. O servidor embaralha com `node:crypto`, mantém o baralho e a carta fechada privados e verifica a propriedade de cada decisão. Cada pessoa tem 30 segundos para decidir; o timeout para a mão ou recusa seguro. As decisões podem demorar um pouco mais a ser processadas se houver latência. Sem clientes ligados, o processo de recuperação corre a cada minuto.
 
-Os ganhos são pagos na transação que termina a ronda. O resumo permanece 6,5 segundos antes de reabrir apostas. Saídas antes da distribuição devolvem apostas reservadas; mãos já distribuídas continuam até à liquidação, mesmo que todos saiam. Não há um botão para cancelar uma mão ou repetir o pagamento.
+Os ganhos são pagos na transação que termina a ronda. O resumo permanece pelo menos 6,5 segundos antes de reabrir apostas. Se a ronda terminar logo na distribuição inicial, o prazo inclui tempo para apresentar todas as cartas e o resultado sem cortar a sequência. Saídas antes da distribuição devolvem apostas reservadas; mãos já distribuídas continuam até à liquidação, mesmo que todos saiam. Não há um botão para cancelar uma mão ou repetir o pagamento.
 
 ## Presença e recuperação
 
@@ -36,6 +40,7 @@ node scripts/build-casino-tables.mjs
 npm.cmd run test:casino:blackjack
 npm.cmd run test:casino:blackjack:backend
 npm.cmd run test:docs
+node tests/roulette-alignment.mjs
 ```
 
 O primeiro comando prepara o SDK usado no browser. Os testes de browser iniciam um servidor de fixtures próprio em 8093 e bloqueiam fontes externas na página principal. O emulador usa `firebase.casino.json`, projeto `demo-` e Firestore em 8188. Não usam dados reais. O teste backend gera `test-results/blackjack/budget.json`: operações de transação medidas, com leituras de listeners, regras e validação calculadas separadamente.

@@ -122,11 +122,11 @@ try {
     });
     results.push({ width, box, buttons });
   }
-  await frame.locator('[data-action="add"]').click();
+  await frame.locator('[data-action^="add-"]').click();
   await frame.locator('[data-action="bet"]').click();
   for (const { page: guest } of guests) {
     const gf = guest.frameLocator("iframe");
-    await gf.locator('[data-action="add"]').click();
+    await gf.locator('[data-action^="add-"]').click();
     await gf.locator('[data-action="bet"]').click();
   }
   await frame.locator(".dealer-hud .card").first().waitFor();
@@ -184,6 +184,96 @@ try {
       .locator('[data-action="rules"]')
       .evaluate((el) => el.matches(":focus-visible")),
   );
+  // Reopen the same public table with one person occupying two places.
+  for (const uid of ["pedro", ...guests.map((g) => g.uid)])
+    await http(uid, "leave");
+  const closingTable = await fetch(origin + "/__blackjack").then((r) =>
+    r.json(),
+  );
+  if (closingTable?.deadline)
+    await page.waitForTimeout(
+      Math.max(0, closingTable.deadline - Date.now() + 100),
+    );
+  await http("pedro", "tick");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    window.__cardSounds = 0;
+    const original = AudioContext.prototype.createBufferSource;
+    AudioContext.prototype.createBufferSource = function () {
+      window.__cardSounds++;
+      return original.call(this);
+    };
+  });
+  await page.reload();
+  await page.locator('[data-casino-game="blackjack"]').click({ force: true });
+  await frame.locator('[data-action="occupy-2"]').click();
+  await frame.locator("[data-people]").filter({ hasText: "2/5" }).waitFor();
+  assert.equal(
+    await frame.locator('button.avatar[data-action^="focus-"]').count(),
+    2,
+  );
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.waitForTimeout(100);
+    assert.ok(
+      await frame
+        .locator("body")
+        .evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+    );
+    const colors = await frame
+      .locator(".decision-dock button")
+      .evaluateAll((buttons) =>
+        buttons.map((b) => getComputedStyle(b).backgroundImage),
+      );
+    assert.equal(
+      new Set(colors).size,
+      3,
+      "Reset, Limpar and Pronto have distinct colors",
+    );
+    await page.screenshot({
+      path: `test-results/blackjack/${width}-two-places.png`,
+      fullPage: true,
+    });
+  }
+  await frame.locator('[data-action="add-1"]').click();
+  await frame.locator('[data-action="bet"]').click();
+  await frame.locator('[data-action="add-2"]').click();
+  await frame.locator('[data-action="bet"]').click();
+  for (let i = 0; i < 12; i++) {
+    const table = await fetch(origin + "/__blackjack").then((r) => r.json());
+    if (table.round?.phase === "summary") break;
+    if (table.round?.phase === "insurance") {
+      for (const s of table.round.seats.filter((s) => s.insured === null)) {
+        await frame.locator(`[data-action="focus-${s.number}"]`).click();
+        await frame.locator('[data-action="decline"]').click();
+      }
+    } else {
+      await frame.locator('[data-action="stand"]').waitFor();
+      await frame.locator('[data-action="stand"]').click();
+    }
+  }
+  await frame.locator(".decision-caption").filter({ hasText: /DJC/ }).waitFor();
+  assert.ok(
+    await frame.locator("body").evaluate(() => window.__cardSounds >= 6),
+    "paper card sounds were synthesized for the deal",
+  );
+  const dealer = await frame.locator("[data-dealer-total]").evaluate((el) => {
+    const total = el.getBoundingClientRect(),
+      cards = el.previousElementSibling.getBoundingClientRect();
+    return {
+      text: el.textContent,
+      afterCards: total.top >= cards.bottom + 4,
+      size: parseFloat(getComputedStyle(el).fontSize),
+    };
+  });
+  assert.ok(
+    dealer.afterCards && dealer.size >= 18 && /^\d+$/.test(dealer.text),
+    JSON.stringify(dealer),
+  );
+  await page.screenshot({
+    path: "test-results/blackjack/320-two-places-summary.png",
+    fullPage: true,
+  });
   assert.deepEqual(errors, []);
   writeFileSync(
     "test-results/blackjack/browser.json",

@@ -1,0 +1,99 @@
+.sca-platinum-prism {
+  --sca-base: #084851;
+  --sca-shadow: #041c2c;
+  --sca-bright: #e7ffff;
+  --sca-mid: #66d9ea;
+  --sca-ink: #efffff;
+  --scm-colour: #00e7f5;
+}
+.sca-palladium-flare {
+  --sca-base: #5a123b;
+  --sca-shadow: #260d28;
+  --sca-bright: #fff0f7;
+  --sca-mid: #f58eaa;
+  --sca-ink: #fff4f8;
+  --scm-colour: #ff397e;
+}
+.sca-iridium-pulse {
+  --sca-base: #30206e;
+  --sca-shadow: #160d38;
+  --sca-bright: #ede2ff;
+  --sca-mid: #af7aff;
+  --sca-ink: #faf4ff;
+  --scm-colour: #af42ff;
+}
+.sca-rhodium-crown {
+  --sca-base: #16452f;
+  --sca-shadow: #08271c;
+  --sca-bright: #f0ffe5;
+  --sca-mid: #b2e579;
+  --sca-ink: #f7fff0;
+  --scm-colour: #acff35;
+}
+.sca-osmium-apex {
+  --sca-base: #133b8c;
+  --sca-shadow: #071732;
+  --sca-bright: #edfaff;
+  --sca-mid: #739dff;
+  --sca-ink: #f3faff;
+  --scm-colour: #3d78ff;
+}
+.scm-enamel {
+  fill: var(--scm-colour);
+  stroke: var(--sca-bright);
+  stroke-width: 0.7;
+}
+.scm-crystal {
+  fill: var(--scm-colour);
+  stroke: var(--sca-bright);
+  stroke-width: 1.4;
+  filter: drop-shadow(0 0 5px var(--scm-colour));
+}
+.scm-rivet {
+  fill: var(--sca-shadow);
+  stroke: var(--sca-bright);
+  stroke-width: 1;
+}
+.scm-fine {
+  fill: none;
+  stroke: var(--sca-bright);
+  stroke-width: 0.8;
+  opacity: 0.7;
+}
+.scm-rib {
+  fill: var(--sca-metal-fill);
+  stroke: var(--scm-colour);
+  stroke-width: 1;
+}
+.scm-aurora {
+  fill: var(--scm-colour);
+  opacity: 0.65;
+  stroke: var(--sca-bright);
+  stroke-width: 0.6;
+}
+.scm-pulse {
+  fill: none;
+  stroke: var(--scm-colour);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 3px var(--scm-colour));
+}
+.scm-pulse ellipse {
+  stroke-width: 1;
+  opacity: 0.6;
+}
+.scm-laurel {
+  fill: none;
+  stroke: var(--sca-bright);
+  stroke-width: 2;
+}
+.scm-leaf {
+  fill: var(--scm-colour);
+  stroke: var(--sca-bright);
+  stroke-width: 0.7;
+}
+.scm-orbit {
+  fill: none;
+  stroke: var(--scm-colour);
+  stroke-width: 1.4;
+  opacity: 0.7;
+}

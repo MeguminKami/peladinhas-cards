@@ -104,6 +104,7 @@ export function tableCommand(
   check(
     [
       "join",
+      "occupy",
       "bet",
       "hit",
       "stand",
@@ -129,6 +130,7 @@ export function tableCommand(
     input.table,
     input.revision,
     input.amount,
+    ...(input.seat === undefined ? [] : [input.seat]),
   ]);
   const previous = table.commands.find(
     (c) => c.id === input.id && c.uid === uid,
@@ -142,15 +144,20 @@ export function tableCommand(
   }
   if (input.action !== "join")
     check(input.table === table.id, "A mesa terminou. Volta ao casino.");
-  if (input.action === "heartbeat" && !roomExpired(table, now)) {
-    const p = table.players.find((p) => p.uid === uid);
+  if (input.seat !== undefined)
     check(
-      p && !p.leaving && !expiredPlayer(p, table, now),
+      Number.isInteger(input.seat) && input.seat >= 1 && input.seat <= 5,
+      "Lugar inválido.",
+    );
+  if (input.action === "heartbeat" && !roomExpired(table, now)) {
+    const owned = table.players.filter((p) => p.uid === uid && !p.leaving);
+    check(
+      owned.length && owned.some((p) => !expiredPlayer(p, table, now)),
       "Saíste da mesa por inatividade.",
     );
-    if (now - p.seenAt < 20000)
+    if (owned.every((p) => now - p.seenAt < 20000))
       return { table, wallets: {}, publicChanged: false, changed: false };
-    p.seenAt = now;
+    owned.forEach((p) => (p.seenAt = now));
     return { table, wallets: {}, publicChanged: false, changed: true };
   }
   const wallets = {},
@@ -180,20 +187,26 @@ export function tableCommand(
       ...w.recent,
     ].slice(0, DJABUCOIN.recentLimit);
   }
-  function pay() {
+  function pay(initialDeal = false) {
     const r = table.session.round;
     if (r?.phase !== "summary" || table.paid === r.id) return;
     for (const p of r.seats) {
       const owner = table.players.find((x) => x.seat === p.number);
       check(owner, "Lugar sem jogador.");
       const gross = p.insuranceGross + p.hands.reduce((n, h) => n + h.gross, 0);
-      if (gross) money(owner.uid, gross, "return");
-      credits[owner.uid] = gross;
+      if (gross) money(owner.uid, gross, `return:${p.number}`);
+      credits[owner.uid] = (credits[owner.uid] || 0) + gross;
       if (!owner.leaving && now - owner.seenAt < BJ.lease) owner.activeAt = now;
     }
     table.paid = r.id;
     table.lastPlayAt = now;
-    table.deadline = now + BJ.summary;
+    const presentationTime = initialDeal
+      ? r.events.filter((e) => e.type === "card" || e.type === "reveal")
+          .length *
+          650 +
+        1800
+      : 0;
+    table.deadline = now + Math.max(BJ.summary, presentationTime);
   }
   function decision(action, player) {
     const before = table.session.round;
@@ -222,7 +235,7 @@ export function tableCommand(
     table.session.balance = 1e12;
     table.session = start(table.session, bets, forcedShoe || shoe());
     table.deadline = now + BJ.turn;
-    pay();
+    pay(true);
   }
   // A live round never expires the room. Idle time starts again at settlement.
   if (original && roomExpired(table, now)) {
@@ -265,11 +278,22 @@ export function tableCommand(
     p.leaving = true;
     if (!table.session.round) {
       if (p.bet) money(p.uid, p.bet, "refund");
-      table.players = table.players.filter((x) => x.uid !== p.uid);
+      table.players = table.players.filter((x) => x.seat !== p.seat);
     }
   }
-  let player = table.players.find((p) => p.uid === uid);
-  const passive = ["tick", "heartbeat", "leave", "join"].includes(input.action);
+  const owned = table.players.filter((p) => p.uid === uid);
+  const activeSeat = table.session.round?.seats.find((s) =>
+    s.hands.some((h) => h.id === table.session.round.active),
+  )?.number;
+  let player =
+    owned.find((p) => p.seat === (input.seat ?? activeSeat)) ||
+    (input.seat === undefined ? owned[0] : undefined);
+  if (input.action === "join") player = owned[0];
+  if (input.action === "leave")
+    player = owned.find((p) => !p.leaving) || owned[0];
+  const passive = ["tick", "heartbeat", "leave", "join", "occupy"].includes(
+    input.action,
+  );
   if (!passive)
     check(
       Number.isSafeInteger(input.revision) && input.revision >= 0,
@@ -297,15 +321,29 @@ export function tableCommand(
       stale: true,
     };
   }
-  if (input.action === "join") {
+  if (input.action === "join" || input.action === "occupy") {
+    if (input.action === "occupy") {
+      check(
+        owned.some((p) => !p.leaving),
+        "Entra primeiro na mesa.",
+      );
+      check(
+        input.seat && !table.players.some((p) => p.seat === input.seat),
+        "O lugar já está ocupado.",
+      );
+      player = undefined;
+    }
     if (!player) {
       check(
         table.players.length < 5,
         "A mesa está cheia. Tenta novamente quando houver um lugar livre.",
       );
-      const seat = [1, 2, 3, 4, 5].find(
-        (n) => !table.players.some((p) => p.seat === n),
-      );
+      const seat =
+        input.action === "occupy"
+          ? input.seat
+          : [1, 2, 3, 4, 5].find(
+              (n) => !table.players.some((p) => p.seat === n),
+            );
       player = {
         uid,
         name: Array.from(String(name || "Jogador"))
@@ -320,15 +358,19 @@ export function tableCommand(
       };
       table.players.push(player);
     } else {
-      if (player.leaving) player.joinedRevision = table.revision + 1;
-      player.seenAt = now;
-      player.activeAt = now;
-      player.leaving = false;
+      owned.forEach((p) => {
+        if (p.leaving) p.joinedRevision = table.revision + 1;
+        p.seenAt = now;
+        p.activeAt = now;
+        p.leaving = false;
+      });
     }
   } else if (input.action === "tick") {
     // Scheduler or connected client: only advance elapsed server deadlines.
   } else {
     check(player && !player.leaving, "Saíste da mesa por inatividade.");
+    if (input.action === "bet" && owned.length > 1)
+      check(input.seat !== undefined, "Escolhe o lugar da aposta.");
     player.seenAt = now;
     if (input.action !== "heartbeat") player.activeAt = now;
     if (input.action === "bet") {
@@ -344,10 +386,12 @@ export function tableCommand(
       player.bet = input.amount;
       if (!table.deadline) table.deadline = now + BJ.betting;
     } else if (input.action === "leave") {
-      player.leaving = true;
-      player.seenAt = now - BJ.lease;
+      owned.forEach((p) => {
+        p.leaving = true;
+        p.seenAt = now - BJ.lease;
+      });
       if (!table.session.round) {
-        if (player.bet) money(uid, player.bet, "refund");
+        for (const p of owned) if (p.bet) money(uid, p.bet, "refund");
         table.players = table.players.filter((p) => p.uid !== uid);
       }
     } else if (input.action !== "heartbeat") {
@@ -362,7 +406,8 @@ export function tableCommand(
         );
       else
         check(
-          ["insure", "decline"].includes(input.action),
+          ["insure", "decline"].includes(input.action) &&
+            !!round.seats.find((p) => p.number === player.seat),
           "Decide o seguro primeiro.",
         );
       decision(input.action, player);

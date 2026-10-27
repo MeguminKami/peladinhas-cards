@@ -58,3 +58,17 @@ Validação local: testes de motor/apresentação e verificação no browser em 
 
 
 A [galeria dos 18 vilões e quatro fundos](./art-gallery.html) permite inspecionar todos os recursos em conjunto. Prompts: [nível 1](./ART-VILLAINS-TIER1.md), [nível 2](./ART-VILLAINS-TIER2.md), [nível 3](./ART-VILLAINS-TIER3.md). Verificação local de assets, proporções e galeria: `node tests/art-browser.mjs` com o servidor local ativo.
+
+
+## Correção da mistura de áudio · 27/10/2026
+
+O [controlador de áudio](./audio.mjs) usa um único canal substituível para o feedback da jogada. Início, derrota e pagamento tocam a gravação do evento, sem acrescentar uma fala antiga ou fanfarra sintetizada em paralelo. Os passos usam uma fala; com vozes desligadas, usam um sinal curto se os efeitos estiverem ligados. Com efeitos desligados, as falas antigas dos eventos continuam disponíveis através do controlo de vozes. Cada evento cancela o anterior, incluindo downloads de falas pendentes. A música baixa temporariamente para 22% do volume escolhido durante o feedback; ocultar ou fechar o jogo cancela os sons.
+
+Diagnóstico local em 27/10/2026: os MP3 fornecidos para [fácil/normal/difícil](./assets/audio/easy_medium_hard.mp3) e [extremo](./assets/audio/extreme.mp3) têm bytes idênticos, incluindo os originais do utilizador. SHA-256 comum: `D8F44971F4F1123D2B2A6BDF1EB50A9B685C47BDEDA0475BFCFB5BF30D731112`. O seletor já aponta para o URL específico do extremo e interrompe a faixa anterior, mas uma música realmente diferente requer o ficheiro correto do utilizador. Este diagnóstico não confirma ficheiros publicados.
+
+Validação local: `npm.cmd test`, `npm.cmd run test:voices` e `node tests/audio-browser.mjs` passaram, cobrindo substituição, mute, downloads tardios, redução do volume da música e troca de URL entre dificuldades. Sem Firebase real e sem deploy.
+
+
+### Faixa do Extremo substituída · 27/10/2026
+
+Recebida a faixa correta, Jan Fleck - Kicknapping (SlugoS & MKM Remix). Copiada para [extreme.mp3](./assets/audio/extreme.mp3), preservando o original do utilizador. SHA-256: `0ACDD4F3D14021181F308ACF3C8277A84DB4194406202379D607CE0CB1B1016B`. O novo ficheiro difere da faixa das restantes dificuldades e resolve a duplicidade identificada no diagnóstico acima. Sem publicação.

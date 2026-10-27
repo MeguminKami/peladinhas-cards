@@ -24,7 +24,7 @@ function neededWallets(table, input, uid, now) {
   if (deadline || expired) return walletIds(table, uid);
   if (input.action === "tick") return [];
   const r = table.session.round;
-  if (["join", "leave"].includes(input.action)) return [uid];
+  if (["join", "occupy", "leave"].includes(input.action)) return [uid];
   if (
     input.action === "bet" &&
     table.players.some((p) => p.uid !== uid && !p.bet && !p.leaving)
@@ -117,7 +117,8 @@ export function blackjackFunctions() {
     if (
       !input ||
       Object.keys(input).some(
-        (k) => !["action", "id", "table", "revision", "amount"].includes(k),
+        (k) =>
+          !["action", "id", "table", "revision", "amount", "seat"].includes(k),
       ) ||
       (input.action === "tick" && !input.table)
     )

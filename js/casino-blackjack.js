@@ -52,7 +52,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
     accept(data);
     return data;
   }
-  async function command(action, amount) {
+  async function command(action, amount, seat) {
     if (stopped || inFlight) return;
     if (!pending) {
       pending = {
@@ -60,6 +60,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
         id: crypto.randomUUID(),
         ...(state ? { table: state.id, revision: state.revision } : {}),
         ...(amount === undefined ? {} : { amount }),
+        ...(seat === undefined ? {} : { seat }),
       };
       sessionStorage.setItem(key, JSON.stringify(pending));
     }

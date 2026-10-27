@@ -1,0 +1,219 @@
+/* Game scenes stay below the portrait and the common typography layer. */
+.casino-shop-card .scg-wood {
+  fill: #38251c;
+  stroke: #ad8c57;
+  stroke-width: 1.3;
+}
+.casino-shop-card .scg-brass {
+  fill: var(--sca-metal-fill, #a78a50);
+  stroke: #d6bd83;
+  stroke-width: 1;
+}
+.casino-shop-card .scg-brass-line {
+  fill: none;
+  stroke: #d6bd83;
+  stroke-width: 1;
+  opacity: 0.8;
+}
+.casino-shop-card .scg-woodgrain {
+  fill: none;
+  stroke: #936544;
+  stroke-width: 0.55;
+  opacity: 0.4;
+}
+.casino-shop-card .scg-felt {
+  fill: #143c32;
+  stroke: #75947a;
+  stroke-width: 0.8;
+}
+.casino-shop-card .scg-felt-stitch {
+  fill: none;
+  stroke: #b8bd8c;
+  stroke-width: 0.7;
+  stroke-dasharray: 2 3;
+  opacity: 0.65;
+}
+.casino-shop-card .scg-spade {
+  fill: #cdb579;
+  stroke: #f2dca3;
+  stroke-width: 0.6;
+}
+.casino-shop-card .scg-diamond {
+  fill: none;
+  stroke: #b0925d;
+  stroke-width: 1;
+}
+.casino-shop-card .scg-card-rank {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  fill: #243b31;
+}
+.casino-shop-card .scg-bolt circle {
+  fill: #2b3237;
+  stroke: #b5b5a3;
+  stroke-width: 0.8;
+}
+.casino-shop-card .scg-bolt path {
+  stroke: #b5b5a3;
+  stroke-width: 0.7;
+}
+.casino-shop-card .scg-rubber {
+  fill: #171c20;
+  stroke: #737e7c;
+  stroke-width: 1.4;
+}
+.casino-shop-card .scg-steel {
+  fill: var(--sca-metal-fill, #818d85);
+  stroke: #b6be9f;
+  stroke-width: 1;
+}
+.casino-shop-card .scg-titanium {
+  fill: #25304a;
+  stroke: #8fafd0;
+  stroke-width: 1;
+}
+.casino-shop-card .scg-worn-gold {
+  fill: var(--sca-metal-fill, #9c8a59);
+  stroke: #d2b978;
+  stroke-width: 1;
+}
+.casino-shop-card .scg-goalnet {
+  stroke: #a4a4a3;
+  stroke-width: 0.5;
+  fill: none;
+  opacity: 0.28;
+}
+.casino-shop-card .scg-fence {
+  stroke: #baa35e;
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.6;
+}
+.casino-shop-card .scg-engraving {
+  fill: none;
+  stroke: #bca47a;
+  stroke-width: 0.8;
+}
+.sca-blackjack-private {
+  --sca-base: #102e25;
+  --sca-shadow: #081c18;
+  --sca-bright: #e5d0a0;
+  --sca-mid: #ae9055;
+  --sca-ink: #fff1d3;
+  --sca-edge-left: #f2cf8d;
+  --sca-edge-right: #8ed4ad;
+}
+.sca-roulette-european {
+  --sca-base: #34241e;
+  --sca-shadow: #19191b;
+  --sca-bright: #e7ce92;
+  --sca-mid: #b09052;
+  --sca-ink: #fff2d5;
+  --sca-edge-left: #f3dca8;
+  --sca-edge-right: #cc8c79;
+}
+.sca-cardoso-asphalt {
+  --sca-base: #252c2c;
+  --sca-shadow: #111a19;
+  --sca-bright: #d8e4b5;
+  --sca-mid: #8b9a81;
+  --sca-ink: #f1f6db;
+  --sca-edge-left: #cbf18c;
+  --sca-edge-right: #bc94d7;
+}
+.sca-rift-core {
+  --sca-base: #171d35;
+  --sca-shadow: #0c1425;
+  --sca-bright: #b5f7ff;
+  --sca-mid: #657797;
+  --sca-ink: #edfdff;
+  --sca-edge-left: #a3f7ff;
+  --sca-edge-right: #c0a0f8;
+}
+.sca-glory-night {
+  --sca-base: #17223c;
+  --sca-shadow: #101a2d;
+  --sca-bright: #e1c889;
+  --sca-mid: #9b824c;
+  --sca-ink: #fff1ce;
+  --sca-edge-left: #ebd294;
+  --sca-edge-right: #a399db;
+}
+.casino-shop-card .scg-suit-engraving {
+  fill: none;
+  stroke: #d8bd80;
+  stroke-width: 0.9;
+  opacity: 0.85;
+}
+.casino-shop-card .scg-king-engraving {
+  fill: none;
+  stroke: #937743;
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.casino-shop-card .scg-factory-depth {
+  fill: #5a416d;
+  stroke: #9980ad;
+  stroke-width: 0.8;
+  opacity: 0.75;
+}
+.casino-shop-card .scg-lime-line {
+  fill: none;
+  stroke: #c1f276;
+  stroke-width: 1.6;
+  opacity: 0.8;
+}
+.casino-shop-card .scg-broken-chain {
+  fill: none;
+  stroke: #aab9ad;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+.casino-shop-card .scg-chain-break {
+  stroke: #d6ff9d;
+  stroke-width: 1.5;
+}
+.casino-shop-card .scg-oil {
+  fill: #d5a43b;
+  stroke: #e9c36b;
+  stroke-width: 0.6;
+  opacity: 0.75;
+}
+.casino-shop-card .scg-reactor-halo {
+  fill: none;
+  stroke: #efffff;
+  stroke-width: 1.7;
+  filter: drop-shadow(0 0 3px #7be8f0);
+}
+.casino-shop-card .scg-fracture-bed {
+  fill: none;
+  stroke: #8465c3;
+  stroke-width: 7;
+  opacity: 0.8;
+  stroke-linejoin: bevel;
+}
+.casino-shop-card .scg-fracture-core {
+  fill: none;
+  stroke: #e9ffff;
+  stroke-width: 1.6;
+  filter: drop-shadow(0 0 2px #56e3ff);
+  stroke-linejoin: bevel;
+}
+.casino-shop-card .scg-gold-filaments {
+  fill: none;
+  stroke: #e6c779;
+  stroke-width: 1.1;
+  opacity: 0.8;
+}
+.casino-shop-card .scg-lit-particles {
+  fill: #fff1b3;
+  filter: drop-shadow(0 0 2px #d9bc76);
+}
+.casino-shop-card .scg-gold-wear {
+  fill: none;
+  stroke: #f4e3b0;
+  stroke-width: 1;
+  opacity: 0.6;
+}
