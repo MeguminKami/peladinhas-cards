@@ -6,7 +6,7 @@ O casino está em `#/casino`; `/casino` redireciona para essa rota. O convite ap
 
 ## Economia e reinício
 
-A edição `official-2026-10-26-cardoso-reset` inicia cada carteira com **250 DJC**. O reinício é aplicado atomicamente no primeiro acesso à carteira, recompensa ou envio administrativo depois da publicação do servidor. Não exige percorrer a base de dados. Carteiras da edição atual conservam o saldo. Sessões e snapshots anteriores ficam isolados pela versão, sem recuperar saldos de teste.
+A edição `official-2026-10-27-reset-200` inicia cada carteira com **200 DJC**. O reinício é aplicado atomicamente no primeiro acesso à carteira, recompensa ou envio administrativo depois da publicação do servidor. Não exige percorrer a base de dados. Carteiras da edição atual conservam o saldo. Sessões e snapshots anteriores ficam isolados pela versão, sem recuperar saldos de teste.
 
 Cada peladinha que passa a `closed` atribui entre **20 e 200 DJC** a cada participante, incluindo suplentes:
 
@@ -67,7 +67,7 @@ npm.cmd ci --prefix games/roleta-europeia-3d
 npm.cmd run dev:casino
 ```
 
-Abrir `http://localhost:8081/#/casino`. O servidor usa fixtures, sem Firebase real, e 1000 créditos de desenvolvimento numa carteira nova. O site oficial começa com 250 DJC. A mesa multiplayer de desenvolvimento tem carteiras fictícias próprias de 250 DJC e estado em memória, partilhado entre browsers desse servidor local. O comando recompila os jogos; depois de alterar fontes de `games`, reiniciar o comando ou executar `npm.cmd run build:casino`. As builds em `assets/games` são geradas e ignoradas no Git.
+Abrir `http://localhost:8081/#/casino`. O servidor usa fixtures, sem Firebase real, e 1000 créditos de desenvolvimento numa carteira nova. O site oficial começa com 200 DJC. A mesa multiplayer de desenvolvimento tem carteiras fictícias próprias de 200 DJC e estado em memória, partilhado entre browsers desse servidor local. O comando recompila os jogos; depois de alterar fontes de `games`, reiniciar o comando ou executar `npm.cmd run build:casino`. As builds em `assets/games` são geradas e ignoradas no Git.
 
 Node 24.16+ para compilar os jogos; runtime das Functions: Node 22. O backend usa Java 21 e [firebase.casino.json](../../firebase.casino.json), com projeto `demo-` e Firestore em 8188.
 

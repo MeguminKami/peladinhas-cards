@@ -17,10 +17,10 @@ const sync = (values = {}) => ({
   release: false,
   ...values,
 });
-test('the casino reset starts at 250 coins and rejects pending sessions from the previous edition',()=>{
- const legacy={edition:'official-2026-10-shared',balance:999999,earned:2000,matches:3,recent:[{kind:'slot'}]};
+test('the casino reset starts at 200 coins and rejects pending sessions from the previous edition',()=>{
+ const legacy={edition:'official-2026-10-26-cardoso-reset',balance:999999,earned:2000,matches:3,recent:[{kind:'slot'}]};
  const wallet=currentCasinoWallet(legacy,1);
- assert.equal(wallet.balance,25000);assert.equal(wallet.edition,CASINO_EDITION);
+ assert.equal(wallet.balance,20000);assert.equal(wallet.edition,CASINO_EDITION);
  assert.equal(wallet.earned,0);assert.equal(wallet.matches,0);
  const pending={edition:legacy.edition,balance:legacy.balance,sequence:0,spent:0,won:0,closed:false};
  assert.throws(()=>applyCasinoSession(wallet,pending,open));

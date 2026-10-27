@@ -15,7 +15,7 @@ test("football rewards cover outcomes, margin, goals, assists and 20–200 bound
   game.status="open";
   assert.equal(casinoMatchReward(game,"p"),0);
   const reset=currentCasinoWallet({balance:999999});
-  assert.equal(reset.balance,25000);
+  assert.equal(reset.balance,20000);
   reset.balance=12345;
   assert.equal(currentCasinoWallet(reset).balance,12345);
 });
@@ -38,11 +38,11 @@ const transaction = (values = {}) => ({
   bonusHunt: false,
   ...values,
 });
-test("DJC uses exact hundredths; welcome is 250 and each football match adds 20", () => {
+test("DJC uses exact hundredths; welcome is 200 and each football match adds 20", () => {
   const wallet = newCasinoWallet(1),
     next = awardCasinoMatch(wallet, "game", 2);
-  assert.equal(wallet.balance, 25000);
-  assert.equal(next.balance, 27000);
+  assert.equal(wallet.balance, 20000);
+  assert.equal(next.balance, 22000);
   assert.equal(next.matches, 1);
   assert.equal(next.earned, 2000);
   assert.equal(wallet.recent.length, 1);
@@ -52,7 +52,7 @@ test("DJC uses exact hundredths; welcome is 250 and each football match adds 20"
 });
 test("slot debits before considering credit and preserves fractional coin payments", () => {
   const next = settleCasinoSlot(newCasinoWallet(), transaction());
-  assert.equal(next.wallet.balance, 24988);
+  assert.equal(next.wallet.balance, 19988);
   assert.equal(next.wallet.recent[0].amount, -12);
   assert.throws(
     () =>

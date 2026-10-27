@@ -2,7 +2,7 @@
 // Without --live --repair --apply this cannot mutate production.
 import {auditAuth} from './firestore-audit-cache.mjs';
 import {firebaseConfig} from '../js/config.js';
-import {CASINO_EDITION,newCasinoWallet} from '../js/casino-economy.js';
+import {CASINO_EDITION,newCasinoWallet,DJABUCOIN} from '../js/casino-economy.js';
 const apply=process.argv.includes('--apply');
 if(apply&&(!process.argv.includes('--live')||!process.argv.includes('--repair')))
  throw Error('Aplicar exige --live --repair --apply e autorização explícita para as leituras.');
@@ -45,5 +45,5 @@ if(apply){
  const verified=await collection('casinoWallets',['edition','balance']);
  const missing=[...ids].filter(uid=>!verified.some(doc=>doc.name.split('/').at(-1)===uid&&doc.fields?.edition?.stringValue===CASINO_EDITION));
  if(missing.length)throw Error(`${missing.length} carteiras sem a edição esperada.`);
- console.log(JSON.stringify({verified:ids.size,initializedWithCoins:250,exactly250Now:verified.filter(doc=>doc.fields?.edition?.stringValue===CASINO_EDITION&&Number(doc.fields?.balance?.integerValue)===25000).length,at:new Date().toISOString()}));
+ console.log(JSON.stringify({verified:ids.size,initializedWithCoins:DJABUCOIN.initial/DJABUCOIN.scale,atInitialBalanceNow:verified.filter(doc=>doc.fields?.edition?.stringValue===CASINO_EDITION&&Number(doc.fields?.balance?.integerValue)===DJABUCOIN.initial).length,at:new Date().toISOString()}));
 }

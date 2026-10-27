@@ -3,7 +3,7 @@ import { icon } from "./icons.js";
 import { createCasinoLocalWallet } from "./casino-local-wallet.js";
 import { CASINO_CATALOG, CASINO_TABLES_ENABLED } from "./casino-catalog.js";
 import { DJABUCOIN, CASINO_EDITION } from "./casino-economy.js";
-import * as casinoRuntime from "./config.js";
+import { djabucoin } from "./djabucoin.js";
 
 const number = (value) =>
   new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 2 }).format(
@@ -15,8 +15,7 @@ function catalogCount(category = "all") {
   const label = category === "slots" ? "slots" : category === "tables" ? "mesas" : "jogos";
   return games.length + " " + label + " \u00b7 " + available + (available === 1 ? " dispon\u00edvel" : " dispon\u00edveis");
 }
-const coin =
-  '<span class="djabucoin" aria-hidden="true">D<span>₫</span></span>';
+const coin = djabucoin();
 export function casinoArt(kind) {
   if (kind === "reels")
     return `<div class="casino-reels" aria-hidden="true"><div>7</div><div>7</div><div>7</div></div><span class="casino-art-caption" aria-hidden="true">PELADINHAS ORIGINALS</span>`;
@@ -56,7 +55,7 @@ export async function casinoPage(ctx) {
     window.removeEventListener("pageshow", returning);
     window.removeEventListener("peladinhas-before-logout", beforeLogout);
     document.removeEventListener("visibilitychange", visibility);
-    void localWallet.close().catch(() => {});
+    return localWallet.close().catch(() => {});
   });
   const leaving = () => {
     void localWallet.close().catch(() => {});
@@ -83,13 +82,11 @@ export async function casinoPage(ctx) {
     `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">${catalogCount()}</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
   );
   const root = document.querySelector(".casino-page");
-  if (casinoRuntime.runtimeMode === 'fixtures') {
-    const shopLink = document.createElement('a');
-    shopLink.href = './assets/casino/shop/';
-    shopLink.className = 'casino-button casino-button-outline';
-    shopLink.innerHTML = `${icon('cards')} Loja de cartas · Pré-visualização local`;
-    root.querySelector('.casino-filters').after(shopLink);
-  }
+  const shopLink = document.createElement('a');
+  shopLink.href = '#/shop';
+  shopLink.className = 'casino-button casino-button-outline casino-shop-link';
+  shopLink.innerHTML = `${icon('shop')} Loja de cartas ${icon('arrow')}`;
+  root.querySelector('.casino-filters').after(shopLink);
   const appHeader = document.querySelector("#header");
   const bottomNav = document.querySelector(".bottom-nav");
   const headerSize = new ResizeObserver(() => {
@@ -285,7 +282,7 @@ export async function casinoPage(ctx) {
   function history() {
     modal(
       "Movimentos Djabucoin",
-      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
+      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "shop" ? "shop" : entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "shop" ? "Loja de cartas" : entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
     );
   }
   function drawWallet(error = "") {

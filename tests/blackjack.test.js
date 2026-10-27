@@ -209,13 +209,13 @@ test("lost-response retries, stale revisions, altered requests and insufficient 
   assert.throws(() => h.send("p0", { ...c, amount: 200 }), /diferentes/);
   const stale = h.send("p1", old);
   assert.equal(stale.stale, true);
-  assert.equal(h.wallets.p1.balance, 25000);
+  assert.equal(h.wallets.p1.balance, 20000);
   assert.throws(
     () => h.send("p1", h.command("p1", "bet", { amount: 30000 })),
     /Saldo/,
   );
   h.send("p0", h.command("p0", "leave"));
-  assert.equal(h.wallets.p0.balance, 25000);
+  assert.equal(h.wallets.p0.balance, 20000);
 });
 test("disconnects and no remaining browser eventually settle and close, presence does not broadcast", () => {
   const h = harness();
@@ -275,7 +275,7 @@ test("expiring one idle place preserves the same owners other place and reserved
   );
   assert.equal(h.table.players.find((p) => p.seat === 3).bet, 100);
   h.send("p0", h.command("p0", "leave"));
-  assert.equal(h.wallets.p0.balance, 25000);
+  assert.equal(h.wallets.p0.balance, 20000);
 });
 test("an immediate dealer blackjack leaves time for the whole five-place deal before reopening", () => {
   const h = harness();

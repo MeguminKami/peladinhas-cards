@@ -349,6 +349,8 @@ A PWA utiliza o mesmo frontend e Firebase do website. A instalação atual não 
 
 ## Documentação técnica
 
+A loja de cartas está integrada em `#/shop`, com carteira DJC, compra permanente e descoberta das edições no álbum público após a primeira compra. [Catálogo, propriedade, leituras, testes e publicação da loja](docs/guides/casino-shop.md). A integração só fica ativa no site publicado após o deploy das duas funções e do frontend.
+
 O casino tem um convite abaixo do pódio no início e está em `#/casino` (ou `/casino` no Hosting). Inclui Noite de Glória, Rift Core Overdrive, Blackjack e Roleta, com carteira Djabucoin partilhada e recompensas de 20–200 DJC por peladinha. [Build, economia, testes e publicação](docs/guides/casino.md).
 
 O início reutiliza dados e missões pessoais em cache, atualiza por versões enquanto está visível e suspende listeners em segundo plano. As automações são processadas às 08:00, 12:00, 17:00 e 22:00 de Lisboa e no fecho de um jogo, com checkpoints para evitar ciclos duplicados. [Funcionamento](docs/reference/home-data.md) · [Validação local e publicação](docs/reports/home-read-cache-2026-10-21.md).

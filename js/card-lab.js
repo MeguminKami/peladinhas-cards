@@ -887,7 +887,7 @@ export async function cardLab(ctx, uid) {
       (t) => `saved:${t.id}` === form.theme.value,
     );
     if (!saved) {
-      set("projectId", "");
+      // Switching the base edits this composition; only New/Save copy creates another.
       Object.entries(defaults()).forEach(([key, value]) => set(key, value));
       set("preserveOriginal", "yes");
     }

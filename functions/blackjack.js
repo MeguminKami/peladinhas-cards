@@ -54,14 +54,13 @@ export async function runBlackjack(
     publicRef = db.doc(BLACKJACK_PUBLIC);
   return db.runTransaction(async (tx) => {
     const snapshot = await tx.get(ref);
-    const old = snapshot.data();
-    if (old && old.edition !== CASINO_EDITION)
-      throw new HttpsError(
-        "failed-precondition",
-        "A mesa pertence a outra edição. Contacta a administração.",
-      );
-    if (!old && input.action !== "join")
+    // A reset discards the previous edition's table and wagers. Never refund
+    // old stakes into the new wallets or leave the shared table unusable.
+    const old = snapshot.data()?.edition === CASINO_EDITION ? snapshot.data() : null;
+    if (!old && input.action !== "join") {
+      if (snapshot.exists) { tx.delete(ref); tx.delete(publicRef); }
       return { table: null, balance: null, seat: null };
+    }
     if (input.action === "balance") {
       if (input.table !== old.id || !old.players.some((p) => p.uid === uid))
         throw new HttpsError(

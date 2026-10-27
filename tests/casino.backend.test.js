@@ -46,7 +46,7 @@ test("local casino checkpoints allow devices, survive lost responses and preserv
     casinoSession.run(request(uid, { ...open, owner: "another" })),
   );
   const started = await casinoSession.run(request(uid, open));
-  assert.equal(started.wallet.balance, 25000);
+  assert.equal(started.wallet.balance, 20000);
   await casinoSession.run(request(uid, { ...open, id: randomUUID() }));
   await assert.rejects(
     settleCasinoSlot.run(request(uid, transaction())),
@@ -105,7 +105,7 @@ test("official edition resets once and rejects legacy per-spin writes", async ()
  const uid=await player();
  await db.doc(`casinoWallets/${uid}`).set({balance:900000,revision:20,recent:[],activeCasinoSession:"old"});
  const first=await getCasinoWallet.run(request(uid));
- assert.equal(first.balance,25000);
+ assert.equal(first.balance,20000);
  await db.doc(`casinoWallets/${uid}`).update({balance:12500});
  assert.equal((await getCasinoWallet.run(request(uid))).balance,12500);
  await assert.rejects(settleCasinoSlot.run(request(uid,transaction())),/carteira local/);
@@ -113,8 +113,8 @@ test("official edition resets once and rejects legacy per-spin writes", async ()
 test("shared wallet applies competing batches atomically without negative balances", async () => {
  const uid=await player(),ids=[randomUUID(),randomUUID()];
  const opened=await Promise.all(ids.map(id=>casinoSession.run(request(uid,{action:"open",owner:uid,id}))));
- assert.equal(opened[0].wallet.balance,25000);
- assert.equal(opened[1].wallet.balance,25000);
+ assert.equal(opened[0].wallet.balance,20000);
+ assert.equal(opened[1].wallet.balance,20000);
  await db.doc(`casinoWallets/${uid}`).update({balance:10000});
  const inputs=ids.map(id=>({action:"sync",owner:uid,id,sequence:1,spent:7000,won:0,release:false}));
  const outcomes=await Promise.allSettled(inputs.map(input=>casinoSession.run(request(uid,input))));
@@ -135,11 +135,11 @@ test("admin grants authorize, validate boundaries and replay without duplicates"
  await assert.rejects(grantCasinoCoins.run(request(uid,input)),e=>e.code==='permission-denied');
  for(const amount of [-1,1000001,0.1]) await assert.rejects(grantCasinoCoins.run(request(admin,{...input,amount})),e=>e.code==='invalid-argument');
  const results=await Promise.all([grantCasinoCoins.run(request(admin,input)),grantCasinoCoins.run(request(admin,input))]);
- assert.equal(results[0].balance,1025000);
- assert.equal(results[1].balance,1025000);
- assert.equal((await getCasinoWallet.run(request(uid))).balance,1025000);
+ assert.equal(results[0].balance,1020000);
+ assert.equal(results[1].balance,1020000);
+ assert.equal((await getCasinoWallet.run(request(uid))).balance,1020000);
  await assert.rejects(grantCasinoCoins.run(request(admin,{...input,amount:1})),e=>e.code==='already-exists');
- assert.equal((await grantCasinoCoins.run(request(admin,{uid:admin,id:randomUUID(),amount:0}))).balance,25000);
+ assert.equal((await grantCasinoCoins.run(request(admin,{uid:admin,id:randomUUID(),amount:0}))).balance,20000);
  assert.equal((await grantCasinoCoins.run(request(admin,{uid:admin,id:randomUUID(),amount:2500}))).balance,27500);
 });
 test("wallet checks revocation, App Check, read-only mode and its transactional quota", async (t) => {
@@ -174,7 +174,7 @@ test("wallet checks revocation, App Check, read-only mode and its transactional 
   await settings.delete();
   await getCasinoWallet.run(request(uid));
   await settings.set(policy({ features: { mode: "readOnly" } }));
-  assert.equal((await getCasinoWallet.run(request(uid))).balance, 25000);
+  assert.equal((await getCasinoWallet.run(request(uid))).balance, 20000);
   await assert.rejects(
     settleCasinoSlot.run(request(uid, transaction())),
     (e) => e.code === "failed-precondition",
@@ -189,7 +189,7 @@ test("wallet checks revocation, App Check, read-only mode and its transactional 
   );
   assert.equal(
     (await db.doc(`casinoWallets/${uid}`).get()).data().balance,
-    25000,
+    20000,
   );
 });
 test("football rewards include bench, skip disabled users and survive duplicate/reopen events", async () => {

@@ -69,7 +69,7 @@ test("metals follow league thresholds and prestige runs from 85 to 95", () => {
     );
   }
 });
-test("five game editions replace generic editions without erasing owned cards", () => {
+test("nine game editions replace generic editions without erasing owned cards", () => {
   assert.deepEqual(
     SHOP_CARDS.filter((card) => card.group === "games").map((card) => card.id),
     [
@@ -78,6 +78,10 @@ test("five game editions replace generic editions without erasing owned cards", 
       "cardoso-asphalt",
       "rift-core",
       "glory-night",
+      "football-p1",
+      "football-p2",
+      "football-p3",
+      "football-p4",
     ],
   );
   const owned = SHOP_ARCHIVED_CARDS.map((card) => card.id);
@@ -103,4 +107,39 @@ test("card preview escapes identity and repeated previews have unique paint ids"
     first.match(/id="([^"]+)-metal"/)[1],
     second.match(/id="([^"]+)-metal"/)[1],
   );
+});
+
+test("Football premium editions require 70 OVR and start at 8000 DJC", () => {
+  const cards = SHOP_CARDS.filter(card => card.id.startsWith("football-p"));
+  assert.deepEqual(cards.map(card => card.price), [8000, 10000, 12000, 15000]);
+  for (const card of cards) {
+    assert.equal(card.minOvr, 70);
+    assert.throws(() => buyShopCard({balance: 100000, ovr: 69, owned: []}, card.id), /70 OVR/);
+    assert.deepEqual(buyShopCard({balance: card.price, ovr: 70, owned: []}, card.id), {balance: 0, ovr: 70, owned: [card.id]});
+  }
+});
+
+test("premium finishes preserve player identity without embedding slot symbols", () => {
+  const cards = SHOP_CARDS.filter((card) => card.id.startsWith("football-p"));
+  const seenIds = new Set();
+  for (const card of cards) {
+    for (let repeat = 0; repeat < 2; repeat++) {
+      const markup = renderCasinoShopCard(card, {
+        name: "JOÃO & MIGUEL",
+        ovr: 87,
+        position: "GR",
+      });
+      assert.ok(!markup.includes("<image"), `${card.id} embeds a symbol`);
+      assert.ok(markup.includes("JOÃO &amp; MIGUEL"));
+      assert.ok(markup.includes("87 OVR, GR"));
+      const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+      for (const id of ids) {
+        assert.ok(!seenIds.has(id), `duplicate SVG id: ${id}`);
+        seenIds.add(id);
+      }
+      for (const [, reference] of markup.matchAll(/url\(#([^)]+)\)/g)) {
+        assert.ok(ids.includes(reference), `missing SVG paint: ${reference}`);
+      }
+    }
+  }
 });

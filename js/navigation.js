@@ -30,7 +30,7 @@ export function mobileNavigation(user, pending, ready = 0) {
     )
     .join(
       "",
-    )}<button type="button" id="mobile-more" aria-haspopup="dialog" class="${/^#\/(statistics|ranking|tickets|profile|admin|assets|notifications)(\/|$)/.test(location.hash) ? "active" : ""}">${icon("menu")}<span>Mais</span></button></nav>`;
+    )}<button type="button" id="mobile-more" aria-haspopup="dialog" class="${/^#\/(statistics|ranking|tickets|profile|admin|assets|notifications|shop|casino)(\/|$)/.test(location.hash) ? "active" : ""}">${icon("menu")}<span>Mais</span></button></nav>`;
 }
 
 export function bindMobileNavigation(user) {
@@ -45,6 +45,8 @@ export function bindMobileNavigation(user) {
         "Eventos e desafios",
         "Calendário, objetivos e recompensas",
       ],
+      ["#/shop", "shop", "Loja de cartas", "Acabamentos exclusivos com DJC"],
+      ["#/casino", "casinoGames", "Casino", "Os jogos da tua liga"],
       ["#/tickets", "tickets", "Apoio à liga", "Os teus pedidos e conversas"],
       ...(user.role === "admin"
         ? [

@@ -1,3 +1,5 @@
+import { SHOP_CARDS } from "./casino-shop-catalog.js";
+import { renderCasinoShopCard } from "./casino-shop-art.js";
 import { cardSymbol, fitCardSymbols } from "./card-symbol.js";
 import { trendArrow } from "./icons.js";
 import { cardClip, expandCardOutline } from "./card-geometry.js";
@@ -40,6 +42,18 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.specials?.[0]?.id ||
     playerBase ||
     "bronze-common";
+  const shopEdition = SHOP_CARDS.find(card => card.id === chosenTheme);
+  if (shopEdition) {
+    const artwork = renderCasinoShopCard(shopEdition, {
+      name: player.displayName || player.username || "Jogador",
+      ovr: player.hasCard === false ? 0 : player.ovr,
+      position: player.primaryPosition,
+      stats: player.stats,
+      photoURL: player.cardPhoto?.photoURL || player.photoURL,
+      photoDesign: player.cardPhoto?.design,
+    });
+    return `<${preview ? "div" : "a"} class="football-card card-shop card-${size}" ${preview ? "" : `href="#/player/${esc(player.uid)}" aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${artwork}</${preview ? "div" : "a"}>`;
+  }
   const template = player.specials?.find(
     (sp) => sp.id === chosenTheme,
   )?.cardTheme;

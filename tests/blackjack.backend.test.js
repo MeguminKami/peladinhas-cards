@@ -73,11 +73,11 @@ test("multiple seats transact against one wallet and competing claims cannot ove
   }
   assert.equal(
     (await db.doc(`casinoWallets/${a}`).get()).data().balance,
-    25000 + (third === a ? 200 : 100),
+    20000 + (third === a ? 200 : 100),
   );
   assert.equal(
     (await db.doc(`casinoWallets/${b}`).get()).data().balance,
-    25000 + (third === b ? 200 : 100),
+    20000 + (third === b ? 200 : 100),
   );
   await db.doc(BLACKJACK_PRIVATE).delete();
   await db.doc(BLACKJACK_PUBLIC).delete();

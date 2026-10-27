@@ -95,7 +95,7 @@ try {
       await page.screenshot({ path: `test-results/${game}-integrated-${width}.png`, fullPage: true });
     }
     const iframe = await page.locator(".casino-table-mount iframe").elementHandle();
-    const rng = await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`)).state.rng, game);
+    const rng = await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-27-reset-200`)).state.rng, game);
     await page.locator("[data-center-game]").click();
     for (const [width, height] of [[1366, 768], [768, 1024], [390, 844], [320, 740], [844, 390]]) {
       await page.setViewportSize({ width, height });
@@ -111,7 +111,7 @@ try {
       assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height + 1, "centered frame fits viewport");
       await page.screenshot({ path: `test-results/${game}-centered-${width}.png` });
     }
-    assert.deepEqual(await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`)).state.rng, game), rng, "centering does not reset the engine");
+    assert.deepEqual(await page.evaluate(game => JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-27-reset-200`)).state.rng, game), rng, "centering does not reset the engine");
     await page.locator("[data-center-game]").click();
     assert.ok(await iframe.evaluate(node => node === document.querySelector(".casino-table-mount iframe")), "same iframe after centering");
     await page.locator("[data-center-game]").click();
@@ -127,7 +127,7 @@ try {
       await frame.locator('[data-action="spin"]').click();
     }
     await page.waitForFunction(game => {
-      const saved = JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-26-cardoso-reset`));
+      const saved = JSON.parse(localStorage.getItem(`atelier:${game}:website:pedro:official-2026-10-27-reset-200`));
       return saved?.state.history.length === 1 && !saved.state.round && !saved.pending;
     }, game);
     const balance = await frame.locator("[data-balance]").innerText();

@@ -1,9 +1,9 @@
 // Integer coins only. Casino outcomes never award participation coins.
 import { matchPerformance } from "./utils.js";
-export const CASINO_EDITION = "official-2026-10-26-cardoso-reset";
+export const CASINO_EDITION = "official-2026-10-27-reset-200";
 export const DJABUCOIN = Object.freeze({
   scale: 100,
-  initial: 25000,
+  initial: 20000,
   perMatch: 2000,
   recentLimit: 12,
 });

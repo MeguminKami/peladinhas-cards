@@ -10,6 +10,8 @@
     "build:blackjack:server": "node scripts/build-blackjack-server.mjs",
     "test:casino:blackjack": "node scripts/build-casino-tables.mjs && node scripts/build-blackjack-server.mjs --check && node --test tests/blackjack.test.js && npm.cmd run check --prefix games/blackjack-3d && npm.cmd run test --prefix games/blackjack-3d && node tests/blackjack-browser.mjs",
     "test:casino:blackjack:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.casino.json --project demo-peladinhas-casino --only firestore \"node --test tests/blackjack.backend.test.js\"",
+    "test:casino:shop:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.casino.json --project demo-peladinhas-casino --only firestore \"node --test tests/casino-shop.backend.test.js\"",
+    "test:casino:shop:ui": "node tests/casino-shop-integrated.mjs",
     "build:casino": "node scripts/build-casino.mjs",
     "predev:casino": "node scripts/build-casino.mjs",
     "test:casino:cardoso": "node tests/casino-cardoso.mjs",

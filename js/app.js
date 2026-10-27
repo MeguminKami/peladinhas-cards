@@ -50,6 +50,7 @@ import { authPage } from "./onboarding.js";
 import { playerPage, editProfile } from "./profile.js";
 import { pathsPage } from "./paths.js";
 import { casinoPage } from './casino.js';
+import { casinoShopPage } from './shop-page.js';
 import { pathAdminPage } from "./path-admin.js";
 import { gamesPage, gamePage, gameRows } from "./games.js";
 import { initialMission, feedbackPage } from "./ratings.js";
@@ -267,6 +268,7 @@ function header() {
     ["#/statistics", "trophy", "Estatísticas"],
     ["#/missions", "missions", "Missões"],
     ["#/players/cards", "cards", "Cartas"],
+    ["#/shop", "shop", "Loja"],
   ];
   document.querySelector("#header").innerHTML =
     `<nav class="navbar"><a class="brand" href="#/" aria-label="Peladinhas Cards — início"><img src="${ASSET_PATHS.logo}" alt=""><span>PELADINHAS<small>CARDS</small></span></a>${p ? `<div class="desktop-nav">${links.map(([h, i, n]) => `<a href="${h}" class="nav-link ${activeDestination(h, hash) ? "active" : ""}">${icon(i)}${n}${i === "missions" && ctx.missions.length ? `<span class="badge">${ctx.missions.length}</span>` : ""}${i === "missions" ? missionRewardBadge(readyMissions) : ""}</a>`).join("")}${p.role === "admin" ? `<a class="nav-link ${hash.startsWith("#/admin") ? "active" : ""}" href="#/admin">${icon("shield")}Admin</a>` : ""}</div><div class="header-actions">${p.role === "admin" ? `<a class="btn btn-icon btn-ghost mobile-admin" href="#/admin" aria-label="Administração">${icon("shield")}</a>` : ""}<a id="header-tickets" href="#/tickets" class="btn btn-icon btn-ghost ${hash.startsWith("#/tickets") ? "active" : ""}" aria-label="Tickets" title="Tickets">${icon("tickets")}</a><button id="bell" class="btn btn-icon btn-ghost" aria-label="Notificações${unread ? `, ${unread} por ler` : ""}">${icon("bell")}${unread ? `<span class="badge notification-count">${unread}</span>` : ""}</button><div class="profile-perspective-menu"><a class="user-link" href="#/profile" aria-label="Ver o meu perfil"><img src="${esc(safeImage(p.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"><span>${esc(p.displayName || p.username)}</span></a>${perspectiveControl(ctx.realUser, p.role, true)}</div><button id="logout" class="btn btn-icon btn-ghost" aria-label="Terminar sessão">${icon("logout")}</button></div>` : '<span class="club-label">A TUA LIGA. A TUA CARTA.</span>'}</nav>${p ? mobileNavigation(p, ctx.missions.length, readyMissions) : ""}`;
@@ -446,6 +448,7 @@ async function route({ cachedOnly = false } = {}) {
     if (isCurrent()) ctx.go(hash);
   };
   pageCtx.refresh = () => ctx.refresh();
+  pageCtx.invalidateLeague = () => { ctx.league = null; ctx.loadedAt = 0; ctx.detailCache.clear(); };
   pageCtx.refreshNotifications = () => ctx.refreshNotifications();
   for (const fn of ctx.disposers.splice(0)) {
     try {
@@ -483,7 +486,7 @@ async function route({ cachedOnly = false } = {}) {
   }
   // The casino needs identity and its own wallet, never league scans,
   // card recalculation or mission/notification subscriptions.
-  if (location.hash === '#/casino') {
+  if (['#/casino', '#/shop'].includes(location.hash)) {
     setMain(skeleton());
     try {
       const [user, casinoPolicy] = await Promise.all([
@@ -500,9 +503,9 @@ async function route({ cachedOnly = false } = {}) {
         pageCtx.render(empty('Conta indisponível', 'Contacta o apoio da liga.', '', 'shield'));
         return;
       }
-      const casinoTask = casinoPage(pageCtx);
+      const casinoTask = location.hash === '#/shop' ? casinoShopPage(pageCtx) : casinoPage(pageCtx);
       if (isCurrent()) {
-        document.title = 'Casino · Peladinhas Cards';
+        document.title = `${location.hash === '#/shop' ? 'Loja' : 'Casino'} · Peladinhas Cards`;
         window.scrollTo({ top: 0, behavior: 'instant' });
         document.querySelector('#main').focus({ preventScroll: true });
       }
