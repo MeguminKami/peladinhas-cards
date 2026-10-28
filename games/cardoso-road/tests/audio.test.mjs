@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {createAudio} from '../audio.mjs';
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-test('one feedback channel cancels recordings, pending voices and cues; music switches and ducks',async()=>{
+test('one feedback channel cancels recordings, pending voices and cues; music switches and keeps its level',async()=>{
  const originals=Object.fromEntries(['Audio','AudioContext','document','window','fetch'].map(k=>[k,globalThis[k]]));
  const originalRandom=Math.random;Math.random=()=>0;
  const media=[],sources=[];let releaseVoice,immediateVoices=false;
@@ -14,7 +14,7 @@ test('one feedback channel cancels recordings, pending voices and cues; music sw
  const audio=createAudio(()=>settings),music=media[0];
  try{
   audio.unlock();assert.ok(music.src.endsWith('easy_medium_hard.mp3'));assert.equal(music.volume,.6);
-  audio.event('start');const initial=media.at(-1);assert.ok(initial.src.endsWith('starrt_1.ogg'));assert.equal(sources.length,0,'no voice or synthetic fanfare layered on recording');assert.ok(music.volume<.6);
+  audio.event('start');const initial=media.at(-1);assert.ok(initial.src.endsWith('starrt_1.ogg'));assert.equal(sources.length,0,'no voice or synthetic fanfare layered on recording');assert.equal(music.volume,.6,'music keeps the chosen level during feedback');
   audio.event('step',1);await flush();assert.equal(initial.paused,true);
   audio.event('paid');const paid=media.at(-1);releaseVoice();await flush();assert.equal(sources.filter(s=>s.started).length,0,'late old voice cannot start over cashout');assert.ok(paid.src.endsWith('win_1.ogg'));
   const played=[];document.addEventListener('cardoso:voice',e=>{if(e.detail.status==='playing')played.push(e.detail.clip);});

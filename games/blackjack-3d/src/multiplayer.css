@@ -232,10 +232,13 @@
 .multiplayer-shell .dealer-id small { font-size: 10px; letter-spacing: .2em; color: #eed39a; }
 .multiplayer-shell .dealer-portrait { width: 72px; height: 72px; flex: 0 0 72px; border-radius: 50%; border: 3px solid #dfc17b; box-shadow: 0 3px 12px #0009, 0 0 18px #62d58a40; background: #0d1f1a; }
 @media (max-width: 650px) {
-  .multiplayer-shell .dealer-id { gap: 10px; }
-  .multiplayer-shell .dealer-portrait { width: 56px; height: 56px; flex-basis: 56px; border-width: 2px; }
-  .multiplayer-shell .dealer-id strong { font-size: 19px; }
-  .multiplayer-shell .dealer-id small { font-size: 9px; }
+  .multiplayer-shell .dealer-hud { top: 8px; gap: 4px; padding: 6px 10px; min-width: 0; }
+  .multiplayer-shell .dealer-id { gap: 8px; }
+  .multiplayer-shell .dealer-portrait { width: 40px; height: 40px; flex-basis: 40px; border-width: 2px; }
+  .multiplayer-shell .dealer-id strong { font-size: 15px; }
+  .multiplayer-shell .dealer-id small { font-size: 8px; }
+  .multiplayer-shell .dealer-hud .card { width: 40px; height: 58px; min-width: 40px; }
+  .multiplayer-shell .dealer-total { font-size: 14px; padding: 3px 10px; min-width: 52px; }
 }
 
 /* Profile photos */
@@ -258,13 +261,13 @@
 .multiplayer-shell .seat.waiting .table-hands { opacity: .55; filter: saturate(.6); transition: opacity 200ms, filter 200ms; }
 .multiplayer-shell .seat.active .avatar { animation: seat-pulse 1.4s ease-in-out infinite; border-color: #fff0b6; }
 .multiplayer-shell .seat.active .table-hands { filter: drop-shadow(0 0 10px #ffe39a99); }
-.multiplayer-shell .seat-person .turn-indicator { z-index: 4; box-shadow: 0 2px 8px #0008; font-size: 10px; padding: 5px 9px; top: auto; bottom: -20px; left: 50%; transform: translateX(-50%); }
+.multiplayer-shell .seat-person .turn-indicator { z-index: 4; box-shadow: 0 2px 8px #0008; font-size: 10px; padding: 5px 9px; top: calc(100% + 38px); bottom: auto; left: 50%; transform: translateX(-50%); }
 .multiplayer-shell .dealer-id small { background: none; padding: 0; }
 @keyframes seat-pulse { 50% { box-shadow: 0 0 0 5px #fff0b655, 0 0 30px #ffe39aaa; } }
 @media (max-width: 650px) {
   .multiplayer-shell .seat-badge { left: calc(50% - 30px); top: -6px; min-width: 20px; height: 20px; font-size: 11px; }
   .multiplayer-shell .seat-leave { left: calc(50% + 10px); top: -6px; width: 22px; height: 22px; font-size: 11px; }
-  .multiplayer-shell .seat-person .turn-indicator { font-size: 8px; padding: 3px 6px; top: auto; bottom: -15px; left: 50%; transform: translateX(-50%); }
+  .multiplayer-shell .seat-person .turn-indicator { font-size: 8px; padding: 3px 6px; top: calc(100% + 34px); bottom: auto; left: 50%; transform: translateX(-50%); }
 }
 
 /* Round result banner */

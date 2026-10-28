@@ -6,7 +6,7 @@ export function createAudio(getSettings){
  let generation=0,clip=null,cue=null,voicePending=false,lossIndex=0;
  const volume=()=>Math.max(0,Math.min(1,getSettings().volume));
  function context(){if(!ctx)ctx=new AudioContext();return ctx;}
- function mix(){track.volume=Math.max(0,Math.min(1,getSettings().musicVolume??.3))*((clip||cue||voicePending||voices.playing)?.22:1);}
+ function mix(){track.volume=Math.max(0,Math.min(1,getSettings().musicVolume??.3));}
  const voices=createVoicePlayer({context,getSettings,isHidden:()=>destroyed||document.hidden,onState:detail=>{
   voicePending=false;mix();document.dispatchEvent(new CustomEvent('cardoso:voice',{detail}));
  }});

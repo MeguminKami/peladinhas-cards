@@ -132,7 +132,7 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
     q('.status').textContent=store.pending?'Liquidação pendente. Recuperar utiliza o mesmo ID e o mesmo número, sem voltar a sortear.':options.online&&onlineState?.phase==='closing'&&!busy?'Apostas a fechar. Confirma agora para participar nesta ronda.':message;q('.status').classList.toggle('error',error||store.pending);
     renderOnline();renderOthers();
     updateCoverage();
-    if(chipLayer&&!['collecting','paying'].includes(phase)){chipLayer.sync(lastShown&&!s.round?Object.fromEntries(lastShown.lines.filter(l=>l.gross).map(l=>[l.id,l.gross])):s.round?.plan||plan,animatePlacement);animatePlacement=false;}
+    if(chipLayer&&!['collecting','paying'].includes(phase)){chipLayer.sync(s.round?.plan||plan,animatePlacement);animatePlacement=false;}
   }
   const compactValue=(value:number)=>value>=1000?(+(value/1000).toFixed(1)+'k').replace('.',','):Number.isInteger(value)?String(value):value.toFixed(2).replace('.',',');
   function renderOthers(){
