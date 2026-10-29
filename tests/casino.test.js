@@ -40,6 +40,7 @@ const transaction = (values = {}) => ({
 });
 
 test("sticky update accepts queued 0.7.0 receipts, rejects unknown versions", () => {
+  assert.doesNotThrow(() => validateSlotTransaction(transaction({configVersion:"0.9.2"})));
   assert.doesNotThrow(() => validateSlotTransaction(transaction({configVersion:"0.7.0"})));
   assert.throws(() => validateSlotTransaction(transaction({configVersion:"0.7.2"})));
 });

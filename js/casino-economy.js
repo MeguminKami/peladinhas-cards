@@ -9,7 +9,7 @@ export const DJABUCOIN = Object.freeze({
 });
 
 export const SLOT_RULES = Object.freeze({
-  version: "0.8.0",
+  version: "0.9.2",
   bets: [20, 40, 60, 80, 100, 150, 200, 300, 400, 500, 750, 1000],
   cap: 10000,
 });
