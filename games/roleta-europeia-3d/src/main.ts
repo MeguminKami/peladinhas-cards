@@ -190,7 +190,7 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
     if(!shared&&Number.isSafeInteger(result.balance))store.state.balance=result.balance;
     const round:Round={id,number,color:winningColor,cost:total,gross,net,lines:clone(lines),plan:clone(resultPlan),phase:'spinning',rotor:scene.angle+Math.PI*2*2.4};
     const unsubmittedPlan=personal?undefined:clone(plan);
-    const next=clone(store.state);next.round=round;next.counter=Math.max(next.counter,id);await store.commit(next);
+    const next=clone(store.state);next.round=round;next.counter=Math.max(next.counter,id);if(personal)next.last=clone(resultPlan);await store.commit(next);
     if(destroyed)return;visualBalance=store.state.balance-round.gross;phase='spinning';render();audio.tone('spin');
     const movement=scene.spin(round,audio.settings.reduced);if(skipRequested)scene.skip();await movement;if(destroyed)return;
     await store.commit(reveal(store.state,scene.angle));await presentResult(store.state.round!);
