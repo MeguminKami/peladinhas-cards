@@ -16,7 +16,7 @@ import {
 export const BJ = Object.freeze({
   turn: 30000,
   betting: 15000,
-  summary: 6500,
+  summary: 3250,
   lease: 60000,
   idle: 120000,
   roomIdle: 60000,

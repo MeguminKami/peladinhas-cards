@@ -100,8 +100,8 @@ test('P3 converte premiums e Scatters e preserva retrigger e ativação natural'
   }
 });
 
-test('P1 converte um normal adjacente sem amplificação nem alteração do global',()=>{
-  const b=blank();b[0]='P1';b[1]='W';b[2]='N1';b[7]='P1';b[10]='W';b[16]='P4';b[22]='W';
+test('P1 mantém global e não amplifica linhas após o passe',()=>{
+  const b=blank();b[0]='P1';b[1]='W';b[2]='P1';b[7]='P1';b[10]='W';b[16]='P4';b[22]='W';
   const powers=resolve(b,'superior',zero);assert.equal(powers.global,5);assert.equal(powers.amplified.has(1),false);
   const win=evaluate(powers.board,powers.amplified,powers.global,single()).wins[0];assert.equal(win.local,1);assert.equal(win.global,5);assert.equal(win.hundredths,10*5);
   const p1=powers.events.find(e=>e.power==='P1')!;assert.equal(p1.factor,1);

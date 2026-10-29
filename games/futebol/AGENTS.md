@@ -4,7 +4,7 @@
 Criar uma slot de entretenimento para browser, exclusivamente com créditos fictícios, com qualidade elevada de apresentação e um motor matemático verificável. A primeira fase é inteiramente independente de tema, arte, áudio e animações.
 
 ## Fonte de verdade
-- Configuração vigente **0.9.2**: `docs/PODERES_0_9_0.md`. Normal: roubo 50%, Wilds 6,04%; pagamentos de 4/6 símbolos reduzidos cerca de 10%. P1 Passe Curto sem multiplicador, P2 cria 1–2 Wilds ortogonais 50/50, P3 converte a fonte fora da quota.
+- Configuração vigente **0.9.4**: `docs/PODERES_0_9_0.md`. Normal: roubo 50%, Wilds 6,04%; pagamentos de 4/6 símbolos reduzidos cerca de 10%. P1 Passe Curto até outro P1 aleatório; sem outro, remate em 8 direções até margem/premium/Wild, sem multiplicador, P2 cria 1–2 Wilds ortogonais 50/50, P3 converte a fonte fora da quota.
 - Configuração anterior **0.8.2**: `docs/LENDAS_0_8_0.md`. Lendas por 5 Scatters / compra 450×, sticky 25%, Wilds com 7% de probabilidade por posição livre. RTP não calibrado.
 - Configuração anterior **0.7.0**: `docs/MAESTRO_0_7_0.md`. P3 converte não-Wilds com distribuição ponderada e preserva Scatters iniciais.
 - Configuração anterior **0.6.0**: `docs/BONUS_HUNT_0_6_0.md`. Hunt custa 3× mas prémios/cap usam a aposta base; Scatters positivos +50% relativo, sem boost nos FS. Preservar o indicador no histórico e no custo enviado à carteira. RTP não medido.

@@ -4,6 +4,8 @@
 
 ## Entrada e rondas
 
+Depois de uma ronda terminar, a mesa reabre as apostas ap?s 3,25 segundos. Se a ronda terminar na distribui??o inicial, o servidor preserva o tempo necess?rio para apresentar as cartas antes de reabrir as apostas.
+
 O Blackjack do casino abre uma única mesa pública com cinco lugares, atribuídos automaticamente. O primeiro jogador cria a mesa. Não há códigos nem anfitrião; sair não transfere controlo para outro browser. Com cinco lugares ocupados, uma nova entrada recebe a indicação de mesa cheia; esta versão não inclui espectadores adicionais.
 
 Cada pessoa pode ocupar vários dos cinco lugares: clicar num **+** livre ocupa o lugar e clicar no próprio avatar escolhe onde apostar. O primeiro lugar é atribuído na entrada; regressar à aplicação não ocupa lugares adicionais. Lugares ocupados durante uma ronda entram na seguinte. Confirmar em **Pronto** reserva apenas a aposta do lugar selecionado. Todos os lugares da mesma pessoa usam a mesma carteira DJC, com controlo do saldo agregado no servidor. Sair da mesa liberta todos os seus lugares após resolver as apostas.

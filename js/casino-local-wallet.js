@@ -284,11 +284,23 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
           "O progresso da slot não corresponde à jogada. Reabre para recuperar.",
         );
       const prior = state.rounds?.[transaction.streamId];
-      const next = settleCasinoSlot(
-        { ...state.wallet, balance: state.balance },
-        transaction,
-        prior?.roundId === transaction.roundId ? prior : undefined,
-      );
+      let next;
+      try {
+        next = settleCasinoSlot(
+          { ...state.wallet, balance: state.balance },
+          transaction,
+          prior?.roundId === transaction.roundId ? prior : undefined,
+        );
+      } catch (error) {
+        // No local state was changed, so the iframe may safely discard its
+        // pending request instead of retrying it on every reload.
+        Object.assign(error, {
+          definitive: true,
+          applied: false,
+          balance: state.balance,
+        });
+        throw error;
+      }
       const spent = state.spent + transaction.debit,
         won = state.won + transaction.credit;
       if (

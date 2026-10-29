@@ -13,6 +13,7 @@
 #board .scatter-arrived{animation:scatter-arrival-v2 .7s ease-out both}
 #board .v2-energy{position:absolute;height:9px;margin-top:-4px;border-radius:50%;transform-origin:left center;z-index:30;pointer-events:none;background:linear-gradient(90deg,transparent,#fff8c8 25%,#fff,#ffd36b);box-shadow:0 0 12px #ffdf71,0 0 26px #ffb520;animation:energy-v2 .45s ease-in-out infinite alternate}
 #board .v2-orb{position:absolute;width:26px;height:26px;border-radius:50%;z-index:31;pointer-events:none;background:#fffdeb;box-shadow:0 0 10px 5px #ffdf7b,0 0 30px 15px #ffbb3766}
+.v2-pass-ball{position:fixed;display:grid;place-items:center;width:30px;height:30px;font-style:normal;font-size:27px;line-height:1;z-index:100;pointer-events:none;filter:drop-shadow(0 0 8px #ffd275)}
 #board .power-P2{--power-color:#62dcff}#board .power-P3{--power-color:#c8a0ff}#board .power-P4{--power-color:#ffe3a0}#board .power-P1{--power-color:#ffba45}
 #board .powered-wild{border-color:var(--power-color,#ffd984)!important;box-shadow:inset 0 0 0 3px var(--power-color,#ffd984),inset 0 0 30px #ffd96455,0 0 14px #ffe29677!important}
 #board .power-emblem{position:absolute;right:4%;bottom:4%;height:30%;aspect-ratio:1;display:grid;place-items:center;color:var(--power-color,#ffe29b);background:#09172ee8;border:2px solid currentColor;border-radius:50%;z-index:9;box-shadow:0 0 12px currentColor;pointer-events:none}

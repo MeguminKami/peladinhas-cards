@@ -86,7 +86,11 @@ test("five players share one shoe, preserve ownership and settle exactly once", 
       h.wallets[`p${p.number - 1}`].balance,
       19900 + p.hands.reduce((n, h) => n + h.gross, 0) + p.insuranceGross,
     );
-  h.advance(BJ.summary + 1);
+  assert.equal(h.table.deadline - h.now, 3250);
+  h.advance(3249);
+  h.send(null, h.command(null, "tick"));
+  assert.equal(h.table.session.round.phase, "summary");
+  h.advance(1);
   h.send(null, h.command(null, "tick"));
   assert.equal(h.table.session.round, null);
 });

@@ -1,4 +1,16 @@
-# Poderes — configuração 0.9.2
+# Poderes — configuração 0.9.4
+
+Atualização de 29/10/2026: o Passe Curto procura **outro P1**, excluindo a carta que forneceu o poder. Havendo destino, mantém o caminho mínimo ortogonal, preservando todos os Wilds. Sem outro P1, sorteia uniformemente uma de **8 direções**, incluindo diagonais, e remata em linha reta até à margem ou ao primeiro premium (P1–P4) ou Wild. O obstáculo entra no percurso da animação mas não é convertido. Converte os normais atravessados para P1; Scatters atravessados são preservados, como no passe normal. Não há ligação entre margens; uma direção que sai imediatamente da grelha não converte posições. Os alvos de passe são do tabuleiro inicial; bloqueios do remate usam o tabuleiro no momento da ativação. Wilds nunca são removidos em nenhuma das duas interações.
+
+O evento distingue `passKind` (pass/shot) e guarda rota/direção; a apresentação mostra Passe ou Remate Livre e anima essa rota, sem novo sorteio. Sessões 0.9.3 migram preservando saldo, RNG, resultados e estado ativo. Novas jogadas usam 0.9.4; RTP ainda não medido. Restantes regras mantidas.
+
+## Histórico 0.9.3
+
+Atualização de 29/10/2026: **Passe Curto** escolhe uniformemente um P1 do tabuleiro inicial e leva a bola pelo caminho ortogonal mais curto a partir do Wild. O percurso inclui origem e destino; empates são sorteados uniformemente entre os caminhos mínimos. Todas as posições percorridas que não sejam Wild, Scatter ou já P1 são convertidas para P1, incluindo outros premiums. Wilds e Scatters são preservados no percurso. O destino pode ser a própria fonte adjacente; nesse caso pode não haver novas conversões. Não cria roubos em cadeia nem altera o global. A animação percorre a rota registada no evento e revela as conversões por ordem; modo reduzido aplica o resultado diretamente.
+
+Sessões 0.9.2 migram preservando saldo, RNG, estado ativo e resultados confirmados; próximas jogadas usam 0.9.3. Restantes probabilidades, preços e pagamentos mantidos. RTP da 0.9.3 ainda não medido; resultados anteriores não validam esta versão.
+
+## Histórico 0.9.2
 
 Atualização de 29/10/2026: no bónus de 3 Scatters, aumento relativo de **25%** na chance de roubo (40% → **50%**) e na chance de Wild por posição livre (50/1035 → 25/414 = **6,038647%**). Pesos N1…W: `18672,16727,14393,12059,6224,4279,2723,1556,4925`, total 81558. Preservadas as proporções entre não-Wilds, a compra 90×, os outros bónus e a tabela de pagamentos. Sessões 0.9.1 migram preservando saldo, RNG e resultados confirmados; próximas jogadas usam 0.9.2. RTP desta versão ainda não medido; resultados anteriores abaixo são históricos.
 

@@ -72,3 +72,5 @@ Validação local: `npm.cmd test`, `npm.cmd run test:voices` e `node tests/audio
 ### Faixa do Extremo substituída · 27/10/2026
 
 Recebida a faixa correta, Jan Fleck - Kicknapping (SlugoS & MKM Remix). Copiada para [extreme.mp3](./assets/audio/extreme.mp3), preservando o original do utilizador. SHA-256: `0ACDD4F3D14021181F308ACF3C8277A84DB4194406202379D607CE0CB1B1016B`. O novo ficheiro difere da faixa das restantes dificuldades e resolve a duplicidade identificada no diagnóstico acima. Sem publicação.
+
+O feedback reutiliza um leitor por grava??o, sem descarregar e recriar leitores em cada jogada. Avan?os separados por menos de 1,2 segundos cancelam o feedback anterior e suprimem a fala/efeito desse passo, sem temporizadores nem fila. Depois de uma pausa, o passo seguinte volta a ter som; in?cio, derrota e pagamento mant?m prioridade imediata.

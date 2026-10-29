@@ -105,6 +105,17 @@ function trail(root:HTMLElement,from:HTMLElement,to:HTMLElement,power:string,dur
     orb.remove();const flight=document.createElement('i'),bounds=root.getBoundingClientRect();flight.className='v2-hud-flight';Object.assign(flight.style,{position:'fixed',left:`${a.x+bounds.left}px`,top:`${a.y+bounds.top}px`,width:'24px',height:'24px',borderRadius:'50%',background:'#fff6cb',boxShadow:'0 0 14px 8px #ffc45a',zIndex:'100',pointerEvents:'none'});document.body.append(flight);flight.animate([{transform:'translate(-50%,-50%) scale(.6)'},{transform:`translate(calc(-50% + ${b.x-a.x}px),calc(-50% + ${b.y-a.y}px)) scale(1.1)`}],{duration,fill:'forwards',easing:'ease-in-out'});
   }
 }
+async function passBall(event:PowerEvent,current:Board,draw:()=>void,reduced:boolean,signal:AbortSignal){
+  const path=event.path??[];if(path.length<2||reduced||signal.aborted)return;
+  const points=path.map(p=>{const r=cell(p)!.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};});
+  const ball=document.createElement('i');ball.className='v2-hud-flight v2-pass-ball';ball.setAttribute('aria-hidden','true');ball.textContent='⚽';
+  Object.assign(ball.style,{left:points[0].x+'px',top:points[0].y+'px'});document.body.append(ball);
+  const duration=Math.min(1200,(path.length-1)*180),step=duration/(path.length-1);
+  const animation=ball.animate(points.map(p=>({transform:`translate(calc(-50% + ${p.x-points[0].x}px),calc(-50% + ${p.y-points[0].y}px))`})),{duration,easing:'linear',fill:'forwards'});
+  try{
+    for(const p of path.slice(1)){await pause(step,signal);if(signal.aborted)break;if(event.targets.includes(p)){current[p]='P1';draw();cell(p)?.classList.add('power-impact','power-P1');}audioCue('convert',1);}
+  }finally{animation.cancel();ball.remove();}
+}
 export function powerEmblemMarkup(power:string){
   const paths:Record<string,string>={
     P1:'<circle cx="8" cy="23" r="4" fill="currentColor"/><path d="M10 17c1-7 5-10 13-10m-5-4 7 4-5 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -116,7 +127,7 @@ export function powerEmblemMarkup(power:string){
 }
 function badge(p:number,power:string){const el=cell(p);if(!el)return;el.dataset.power=power;el.classList.add('powered-wild',`power-${power}`);if(!el.querySelector('.power-emblem'))el.insertAdjacentHTML('beforeend',powerEmblemMarkup(power));}
 function announcePower(root:HTMLElement,event:PowerEvent,duration:number,reduced:boolean){
-  const effects:Record<string,string>={P1:event.targets.length?'1 VIZINHO NORMAL → BRONZE':'SEM VIZINHO NORMAL DISPONÍVEL',P2:`ARRANQUE · +${event.targets.length} WILD${event.targets.length===1?'':'S'}`,P3:`PASSE DECISIVO · ${event.targets.length} CARTAS · ${symbolArt[event.conversionSymbol??'P3'].name.toUpperCase()}`,P4:`GOLO DE GLÓRIA · GLOBAL +${event.factor}`};
+  const effects:Record<string,string>={P1:`${event.passKind==='shot'?'REMATE LIVRE':'PASSE ATÉ BRONZE'} · ${event.targets.length} CONVERSÕES`,P2:`ARRANQUE · +${event.targets.length} WILD${event.targets.length===1?'':'S'}`,P3:`PASSE DECISIVO · ${event.targets.length} CARTAS · ${symbolArt[event.conversionSymbol??'P3'].name.toUpperCase()}`,P4:`GOLO DE GLÓRIA · GLOBAL +${event.factor}`};
   const banner=document.createElement('div');banner.className=`power-announcement theme-${event.power}${reduced?' reduced':''}`;banner.dataset.power=event.power;banner.style.setProperty('--announcement-time',`${duration}ms`);
   banner.innerHTML=`<div class="power-stage"><div class="power-motif">${powerEmblemMarkup(event.power)}${Array.from({length:6},(_,i)=>`<i style="--i:${i}"></i>`).join('')}</div><img class="power-player" src="${symbolArt[event.power as keyof typeof symbolArt].src}" alt=""><div class="power-announcement-copy"><small>PODER ROUBADO PELO WILD</small><strong>${powerTitles[event.power]}</strong><span>${effects[event.power]}</span></div></div>`;
   root.append(banner);return banner;
@@ -137,13 +148,14 @@ export async function presentSpin(result:SpinResult,options:Options){
       const origin=source===null||source===undefined?null:cell(source),wild=cell(event.position);
       audioCue('charge');const announcement=announcePower(root,event,duration,options.reduced);
       if(origin&&wild){origin.classList.add('power-source-v2');wild.classList.add('power-charge');trail(root,origin,wild,event.power,duration*.4);}
-      options.message(powerTitles[event.power],event.power==='P1'?(event.targets.length?'Um símbolo normal ao lado do Wild recebe uma carta de Bronze.':'Sem símbolo normal adjacente disponível.'):event.power==='P2'?`${event.targets.length} Wild(s) criados em vizinhos aleatórios.`:event.power==='P3'?`${event.targets.length} posições recebem ${symbolArt[event.conversionSymbol??'P3'].name}; a origem não gasta a quantidade sorteada.`:`+${event.factor} ao multiplicador global.`);
+      options.message(powerTitles[event.power],event.power==='P1'?(event.passKind==='shot'?`Sem outro P1: remate aleatório até à margem, premium ou Wild. ${event.targets.length} conversões.`:`Passe ao P1 sorteado pelo caminho mais curto: ${event.targets.length} conversões.`):event.power==='P2'?`${event.targets.length} Wild(s) criados em vizinhos aleatórios.`:event.power==='P3'?`${event.targets.length} posições recebem ${symbolArt[event.conversionSymbol??'P3'].name}; a origem não gasta a quantidade sorteada.`:`+${event.factor} ao multiplicador global.`);
       await pause(duration*.45,signal);if(signal.aborted)break;
       // Reveal the board before applying the effect; the title must not cover its targets.
       announcement.remove();
+      if(event.power==='P1'){clean(root);await passBall(event,current,()=>options.draw({board:[...current],events:[...events],sticky:[...sticky]}),options.reduced,signal);}
       clean(root);audioCue('power',Number(event.power[1]));events.push(event);if(event.power==='P1')event.targets.forEach(p=>current[p]='P1');if(event.power==='P2')event.targets.forEach(p=>current[p]='W');if(event.power==='P3')event.targets.forEach(p=>current[p]=event.conversionSymbol??'P3');if(event.power==='P4')global+=event.factor;
       options.draw({board:[...current],events:[...events],sticky:[...sticky]});for(const e of events)badge(e.position,e.power);
-      for(const [targetIndex,target] of event.targets.entries()){if(event.power==='P3'&&targetIndex<4)audioCue('convert',Number((event.conversionSymbol??'P3')[1]),targetIndex*.07);cell(target)?.classList.add('power-impact',`power-${event.power}`);if(target!==event.position&&cell(event.position)&&cell(target))trail(root,cell(event.position)!,cell(target)!,event.power,duration*.5);}
+      for(const [targetIndex,target] of event.targets.entries()){if(event.power==='P3'&&targetIndex<4)audioCue('convert',Number((event.conversionSymbol??'P3')[1]),targetIndex*.07);cell(target)?.classList.add('power-impact',`power-${event.power}`);if(event.power!=='P1'&&target!==event.position&&cell(event.position)&&cell(target))trail(root,cell(event.position)!,cell(target)!,event.power,duration*.5);}
       if(hud){hud.textContent='Global ×'+global;if(event.power==='P4'){hud.classList.remove('global-impact');void hud.offsetWidth;hud.classList.add('global-impact');if(cell(event.position))trail(root,cell(event.position)!,hud,event.power,duration*.5);}}
       await pause(duration*.55,signal);
       if(result.mode==='base')await pause(450,signal);

@@ -1,6 +1,6 @@
 # Especificação matemática — proposta 0.1
 
-> Vigente: **0.9.2**, [Novos poderes e medições](PODERES_0_9_0.md). P1 Passe Curto sem multiplicador, P2 1–2 Wilds ortogonais 50/50, P3 origem fora da quota. Lendas: compra 450×, sticky 25%, Wilds 7%. As notas abaixo são históricas.
+> Vigente: **0.9.4**, [Novos poderes e medições](PODERES_0_9_0.md). P1 Passe Curto até um P1 aleatório pelo caminho mais curto, sem multiplicador, P2 1–2 Wilds ortogonais 50/50, P3 origem fora da quota. Lendas: compra 450×, sticky 25%, Wilds 7%. As notas abaixo são históricas.
 
 > Configuração vigente **0.6.0**: Bonus Hunt opcional, custo 3× e chances positivas de Scatters multiplicadas por 1,5 no jogo base. [Regras atuais](BONUS_HUNT_0_6_0.md). RTP atual não medido. Esta nota prevalece sobre as atualizações históricas abaixo.
 

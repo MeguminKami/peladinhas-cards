@@ -1,9 +1,10 @@
 import {createVoicePlayer,voiceForEvent,STEP_CLIPS} from './voices.mjs';
 // Music has its own volume. All game feedback shares one replaceable channel.
-export function createAudio(getSettings){
+export function createAudio(getSettings,now=()=>performance.now()){
  const track=new Audio();track.loop=true;track.preload='none';
  let ctx,trackName='',unlocked=false,destroyed=false,timer=null,beatAt=0;
- let generation=0,clip=null,cue=null,voicePending=false,lossIndex=0;
+ let generation=0,clip=null,cue=null,voicePending=false,lossIndex=0,lastStepAt=-Infinity;
+ const recordings=new Map();
  const volume=()=>Math.max(0,Math.min(1,getSettings().volume));
  function context(){if(!ctx)ctx=new AudioContext();return ctx;}
  function mix(){track.volume=Math.max(0,Math.min(1,getSettings().musicVolume??.3));}
@@ -12,7 +13,7 @@ export function createAudio(getSettings){
  }});
  function stopFeedback(){
   generation++;voicePending=false;voices.stop();
-  if(clip){const old=clip;clip=null;old.onended=null;old.onerror=null;old.pause();old.removeAttribute('src');old.load();}
+  if(clip){const old=clip;clip=null;old.onended=null;old.onerror=null;old.pause();old.currentTime=0;}
   if(cue){const old=cue;cue=null;old.source.onended=null;try{old.source.stop();}catch{}old.source.disconnect();old.gain.disconnect();}
   mix();
  }
@@ -27,7 +28,9 @@ export function createAudio(getSettings){
   }else{track.pause();clearInterval(timer);timer=null;}
  }
  function recording(name,request){
-  const current=new Audio(`assets/audio/${name}.ogg`);clip=current;current.volume=volume();mix();
+  let current=recordings.get(name);
+  if(!current){current=new Audio(`assets/audio/${name}.ogg`);current.preload='auto';recordings.set(name,current);}
+  clip=current;current.currentTime=0;current.volume=volume();mix();
   const done=()=>{if(request!==generation||clip!==current)return;clip=null;mix();};
   current.onended=done;current.onerror=done;void current.play().catch(done);
  }
@@ -40,7 +43,9 @@ export function createAudio(getSettings){
   source.start();source.stop(t+.2);
  }
  function event(kind,step){
-  stopFeedback();if(destroyed||document.hidden||volume()<=0)return;
+  const at=now(),rapidStep=kind==='step'&&at-lastStepAt<1200;
+  lastStepAt=kind==='step'?at:-Infinity;
+  stopFeedback();if(destroyed||document.hidden||volume()<=0||rapidStep)return;
   const settings=getSettings();
   if(kind==='step'){
    const choices=[...(settings.voices?STEP_CLIPS.map(voice=>({voice})):[]),...(settings.effects?['unlearnthematrix','maluco'].map(recording=>({recording})):[])];
@@ -63,7 +68,7 @@ export function createAudio(getSettings){
  function visibility(){if(document.hidden)stopFeedback();start();}
  function pageHide(){stopFeedback();track.pause();clearInterval(timer);timer=null;}
  function pageShow(e){if(e.persisted)configure();}
- function destroy(){if(destroyed)return;destroyed=true;pageHide();track.removeAttribute('src');track.load();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);if(ctx)void ctx.close().catch(()=>{});}
+ function destroy(){if(destroyed)return;destroyed=true;pageHide();for(const media of recordings.values()){media.removeAttribute('src');media.load();}recordings.clear();track.removeAttribute('src');track.load();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);if(ctx)void ctx.close().catch(()=>{});}
  document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',pageHide);window.addEventListener('pageshow',pageShow);
  return {configure,event,unlock(){if(destroyed)return;unlocked=true;start();},destroy,get beatAt(){return beatAt;}};
 }
