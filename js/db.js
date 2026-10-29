@@ -17,6 +17,7 @@ import {
   onSnapshot,
   orderBy,
   limit,
+  getCountFromServer,
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
   ref,
@@ -78,7 +79,10 @@ export const watchHomeSignals = (uid, callback, error) => {
   const stops = ["global", uid].map((id, index) => onSnapshot(doc(db, "homeSignals", id), snapshot => callback(index, snapshot.data()?.version || "initial"), error));
   return () => stops.forEach(stop => stop());
 };
-export const watchEventSignals = (eventId, callback, error) => {
+// Two tiny revision documents: checked before reusing an in-memory league.
+export const homeVersions = async (uid) =>
+  Promise.all(["global", uid].map(async (id) => (await read(`homeSignals/${id}`))?.version || "initial"));
+export const watchEventSignals =(eventId, callback, error) => {
   const stops = ["homeSignals/global", `eventSignals/${eventId}`].map((path, index) => onSnapshot(doc(db, path), snapshot => callback(index, snapshot.data()?.version || "initial"), error));
   return () => stops.forEach(stop => stop());
 };
@@ -111,6 +115,16 @@ export const myCommunity = (uid) =>
   list("communityRatings", where("raterId", "==", uid));
 export const myFeedback = (gid, uid) =>
   list(`games/${gid}/feedback`, where("raterId", "==", uid));
+// Submitted ratings by uid for current participants. Ids are rater_target, so
+// the count is exact; "in" accepts at most 30 values.
+export const feedbackDone = async (gid, uid, targets) => {
+  if (!targets.length) return 0;
+  if (targets.length > 30)
+    return (await myFeedback(gid, uid)).filter((r) => r.submitted && targets.includes(r.targetId)).length;
+  const snapshot = await getCountFromServer(query(collection(db, `games/${gid}/feedback`),
+    where("raterId", "==", uid), where("submitted", "==", true), where("targetId", "in", targets)));
+  return snapshot.data().count;
+};
 export const history = (uid) => list(`users/${uid}/cardHistory`);
 export const notifications = (uid) => list(`users/${uid}/notifications`);
 export const watchNotifications = (uid, callback, error) =>

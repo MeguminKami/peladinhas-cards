@@ -66,7 +66,7 @@ function counted(wallet) {
   return { ...wallet, requestWindow: { minute, count: count + 1 } };
 }
 
-export function casinoFunctions() {
+export function casinoFunctions({ settleTables } = {}) {
   const grantCasinoCoins = walletCall(async (request, admin) => {
     if (admin.role !== "admin") throw new HttpsError("permission-denied", "Apenas administradores podem enviar moedas.");
     const input = request.data;
@@ -109,6 +109,10 @@ export function casinoFunctions() {
         "permission-denied",
         "A sessão pertence a outra conta.",
       );
+    // Settle tables abandoned mid-round before showing the balance, so
+    // returning players see their payouts and refunds. Never blocks opening.
+    if (input.action === "open" && settleTables)
+      await settleTables().catch((error) => console.error("casino settle", error));
     const db = getFirestore(),
       ref = db.doc(`casinoWallets/${request.auth.uid}`),
       sessionRef = ref.collection("sessions").doc(input.id);

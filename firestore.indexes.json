@@ -23,6 +23,15 @@
         { "fieldPath": "targetId", "order": "ASCENDING" },
         { "fieldPath": "submitted", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "feedback",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "raterId", "order": "ASCENDING" },
+        { "fieldPath": "submitted", "order": "ASCENDING" },
+        { "fieldPath": "targetId", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

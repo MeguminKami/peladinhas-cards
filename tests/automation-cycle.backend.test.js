@@ -8,7 +8,7 @@ import { registeredJobs } from "../functions/policy-runtime.js";
 assertTestEmulator();
 process.env.GCLOUD_PROJECT = `demo-cycles-${process.pid}`;
 const { getEvent, claimMission, closeEvents, systemHeartbeat, onGame, ensureHistory,
-  onPathGame, onPathSummary, getPath, pathAction, onGameNotifications, scheduledNotifications } = await import("../functions/index.js");
+  onPathGame, onPathSummary, getPath, pathAction, onGameNotifications, scheduledNotifications, onCommunityWork } = await import("../functions/index.js");
 const db = getFirestore();
 
 test("four Lisbon checks share one checkpoint; failures and overlapping game closures retry", async () => {
@@ -102,4 +102,21 @@ test("queued announcements survive quiet hours and duplicate deliveries keep the
   await scheduledNotifications.run({ cycle: true });
   assert.equal((await db.collection(`users/${uid}/notifications`).where("type", "==", "GAME_CALLUP").get()).size, 1);
   assert.equal((await db.collection(`users/${uid}/notifications`).where("type", "==", "GAME_REMINDER").get()).size, 0);
+});
+
+test("a submitted rating runs the cycle at once for its newest pending generation", async () => {
+  const ref = db.doc("communityWork/instant-player");
+  const delivery = (token, time = new Date()) => ({ time: time.toISOString(), params: { id: "instant-player" }, data: {
+    before: { data: () => undefined }, after: { data: () => ({ pending: true, token }), ref } } });
+  // Superseded and stale deliveries leave the newest generation pending.
+  await ref.set({ pending: true, token: "new" });
+  await onCommunityWork.run(delivery("old"));
+  await onCommunityWork.run(delivery("new", new Date(Date.now() - 20 * 60000)));
+  assert.equal((await ref.get()).data().pending, true);
+  await onCommunityWork.run(delivery("new"));
+  assert.equal((await ref.get()).data().pending, false);
+  // The acknowledgement write itself does not start another cycle.
+  const cycles = (await db.collection("automationCycles").get()).size;
+  await onCommunityWork.run(delivery("new"));
+  assert.equal((await db.collection("automationCycles").get()).size, cycles);
 });

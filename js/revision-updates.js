@@ -75,15 +75,19 @@ export function startRevisionUpdates({
     );
     arm();
   };
+  // Re-attaching the listener delivers the current versions; it schedules a
+  // refresh only when one differs. Returning to the page (frequent on phones)
+  // must not refetch everything when nothing changed.
   const visibility = () => {
     detach();
     if (live()) {
       attach();
-      schedule(0);
+      if (dirty) schedule(0);
     }
   };
+  // Firestore listeners resynchronise by themselves after a reconnection.
   const reconnect = () => {
-    if (live()) schedule(0);
+    if (live() && dirty) schedule(0);
   };
   page.addEventListener("visibilitychange", visibility);
   connection.addEventListener?.("online", reconnect);

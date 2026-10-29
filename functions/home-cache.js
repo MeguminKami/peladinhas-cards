@@ -161,13 +161,18 @@ async function leagueContext() {
     "cardCollections",
     "cardSelections",
   ];
+  const cycle = cardWeek();
+  // Photos accumulate every week; only the current week's are used.
   const snapshots = await Promise.all(
-    names.map((name) => db().collection(name).get()),
+    names.map((name) =>
+      name === "weeklyCardPhotos"
+        ? db().collection(name).where("weekId", "==", cycle.weekId).get()
+        : db().collection(name).get(),
+    ),
   );
   const source = Object.fromEntries(
     names.map((name, index) => [name, rows(snapshots[index])]),
   );
-  const cycle = cardWeek();
   const week = cardWeek(new Date(+cycle.opensAt - 1)).weekId;
   const active = source.users.filter((user) => !user.disabled);
   const previous = active.length
@@ -311,6 +316,17 @@ export function homeFunctions(
                 .where("raterId", "==", owner)
                 .get(),
             ),
+          // One aggregation read per game instead of one read per rating.
+          feedbackDone: async (game, owner, targets) => {
+            if (!targets.length) return 0;
+            const ratings = db()
+              .collection(`games/${game}/feedback`)
+              .where("raterId", "==", owner)
+              .where("submitted", "==", true);
+            if (targets.length > 30)
+              return rows(await ratings.get()).filter((r) => targets.includes(r.targetId)).length;
+            return (await ratings.where("targetId", "in", targets).count().get()).data().count;
+          },
           read: async (path) => {
             const value = (await db().doc(path).get()).data() || null;
             if (path === `pathStates/${uid}`) {
