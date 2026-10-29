@@ -43,9 +43,9 @@ Instalar a PWA e ativar notificações são ações diferentes. **Enviar teste**
 
 ## Entrega, leitura e recuperação
 
-- `onNotificationPush` processa novos documentos ainda por ler. Registo e reconexão recuperam notificações elegíveis dos últimos sete dias; não repetem entregas concluídas.
+- `onNotificationPush` faz uma tentativa de envio por dispositivo e revisão da nova mensagem. A tentativa fica registada antes do envio; falhas e entregas duplicadas do trigger não provocam reenvio. O trigger tem `retry: false`.
 - O fornecedor pode conservar entregas até sete dias, segundo o TTL. Com a app fechada, navegador e sistema gerem a entrega; não há polling da aplicação em segundo plano.
-- Com a app visível, a recuperação é verificada a cada dez segundos, ao regressar à app e ao recuperar rede. Os pendentes são sincronizados em páginas de 100.
+- A recuperação de ligação valida o dispositivo, sem consultar ou reenviar o histórico de notificações.
 - O worker usa tags estáveis, recibos persistentes e a revisão da mensagem para evitar duplicados. Ignora mensagens expiradas, já lidas ou pertencentes a outra conta.
 - Tocar abre apenas um destino permitido da aplicação e confirma a leitura. **Marcar como lida**, quando suportado, confirma sem abrir a página.
 - Sem rede, a intenção de leitura fica em IndexedDB por conta. O worker volta a tentar ao abrir a app, recuperar ligação ou através de Background Sync quando disponível. Uma leitura antiga não consome uma revisão posterior da mensagem.
@@ -76,7 +76,7 @@ A verificação local preserva o par existente. Se uma cópia do repositório ti
 | Função                  | Responsabilidade                                                                             |
 | ----------------------- | -------------------------------------------------------------------------------------------- |
 | `pushDeviceAction`      | Registar, remover, testar e sincronizar o próprio dispositivo.                               |
-| `onNotificationPush`    | Entregar, controlar concorrência, repetir falhas transitórias e retirar endpoints expirados. |
+| `onNotificationPush` | Tentar entregar uma vez por dispositivo, impedir duplicados e retirar endpoints expirados. |
 | `ackPushNotification`   | Confirmar uma revisão específica através do recibo e capacidade enviados no push encriptado. |
 | `cleanupPushDeliveries` | Limpar diariamente recibos expirados, em lotes limitados.                                    |
 

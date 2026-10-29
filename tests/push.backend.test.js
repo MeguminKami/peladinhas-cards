@@ -20,7 +20,7 @@ const subscription = (id) => ({
   keys: { p256dh: keys.publicKey, auth: randomBytes(16).toString("base64url") },
 });
 const notifications = () => db.collection(`users/${uid}/notifications`);
-test("push: secure devices, delivery retries, private read receipts and account changes", async (t) => {
+test("push: secure devices, single-attempt delivery, private read receipts and account changes", async (t) => {
   await db.doc(`users/${uid}`).set({ disabled: false });
   await db.doc(`users/${other}`).set({ disabled: false });
   for (const name of ["pushDevices", "pushDeliveries"]) {
@@ -168,11 +168,9 @@ test("push: secure devices, delivery retries, private read receipts and account 
         before,
       );
       await create("invalid-configuration");
-      await assert.rejects(
-        invalid.onNotificationPush.run({
-          params: { uid, nid: "invalid-configuration" },
-        }),
-      );
+      await invalid.onNotificationPush.run({
+        params: { uid, nid: "invalid-configuration" },
+      });
       const receipts = await db
         .collection("pushDeliveries")
         .where("notificationId", "==", "invalid-configuration")
@@ -208,36 +206,20 @@ test("push: secure devices, delivery retries, private read receipts and account 
     },
   );
   await t.test(
-    "retries only the failed device, preserves the capability and suppresses duplicates",
+    "never retries a failed device, including concurrent duplicate triggers",
     async () => {
       await create("retry");
       failure = Object.assign(Error("unavailable"), { statusCode: 503 });
-      await assert.rejects(fire("retry"));
-      const before = await db
-        .collection("pushDeliveries")
-        .where("notificationId", "==", "retry")
-        .get();
-      const tokenById = new Map(before.docs.map((d) => [d.id, d.data().token]));
+      await Promise.all([fire("retry"), fire("retry")]);
       await fire("retry");
-      await fire("retry");
-      const pushes = delivered.filter(
-        (d) => d.payload.notificationId === "retry",
-      );
-      assert.equal(pushes.length, 2);
-      for (const item of pushes)
-        assert.equal(
-          item.payload.receiptToken,
-          tokenById.get(item.payload.receiptId),
-        );
-      const recovered = await db
-        .collection("pushDeliveries")
-        .where("notificationId", "==", "retry")
-        .get();
-      for (const doc of recovered.docs) {
-        assert.ok(doc.data().sentAt);
-        assert.equal(doc.data().lastError, undefined);
-        assert.equal(doc.data().failure, undefined);
-      }
+      await call({ action: "sync", deviceId: device1 });
+      const pushes = delivered.filter(d => d.payload.notificationId === "retry");
+      assert.equal(pushes.length, 1);
+      const receipts = await db.collection("pushDeliveries")
+        .where("notificationId", "==", "retry").get();
+      assert.equal(receipts.size, 2);
+      assert.equal(receipts.docs.filter(d => d.data().failure === "provider").length, 1);
+      for (const doc of receipts.docs) assert.equal(doc.data().attempts, 1);
     },
   );
   await t.test(
@@ -292,31 +274,14 @@ test("push: secure devices, delivery retries, private read receipts and account 
       assert.equal(delivered.at(-1).sub.endpoint, first.endpoint);
     },
   );
-  await t.test("offline backlog sync is private, paginated and idempotent", async () => {
+  await t.test("reconnect validates ownership without replaying notification history", async () => {
     await assert.rejects(call({ action: "sync", deviceId: device1 }, other));
-    await assert.rejects(call({ action: "sync", deviceId: device1, cursor: { id: "../bad" } }));
-    await create("old-backlog", { createdAt: Timestamp.fromMillis(Date.now() - 8 * 86400000) });
-    await create("read-backlog", { read: true });
-    for (let i = 0; i < 105; i++) await create(`backlog-${i}`);
-    let cursor, pages = 0;
-    do {
-      const result = await call({ action: "sync", deviceId: device1, ...(cursor ? { cursor } : {}) });
-      assert.equal(result.pending, 0);
-      cursor = result.nextCursor;
-      assert.ok(++pages < 10);
-    } while (cursor);
-    assert.ok(pages >= 2);
-    assert.equal(delivered.filter(d => d.payload.notificationId.startsWith("backlog-")).length, 105);
-    assert.equal(delivered.some(d => ["old-backlog", "read-backlog"].includes(d.payload.notificationId)), false);
+    await create("backlog-unattempted");
+    const start = delivered.length;
+    assert.deepEqual(await call({ action: "sync", deviceId: device1 }),
+      { synchronized: true, pending: 0, nextCursor: null });
     await call({ action: "sync", deviceId: device1 });
-    assert.equal(delivered.filter(d => d.payload.notificationId.startsWith("backlog-")).length, 105);
-    await create("reconnect-retry");
-    failure = Object.assign(Error("offline"), { statusCode: 503 });
-    const retry = await call({ action: "sync", deviceId: device1 });
-    assert.equal(retry.synchronized, false);
-    assert.equal(retry.pending, 1);
-    await call({ action: "sync", deviceId: device1 });
-    assert.equal(delivered.filter(d => d.payload.notificationId === "reconnect-retry").length, 1);
+    assert.equal(delivered.length, start);
   });
   await t.test(
     "unsubscribed devices are removed and account transfers prevent stale sends",

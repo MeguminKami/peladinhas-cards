@@ -9,7 +9,7 @@ import {
   createECDH,
 } from "node:crypto";
 import * as logger from "firebase-functions/logger";
-import { getFirestore, FieldValue, FieldPath, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
@@ -197,27 +197,8 @@ export function pushFunctions({
         const device = (await ref.get()).data();
         if (!device?.enabled || device.uid !== uid)
           throw new HttpsError("permission-denied", "Ativa as notificações neste dispositivo.");
-        // Recover recent unread alerts after a reconnect or a repaired subscription.
-        // sentAt is acceptance by the push provider; the provider retains offline deliveries.
-        let query = db().collection(`users/${uid}/notifications`)
-          .where("createdAt", ">=", Timestamp.fromMillis(Date.now() - PUSH_TTL_SECONDS * 1000))
-          .orderBy("createdAt", "desc").orderBy(FieldPath.documentId(), "desc").limit(100);
-        if (input.cursor) {
-          const { seconds, nanoseconds, id } = input.cursor;
-          if (!Number.isSafeInteger(seconds) || seconds < 0 || seconds > 253402300799 || !Number.isInteger(nanoseconds) || nanoseconds < 0 || nanoseconds > 999999999 || typeof id !== "string" || !id || id.length > 256 || id.includes("/")) bad("Página de notificações inválida.");
-          query = query.startAfter(new Timestamp(seconds, nanoseconds), id);
-        }
-        const recent = await query.get();
-        const pending = recent.docs.filter(doc => !doc.data().read);
-        let failures = 0;
-        for (let i = 0; i < pending.length; i += 10) {
-          const results = await Promise.allSettled(pending.slice(i, i + 10).map(doc => deliver(uid, doc.id, input.deviceId)));
-          failures += results.filter(result => result.status === "rejected").length;
-        }
-        const last = recent.docs.at(-1);
-        const stamp = last?.data().createdAt;
-        const nextCursor = failures ? input.cursor || null : recent.size === 100 ? { seconds: stamp.seconds, nanoseconds: stamp.nanoseconds, id: last.id } : null;
-        return { synchronized: failures === 0 && !nextCursor, pending: failures, nextCursor };
+        // Compatibility with existing clients: reconnecting never resends alerts.
+        return { synchronized: true, pending: 0, nextCursor: null };
       }
       if (input.action === "unregister") {
         await db().runTransaction(async (tx) => {
@@ -292,17 +273,9 @@ export function pushFunctions({
       receiptRef = db().doc(`pushDeliveries/${receiptId}`);
     const receipt = await db().runTransaction(async (tx) => {
       const current = (await tx.get(receiptRef)).data();
-      if (current?.sentAt || current?.readAt) return null;
-      if (
-        current?.sendingAt &&
-        Date.now() - current.sendingAt.toMillis() < 60000
-      )
-        throw Error("A entrega anterior ainda está em curso.");
-      if (
-        (current?.createdAt &&
-          Date.now() - current.createdAt.toMillis() > PUSH_TTL_SECONDS * 1000)
-      )
-        return null;
+      // Claim before sending. A failed or interrupted attempt is never repeated,
+      // including duplicate trigger deliveries and receipts from older versions.
+      if (current) return null;
       const value = {
         uid,
         notificationId: nid,
@@ -419,14 +392,14 @@ export function pushFunctions({
         });
         return;
       }
-      throw Error("Não foi possível entregar uma notificação push.");
+      return;
     }
   }
   const onNotificationPush = policyCreated(
     {
       document: "users/{uid}/notifications/{nid}",
       secrets: secret ? [secret] : [],
-      retry: true,
+      retry: false,
       timeoutSeconds: 120,
     },
     async (event) => {
@@ -437,13 +410,11 @@ export function pushFunctions({
         .collection("pushDevices")
         .where("uid", "==", uid)
         .get();
-      const results = await Promise.allSettled(
+      await Promise.allSettled(
         devices.docs
           .filter((d) => d.data().enabled)
           .map((d) => deliver(uid, nid, d.id)),
       );
-      if (results.some((r) => r.status === "rejected"))
-        throw Error("Entrega push temporariamente indisponível.");
     },
   );
   const ackPushNotification = policyCall("ackPushNotification",{ cors: true }, async (request) => {
