@@ -81,13 +81,16 @@ try {
       rarity:["gold","silver","bronze","elite","icon","ultimate"][i],
       startsAt:"2026-10-15",endsAt:"2026-12-01",indefinite:i===0,
       objective:{metric:"goals",target:3},participantIds:["pedro"],
-      positions:[{mode:"card",specialId:"mvp"}],cadence:"once",maxRepeats:1,
+      positions:[{mode:"card",specialId:"mvp",boosts:{shooting:2},statDuration:"permanent"}],cadence:"once",maxRepeats:1,
     }));
     const {mountEventAdmin}=await import("/js/event-admin.js");
     const state=window.__testState;
     await mountEventAdmin({user:state.users.find(u=>u.uid==="pedro"),league:{users:state.users,players:state.users,games:state.games},refresh:async()=>{}},document.querySelector("#main"),"mission");
   });
   assert.equal(await page.locator(".event-admin-card").count(),6);
+  assert.match(await page.locator(".event-admin-rewards").first().innerText(), /Por conclusão/);
+  assert.match(await page.locator(".event-admin-rewards").first().innerText(), /\+2 Finalização \(Permanente\)/);
+  assert.match(await page.locator(".event-admin-rewards").first().innerText(), /Carta .*\(Semanal\)/);
   assert.equal(await page.locator('[data-action="open"]').getAttribute("aria-label"),"Publicar");
   assert.equal(await page.locator('[data-action="delete"]').getAttribute("aria-label"),"Apagar");
   for(const width of [1440,768,390,320]) {
@@ -97,7 +100,7 @@ try {
       await page.emulateMedia({reducedMotion:"reduce"});
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
       const dimensions=await page.locator(".event-admin-card").first().evaluate(el=>({height:el.getBoundingClientRect().height,children:[...el.children].map(child=>({name:child.className,height:child.getBoundingClientRect().height}))}));
-      assert.ok(dimensions.height<340,JSON.stringify({width,theme,...dimensions}));
+      assert.ok(dimensions.height<500,JSON.stringify({width,theme,...dimensions}));
       const issues=await page.locator(".event-card-action").evaluateAll(els=>els.filter(el=>{
         const box=el.getBoundingClientRect();return box.width<44 || box.height<44 || !el.getAttribute("aria-label");
       }).length);
@@ -122,6 +125,19 @@ try {
   await button.hover();await page.waitForTimeout(220);
   const after=await page.locator(".event-admin-card").first().boundingBox();
   assert.equal(before.width,after.width);assert.equal(before.height,after.height);
+  await page.evaluate(async () => {
+    const state = window.__testState;
+    state.events = [{ ...state.events[0], kind: "event", positions: [
+      { boosts: { pace: 3 }, statDuration: "monthly" },
+      { specialId: "mvp" },
+    ] }];
+    const { mountEventAdmin } = await import("/js/event-admin.js");
+    await mountEventAdmin({ user: state.users.find(u => u.uid === "pedro"), league: { users: state.users, players: state.users, games: state.games }, refresh: async () => {} }, document.querySelector("#main"));
+  });
+  const eventRewards = await page.locator(".event-admin-rewards").innerText();
+  assert.match(eventRewards, /1.* lugar/);
+  assert.match(eventRewards, /2.* lugar/);
+  assert.match(eventRewards, /\+3 Velocidade \(Mensal\)/);
   assert.deepEqual(errors,[]);
   console.log("Compact admin cards: six states, accessible actions, keyboard/edit, stable hover, reduced motion, four themes and four widths passed.");
 } finally {await browser?.close();await new Promise(resolve=>server.close(resolve));}

@@ -6,7 +6,7 @@ import { rewardBreakdown } from "./reward-presentation.js";
 import { TOTAL_OBJECTIVES, isLifetimeObjective, usesLifetimeObjective, objectiveTargetLimit } from "./event-totals.js";
 import { groupActivities } from "./activity-categories.js";
 import { EVENT_RARITIES, eventRarityId, rarityBadge } from "./event-rarity.js";
-import { CARD_POLICY } from "./card-achievements.js";
+import { CARD_POLICY, durationName } from "./card-achievements.js";
 import { DIFFICULTY_LABELS } from "./labels.js";
 import * as DB from "./db.js";
 import {
@@ -158,6 +158,9 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
     DB.list("events"),
     DB.list("cardThemes"),
   ]);
+  const rewardsById = new Map(await Promise.all(events.map(async (event) => [
+    event.id, await DB.read(`events/${event.id}/private/rewards`),
+  ])));
   let editing = null,
     activeArea = "event";
   root.innerHTML = `<div class="event-workspace content-stack"><section class="event-command panel"><div><span class="eyebrow">CENTRO DE COMPETIÇÕES</span><h2>Eventos e missões</h2><p>Cria eventos e missões e acompanha as recompensas.</p></div><div class="actions"><button class="btn btn-primary" id="new-event">Criar evento</button><button class="btn btn-secondary" id="new-mission">Criar missão</button><a class="btn btn-ghost" href="#/events">Histórico público</a></div></section><div class="event-metrics">${["open", "scheduled", "review", "closed"].map((state) => `<article class="panel"><small>${statusName[state]}</small><strong>${events.filter((e) => e.status === state).length}</strong></article>`).join("")}</div><section class="panel"><div class="event-area-tabs" role="tablist" aria-label="Área de gestão"><button type="button" role="tab" id="events-tab" aria-selected="true">Eventos <span>Classificação e vencedores</span></button><button type="button" role="tab" id="missions-tab" aria-selected="false">Missões <span>Objetivos e progresso</span></button></div><p id="event-area-description" class="muted"></p><div class="event-toolbar"><label>Pesquisar<input id="event-search" type="search" placeholder="Nome do evento ou missão"></label><label>Estado<select id="event-status"><option value="">Todos</option>${options(Object.entries(statusName))}</select></label></div><div id="event-admin-list" class="activity-groups"></div></section><section id="event-editor" class="panel event-builder" hidden></section></div>`;
@@ -185,7 +188,24 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       `<button type="button" class="btn event-card-action action-${tone}" aria-label="${esc(label)}" ${attributes}>${icon(symbol)}</button>`;
     const eventCard = (event) => {
       const id = esc(event.id);
-      return `<article class="event-management-card event-admin-card event-rarity-surface" data-rarity="${eventRarityId(event)}"><div class="event-admin-card-head">${rarityBadge(event)}<span class="pill">${statusName[event.status]}</span></div><h3>${esc(event.title)}</h3>${event.description ? `<p class="event-admin-card-description">${esc(event.description)}</p>` : ""}<small class="event-admin-card-date">${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small><div class="actions compact event-admin-card-actions" role="group" aria-label="Ações do desafio"><a class="btn event-card-action action-audit" href="#/event/${id}" aria-label="Consultar / auditar">${icon("preview")}</a>${event.schemaVersion === 2 ? actionIcon("Editar", "edit", "edit", `data-edit="${id}"`) + actionIcon("Duplicar", "copy", "duplicate", `data-action="duplicate" data-id="${id}"`) : ""}${event.schemaVersion === 2 && event.status === "cancelled" ? actionIcon("Apagar", "trash", "delete", `data-action="delete" data-id="${id}"`) : ""}${event.status === "draft" ? actionIcon("Publicar", "publish", "publish", `data-action="open" data-id="${id}"`) : ""}${event.status === "open" && event.kind !== "mission" ? actionIcon("Preparar resultados", "chart", "prepare", `data-action="prepare" data-id="${id}"`) : ""}${["draft", "scheduled", "open", "review"].includes(event.status) ? actionIcon("Cancelar", "close", "cancel", `data-action="cancel" data-id="${id}"`) : ""}</div></article>`;
+      const configuration = rewardsById.get(event.id) || {};
+      const rewards = configuration.positions || event.rewardPreview || [];
+      const summary = (reward) => {
+        const boosts = ATTRIBUTES.filter(([key]) => Number.isFinite(reward.boosts?.[key]) && reward.boosts[key] > 0);
+        const equal = boosts.length === ATTRIBUTES.length && boosts.every(([key]) => reward.boosts[key] === reward.boosts[boosts[0][0]]);
+        const amount = (value) => Number(value).toLocaleString("pt-PT", { maximumFractionDigits: 2 });
+        const parts = [];
+        if (boosts.length) parts.push(`${equal ? `+${amount(reward.boosts[boosts[0][0]])} em todos os atributos` : boosts.map(([key, label]) => `+${amount(reward.boosts[key])} ${label}`).join(" · ")} (${durationName(reward.statDuration || "weekly")})`);
+        if (reward.specialId) parts.push(`Carta ${reward.cardTheme?.name || themes.find(theme => theme.id === reward.specialId)?.name || themeName(reward.specialId)} (${durationName(CARD_POLICY[reward.specialId]?.duration || reward.cardDuration || reward.statDuration)})`);
+        return esc(parts.join(" · ") || "Sem recompensa.");
+      };
+      const prizes = rewards.map((reward, i) => `<div><strong>${event.kind === "mission" ? "Por conclusão" : `${positionLabel(i + 1)} lugar`}</strong><span>${summary(reward)}</span></div>`);
+      if (!rewards.length) for (const question of event.questions || []) {
+        const reward = configuration.questions?.[question.id] || question.reward;
+        if (reward) prizes.push(`<div><strong>${esc(question.title || question.text || "Vencedor")}</strong><span>${summary(reward)}</span></div>`);
+      }
+      const rewardSummary = `<div class="event-admin-rewards" aria-label="Recompensas"><small>Recompensas</small>${prizes.join("") || '<span class="muted">Sem recompensas configuradas.</span>'}</div>`;
+      return `<article class="event-management-card event-admin-card event-rarity-surface" data-rarity="${eventRarityId(event)}"><div class="event-admin-card-head">${rarityBadge(event)}<span class="pill">${statusName[event.status]}</span></div><h3>${esc(event.title)}</h3>${event.description ? `<p class="event-admin-card-description">${esc(event.description)}</p>` : ""}${rewardSummary}<small class="event-admin-card-date">${formatDate(event.startsAt || event.createdAt)} → ${eventEndLabel(event)}</small><div class="actions compact event-admin-card-actions" role="group" aria-label="Ações do desafio"><a class="btn event-card-action action-audit" href="#/event/${id}" aria-label="Consultar / auditar">${icon("preview")}</a>${event.schemaVersion === 2 ? actionIcon("Editar", "edit", "edit", `data-edit="${id}"`) + actionIcon("Duplicar", "copy", "duplicate", `data-action="duplicate" data-id="${id}"`) : ""}${event.schemaVersion === 2 && event.status === "cancelled" ? actionIcon("Apagar", "trash", "delete", `data-action="delete" data-id="${id}"`) : ""}${event.status === "draft" ? actionIcon("Publicar", "publish", "publish", `data-action="open" data-id="${id}"`) : ""}${event.status === "open" && event.kind !== "mission" ? actionIcon("Preparar resultados", "chart", "prepare", `data-action="prepare" data-id="${id}"`) : ""}${["draft", "scheduled", "open", "review"].includes(event.status) ? actionIcon("Cancelar", "close", "cancel", `data-action="cancel" data-id="${id}"`) : ""}</div></article>`;
     };
     list.innerHTML =
       groupActivities(filtered)

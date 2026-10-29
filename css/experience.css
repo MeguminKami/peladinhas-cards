@@ -1876,3 +1876,8 @@ p {
   .card-selection-button { transition: none; }
   .card-selection-button:hover { transform: none; }
 }
+
+.event-admin-rewards { display:grid; gap:8px; padding-block:10px; border-block:1px solid var(--border); overflow-wrap:anywhere; }
+.event-admin-rewards > small { color:var(--text-secondary); font-weight:700; }
+.event-admin-rewards > div { display:grid; gap:4px; font-size:.8rem; line-height:1.5; }
+.event-admin-rewards > div > span { color:var(--text-secondary); }
