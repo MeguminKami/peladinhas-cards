@@ -59,84 +59,43 @@
   height: 19px;
   flex: none;
 }
-.casino-rejuice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 20px;
-  padding: 24px;
-  margin: 24px 0;
-  border: 1px solid var(--border-strong);
-  border-radius: 20px;
-  background: var(--bg-surface);
-}
-.casino-rejuice-token {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: none;
-  color: var(--casino-gold);
-  font-size: 1.5rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.casino-rejuice-token .djabucoin { width: 40px; height: 40px; font-size: 1.3rem; }
-.casino-rejuice-copy { position: relative; flex: 1 1 260px; min-width: 0; height: 112px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-.casino-rejuice-copy.has-feedback > h2, .casino-rejuice-copy.has-feedback > p:not(.casino-rejuice-notice) { visibility: hidden; }
-.casino-rejuice h2 { font-size: clamp(1.1rem, 2vw, 1.4rem); line-height: 1.25; letter-spacing: -.03em; }
-.casino-rejuice p { color: var(--text-secondary); line-height: 1.5; }
-.casino-rejuice-notice:empty { display: none; }
+.casino-salon-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 24px 0; }
+.casino-salon-actions .casino-button { width: 181px; min-height: 46px; padding: 12px; gap: 10px; }
+.casino-salon-actions .casino-shop-link { margin: 0; }
+.casino-rejuice { position: relative; min-width: 0; }
 .casino-rejuice-notice {
-  --feedback-color: var(--text-primary);
   position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 16px;
-  margin: 0 !important;
-  border-inline-start: 3px solid var(--feedback-color);
-  border-radius: 4px 12px 12px 4px;
-  background: color-mix(in srgb, var(--feedback-color) 9%, var(--bg-surface));
+  left: calc(100% + 12px);
+  top: 0;
+  z-index: 5;
+  width: min(340px, calc(100vw - 48px));
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  box-shadow: 0 8px 24px #0003;
+  font-size: .875rem;
+  line-height: 1.5;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms ease, visibility 200ms;
+  pointer-events: none;
 }
-.casino-rejuice-notice[data-state="success"] { --feedback-color: var(--accent); }
-.casino-rejuice-notice[data-state="refused"] { --feedback-color: var(--warning); }
-.casino-rejuice-notice[data-state="error"] { --feedback-color: var(--danger); border-inline-start-style: dashed; }
-.casino-rejuice-feedback-icon {
-  display: grid;
-  place-items: center;
-  flex: 0 0 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--feedback-color);
-  color: var(--bg-surface);
-}
-.casino-rejuice-feedback-copy { display: grid; gap: 5px; min-width: 0; flex: 1; }
-.casino-rejuice-feedback-copy strong { color: var(--text-primary); font-size: 1rem; line-height: 1.3; }
-.casino-rejuice-feedback-copy > span { font-size: .875rem; line-height: 1.55; }
-.casino-rejuice-credit { color: var(--feedback-color); font-size: 1.65rem; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; animation: rejuice-credit-in 360ms ease-out; }
-.casino-rejuice-credit small { display: block; margin-top: 5px; font-size: .65rem; letter-spacing: .12em; text-align: center; }
-@keyframes rejuice-credit-in {
-  from { opacity: 0; transform: translateY(8px) rotate(-8deg) scale(.8); }
-  to { opacity: 1; transform: none; }
-}
-.casino-rejuice .casino-button { min-height: 48px; white-space: normal; transition: transform 160ms ease; }
-.casino-rejuice .casino-button:hover { transform: translateY(-2px); }
-.casino-rejuice .casino-button:active { transform: scale(.98); }
+.casino-rejuice-notice.is-visible { opacity: 1; visibility: visible; }
+.casino-rejuice-notice strong { display: block; }
+.casino-rejuice-notice[data-state="success"] { border-color: var(--accent); }
+.casino-rejuice-notice[data-state="error"] { border-color: var(--danger); }
 .casino-rejuice .casino-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
-.casino-rejuice .casino-button:disabled { opacity: .65; cursor: wait; transform: none; }
-@media (max-width: 600px) {
-  .casino-rejuice { padding: 20px; gap: 16px; }
-  .casino-rejuice .casino-button { width: 100%; }
-  .casino-rejuice-copy { height: 168px; }
-  .casino-rejuice-notice { display: grid; grid-template-columns: 32px minmax(0, 1fr); }
-  .casino-rejuice-credit { grid-column: 2; justify-self: start; }
+.casino-rejuice .casino-button:disabled { opacity: .65; cursor: wait; }
+@media (max-width: 700px) {
+  .casino-rejuice-notice { left: 0; top: calc(100% + 8px); }
+}
+@media (max-width: 420px) {
+  .casino-salon-actions .casino-button { width: 140px; gap: 6px; padding: 10px 8px; font-size: .75rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .casino-rejuice .casino-button { transition: none; transform: none; }
-  .casino-rejuice-credit { animation: none; }
+  .casino-rejuice-notice { transition: none; }
 }
 .casino-topline,
 .casino-topline > span,

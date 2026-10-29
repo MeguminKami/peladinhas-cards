@@ -76,7 +76,8 @@ try {
   );
 
   const initialHeight = (await page.locator('.casino-rejuice').boundingBox()).height;
-  assert.equal(await page.locator('.casino-rejuice-token .djabucoin').count(), 1);
+  assert.equal(await page.locator('.casino-store-entry').count(), 0);
+  assert.deepEqual(await page.locator('[data-rejuice]').boundingBox().then(({width,height})=>({width,height})), await page.locator('.casino-shop-link').boundingBox().then(({width,height})=>({width,height})));
   assert.equal(await page.locator('[data-rejuice]').innerText(), 'Pedir Rejuice');
   await page.locator('[data-rejuice]').click();
   assert.equal((await page.locator('.casino-rejuice').boundingBox()).height, initialHeight);
@@ -88,6 +89,7 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({path: `test-results/rejuice-${width}.png`});
   }
+  await page.locator('.casino-rejuice-notice:not(.is-visible)').waitFor({state:'attached',timeout:7000});
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.locator('[data-rejuice]').focus();
   await page.keyboard.press('Tab');
@@ -121,6 +123,7 @@ try {
   assert.equal(await mobile.evaluate(() => window.__casinoCalls.length),3);
   for (const width of [1440, 768, 390, 320]) {
     await mobile.setViewportSize({ width, height: 1000 });
+    await mobile.locator('[data-rejuice]').click();
     await mobile.locator('.casino-rejuice-notice').scrollIntoViewIfNeeded();
     await mobile.waitForTimeout(400);
     assert.equal(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

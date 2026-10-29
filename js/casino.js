@@ -81,22 +81,15 @@ export async function casinoPage(ctx) {
   window.addEventListener("peladinhas-before-logout", beforeLogout);
   document.addEventListener("visibilitychange", visibility);
   ctx.render(
-    `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">${catalogCount()}</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><section class="casino-rejuice" aria-labelledby="rejuice-title"><div class="casino-rejuice-token" aria-hidden="true"><span>+50</span>${coin}</div><div class="casino-rejuice-copy"><h2 id="rejuice-title">Já perdeste as tuas Djabucoins todas?</h2><p>Queres um Rejuice? Clica em mim.</p><p class="casino-rejuice-notice" role="status" aria-live="polite"></p></div><button type="button" class="casino-button" data-rejuice>Pedir Rejuice</button></section><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
+    `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">${catalogCount()}</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><div class="casino-salon-actions"><div class="casino-rejuice"><button type="button" class="casino-button casino-button-outline" data-rejuice title="Pedir 50 Djabucoins">${icon('gift')}<span>Pedir Rejuice</span>${icon('arrow')}</button><p class="casino-rejuice-notice" role="status" aria-live="polite" aria-atomic="true"></p></div></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
   );
   const root = document.querySelector(".casino-page");
   const store = mountCasinoStore(root, localWallet, () => wallet, () => ctx.invalidateLeague?.());
-  const shopButton = document.createElement('button');
-  shopButton.type = 'button';
-  shopButton.className = 'casino-store-entry';
-  shopButton.dataset.casinoStore = '';
-  shopButton.innerHTML = `${icon('cards')}<span><strong>Loja do casino</strong><small>A sorte passa. A tua carta fica.</small></span>${icon('arrow')}`;
-  shopButton.onclick = store.open;
   const shopLink = document.createElement('a');
   shopLink.href = '#/shop';
   shopLink.className = 'casino-button casino-button-outline casino-shop-link';
   shopLink.innerHTML = `${icon('shop')} Loja de cartas ${icon('arrow')}`;
-  root.querySelector('.casino-filters').after(shopLink);
-  root.querySelector('.casino-filters').after(shopButton);
+  root.querySelector('.casino-salon-actions').append(shopLink);
   const appHeader = document.querySelector("#header");
   const bottomNav = document.querySelector(".bottom-nav");
   const headerSize = new ResizeObserver(() => {
@@ -358,13 +351,16 @@ export async function casinoPage(ctx) {
   }
   const rejuiceButton = root.querySelector("[data-rejuice]");
   const rejuiceNotice = root.querySelector(".casino-rejuice-notice");
+  let rejuiceTimer;
+  ctx.cleanup(() => clearTimeout(rejuiceTimer));
   function showRejuiceNotice(state, title, message) {
-    const symbols = { success: "gift", refused: "ban", error: "info", loading: "refresh" };
+    clearTimeout(rejuiceTimer);
     rejuiceNotice.dataset.state = state;
-    root.querySelector(".casino-rejuice-copy").classList.add("has-feedback");
-    rejuiceNotice.innerHTML = `<span class="casino-rejuice-feedback-icon" aria-hidden="true">${icon(symbols[state])}</span><span class="casino-rejuice-feedback-copy"><strong>${esc(title)}</strong><span>${esc(message)}</span></span>`;
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
-      rejuiceNotice.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: 240, easing: "ease-out" });
+    rejuiceNotice.innerHTML = `<strong>${esc(title)}</strong> <span>${esc(message)}</span>`;
+    rejuiceNotice.classList.add("is-visible");
+    if (state !== "loading") {
+      rejuiceTimer = setTimeout(() => rejuiceNotice.classList.remove("is-visible"), 5000);
+    }
   }
   let rejuicing = false;
   rejuiceButton.onclick = async () => {

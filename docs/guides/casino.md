@@ -131,7 +131,7 @@ Validação local da integração: `npm.cmd run test:casino:cardoso`.
 
 A Vault pessoal está descrita no [relatório de implementação de 29/10/2026](../reports/casino-vault-2026-10-29.md): depósitos definitivos no cabeçalho do salão, sem levantamentos e com saldo separado das apostas. O total para a [loja da conta](casino-shop.md) soma carteira e Vault. O painel abre num popup ancorado ao botão Vault e fecha ao clicar fora, mover o foco para outro controlo ou premir Escape.
 
-O salão apresenta sempre «Pedir Rejuice (+50 Djabucoins)». Com saldo local de pelo menos 5 DJC, o clique mostra uma mensagem sem chamar o servidor. Abaixo desse valor, a carteira envia uma confirmação `casinoSession` com `rejuice: true`, incluindo os totais pendentes. Não há limite diário.
+O salão apresenta sempre «Pedir Rejuice». Com saldo local de pelo menos 5 DJC, o clique mostra uma mensagem sem chamar o servidor. Abaixo desse valor, a carteira envia uma confirmação `casinoSession` com `rejuice: true`, incluindo os totais pendentes. Não há limite diário.
 
 Na mesma transação, o servidor aplica os totais, verifica o saldo real resultante e acrescenta 5000 centésimos apenas se o saldo estiver entre 0 e 499. A sequência e o fingerprint da sessão tornam a repetição idempotente; o pedido fica persistido antes do envio e a resposta atualiza a carteira local sem leitura adicional nem novo listener. Pedidos concorrentes são serializados pela transação. O cliente bloqueia cliques durante o processamento.
 
@@ -141,4 +141,4 @@ Segurança: esta validação protege a atribuição contra saldo concorrente e r
 
 Validação local: `node tests/casino-rejuice.mjs`, `node --test tests/casino-session.test.js tests/casino.test.js` e `npm.cmd run test:casino:backend` (emulador). Publicar primeiro `npx.cmd firebase deploy --only functions:peladinhas:casinoSession` e depois `npm.cmd run deploy:frontend`. Não é necessário recalcular carteiras nem alterar semanas fechadas.
 
-O Rejuice apresenta +50 com o símbolo DJC e o botão **Pedir Rejuice**. As mensagens substituem o texto no mesmo espaço, mantendo o tamanho da secção em cada largura de ecrã.
+O Rejuice usa o botão **Pedir Rejuice**, do lado oposto a **Loja de cartas**, com o mesmo formato e tamanho. O resultado aparece num popup junto ao botão e desvanece após cinco segundos. Em ecrãs estreitos, o popup aparece por baixo.
