@@ -50,7 +50,7 @@ Nos jogos com checkpoints, o estado fica no navegador: o servidor verifica ident
 
 No casino do website, todos entram na mesma sala online, mesmo quando só há uma pessoa. A aposta é debitada no servidor; o número é sorteado com `node:crypto` e o retorno de todos os participantes é aplicado atomicamente nas respetivas carteiras. A animação do browser apenas apresenta o resultado confirmado pelo servidor. Sem ligação, não há sorteio offline nem prémio local: a operação pendente conserva o identificador para recuperação.
 
-Com uma pessoa ativa, cada aposta resolve imediatamente. Com várias, a primeira aposta abre uma janela comum de **30 segundos**; a ronda resolve antes se todos os jogadores ativos apostarem, ou no prazo pelo cliente/sweep. Assim que a ronda resolve, a mesa volta imediatamente a «apostas abertas» e limpa as apostas ativas; o resultado fica no documento apenas para ser animado (15 segundos de validade no cliente) e quem entra mais tarde não repete resultados antigos. As fichas dos outros jogadores aparecem no tapete com a cor e o valor de cada um, e o pedido de aposta repetido devolve o `roundId` original. Uma presença expira após 75 segundos; browsers visíveis enviam heartbeat a cada 30 segundos. A mesa aceita até 12 jogadores.
+Com uma pessoa ativa, cada aposta resolve imediatamente. Com várias, a primeira aposta abre uma janela comum de **30 segundos**; a ronda resolve antes se todos os jogadores ativos apostarem, ou no prazo pelo cliente; sem clientes ligados, na próxima abertura do casino ou ação na mesa, que carregam as carteiras de todos os apostadores. Assim que a ronda resolve, a mesa volta imediatamente a «apostas abertas» e limpa as apostas ativas; o resultado fica no documento apenas para ser animado (15 segundos de validade no cliente) e quem entra mais tarde não repete resultados antigos. As fichas dos outros jogadores aparecem no tapete com a cor e o valor de cada um, e o pedido de aposta repetido devolve o `roundId` original. Uma presença expira após 75 segundos; browsers visíveis enviam heartbeat a cada 30 segundos. A mesa aceita até 12 jogadores.
 
 O separador **Chat** subscreve mensagens apenas enquanto está aberto. Mostra o nome e a mensagem, sem horário; as próprias ficam à direita, as restantes à esquerda, com uma cor atribuída pelo servidor a cada jogador. O texto tem até 180 caracteres e o servidor limita cada jogador a uma mensagem por segundo. A consulta apresenta as 100 mensagens mais recentes dos últimos 30 minutos; a interface também remove mensagens expiradas enquanto está aberta. O TTL do Firestore elimina os documentos mais tarde, de forma assíncrona.
 
@@ -58,18 +58,18 @@ O separador **Chat** subscreve mensagens apenas enquanto está aberto. Mostra o 
 
 As contagens seguintes são leituras dos documentos da mesa, não uma fatura total. Uma entrada lê o documento privado da sala e a carteira do jogador (2); um heartbeat lê a sala (1); uma aposta individual lê a sala e a carteira (2). A liquidação de uma ronda partilhada lê a sala e as carteiras de quem apostou, até 13 documentos no máximo. Quem recebe o resultado pelo listener e não pela resposta da aposta consulta depois o saldo (sala + carteira, 2 leituras); a resposta da própria aposta já traz o saldo quando disponível. O cliente também lê o documento público ao subscrever e em cada atualização.
 
-Os heartbeats atualizam o documento público, pelo que cada escrita é entregue a cada listener. Com 12 jogadores visíveis e 12 listeners, o ritmo máximo normal de heartbeat representa aproximadamente **24 leituras transacionais + 288 entregas a listeners + 1 leitura do sweep por minuto**, cerca de **18 780 leituras por hora** ou **450 720 por dia**. Com apenas uma pessoa, a mesma presença e o sweep representam cerca de 5 leituras por minuto (300 por hora). Estes valores excluem autenticação/políticas das callables, entradas, apostas/liquidações, confirmações de saldo, chat, reconexões e leituras das regras; não são uma estimativa do consumo total.
+Os heartbeats atualizam o documento público, pelo que cada escrita é entregue a cada listener. Com 12 jogadores visíveis e 12 listeners, o ritmo máximo normal de heartbeat representa aproximadamente **24 leituras transacionais + 288 entregas a listeners por minuto**, cerca de **18 720 leituras por hora** ou **449 280 por dia**. Com apenas uma pessoa, a mesma presença representa cerca de 4 leituras por minuto (240 por hora). Estes valores excluem autenticação/políticas das callables, entradas, apostas/liquidações, confirmações de saldo, chat, reconexões e leituras das regras; não são uma estimativa do consumo total.
 
-Cada envio de chat lê a sala e o documento de idempotência da mensagem; cada listener do chat recebe uma leitura por nova mensagem. Abrir o separador lê até 100 mensagens. `rouletteSweep` consulta um documento fixo uma vez por minuto mesmo quando não há ronda, isto é, **1 440 leituras por dia**, além da execução agendada. O modo multiplayer não é polling de jogo: as atualizações chegam por listeners Firestore.
+Cada envio de chat lê a sala e o documento de idempotência da mensagem; cada listener do chat recebe uma leitura por nova mensagem. Abrir o separador lê até 100 mensagens. Não há sweep agendado: uma ronda vencida e abandonada resolve na próxima abertura do casino (1 leitura por mesa) ou ação na mesa, além da execução agendada. O modo multiplayer não é polling de jogo: as atualizações chegam por listeners Firestore.
 
 ## Código e publicação
 
 [casino-economy.js](../../js/casino-economy.js) contém a edição e as recompensas; [casino-session-model.js](../../js/casino-session-model.js) define as confirmações; [casino-local-wallet.js](../../js/casino-local-wallet.js) guarda o progresso e agenda checkpoints. As funções ficam em [functions/casino.js](../../functions/casino.js).
 
-Alterar estes cálculos exige publicar todos os consumidores: `getCasinoWallet`, `settleCasinoSlot`, `casinoSession`, `onCasinoGame`, `grantCasinoCoins`, `blackjackAction`, `blackjackSweep`, `getCasinoShop` e `buyCasinoCard`, além do frontend. O endpoint antigo por spin rejeita novas operações nas carteiras oficiais.
+Alterar estes cálculos exige publicar todos os consumidores: `getCasinoWallet`, `settleCasinoSlot`, `casinoSession`, `onCasinoGame`, `grantCasinoCoins`, `blackjackAction`, `getCasinoShop` e `buyCasinoCard`, além do frontend. O endpoint antigo por spin rejeita novas operações nas carteiras oficiais.
 
 ```powershell
-npx.cmd firebase deploy --only "functions:peladinhas:getCasinoWallet,functions:peladinhas:settleCasinoSlot,functions:peladinhas:casinoSession,functions:peladinhas:onCasinoGame,functions:peladinhas:grantCasinoCoins,functions:peladinhas:blackjackAction,functions:peladinhas:blackjackSweep,functions:peladinhas:getCasinoShop,functions:peladinhas:buyCasinoCard"
+npx.cmd firebase deploy --only "functions:peladinhas:getCasinoWallet,functions:peladinhas:settleCasinoSlot,functions:peladinhas:casinoSession,functions:peladinhas:onCasinoGame,functions:peladinhas:grantCasinoCoins,functions:peladinhas:blackjackAction,functions:peladinhas:getCasinoShop,functions:peladinhas:buyCasinoCard"
 npm.cmd run deploy:frontend
 ```
 
@@ -78,7 +78,7 @@ Estes comandos publicam a economia e os checkpoints. Para o Blackjack multiplaye
 Para a Roleta multiplayer, publicar as duas funções novas, regras de leitura e TTL do chat, e frontend:
 
 ```powershell
-npx.cmd firebase deploy --only "functions:peladinhas:rouletteAction,functions:peladinhas:rouletteSweep,firestore:rules,firestore:indexes"
+npx.cmd firebase deploy --only "functions:peladinhas:rouletteAction,firestore:rules,firestore:indexes"
 npm.cmd run deploy:frontend
 ```
 

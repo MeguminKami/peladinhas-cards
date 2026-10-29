@@ -1,6 +1,5 @@
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
-import { onSchedule } from "firebase-functions/v2/scheduler";
 import { randomUUID } from "node:crypto";
 import { walletCall } from "./casino.js";
 import {
@@ -144,6 +143,16 @@ export async function runBlackjack(
   });
 }
 
+// No scheduler: elapsed turns, idle players and an idle room settle when anyone
+// next opens the casino or acts on the table (every action advances them).
+export async function settleIdleBlackjack(db = getFirestore(), now = Date.now()) {
+  const table = (await db.doc(BLACKJACK_PRIVATE).get()).data();
+  if (!table?.players) return;
+  if (roomExpired(table, now) || (table.deadline && table.deadline <= now) ||
+      table.players.some((p) => expiredPlayer(p, table, now)))
+    await runBlackjack({ action: "tick", table: table.id, id: randomUUID() }, null, null, now, db);
+}
+
 export function blackjackFunctions() {
   const blackjackAction = walletCall((request, user) => {
     const input = request.data;
@@ -167,20 +176,5 @@ export function blackjackFunctions() {
     );
   });
 
-  // A single fixed document: empty casino costs one read/minute, never a collection scan.
-  // Connected clients wake deadlines precisely; this is the recovery path when everyone leaves.
-  const blackjackSweep = onSchedule(
-    { schedule: "every 1 minutes", region: "europe-west1", maxInstances: 1 },
-    async () => {
-      const snapshot = await getFirestore().doc(BLACKJACK_PRIVATE).get();
-      if (!snapshot.exists) return;
-      const table = snapshot.data();
-      await runBlackjack(
-        { action: "tick", table: table.id, id: randomUUID() },
-        null,
-        null,
-      );
-    },
-  );
-  return { blackjackAction, blackjackSweep };
+  return { blackjackAction };
 }

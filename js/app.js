@@ -38,6 +38,7 @@ import { ticketsPage } from "./tickets.js";
 import { bindThemePicker } from "./themes.js";
 import { startAuth, currentUser, loadProfile, logout } from "./auth.js";
 import { loadLeague } from "./data.js";
+import { cardWeek } from "./card-week.js";
 import { startRevisionUpdates } from "./revision-updates.js";
 import { pathReviewText } from "./path-entry.js";
 import { refreshMissionsForCurrentUser, missionList, compareMissionPriority, bindMissionClaims } from "./missions.js";
@@ -168,10 +169,16 @@ const ctx = {
       await this.refreshTask.catch(() => {});
     }
     this.detailCache.clear();
-    return this.updateData();
+    // Triggers bump the revision documents asynchronously, so a refresh after
+    // a write must reload instead of trusting unchanged versions.
+    return this.updateData({ force: true });
   },
-  updateData({ homeOnly = !location.hash || location.hash === "#/" || location.hash === "#" } = {}) {
+  // Last full model, reused while the revision documents are unchanged. A full
+  // reload reads every league collection; the check reads two documents.
+  fullCache: null,
+  updateData({ homeOnly = !location.hash || location.hash === "#/" || location.hash === "#", force = false } = {}) {
     if (this.refreshTask) return this.refreshTask;
+    if (force) this.fullCache = null;
     const owner = currentUser?.uid;
     const session = authSession;
     const task = (async () => {
@@ -200,6 +207,30 @@ const ctx = {
         this.league = null;
         return;
       }
+      // Read the versions before the data: a change during the load leaves
+      // them different, so the next check reloads.
+      // getHome returns its own versions: a first home load needs no check.
+      const fullLoad = !homeOnly || typeof DB.getHome !== "function" || this.homeUnavailable;
+      const versions = typeof DB.homeVersions === "function" && (fullLoad || (!force && this.homeSnapshot))
+        ? await DB.homeVersions(owner).catch(() => null) : null;
+      if (currentUser?.uid !== owner || authSession !== session) return;
+      const week = cardWeek(), cacheKey = versions && `${versions.join(":")}:${owner}:${this.user.role}:${week.weekId}:${week.phase}`;
+      const fresh = (time) => !force && cacheKey && Date.now() - time < 300000;
+      const home = this.homeSnapshot;
+      if (homeOnly && home && this.leagueKind === "home" && fresh(this.homeTime) && versions.join(":") === home.versions?.join(":") && !(home.validUntil <= Date.now())) {
+        this.loadedAt = Date.now();
+        return;
+      }
+      const full = this.fullCache;
+      if (fullLoad && full?.key === cacheKey && fresh(full.time)) {
+        this.league = full.league;
+        this.leagueKind = "full";
+        this.homeSnapshot = null;
+        this.missions = full.missions;
+        this.loadedAt = Date.now();
+        header();
+        return;
+      }
       let snapshot;
       if (homeOnly && typeof DB.getHome === "function") {
         try { snapshot = await DB.getHome(); }
@@ -222,6 +253,8 @@ const ctx = {
       this.homeSnapshot = snapshot || null;
       this.missions = missions;
       this.loadedAt = Date.now();
+      if (snapshot) this.homeTime = this.loadedAt;
+      else this.fullCache = cacheKey ? { key: cacheKey, league, missions, time: this.loadedAt } : null;
       header();
       // Notifications are auxiliary: never hold up the destination page.
       this.refreshNotifications().catch(() => {});
@@ -353,7 +386,7 @@ function home() {
         setPolicyDocument(snapshot.policyDocument);
         ctx.realUser = snapshot.user; ctx.user = perspectiveUser(snapshot.user);
         ctx.league = snapshot.league; ctx.missions = snapshot.missions;
-        ctx.homeSnapshot = snapshot; ctx.leagueKind = "home"; ctx.loadedAt = Date.now();
+        ctx.homeSnapshot = snapshot; ctx.leagueKind = "home"; ctx.loadedAt = ctx.homeTime = Date.now();
         await route({ cachedOnly: true });
         return snapshot;
       },
@@ -448,7 +481,7 @@ async function route({ cachedOnly = false } = {}) {
     if (isCurrent()) ctx.go(hash);
   };
   pageCtx.refresh = () => ctx.refresh();
-  pageCtx.invalidateLeague = () => { ctx.league = null; ctx.loadedAt = 0; ctx.detailCache.clear(); };
+  pageCtx.invalidateLeague = () => { ctx.league = null; ctx.fullCache = null; ctx.loadedAt = 0; ctx.detailCache.clear(); };
   pageCtx.refreshNotifications = () => ctx.refreshNotifications();
   for (const fn of ctx.disposers.splice(0)) {
     try {
@@ -698,6 +731,7 @@ if (configured)
       ctx.detailCache.clear();
       ctx.league = null;
       ctx.homeSnapshot = null;
+      ctx.fullCache = null;
       ctx.homeUnavailable = false;
       ctx.realUser = null;
       ctx.user = null;

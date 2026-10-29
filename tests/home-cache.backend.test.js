@@ -71,6 +71,15 @@ test("home caches isolate personal missions, reuse the league and invalidate onl
     teamB: { starters: ids.slice(5, 10), bench: [] },
     score: { teamA: 5, teamB: 4 },
   });
+  // Exact count: submitted ratings of current participants only.
+  const vote = (target, submitted) =>
+    batch.set(db.doc(`games/home-game/feedback/${ids[0]}_${target}`), {
+      gameId: "home-game", raterId: ids[0], targetId: target, submitted, ratings: {},
+    });
+  vote(ids[1], true);
+  vote(ids[2], true);
+  vote(ids[3], false);
+  vote(ids[15], true);
   await batch.commit();
   const mission = await eventAction.run({
     auth: { uid: ids[0] },
@@ -104,7 +113,9 @@ test("home caches isolate personal missions, reuse the league and invalidate onl
   assert.deepEqual(first, concurrent, "concurrent opens share the same build");
   assert.equal(first.league.players.length, 20);
   assert.equal(first.league.games.length, 1);
-  assert.ok(first.missions.some((m) => m.type === "GAME_FEEDBACK"));
+  const feedbackMission = first.missions.find((m) => m.type === "GAME_FEEDBACK");
+  assert.equal(feedbackMission.done, 2);
+  assert.equal(feedbackMission.total, 10);
   assert.equal(
     first.missions.find((m) => m.id === `event-${mission.id}`).done,
     1,

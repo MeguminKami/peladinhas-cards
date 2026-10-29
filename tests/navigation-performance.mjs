@@ -61,6 +61,15 @@ try {
           if (window.__dataGate) await window.__dataGate;`,
         )
         .replace(
+          "export const users = async () => {",
+          `export const homeVersions = async () => [window.__homeVersion || "v1", "own"];
+export const users = async () => {`,
+        )
+        .replace(
+          "export const gameSummaries = async () => state.gameSummaries;",
+          "export const gameSummaries = async () => { window.__leagueLoads = (window.__leagueLoads || 0) + 1; return state.gameSummaries; };",
+        )
+        .replace(
           "export const callAdmin = async (name, data) => {",
           `export const callAdmin = async (name, data) => {
           if (name === "ensureHistory") {
@@ -103,6 +112,17 @@ try {
       false,
     );
   }
+
+  // A stale model is reused while the revision documents are unchanged.
+  const loads = await page.evaluate(() => window.__leagueLoads);
+  await context.clock.fastForward(31000);
+  await navigate("#/players", "Jogadores");
+  await page.waitForTimeout(100);
+  assert.equal(await page.evaluate(() => window.__leagueLoads), loads, "Unchanged versions must not reload the league");
+  await page.evaluate(() => (window.__homeVersion = "v2"));
+  await context.clock.fastForward(31000);
+  await navigate("#/ranking", "Ranking semanal");
+  await page.waitForFunction((loads) => window.__leagueLoads > loads, loads);
 
   // A slow refresh must not prevent navigating with the last good snapshot.
   await page.evaluate(() => {

@@ -47,16 +47,24 @@ export async function buildMissions(user, league, DB) {
   const closedGames = league.games.filter(
     (g) => g.status === "closed" && participants(g).includes(user.uid) && !hasRatingWaiver(g,user.uid),
   );
+  const targetsOf = (g) => [...new Set(participants(g))];
+  // A count costs one read per game instead of one per rating document.
   const [feedback, my] = await Promise.all([
-    Promise.all(closedGames.map((g) => DB.myFeedback(g.id, user.uid))),
+    Promise.all(
+      closedGames.map(async (g) => {
+        const targets = targetsOf(g);
+        if (DB.feedbackDone) return DB.feedbackDone(g.id, user.uid, targets);
+        const ratings = await DB.myFeedback(g.id, user.uid);
+        return targets.filter((uid) =>
+          ratings.some((r) => r.targetId === uid && r.submitted),
+        ).length;
+      }),
+    ),
     DB.myCommunity(user.uid),
   ]);
   for (const [index, g] of closedGames.entries()) {
-    const targets = [...new Set(participants(g))],
-      ratings = feedback[index];
-    const done = targets.filter((uid) =>
-      ratings.some((r) => r.targetId === uid && r.submitted),
-    ).length;
+    const targets = targetsOf(g),
+      done = feedback[index];
     if (done < targets.length)
       missions.push({
         id: `game-${g.id}`,

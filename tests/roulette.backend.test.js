@@ -1,4 +1,4 @@
-﻿import test from "node:test";
+import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { getFirestore } from "firebase-admin/firestore";
@@ -6,6 +6,7 @@ import { newCasinoWallet } from "../js/casino-economy.js";
 import { rouletteAction } from "../functions/index.js";
 import {
   runRoulette,
+  settleIdleRoulette,
 } from "../functions/roulette.js";
 import { ROULETTE_PRIVATE, ROULETTE_PUBLIC } from "../functions/roulette-table.js";
 
@@ -180,4 +181,40 @@ test("the authenticated callable exposes the online room action", async () => {
   assert.equal(response.table.players[0].uid, uid);
   assert.equal(response.balance, 20000);
   await clearRoom();
+});
+
+// Without a scheduler, abandoned rounds settle on the next table action or
+// casino opening. Every bettor's wallet must be loaded for that settlement.
+async function abandonedRound() {
+  await clearRoom();
+  const bettor = `roulette-gone-${randomUUID()}`,
+    other = `roulette-idle-${randomUUID()}`;
+  await Promise.all([player(bettor), player(other)]);
+  const joined = await request(bettor, "join");
+  await request(other, "join");
+  const startedAt = Date.now();
+  await runRoulette({ action: "spin", id: randomUUID(), table: joined.table.id,
+    plan: { "straight:0": 20 } }, bettor, bettor, startedAt, db, 0);
+  assert.equal((await db.doc(`casinoWallets/${bettor}`).get()).data().balance, 19980);
+  return { bettor, later: startedAt + 31000 };
+}
+
+test("a join after an abandoned round pays the absent bettor", async () => {
+  const { bettor, later } = await abandonedRound();
+  const newcomer = `roulette-new-${randomUUID()}`;
+  await player(newcomer);
+  const joined = await runRoulette({ action: "join", id: randomUUID() }, newcomer, newcomer, later, db, 0);
+  assert.equal(joined.table.phase, "betting");
+  assert.equal((await db.doc(`casinoWallets/${bettor}`).get()).data().balance, 20700);
+});
+
+test("opening the casino settles an abandoned round once", async () => {
+  const { bettor, later } = await abandonedRound();
+  await settleIdleRoulette(db, later);
+  const table = (await db.doc(ROULETTE_PRIVATE).get()).data();
+  assert.equal(table.phase, "betting");
+  const settled = (await db.doc(`casinoWallets/${bettor}`).get()).data().balance;
+  assert.ok([19980, 20700].includes(settled));
+  await settleIdleRoulette(db, later + 1000);
+  assert.equal((await db.doc(`casinoWallets/${bettor}`).get()).data().balance, settled);
 });

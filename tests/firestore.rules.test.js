@@ -15,6 +15,7 @@ import {
   collection,
   query,
   where,
+  getCountFromServer,
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
@@ -366,6 +367,13 @@ test("rascunhos e submissões de feedback exigem a função e o histórico atóm
       updatedAt: serverTimestamp(),
     }),
   );
+});
+test("missões contam as próprias avaliações submetidas, não as de outros", async () => {
+  await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), "games/closed/feedback/pedro_joao"), vote()));
+  const count = (rater) => getCountFromServer(query(collection(signed("pedro"), "games/closed/feedback"),
+    where("raterId", "==", rater), where("submitted", "==", true), where("targetId", "in", ["joao", "pedro"])));
+  await assertSucceeds(count("pedro"));
+  await assertFails(count("joao"));
 });
 test("raw privados: query filtrada funciona, outra identidade não", async () => {
   await env.withSecurityRulesDisabled(c => setDoc(doc(c.firestore(), "games/closed/feedback/pedro_joao"), vote()));

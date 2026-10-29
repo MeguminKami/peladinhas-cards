@@ -6,6 +6,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { blackjackAction, casinoSession } from "../functions/index.js";
 import {
   runBlackjack,
+  settleIdleBlackjack,
   BLACKJACK_PRIVATE,
   BLACKJACK_PUBLIC,
 } from "../functions/blackjack.js";
@@ -224,12 +225,8 @@ test("real transactions: simultaneous joins, wallet reservations, retries, permi
     const table = (await db.doc(BLACKJACK_PRIVATE).get()).data();
     if (!table) break;
     now += BJ.lease + 1;
-    await runBlackjack(
-      { action: "tick", id: randomUUID(), table: table.id },
-      null,
-      null,
-      now,
-    );
+    // Opening the casino recovers orphaned tables; no scheduler is needed.
+    await settleIdleBlackjack(db, now);
   }
   assert.equal((await db.doc(BLACKJACK_PRIVATE).get()).exists, false);
   assert.equal((await db.doc(BLACKJACK_PUBLIC).get()).exists, false);

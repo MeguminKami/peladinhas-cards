@@ -456,9 +456,12 @@ export async function syncPushIdentity(account, onSnapshot) {
   if (previous && previous.uid !== account) await detachPushForLogout();
   if (generation !== epoch) return;
   if (account && typeof DB.watchNotifications === "function") {
+    // An idle listener costs nothing, but every new one re-reads all of the
+    // user's notifications. Keep it while hidden; attach once when visible.
+    let watching = false;
     resumeNotifications = () => {
-      unsubscribe(); unsubscribe = () => {};
-      if (generation !== epoch || document.visibilityState !== "visible") return;
+      if (watching || generation !== epoch || document.visibilityState !== "visible") return;
+      watching = true;
       unsubscribe = DB.watchNotifications(
       account,
       (items) => {
@@ -470,7 +473,7 @@ export async function syncPushIdentity(account, onSnapshot) {
         ).catch(() => {});
         snapshotCallback?.(items);
       },
-      () => {},
+      () => { watching = false; },
       );
     };
     resumeNotifications();
