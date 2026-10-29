@@ -31,7 +31,7 @@ const server = createServer((req, res) => {
 await new Promise((resolve) => server.listen(5197, "127.0.0.1", resolve));
 const browser = await chromium.launch({
   headless: true,
-  ...(process.platform === "win32" ? { channel: "msedge" } : {}),
+  ...(process.platform === "win32" ? { executablePath: "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" } : {}),
 });
 mkdirSync("test-results/paths", { recursive: true });
 try {
@@ -56,19 +56,21 @@ try {
       contentType: "text/javascript",
       body:
         readFileSync("tests/fixtures/db.js", "utf8")
+          .replace("export const list = async (path) =>", 'export const list = async (path) => path === "pathStates" ? window.__pathReviewStates || [] :')
           .replace("'../../js/utils.js'", "'./utils.js'")
           .replace(
             'displayName: "Pedro"',
             'displayName: "Alexandre João da Conceição"',
           ) +
         `
-    import {emptyPathState, createPathOffers, pathNode, settlePathState, rerollPathOffers, unifyPathState} from './path-model.js';
+    import {emptyPathState, createPathOffers, pathNode, settlePathState, rerollPathOffers, unifyPathState, activatePathState} from './path-model.js';
     export const getPath=async()=>window.__pathState ||= {...emptyPathState('pedro'),activePath:'shooting'};
     export const pathAction=async(action, values={})=>{
       if(window.__pathError) throw Error('Sem ligação. Tenta novamente.');
       const current=await getPath();
-      if(action==='select') current.selectedNode=values.nodeId;
-      if(action==='activate')current.activePath=values.routeId;
+      if(action==='resolveReview'){window.__reviewDecision=values;window.__pathReviewStates=[];return current;}
+      if(action==='select') window.__pathState=activatePathState(current,pathNode(values.nodeId).route,values.nodeId,new Date().toISOString());
+      if(action==='activate')window.__pathState=activatePathState(current,values.routeId,null,new Date().toISOString());
       if(action==='unify')window.__pathState=unifyPathState(current,values.routeId);
       if(action==='reroll') window.__pathState=rerollPathOffers(current,pathNode(values.nodeId),new Date(),()=>.9);
       if(action==='offers')current.offers[values.nodeId] ||= createPathOffers(pathNode(values.nodeId),()=>.9);
@@ -89,6 +91,8 @@ try {
     if (message.type() === "error") console.error("Console:", message.text());
   });
   await page.goto("http://127.0.0.1:5197/#/missions");
+  // Installation controls have their own tests; keep this fixture focused on paths.
+  await page.addStyleTag({content:".header-actions .install-app{display:none!important}"});
   await page
     .getByRole("heading", { name: "Escolhe o teu caminho!", exact: true })
     .waitFor();
@@ -203,7 +207,9 @@ try {
   for(const line of activeLines)assert.ok((await page.locator(".path-active").innerText()).includes(line));
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 960 });
-    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.waitForTimeout(350);
+    const overflowing = await page.evaluate(() => [...document.querySelectorAll("body *")].filter(el => el.getBoundingClientRect().right > innerWidth + 1).slice(0,8).map(el => el.className));
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, "Overflow at " + width + ": " + JSON.stringify(overflowing));
     await page.locator(".path-active").screenshot({ path: `test-results/paths/prepared-${width}.png`, style: "#header, .mobile-nav, .toast { visibility: hidden !important; }" });
   }
 
@@ -225,7 +231,33 @@ try {
     ),
     75,
   );
+  await page.getByRole("button", { name: "Escolher missão" }).first().click();
+  await page.locator(".path-active").waitFor();
+  await page.evaluate(() => location.hash = "#/missions");
+  await page.locator(".path-mission-spotlight.has-chosen-mission").waitFor();
+  await page.locator(".path-mission-spotlight").click();
+  await page.locator(".path-active").waitFor();
+  await page.locator("[data-path-picker]").click();
+  await page.locator('[data-picker-route="vision"]').click();
+  assert.equal(await page.evaluate(() => window.__pathState.active), null);
+  assert.equal(await page.evaluate(() => window.__pathState.activePath), "vision");
+  await page.evaluate(() => location.hash = "#/missions");
+  await page.locator(".path-mission-spotlight:not(.has-chosen-mission)").waitFor();
+  assert.match(await page.locator(".path-mission-spotlight").innerText(), /Visão de jogo/);
+  assert.match(await page.locator(".path-mission-spotlight").innerText(), /Ainda não escolheste/);
+  await page.locator(".path-mission-spotlight").click();
+  await page.getByRole("button", { name: "Revelar as três missões" }).click();
+  await page.getByRole("button", { name: "Escolher missão" }).first().click();
+  await page.locator(".path-active").waitFor();
+  await page.evaluate(() => location.hash = "#/missions");
+  await page.locator(".path-mission-spotlight.has-chosen-mission").waitFor();
+  assert.match(await page.locator(".path-mission-spotlight").innerText(), /Visão de jogo/);
+  await page.locator(".path-mission-spotlight").click();
+  await page.locator("[data-path-picker]").click();
+  await page.locator('[data-picker-route="shooting"]').click();
+  assert.equal(await page.evaluate(() => window.__pathState.nodes["shooting-0-0"].progress), 75);
   await page.reload();
+  await page.addStyleTag({content:".header-actions .install-app{display:none!important}"});
   // The fixture deliberately keeps state only within this page. Persistence is covered by backend tests.
   await page.locator(".path-hero h1").waitFor();
   for (const width of [768, 390, 320]) {
@@ -496,7 +528,7 @@ try {
   await page.getByRole("dialog", { name: "Onde queres chegar?" }).waitFor();
   assert.equal(await page.locator(".path-picker-dialog small, .path-picker-reward").count(), 0);
   await page.locator('[data-picker-route="passing"]').click();
-  await page.locator('[data-path-activate="passing"]').click();
+  assert.equal(await page.locator('[data-path-activate="passing"]').count(), 0);
   assert.equal(
     await page.evaluate(() => window.__pathState.activePath),
     "passing",
@@ -538,6 +570,28 @@ try {
   await page
     .locator(".path-design-review")
     .screenshot({ path: "test-results/paths/reward-cards-monochrome.png" });
+  for (const decision of ["grant", "cancel"]) {
+    await page.evaluate(async () => {
+      const { pathAdminPage } = await import("/js/path-admin.js");
+      const { createPathOffers, pathNode } = await import("/js/path-model.js");
+      window.__pathReviewStates = [{ uid: "pedro", reviews: { review: {
+        pending: true, gameId: "game", nodeId: "shooting-0-0", reason: "O jogo foi retirado depois do fecho." } },
+        pending: [{ id: "review", offer: createPathOffers(pathNode("shooting-0-0"), () => .9)[0] }] }];
+      await pathAdminPage({ league: { players: [{ uid: "pedro", displayName: "Alexandre João da Conceição" }] },
+        render: html => document.body.innerHTML = '<main id="main">' + html + '</main><div id="toast-region" aria-live="polite"></div>' });
+    });
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      const form = page.locator(".path-review-form");
+      assert.equal(await form.evaluate(el => el.scrollWidth > el.clientWidth), false);
+      await form.screenshot({ path: "test-results/paths/admin-review-" + width + ".png" });
+    }
+    await page.getByLabel("Decisão", { exact: true }).selectOption(decision);
+    await page.getByLabel("Motivo da decisão").fill("Verificação administrativa do jogo.");
+    await page.getByRole("button", { name: "Registar decisão" }).click();
+    await page.getByRole("heading", { name: "Tudo em dia." }).waitFor();
+    assert.equal(await page.evaluate(() => window.__reviewDecision.decision), decision);
+  }
   assert.deepEqual(errors, []);
   console.log(
     "Paths UI: mission/profile entry, single nodes, fusion dependencies, rarity choices, daily reroll, tutorial, active mission, error recovery, keyboard, reduced motion, four widths and all themes passed.",

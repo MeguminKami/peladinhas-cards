@@ -281,3 +281,11 @@ test("overflow reservations follow unfinished nodes beyond completed legacy bran
   );
   assert.equal(nodeAvailable(pathNode("passing-0-0"), state), true);
 });
+
+test("cancelled attempts explain whether the game or participation is missing",()=>{
+  const evaluate=(value)=>pathWindowResult(objective,value,null,"a",deadline,evaluatePathMission);
+  assert.match(evaluate(null).reason,/já não está disponível/);
+  assert.match(evaluate({...game,deleting:true}).reason,/foi eliminado/);
+  assert.match(evaluate({...game,status:"draft"}).reason,/rascunho/);
+  assert.match(evaluate({...game,teamA:{starters:[],bench:[]}}).reason,/participantes/);
+});

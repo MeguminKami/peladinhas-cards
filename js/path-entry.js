@@ -32,7 +32,11 @@ export function pathMissionEntry(
       ),
   );
   const frozen = !!(active?.frozenAt || active?.gameId);
-  const stateText = frozen
+  const review = active && state?.reviews?.[active.id];
+  const needsReview = review && !review.acknowledgedAt;
+  const stateText = needsReview
+    ? "Decisão administrativa pendente · Os outros percursos continuam disponíveis"
+    : frozen
     ? active.reviewDeadline
       ? pathReviewText(active.reviewDeadline)
       : "Escolha bloqueada · Missão associada a um jogo"
@@ -42,7 +46,7 @@ export function pathMissionEntry(
         ? `Nova possibilidade: ${discovery.label}`
         : result?.reward?.specialId
           ? `Carta permanente conquistada: ${PATH_CARD_EDITIONS[result.reward.specialId]?.name || "A tua assinatura"}`
-          : "Os teus progressos ficam guardados em cada percurso.";
+          : "Ainda não escolheste uma missão neste caminho. O progresso anterior mantém-se.";
   return {
     id: "player-path",
     type: "PLAYER_PATH",
@@ -80,7 +84,7 @@ export function pathMissionEntry(
       : "Explora o teu caminho, conquista atributos e desbloqueia cartas permanentes.",
     done: state?.nodes?.[active?.nodeId || result?.nodeId]?.progress || 0,
     total: 100,
-    reviewDeadline: active?.reviewDeadline || null,
+    reviewDeadline: needsReview ? null : active?.reviewDeadline || null,
     stateText,
     stateIcon: frozen
       ? active.reviewDeadline

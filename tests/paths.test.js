@@ -7,6 +7,7 @@ import {
   pathNode,
   nodeAvailable,
   emptyPathState,
+  activatePathState,
   createPathOffers,
   nextPathGame,
   evaluatePathMission,
@@ -491,4 +492,33 @@ test("all cards from one settlement batch remain discoverable when its last resu
   const last={id:"cancel-last",settledAt:"same",status:"cancelled"};
   const state={lastResult:last,history:[{id:"old",settledAt:"older",reward:{specialId:"path-pace"}},first,last]};
   assert.deepEqual(pathResultAwards(state),[{id:"card-first",specialId:"path-shooting"}]);
+});
+
+test("changing the confirmed route clears only preparation and keeps progress, offers and pending attempts", async()=>{
+  const state=emptyPathState("a");
+  const offer=createPathOffers(pathNode("shooting-0-0"),()=>.9)[0];
+  state.activePath="shooting";
+  state.nodes["shooting-0-0"]={progress:75};
+  state.offers["shooting-0-0"]=[offer];
+  state.active={id:"prepared",nodeId:"shooting-0-0",offer,acceptedAt:"2026-10-29T10:00:00Z"};
+  state.pending=[{...state.active,id:"frozen",nodeId:"passing-0-0",gameId:"game",frozenAt:"2026-10-28T10:00:00Z"}];
+  const next=activatePathState(state,"vision","vision-0-0","2026-10-29T11:00:00Z");
+  assert.equal(next.active,null);
+  assert.equal(next.activePath,"vision");
+  assert.deepEqual(next.nodes,state.nodes);
+  assert.deepEqual(next.offers,state.offers);
+  assert.deepEqual(next.pending,state.pending);
+  assert.equal(state.active.id,"prepared");
+  assert.equal(next.history.at(-1).status,"abandoned");
+  assert.equal(activatePathState(state,"shooting","shooting-0-0","now").active.id,"prepared");
+  const {pathMissionEntry}=await import("../js/path-entry.js");
+  const noAttempt=pathMissionEntry({...next,pending:[]});
+  assert.equal(noAttempt.mission,null);
+  assert.equal(noAttempt.routeLabel,"Visão de jogo");
+  assert.match(noAttempt.stateText,/Ainda não escolheste/);
+  const pending=pathMissionEntry(next);
+  assert.equal(pending.mission.nodeId,"passing-0-0");
+  const reviewed=pathMissionEntry({...next,reviews:{frozen:{pending:true}}});
+  assert.match(reviewed.stateText,/Decisão administrativa/);
+  assert.equal(reviewed.reviewDeadline,null);
 });

@@ -314,15 +314,15 @@ test("concurrent Vault deposits cannot overspend or duplicate a transfer", async
   const ref = db.doc(`casinoWallets/${uid}`);
   const ids = [randomUUID(), randomUUID()];
   for (const id of ids) await casinoSession.run(request(uid, { action: "open", id, owner: uid }));
-  await ref.update({ balance: 1000 });
-  const inputs = ids.map(id => ({ action: "sync", owner: uid, id, sequence: 1, spent: 0, won: 0, release: false, vaultDeposit: 750 }));
+  await ref.update({ balance: 40000 });
+  const inputs = ids.map(id => ({ action: "sync", owner: uid, id, sequence: 1, spent: 0, won: 0, release: false, vaultDeposit: 30000 }));
   const results = await Promise.all(inputs.map(body => casinoSession.run(request(uid, body))));
-  assert.equal(results.filter(result => result.vaultDeposited === 750).length, 1);
+  assert.equal(results.filter(result => result.vaultDeposited === 30000).length, 1);
   for (const body of inputs) await casinoSession.run(request(uid, body));
   const wallet = (await ref.get()).data();
-  assert.equal(wallet.balance, 250);
-  assert.equal(wallet.vaultBalance, 750);
-  await assert.rejects(casinoSession.run(request(uid, { ...inputs[0], sequence: 2, vaultDeposit: -750 })));
+  assert.equal(wallet.balance, 10000);
+  assert.equal(wallet.vaultBalance, 30000);
+  await assert.rejects(casinoSession.run(request(uid, { ...inputs[0], sequence: 2, vaultDeposit: -30000 })));
 });
 
 test("concurrent Rejuice claims and replay only award once", async () => {

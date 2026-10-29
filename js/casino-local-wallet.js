@@ -1,3 +1,4 @@
+import { VAULT_MIN_DEPOSIT } from "./casino-session-model.js";
 import { callAdmin } from "./db.js";
 import { settleCasinoSlot, CASINO_EDITION } from "./casino-economy.js";
 import { readCasinoLocal, writeCasinoLocal } from "./casino-local-store.js";
@@ -576,8 +577,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         if (recovering) return state.lastVaultDeposit;
       }
       assertPlayable();
-      if (!Number.isSafeInteger(amount) || amount <= 0 || amount > state.balance)
-        throw Error("Escolhe um valor até ao saldo disponível na carteira.");
+      if (!Number.isSafeInteger(amount) || amount < VAULT_MIN_DEPOSIT || amount > state.balance)
+        throw Error("Escolhe pelo menos 300 DJC, até ao saldo disponível na carteira.");
       const pending = {
         body: { action: "sync", id: state.id, sequence: state.sequence + 1,
           spent: state.spent, won: state.won, release: false, vaultDeposit: amount },

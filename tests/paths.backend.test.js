@@ -11,7 +11,7 @@ import {
 } from "../js/path-model.js";
 
 const db = getFirestore();
-test("paths: legacy settlement stays idempotent and archived corrections require administrative review", async () => {
+test("paths: legacy settlement stays idempotent and archived corrections preserve rewards without blocking new choices", async () => {
   const suffix = randomUUID().slice(0, 8),
     uid = `legacy-review-${suffix}`,
     admin = `review-admin-${suffix}`,
@@ -68,7 +68,8 @@ test("paths: legacy settlement stays idempotent and archived corrections require
   await endpoints.syncGame(gid);
   const reviewed = (await db.doc(`pathStates/${uid}`).get()).data();
   assert.ok(reviewed.reviews[attemptId]);
-  await assert.rejects(call("offers", { nodeId: "passing-0-0" }), /corrigido/);
+  assert.equal(reviewed.reviews[attemptId].decision, "preserve");
+  assert.ok(reviewed.reviews[attemptId].acknowledgedAt);
   await call(
     "acknowledge",
     { uid, attemptId, reason: "Conservar a conquista validada." },

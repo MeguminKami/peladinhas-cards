@@ -6,9 +6,9 @@ Referência do código local em 19 de outubro de 2026. Implementação e valida�
 
 ## Escolher e preparar
 
-A entrada própria em **Missões** mostra o percurso, a missão atual e o seu estado. Abre `#/missions/path`, também acessível pelo botão no próprio perfil. O seletor só abre por ação do jogador: **Escolher o meu caminho** ou **Mudar caminho**. Mostra apenas ícones e nomes dos atributos; recompensas e limites ficam no percurso e no tutorial. Explorar mostra uma especialização; **Ativar caminho** confirma a identidade escolhida. **Como funciona**, ao lado da ação principal, abre o tutorial visual.
+A entrada própria em **Missões** mostra o percurso, a missão atual e o seu estado. Abre `#/missions/path`, também acessível pelo botão no próprio perfil. O seletor só abre por ação do jogador: **Escolher o meu caminho** ou **Mudar caminho**. Mostra apenas ícones e nomes dos atributos; recompensas e limites ficam no percurso e no tutorial. Selecionar uma especialização no seletor confirma o novo caminho e atualiza a escolha de missão de forma coerente. Durante um jogo aberto, permite apenas explorar. **Como funciona**, ao lado da ação principal, abre o tutorial visual.
 
-São 12 especializações independentes. Cada uma tem 15 nós, ou 25 em Guarda-redes, agrupados em capítulos de cinco. Não há ramos Consistência/Ousadia. Os nós mostram avanço, estado e recompensa. Mudar de vista não substitui uma missão preparada; escolher outra proposta antes da abertura substitui a preparação sem perder progresso.
+São 12 especializações independentes. Cada uma tem 15 nós, ou 25 em Guarda-redes, agrupados em capítulos de cinco. Não há ramos Consistência/Ousadia. Os nós mostram avanço, estado e recompensa. Mudar caminho confirma a nova especialização e remove a missão preparada do percurso anterior, sem perder progresso nem propostas. O resumo passa a pedir uma missão no novo caminho; escolher uma proposta atualiza o percurso e a missão em conjunto. Selecionar outro nó do mesmo percurso permite explorá-lo sem remover a preparação. Com um jogo aberto, a navegação é apenas exploração: a tentativa associada ao jogo não muda.
 
 Cada nó revela três propostas guardadas pelo servidor. Sair, trocar de dispositivo ou consultar outra escolha não as volta a sortear. Após apuramento ou cancelamento de uma tentativa jogada, as propostas consumidas são retiradas e o conjunto seguinte dessa escolha é gratuito. Remover uma preparação conserva as propostas e o avanço.
 
@@ -31,6 +31,8 @@ A dificuldade usa os pontos permanentes efetivamente entregues por esta origem, 
 Existe **um reroll por jogador e dia de Lisboa**, partilhado por todos os percursos e focos. Só renova o trio escolhido, exige propostas já reveladas e preserva os outros trios e o progresso. Renovar o trio da preparação remove essa escolha, para escolher novamente entre as novas propostas. A meia-noite de Lisboa repõe o saldo, incluindo mudanças de horário de verão. Pedidos concorrentes não permitem gastar mais de um.
 
 ## Abertura e fecho do próximo jogo
+
+Preparações antigas que ficaram associadas a um caminho diferente do ativo são removidas na próxima operação ou ciclo, preservando progresso, propostas e tentativas já congeladas.
 
 A missão preparada fica congelada quando o próximo jogo do jogador passa a **aberto**. Não se usa a hora agendada para adiar o bloqueio. Preparar, substituir, remover ou renovar fica bloqueado enquanto o jogador participa num jogo aberto. Consultar outros percursos continua possível.
 
@@ -108,7 +110,9 @@ A atualização v4 não converte propostas v3 nem as volta a sortear. Só propos
 
 Propostas antigas dos ramos alternativos continuam acessíveis numa secção recolhida do seletor. `PATH_VERSION = 1` continua compatível; `activePath`, `unifiedFusions`, `pending` e metadados são aditivos.
 
-Correções dos dados do jogo colocam o percurso em revisão administrativa. Para uma tentativa ainda em avaliação, a decisão pode conservar o registo numérico do fecho e retomar o apuramento; para uma conquista já validada, conserva a conquista. A ação em `#/admin/paths` exige motivo e não permite editar pontos manualmente. Alterações normais dos votos posteriores ao corte não reabrem conquistas.
+Correções dos dados do jogo são apuradas automaticamente no fecho e nos ciclos das 08:00, 12:00, 17:00 e 22:00 de Lisboa. Tentativas ainda pendentes usam os dados corrigidos e mantêm o prazo original de 48 horas; não ficam bloqueadas por uma diferença na assinatura do jogo. Revisões antigas com dados disponíveis retomam automaticamente. Resultados já entregues são preservados e as revisões históricas são encerradas automaticamente, sem retirar nem duplicar recompensas. Alterações normais dos votos posteriores ao corte não reabrem conquistas.
+
+Se um jogo for retirado depois do fecho e faltar informação para apurar, apenas a tentativa afetada fica em decisão administrativa; os nós que pode afetar continuam reservados, mas os outros percursos mantêm-se disponíveis. Em `#/admin/paths`, o ADMIN pode atribuir o avanço previsto da missão ou cancelar sem recompensa nem perda de progresso. A atribuição usa a entrega normal dos nós completados, com os mesmos tetos, orçamentos e IDs únicos; não permite escolher quantidades de pontos. Ambas as decisões exigem motivo, ficam auditadas e não podem ser repetidas. Sem informação recuperada, a exceção aguarda essa decisão; os casos com dados suficientes continuam automáticos.
 
 Os cálculos futuros das cartas abertas usam o novo teto. Não foi executado recálculo de dados existentes. Os snapshots de semanas fechadas continuam preservados pelo fluxo de `buildHistory`.
 
@@ -132,7 +136,7 @@ A missão preparada usa uma composição compacta com o tema da raridade. O cabe
 
 O apuramento aparece numa linha própria. **Se falhares** conserva ícone e título vermelhos; o rodapé mantém o ícone de informação, a regra **Podes mudar até à abertura do jogo, sem perder progresso** e as ações **Alterar missão** / **Remover escolha**. Tentativas congeladas apresentam o estado e prazo aplicáveis e não permitem alterar a escolha.
 
-Em Missões e no resumo do início, o bloco fica detalhado apenas quando existe uma missão preparada ou pendente. Mostra objetivo, nó, raridade, progresso, avanço e recompensa; em avaliação, inclui estado e votos por critério. Sem tentativa, mantém a apresentação de descoberta. A ligação `#/missions/path/{nodeId}` abre diretamente o nó mostrado. Ao escolher, alterar ou remover a preparação, o resumo em memória é atualizado sem esperar pela renovação geral dos dados.
+Em Missões e no resumo do início, o bloco fica detalhado apenas quando existe uma missão preparada ou pendente. Mostra objetivo, nó, raridade, progresso, avanço e recompensa; em avaliação, inclui estado e votos por critério. Sem tentativa, mantém a apresentação de descoberta. A ligação `#/missions/path/{nodeId}` abre diretamente o nó mostrado. Ao escolher, alterar ou remover a preparação, o resumo em memória é atualizado sem esperar pela renovação geral dos dados. A alteração do estado e a invalidação do resumo do jogador são guardadas na mesma transação, evitando que uma atualização imediata recupere a missão anterior. Sem escolha, o resumo indica explicitamente que falta escolher uma missão no caminho atual.
 
 O cabeçalho «Escolhe o teu caminho» usa título destacado a negrito e o ícone do percurso à direita. Na lista de Missões e na seleção dos quatro itens do início, o percurso tem prioridade, seguido das avaliações, antes das restantes missões e eventos. Em Missões, «Calendário e histórico de eventos» fica no final da lista.
 

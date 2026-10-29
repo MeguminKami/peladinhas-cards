@@ -8,7 +8,7 @@ export async function pathAdminPage(ctx) {
   const states = await DB.list("pathStates");
   const pending = states.flatMap((state) =>
     Object.entries(state.reviews || {})
-      .filter(([, review]) => !review.acknowledgedAt)
+      .filter(([id, review]) => !review.acknowledgedAt && (state.pending || []).some(row => row.id === id))
       .map(([attemptId, review]) => ({
         uid: state.uid,
         attemptId,
@@ -19,7 +19,7 @@ export async function pathAdminPage(ctx) {
       })),
   );
   ctx.render(
-    `${pageHead("Gestão de missões", "Percursos em revisão", "Correções de jogos suspendem novas escolhas até revisão. As conquistas validadas e as semanas fechadas são preservadas.", linkButton("#/admin/events", "Eventos e missões", "secondary", "trophy"))}<div class="content-stack">${
+    `${pageHead("Gestão de missões", "Percursos em revisão", "As correções são apuradas automaticamente nos ciclos de atualização. Decide apenas os casos sem informação suficiente; os outros percursos continuam disponíveis.", linkButton("#/admin/events", "Eventos e missões", "secondary", "trophy"))}<div class="content-stack">${
       pending
         .map((review, index) => {
           const player = ctx.league.players.find(
@@ -37,7 +37,7 @@ export async function pathAdminPage(ctx) {
                   : `<p>${esc(pathObjectiveText(objective))}</p>`
               }</div>`
             : "";
-          return `<form class="panel path-review-form" data-path-review="${index}"><div class="section-head"><div><p class="eyebrow">${review.pending ? "TENTATIVA EM VALIDAÇÃO" : "RESULTADO CORRIGIDO"}</p><h2>${esc(player?.displayName || review.uid)}</h2></div>${linkButton(`#/game/${review.gameId}`, "Consultar jogo", "secondary", "games")}</div><p>${esc(pathNode(review.nodeId)?.label || review.nodeId)}</p>${mission}<p class="muted">${review.pending ? "Esta tentativa ainda não foi apurada. A decisão conserva os dados numéricos guardados no fecho e retoma o apuramento com os votos válidos às 48 horas; não atribui pontos manualmente." : "Esta ação conserva a conquista registada antes da correção e permite continuar o percurso. Não atribui pontos adicionais nem recalcula cartas históricas."}</p><label>Motivo da decisão<textarea name="reason" required minlength="5" maxlength="500" rows="3" placeholder="Explica por que se conserva esta conquista."></textarea></label><button class="btn btn-primary" type="submit">${icon("check")}${review.pending ? "Conservar registo do fecho e apurar" : "Conservar conquista e desbloquear percurso"}</button></form>`;
+          return `<form class="panel path-review-form" data-path-review="${index}"><div class="section-head"><div><p class="eyebrow">${review.pending ? "TENTATIVA EM VALIDAÇÃO" : "RESULTADO CORRIGIDO"}</p><h2>${esc(player?.displayName || review.uid)}</h2></div>${linkButton(`#/game/${review.gameId}`, "Consultar jogo", "secondary", "games")}</div><p>${esc(pathNode(review.nodeId)?.label || review.nodeId)}</p>${mission}<p class="muted">${esc(review.reason || "Falta informação para apurar automaticamente esta tentativa.")} Atribuir aplica o avanço de +${review.offer?.advance || 0}% da missão e entrega apenas as recompensas dos nós que completar, respeitando os limites. Não atribuir cancela sem perder progresso.</p><label for="path-review-decision-${index}">Decisão</label><select id="path-review-decision-${index}" name="decision" required><option value="">Escolhe uma decisão</option><option value="grant">Atribuir avanço e recompensas correspondentes</option><option value="cancel">Não atribuir recompensa · Preservar progresso</option></select><label for="path-review-reason-${index}">Motivo da decisão</label><textarea id="path-review-reason-${index}" name="reason" required minlength="5" maxlength="500" rows="3" placeholder="Explica a decisão para esta tentativa."></textarea><button class="btn btn-primary" type="submit">${icon("check")}Registar decisão</button></form>`;
         })
         .join("") ||
       '<div class="panel"><h2>Tudo em dia.</h2><p>Não existem percursos à espera de revisão.</p></div>'
@@ -50,12 +50,13 @@ export async function pathAdminPage(ctx) {
         const review = pending[Number(form.dataset.pathReview)];
         try {
           await busy(event.submitter, async () => {
-            await DB.pathAction("acknowledge", {
+            await DB.pathAction("resolveReview", {
               uid: review.uid,
               attemptId: review.attemptId,
+              decision: new FormData(form).get("decision"),
               reason: new FormData(form).get("reason"),
             });
-            toast("Decisão registada. O jogador pode continuar.");
+            toast("Decisão registada. A tentativa foi apurada.");
             await pathAdminPage(ctx);
           });
         } catch {

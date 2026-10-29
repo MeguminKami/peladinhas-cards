@@ -1835,3 +1835,44 @@ p {
 .event-builder #editor-step-note { position:absolute; right:0; bottom:0; margin:0; text-align:right; }
 .event-builder #editor-next,.event-builder .event-editor-navigation > .event-create-actions { margin-left:auto; }
 @media(max-width:600px) { .game-row.has-own-rating { grid-template-columns:auto minmax(0,1fr) auto; } .game-row.has-own-rating .game-own-rating { grid-column:2; } }
+
+/* Primary entry to the player's card collection, on home and profile. */
+.card-selection-entry { margin-bottom: 24px; }
+.card-selection-button {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 88px;
+  padding: 16px 24px;
+  border: 1px solid var(--accent);
+  border-radius: 18px;
+  background: linear-gradient(110deg, var(--accent-tint), transparent 65%), var(--bg-surface);
+  box-shadow: inset 0 1px 0 var(--border-strong), 0 6px 24px var(--accent-tint);
+  color: var(--text-primary);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms, box-shadow 180ms, transform 180ms;
+}
+.card-selection-button strong { flex: 1; font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 800; letter-spacing: -.025em; }
+.card-selection-symbol { position: relative; display: block; flex: 0 0 48px; height: 52px; }
+.card-selection-symbol > span { position: absolute; inset: 3px 8px; display: grid; place-items: center; border: 1px solid var(--accent); border-radius: 6px; background: var(--bg-panel); color: var(--accent); }
+.card-selection-symbol > span:first-child { transform: translateX(-7px) rotate(-17deg); opacity: .45; }
+.card-selection-symbol > span:nth-child(2) { transform: translateX(5px) rotate(13deg); opacity: .7; }
+.card-selection-symbol > span:last-child { transform: rotate(-4deg); background: linear-gradient(145deg, var(--accent-tint), transparent), var(--bg-panel); }
+.card-selection-symbol svg { width: 21px; height: 21px; }
+.card-selection-arrow { display: grid; place-items: center; flex: 0 0 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--on-accent, #08110a); }
+.card-selection-arrow svg { width: 18px; height: 18px; }
+.card-selection-button:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 var(--border-strong), 0 8px 28px var(--accent-tint); }
+.card-selection-button:active { transform: translateY(0); }
+.card-selection-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+@media (max-width: 600px) {
+  .card-selection-button { min-height: 80px; padding: 14px 16px; gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-selection-button { transition: none; }
+  .card-selection-button:hover { transform: none; }
+}

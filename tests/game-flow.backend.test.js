@@ -258,19 +258,10 @@ test("game flow: atomic freeze, singleton opening, immediate numeric settlement 
     status: "closed",
     score: { teamA: 4, teamB: 0 },
   });
-  await paths.syncGame(second); // The next permitted check detects the correction.
+  await paths.syncGame(second); // Corrections keep automatic settlement and the original cutoff.
   const corrected = (await db.doc(`pathStates/${uid}`).get()).data();
-  assert.equal(corrected.reviews[waiting.pending[0].id].pending, true);
-  await assert.rejects(path("offers", { nodeId: "pace-0-0" }), /corrigido/);
-  await paths.pathAction.run({
-    auth: { uid: admin },
-    data: {
-      action: "acknowledge",
-      uid,
-      attemptId: waiting.pending[0].id,
-      reason: "Conservar os dados registados no fecho e apurar.",
-    },
-  });
+  assert.equal(corrected.pending[0].reviewDeadline, waiting.pending[0].reviewDeadline);
+  assert.equal(Object.values(corrected.reviews || {}).some(review => !review.acknowledgedAt), false);
   await path("offers", { nodeId: "pace-0-0" });
   const next = await path("accept", { nodeId: "pace-0-0", offerId: "0" });
   assert.equal(next.active.nodeId, "pace-0-0");

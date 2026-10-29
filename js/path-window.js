@@ -146,8 +146,13 @@ export function pathWindowResult(objective, game, summary, uid, now, evaluate) {
   )
     return {
       status: "cancelled",
-      reason:
-        "Tentativa cancelada sem perder progresso: o jogo ou a participação deixou de ser elegível.",
+      reason: !game
+        ? "O jogo associado a esta missão já não está disponível. O progresso anterior mantém-se."
+        : game.deleting
+          ? "O jogo associado a esta missão foi eliminado. O progresso anterior mantém-se."
+          : !["open", "closed"].includes(game.status)
+            ? "O jogo associado a esta missão foi cancelado ou voltou a rascunho. O progresso anterior mantém-se."
+            : "Deixaste de constar nos participantes do jogo desta missão. O progresso anterior mantém-se.",
     };
   if (game.status !== "closed")
     return {

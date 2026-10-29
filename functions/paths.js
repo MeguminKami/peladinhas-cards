@@ -8,6 +8,7 @@ import {
   pathWindowResult,
   pathReviewDeadline,
   pathUsesRatings,
+  PATH_REVIEW_MS,
 } from "../js/path-window.js";
 import { createHash, randomInt, randomUUID } from "node:crypto";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -26,6 +27,7 @@ import {
 } from "../js/system-policy.js";
 import {
   emptyPathState,
+  activatePathState,
   pathNode,
   nodeAvailable,
   createPathOffers,
@@ -138,7 +140,7 @@ export function pathFunctions(rebuildPlayer) {
                 .map((attempt) => attempt.gameId),
             ),
           ].map(async (gid) => {
-            const deadline = pathReviewDeadline(games.find(game => game.id === gid));
+            const deadline = (state.pending || []).find(row => row.gameId === gid)?.reviewDeadline || pathReviewDeadline((state.pending || []).find(row => row.gameId === gid)?.closedGame) || pathReviewDeadline(games.find(game => game.id === gid));
             const [votes, revisions] = await Promise.all([
               tx.get(db().collection(`games/${gid}/feedback`).where("targetId", "==", uid)),
               // Before the deadline the current votes are sufficient. Historical
@@ -161,7 +163,32 @@ export function pathFunctions(rebuildPlayer) {
       ];
       const writes = [];
       let changed = migrated;
-      // An admin can acknowledge a correction, but cannot forge progress or award points.
+      // Repair older preparations left behind when another path was activated.
+      if (state.active && !state.active.gameId && !state.active.frozenAt && state.activePath &&
+          pathVisibleRoute(state, pathNode(state.active.nodeId)?.route) !== state.activePath &&
+          !games.some(game => game.status === "open" && !game.deleting && participants(game).includes(uid))) {
+        const selected = pathNode(state.selectedNode);
+        state = activatePathState(state, state.activePath,
+          selected && pathVisibleRoute(state, selected.route) === state.activePath ? selected.id : null, now);
+        changed = true;
+      }
+      // Manual decisions share the capped, idempotent automatic delivery.
+      const manual = input.action === "resolveReview";
+      if (manual) {
+        if (!canManage(input.actor, "events"))
+          throw new HttpsError("permission-denied", "Acesso reservado à gestão de eventos.");
+        const review = state.reviews?.[input.attemptId];
+        const attempt = (state.pending || []).find(row => row.id === input.attemptId);
+        if (!review || review.acknowledgedAt || !attempt || state.history.some(row => row.id === input.attemptId) ||
+            !["grant", "cancel"].includes(input.decision) ||
+            typeof input.reason !== "string" || input.reason.trim().length < 5)
+          reject("Indica uma tentativa em revisão, a decisão e o motivo.");
+        state.reviews[input.attemptId] = { ...review, acknowledgedAt: now,
+          acknowledgedBy: input.actorId, decision: input.decision,
+          reason: input.reason.trim().slice(0, 500) };
+        changed = true;
+      }
+      // Compatibility for earlier management clients.
       if (input.action === "acknowledge") {
         if (!canManage(input.actor, "events"))
           throw new HttpsError(
@@ -184,7 +211,7 @@ export function pathFunctions(rebuildPlayer) {
         changed = true;
       }
       for (const previous of state.history) {
-        if (!settle) break;
+        if (!settle || manual) break;
         if (!previous.signature) continue;
         const game = games.find((game) => game.id === previous.gameId);
         const signature = previous.signature.startsWith("core:")
@@ -200,19 +227,28 @@ export function pathFunctions(rebuildPlayer) {
             nodeId: previous.nodeId,
             signature,
             detectedAt: now,
+            acknowledgedAt: now, acknowledgedBy: "system", decision: "preserve",
+            reason: "Resultado já entregue; a correção não reabre conquistas.",
           };
           changed = true;
         }
       }
-      const blocked = Object.values(state.reviews || {}).some(
-        (review) => !review.acknowledgedAt,
-      );
+      if (settle && !manual) {
+        for (const [id, review] of Object.entries(state.reviews || {})) {
+          if (!review.acknowledgedAt && !(state.pending || []).some(row => row.id === id)) {
+            state.reviews[id] = { ...review, acknowledgedAt: now,
+              acknowledgedBy: "system", decision: "preserve",
+              reason: "Resultado já apurado; revisão encerrada automaticamente." };
+            changed = true;
+          }
+        }
+      }
       for (const attemptId of [
         ...(state.pending || []).map((row) => row.id),
         ...(state.active ? [state.active.id] : []),
       ]) {
         if (!settle) break;
-        if (blocked) break;
+        if (manual && attemptId !== input.attemptId) continue;
         const active =
           (state.pending || []).find((row) => row.id === attemptId) ||
           (state.active?.id === attemptId ? state.active : null);
@@ -237,45 +273,30 @@ export function pathFunctions(rebuildPlayer) {
           // A newly scheduled earlier participation becomes the next game; once started, the binding is fixed.
           game = nextPathGame(games, uid, active.acceptedAt, excludedGames());
         }
-        if ((game?.id || null) !== active.gameId) {
+        if (!active.frozenAt && (game?.id || null) !== active.gameId) {
           active.gameId = game?.id || null;
           changed = true;
         }
-        if (active.closedGame && game?.status === "closed") {
-          const frozen = {
-            ...active.closedGame,
-            scheduledAt: Timestamp.fromDate(
-              new Date(active.closedGame.scheduledAt),
-            ),
-            closedAt: game.closedAt,
-          };
-          const signature = active.closedCoreSignature
-            ? `core:${pathGameCoreSignature(game)}`
-            : pathGameSignature(game);
-          if (
-            (active.closedCoreSignature
-              ? `core:${active.closedCoreSignature}`
-              : pathGameSignature(frozen)) !== signature &&
-            state.reviews?.[active.id]?.signature !== signature
-          ) {
+        if (active.closedGame && (!game || !["open", "closed"].includes(game.status) || game.deleting) && !manual) {
+          if (!state.reviews?.[active.id] || state.reviews[active.id].acknowledgedAt) {
             state.reviews ||= {};
-            state.reviews[active.id] = {
-              gameId: game.id,
-              nodeId: active.nodeId,
-              signature,
-              detectedAt: now,
-              pending: true,
-            };
+            state.reviews[active.id] = { gameId: active.gameId, nodeId: active.nodeId,
+              detectedAt: now, pending: true,
+              reason: "O jogo foi retirado depois do fecho; falta informação para apurar automaticamente." };
             changed = true;
-            break;
           }
-          game = {
-            ...frozen,
-            ratingWaivers: game.ratingWaivers || {},
-            status: game.status,
-            deleting: game.deleting || false,
-          };
+          continue;
         }
+        if (!manual && state.reviews?.[active.id] && !state.reviews[active.id].acknowledgedAt) {
+          state.reviews[active.id] = { ...state.reviews[active.id], acknowledgedAt: now,
+            acknowledgedBy: "system", decision: "automatic",
+            reason: "Apuramento automático com os dados corrigidos e o prazo original." };
+          changed = true;
+        }
+        // Corrections never restart the original voting window.
+        const originalDeadline = active.reviewDeadline || pathReviewDeadline(active.closedGame);
+        if (game?.status === "closed" && originalDeadline)
+          game = { ...game, closedAt: Timestamp.fromMillis(originalDeadline - PATH_REVIEW_MS) };
         const history = historic.get(game?.id);
         const summary =
           active.windowVersion >= 3 && game?.status === "closed" && history
@@ -286,7 +307,11 @@ export function pathFunctions(rebuildPlayer) {
                 Math.min(nowMillis, pathReviewDeadline(game) || nowMillis),
               )
             : summaries.find((summary) => summary.id === game?.id);
-        const result = active.frozenAt
+        const result = manual
+          ? { status: input.decision === "grant" ? "success" : "cancelled",
+              reason: "Decisão da administração: " + input.reason.trim().slice(0, 500),
+              administrativeDecision: input.decision, decidedBy: input.actorId }
+          : active.frozenAt
           ? active.windowVersion >= 3
             ? pathWindowResult(
                 active.offer.objective,
@@ -331,9 +356,7 @@ export function pathFunctions(rebuildPlayer) {
           assertFeature("missions");
           const settled = {
             ...active,
-            signature: active.closedCoreSignature
-              ? `core:${active.closedCoreSignature}`
-              : pathGameSignature(game),
+            signature: `core:${pathGameCoreSignature(games.find(row => row.id === active.gameId))}`,
           };
           state = settlePathState(state, settled, result, now);
           changed = true;
@@ -416,7 +439,7 @@ export function pathFunctions(rebuildPlayer) {
                   createdAt: now,
                   deliveredAt: now,
                   expiresAt: null,
-                  gameId: game.id,
+                  gameId: active.gameId,
                 },
               ]);
               rewards.push({ id: key, ...writes.at(-1)[1] });
@@ -429,18 +452,10 @@ export function pathFunctions(rebuildPlayer) {
           }
         }
       }
-      if (!["sync", "acknowledge"].includes(input.action)) {
+      if (!["sync", "acknowledge", "resolveReview"].includes(input.action)) {
         assertFeature("missions");
         if (!policyAt().rules.allowPermanent)
           reject("As recompensas permanentes estão pausadas pela liga.");
-        if (
-          Object.values(state.reviews || {}).some(
-            (review) => !review.acknowledgedAt,
-          )
-        )
-          reject(
-            "Um jogo foi corrigido. A administração precisa de rever o percurso antes de continuares.",
-          );
         if (
           ["accept", "abandon", "reroll", "activate", "unify"].includes(
             input.action,
@@ -459,6 +474,7 @@ export function pathFunctions(rebuildPlayer) {
         if (input.action === "unify") {
           try {
             state = unifyPathState(state, input.routeId);
+            state = activatePathState(state, input.routeId, state.selectedNode, now);
           } catch (error) {
             reject(error.message);
           }
@@ -467,13 +483,19 @@ export function pathFunctions(rebuildPlayer) {
           const route = pathRoute(input.routeId);
           if (!route || input.routeId.startsWith("fusion-"))
             reject("Ativa uma especialização válida ou desbloqueia a fusão.");
-          state.activePath = pathVisibleRoute(state, route.id);
-          state.revision++;
+          state = activatePathState(state, route.id, null, now);
           changed = true;
         } else if (input.action === "select") {
           if (!node) reject("Escolhe um percurso válido.");
-          state.selectedNode = node.id;
-          state.revision++;
+          if (games.some(game => game.status === "open" && !game.deleting && participants(game).includes(uid))) {
+            state.selectedNode = node.id;
+            state.revision++;
+          } else if (node.style === "fusion" && !(state.unifiedFusions || []).includes(node.route)) {
+            state.selectedNode = node.id;
+            state.revision++;
+          } else {
+            state = activatePathState(state, node.route, node.id, now);
+          }
           changed = true;
         } else if (input.action === "offers") {
           if (
@@ -600,6 +622,8 @@ export function pathFunctions(rebuildPlayer) {
         // Keep the document comfortably below Firestore's 1 MiB limit on long careers.
         state.history = state.history.slice(-30);
         tx.set(ref, state);
+        tx.set(db().doc(`homeSignals/${uid}`), { version: randomUUID() }, { merge: true });
+        writeMaintenanceSignals(tx, "pathStates", uid, stored, state);
         tx.set(ref.collection("audit").doc(), {
           action: input.action,
           actorId: input.actorId || uid,
@@ -607,6 +631,7 @@ export function pathFunctions(rebuildPlayer) {
           revision: state.revision,
           activeAttempt: state.active?.id || null,
           result: state.lastResult?.id || null,
+          ...(manual ? { attemptId: input.attemptId, decision: input.decision, reason: input.reason.trim().slice(0, 500) } : {}),
         });
       }
       return { ...state, history: state.history.slice(-30) };
@@ -639,7 +664,7 @@ export function pathFunctions(rebuildPlayer) {
       const state = (await db().doc(`pathStates/${request.auth.uid}`).get()).data() || emptyPathState(request.auth.uid);
       return upgradePathProposals(state);
     }
-    if (input.action === "acknowledge") {
+    if (["acknowledge", "resolveReview"].includes(input.action)) {
       if (
         typeof input.uid !== "string" ||
         !/^[A-Za-z0-9_-]{1,128}$/.test(input.uid)
@@ -649,7 +674,7 @@ export function pathFunctions(rebuildPlayer) {
         ...input,
         actor: request.systemActor,
         actorId: request.auth.uid,
-      });
+      }, input.action === "resolveReview");
     }
     return sync(request.auth.uid, { ...input, actorId: request.auth.uid });
   });
@@ -691,6 +716,7 @@ export function pathFunctions(rebuildPlayer) {
         !state.active &&
         !state.pending?.length &&
         !state.rebuildPending &&
+        !Object.values(state.reviews || {}).some(review => !review.acknowledgedAt) &&
         !linked.has(doc.id)
       )
         continue;

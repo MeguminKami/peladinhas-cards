@@ -3,6 +3,8 @@
 import { DJABUCOIN, CASINO_EDITION } from "./casino-economy.js";
 import { SHOP_CARDS } from "./casino-shop-catalog.js";
 import { payFromCasinoFunds, shopFunds } from "./casino-shop-payment.js";
+export const VAULT_MIN_DEPOSIT = 300 * DJABUCOIN.scale;
+
 export function casinoSessionInput(value) {
   if (
     !value ||
@@ -29,7 +31,7 @@ export function casinoSessionInput(value) {
       ) ||
       typeof value.release !== "boolean" ||
       (value.rejuice !== undefined && (value.rejuice !== true || value.release)) ||
-      (value.vaultDeposit !== undefined && (!Number.isSafeInteger(value.vaultDeposit) || value.vaultDeposit <= 0 || value.vaultDeposit > 1e12 || value.release || value.rejuice)) ||
+      (value.vaultDeposit !== undefined && (!Number.isSafeInteger(value.vaultDeposit) || value.vaultDeposit < VAULT_MIN_DEPOSIT || value.vaultDeposit > 1e12 || value.release || value.rejuice)) ||
       (value.shopCard !== undefined && (!SHOP_CARDS.some(card => card.id === value.shopCard) || value.release || value.rejuice || value.vaultDeposit)))
   )
     throw Error("Confirmação de saldo inválida.");

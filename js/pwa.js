@@ -37,7 +37,7 @@ export function bindInstallSpotlight(root = document) {
   const place = () => {
     if (!spotlight.isConnected || !greeting.isConnected) return;
     if (desktop.matches) host.append(spotlight);
-    else greeting.after(spotlight);
+    else (host.querySelector(".card-selection-entry") || greeting).after(spotlight);
   };
   place();
   desktop.addEventListener("change", place);

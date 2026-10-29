@@ -2,7 +2,7 @@
 
 [← Cartas e avaliações](cards-and-ratings.md) · [Catálogo visual](card-collection.md)
 
-A carta normal está sempre disponível. As especiais são cosméticas: não acrescentam atributos nem OVR. «Escolher carta», no próprio perfil, apresenta a normal e todas as especiais válidas, incluindo permanentes de semanas anteriores. A escolha persiste entre semanas e pode mudar durante a pausa. Uma carta expirada regressa à normal. Os snapshots fechados não são alterados.
+A carta normal está sempre disponível. As especiais são cosméticas: não acrescentam atributos nem OVR. «Escolher carta», em destaque no topo do Início e antes da carta no próprio perfil, apresenta a normal e todas as especiais válidas, incluindo permanentes de semanas anteriores. A escolha persiste entre semanas e pode mudar durante a pausa. Uma carta expirada regressa à normal. Os snapshots fechados não são alterados.
 
 ## Validade
 

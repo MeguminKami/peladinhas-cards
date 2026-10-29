@@ -34,7 +34,7 @@ const inputs = new Set([
 ]);
 const ownInputs = new Set(["pathStates", "communityRatings"]);
 const pending = new Map();
-const HOME_CACHE_VERSION = "2026-10-26-cycles-v1";
+const HOME_CACHE_VERSION = "2026-10-29-path-corrections-v1";
 // Cache documents are server-only. Timestamps become ISO strings, understood by
 // the same asDate helpers used by the browser. No SDK objects enter the cache.
 export function plain(value) {

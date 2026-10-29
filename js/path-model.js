@@ -231,6 +231,26 @@ export function pathVisibleRoute(state, routeId) {
     )?.id || routeId
   );
 }
+// Confirming another route removes only the preparation for a future game.
+export function activatePathState(state, routeId, nodeId, now) {
+  const route = pathRoute(routeId);
+  if (!route) throw Error("Escolhe um caminho válido.");
+  const next = structuredClone(state);
+  const selected = pathNode(nodeId) || PATH_NODES.find(node =>
+    node.route === routeId && !next.nodes[node.id]?.completedAt && nodeAvailable(node, next)
+  ) || PATH_NODES.find(node => node.route === routeId);
+  if (!selected) throw Error("Escolhe um nó válido.");
+  if (next.active && pathNode(next.active.nodeId)?.route !== selected.route) {
+    if (next.active.frozenAt) throw Error("Esta tentativa já está associada a um jogo.");
+    next.history.push({ ...next.active, status: "abandoned", settledAt: now,
+      reason: "Mudaste de caminho. A missão preparada foi removida; progresso preservado." });
+    next.active = null;
+  }
+  next.activePath = pathVisibleRoute(next, routeId);
+  next.selectedNode = selected.id;
+  next.revision++;
+  return next;
+}
 export function unifyPathState(state, fusionId) {
   const fusion = PATH_FUSIONS.find((fusion) => fusion.id === fusionId),
     root = pathNode(fusionId);

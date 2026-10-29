@@ -230,7 +230,8 @@ export function gameFlowFunctions(syncGame = async () => {}) {
           : prior?.openedAt || null,
       };
       if (value.status === "closed" && prior?.status !== "closed") {
-        output.closedAt = FieldValue.serverTimestamp();
+        // Use one server instant for the match and its snapshots (array transforms are unsupported).
+        output.closedAt = Timestamp.now();
         output.closedBy = request.auth.uid;
       }
       for (const key of ["teamNames", "playerCards", "cardWeekId"])
@@ -249,6 +250,7 @@ export function gameFlowFunctions(syncGame = async () => {}) {
                           ...attempt,
                           closedCoreSignature: pathGameCoreSignature(value),
                           closedGame: {
+                            closedAt: output.closedAt,
                             id: ref.id,
                             status: "closed",
                             scheduledAt: value.scheduledAt

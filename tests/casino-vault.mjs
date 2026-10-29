@@ -43,7 +43,7 @@ try {
     viewport: { width: 1440, height: 1050 },
     serviceWorkers: "block",
   });
-  const fixtureSession=createSession('casino-ui-fixed');fixtureSession.balance=10000;
+  const fixtureSession=createSession('casino-ui-fixed');fixtureSession.balance=50000;
   await context.addInitScript(snapshot=>{
     const key='slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200';
     if(!localStorage.getItem(key)) localStorage.setItem(key,JSON.stringify(snapshot));
@@ -64,6 +64,9 @@ try {
         ),
       }),
     );
+  await context.addInitScript(() => {
+    if (!sessionStorage.getItem("casino-fixture-wallet")) sessionStorage.setItem("casino-fixture-wallet", JSON.stringify({ wallet: { edition: "official-2026-10-27-reset-200", sessionProtocol: 5, balance: 50000, vaultBalance: 0, revision: 1, recent: [] }, sessions: {} }));
+  });
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -72,7 +75,7 @@ try {
   await page.goto(`${base}/#/casino`);
   await page.waitForFunction(
     () =>
-      document.querySelector(".casino-balance strong")?.textContent === "100",
+      document.querySelector(".casino-balance strong")?.textContent === "500",
   );
 
 
@@ -95,18 +98,22 @@ try {
   assert.equal(await panel.isVisible(), false);
   await trigger.click();
   assert.equal(await page.evaluate(() => window.__casinoCalls.length), 1);
-  await page.locator('#vault-amount').fill('25,50');
+  await page.locator('#vault-amount').fill('299,99');
+  await page.locator('.casino-vault-form button').click();
+  assert.equal(await page.evaluate(() => window.__casinoCalls.length), 1);
+  assert.match(await page.locator('.casino-vault-feedback').innerText(), /300/);
+  await page.locator('#vault-amount').fill('300,00');
   await page.evaluate(() => { window.__casinoLoseResponse = true; });
   await page.locator('.casino-vault-form button').click();
   await page.waitForFunction(() => !document.querySelector('.casino-vault-form button').disabled);
   await page.evaluate(() => { window.__casinoLoseResponse = false; });
   await page.locator('.casino-vault-form button').click();
-  await page.waitForFunction(() => document.querySelector('.casino-balance strong')?.textContent === '74,5');
-  assert.match(await page.locator('[data-vault-balance]').innerText(), /25,5/);
-  assert.match(await page.locator('[data-vault-total]').innerText(), /100/);
+  await page.waitForFunction(() => document.querySelector('.casino-balance strong')?.textContent === '200');
+  assert.match(await page.locator('[data-vault-balance]').innerText(), /300/);
+  assert.match(await page.locator('[data-vault-total]').innerText(), /500/);
   const ledger = await page.evaluate(() => JSON.parse(sessionStorage.getItem('casino-fixture-wallet')));
-  assert.equal(ledger.wallet.vaultBalance, 2550);
-  assert.equal(ledger.wallet.balance, 7450);
+  assert.equal(ledger.wallet.vaultBalance, 30000);
+  assert.equal(ledger.wallet.balance, 20000);
   assert.equal(await page.evaluate(() => window.__casinoCalls.length), 3);
   await page.locator('#vault-amount').fill('999');
   await page.locator('.casino-vault-form button').click();
