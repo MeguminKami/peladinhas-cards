@@ -20,6 +20,36 @@
 #game #speed i.on{opacity:1}
 #game #speed>span{font-size:7px;line-height:1.2;letter-spacing:.6px}
 
+/* Give the desktop rail a readable scale as the fitted/fullscreen board grows. */
+@media (min-width:1000px){
+ :is(html[data-casino-fit],html:fullscreen) #game .arena{grid-template-columns:clamp(190px,15vw,260px) minmax(0,1fr);gap:clamp(16px,1.5vw,28px)}
+ :is(html[data-casino-fit],html:fullscreen) #game .right{display:none}
+ :is(html[data-casino-fit],html:fullscreen) #game .left{padding-top:20px;min-width:0}
+ :is(html[data-casino-fit],html:fullscreen) #game .system-label{font-size:12px;letter-spacing:1px;gap:8px}
+ :is(html[data-casino-fit],html:fullscreen) #game .system-label span{font-size:10px}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module{grid-template-columns:minmax(0,1fr) clamp(48px,4.5vw,72px);gap:12px;margin-top:12px;padding:16px}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module>span{font-size:12px;letter-spacing:1px}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module #global{font-size:clamp(44px,4vw,64px)}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module #global[data-digits="2"]{font-size:clamp(38px,3.4vw,54px)}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module #global[data-digits="3"]{font-size:clamp(30px,2.8vw,44px)}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module>.core-art{width:100%;height:auto;aspect-ratio:1}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers{display:grid;gap:12px;margin-top:24px;padding-left:4px}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers>span{font-size:11px;line-height:1.5;letter-spacing:1px;color:#a5b0c8}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers>div{display:flex;align-items:center;gap:10px;min-height:32px;padding:0;font-size:clamp(13px,1vw,16px);line-height:1.3;letter-spacing:.2px;color:#b5bfd6}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers b{flex:0 0 28px;width:28px;font-size:24px;text-align:center}
+ :is(html[data-casino-fit],html:fullscreen) #game #fsPanel{margin-top:20px;padding:14px 12px}
+ :is(html[data-casino-fit],html:fullscreen) #game #fs{font-size:32px}
+}
+
+@media (min-width:1000px) and (max-height:850px){
+ :is(html[data-casino-fit],html:fullscreen) #game .left{padding-top:0}
+ :is(html[data-casino-fit],html:fullscreen) #game .core-module{padding:12px;gap:8px}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers{gap:6px;margin-top:12px}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers>div{min-height:24px}
+ :is(html[data-casino-fit],html:fullscreen) #game .powers b{font-size:22px;line-height:1}
+ :is(html[data-casino-fit],html:fullscreen) #game #fsPanel{margin-top:12px;padding:8px}
+}
+
 /* One compact catalog, then a separate confirmation with an explicit debit. */
 #modal:has(.bonus-shop)>section{width:min(680px,100%);padding:28px;max-height:calc(100svh - 32px);overflow:auto;border-radius:28px 12px 28px 12px}
 #modal:has(.bonus-shop) h2{font-size:28px;line-height:1.1;margin:0 40px 16px 0}
@@ -41,7 +71,7 @@
 .bonus-offer-price{font-size:24px;line-height:1.1;color:#f1f5ff;font-variant-numeric:tabular-nums}
 
 /* Content-sized protocol notice, with a stable copy/illustration alignment. */
-#game #powerBanner.power-readable{left:50%;right:auto;bottom:12px;top:auto;transform:translateX(-50%);width:min(430px,calc(100% - 24px));box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px;border:1px solid #8892b777;border-radius:7px;background:#111a2ff2;letter-spacing:normal;text-align:left;opacity:1;animation:none!important}
+#game #powerBanner.power-readable{left:12px;right:12px;bottom:12px;top:auto;transform:none;width:auto;max-width:430px;margin-inline:auto;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px;border:1px solid #8892b777;border-radius:7px;background:#111a2ff2;letter-spacing:normal;text-align:left;opacity:1;animation:none!important}
 .power-copy{display:grid;min-width:0;gap:5px}
 #game #powerBanner .power-copy>strong{font:600 17px/1.15 'Barlow Condensed',sans-serif;letter-spacing:1px;overflow-wrap:anywhere}
 #game #powerBanner .power-explanation{font-size:10px;line-height:1.3;letter-spacing:.2px;min-height:13px;color:#b5e8ee}

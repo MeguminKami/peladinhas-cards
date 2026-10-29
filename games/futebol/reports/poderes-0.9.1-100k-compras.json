@@ -1,0 +1,922 @@
+{
+  "date": "2026-10-29T02:12:38.342Z",
+  "configVersion": "0.9.1",
+  "betCents": 20,
+  "products": [
+    {
+      "summary": {
+        "mode": "normal",
+        "rounds": 100000,
+        "buyCostX": 90,
+        "observedRtpPercent": 74.30513555555555,
+        "ci95RtpPercent": [
+          72.85705458223686,
+          75.75321652887425
+        ],
+        "meanReturnX": 66.874622,
+        "profitFrequency": 0.14485,
+        "capCount": 6
+      },
+      "batches": [
+        {
+          "bonusHunt": false,
+          "configVersion": "0.9.1",
+          "configHash": "bfb91c8f0904fd0c89fa91614aab006a06146e3d9543dedec6fc78a8a83edc36",
+          "seed": "balance-091-normal-a",
+          "rng": "FNV-1a + Mulberry32",
+          "finalRngState": 4257170068,
+          "mode": "normal",
+          "betCents": 20,
+          "rounds": 50000,
+          "totalSpins": 526128,
+          "totalCostCents": "90000000",
+          "totalPaidCents": "68209428",
+          "sumSquaredPaidCents": "1127288161974",
+          "targetRtpPercent": 65,
+          "observedRtpPercent": 75.78825333333333,
+          "sdReturnPerCost": 2.5267193459019874,
+          "ci95RtpPercent": [
+            73.57348617607336,
+            78.00302049059388
+          ],
+          "contributionsPercentagePoints": {
+            "base": 0,
+            "bonus": 75.78825333333333
+          },
+          "hitFrequency": 0.9999,
+          "profitFrequency": 0.1458,
+          "belowCostCount": 42699,
+          "equalCostCount": 6,
+          "zeroCount": 5,
+          "scatters": {
+            "three": 0,
+            "four": 0,
+            "threeFrequency": 0,
+            "fourFrequency": 0,
+            "five": 0,
+            "fiveFrequency": 0
+          },
+          "bonus": {
+            "normal": {
+              "count": 50000,
+              "meanReturnX": 68.20942800000013,
+              "sdX": 227.40474113117847,
+              "meanSpins": 10.52256,
+              "distribution": {
+                "zero": 5,
+                "(0,1]": 11,
+                "(1,5]": 521,
+                "(5,20]": 12089,
+                "(20,100]": 31042,
+                "(100,500]": 5731,
+                "(500,2000]": 505,
+                "(2000,10000]": 96
+              },
+              "quantileIntervalsX": {
+                "0.5": "(20,100]",
+                "0.9": "(100,500]",
+                "0.95": "(100,500]",
+                "0.99": "(500,2000]"
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "superior": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "legend": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            }
+          },
+          "metrics": {
+            "eligible": 280423,
+            "wilds": 602225,
+            "success": 112110,
+            "powers": [
+              47176,
+              32433,
+              20566,
+              11935
+            ],
+            "newSticky": 0,
+            "retriggers": 5227,
+            "extraFreeSpins": 26135
+          },
+          "maxObservedX": 10000,
+          "capCount": 3,
+          "capFrequency": 0.00006,
+          "distributionReference": "Total da ronda dividido pela aposta de referência; não pelo preço da compra.",
+          "distribution": {
+            "zero": 5,
+            "(0,1]": 11,
+            "(1,5]": 521,
+            "(5,20]": 12089,
+            "(20,100]": 31042,
+            "(100,500]": 5731,
+            "(500,2000]": 505,
+            "(2000,10000]": 96
+          },
+          "limitations": [
+            "Estimativa empírica da configuração identificada, não prova de RTP teórico.",
+            "IC95 normal aproximado calculado por ronda completa; prémios raros podem tornar a aproximação insuficiente.",
+            "Amostra não demonstra frequência da cauda nem ausência de eventos não observados.",
+            "Totais monetários e quadrados exportados como strings inteiras exatas; momentos estatísticos usam ponto flutuante."
+          ]
+        },
+        {
+          "bonusHunt": false,
+          "configVersion": "0.9.1",
+          "configHash": "bfb91c8f0904fd0c89fa91614aab006a06146e3d9543dedec6fc78a8a83edc36",
+          "seed": "balance-091-normal-b",
+          "rng": "FNV-1a + Mulberry32",
+          "finalRngState": 781751548,
+          "mode": "normal",
+          "betCents": 20,
+          "rounds": 50000,
+          "totalSpins": 526575,
+          "totalCostCents": "90000000",
+          "totalPaidCents": "65539816",
+          "sumSquaredPaidCents": "820137721116",
+          "targetRtpPercent": 65,
+          "observedRtpPercent": 72.82201777777779,
+          "sdReturnPerCost": 2.128935073076582,
+          "ci95RtpPercent": [
+            70.95592390888902,
+            74.68811164666587
+          ],
+          "contributionsPercentagePoints": {
+            "base": 0,
+            "bonus": 72.82201777777779
+          },
+          "hitFrequency": 0.99992,
+          "profitFrequency": 0.1439,
+          "belowCostCount": 42792,
+          "equalCostCount": 9,
+          "zeroCount": 4,
+          "scatters": {
+            "three": 0,
+            "four": 0,
+            "threeFrequency": 0,
+            "fourFrequency": 0,
+            "five": 0,
+            "fiveFrequency": 0
+          },
+          "bonus": {
+            "normal": {
+              "count": 50000,
+              "meanReturnX": 65.53981599999956,
+              "sdX": 191.6041565768925,
+              "meanSpins": 10.5315,
+              "distribution": {
+                "zero": 4,
+                "(0,1]": 6,
+                "(1,5]": 550,
+                "(5,20]": 12208,
+                "(20,100]": 30992,
+                "(100,500]": 5661,
+                "(500,2000]": 513,
+                "(2000,10000]": 66
+              },
+              "quantileIntervalsX": {
+                "0.5": "(20,100]",
+                "0.9": "(100,500]",
+                "0.95": "(100,500]",
+                "0.99": "(500,2000]"
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "superior": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "legend": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            }
+          },
+          "metrics": {
+            "eligible": 280301,
+            "wilds": 604161,
+            "success": 111833,
+            "powers": [
+              46983,
+              32191,
+              20877,
+              11782
+            ],
+            "newSticky": 0,
+            "retriggers": 5316,
+            "extraFreeSpins": 26580
+          },
+          "maxObservedX": 10000,
+          "capCount": 3,
+          "capFrequency": 0.00006,
+          "distributionReference": "Total da ronda dividido pela aposta de referência; não pelo preço da compra.",
+          "distribution": {
+            "zero": 4,
+            "(0,1]": 6,
+            "(1,5]": 550,
+            "(5,20]": 12208,
+            "(20,100]": 30992,
+            "(100,500]": 5661,
+            "(500,2000]": 513,
+            "(2000,10000]": 66
+          },
+          "limitations": [
+            "Estimativa empírica da configuração identificada, não prova de RTP teórico.",
+            "IC95 normal aproximado calculado por ronda completa; prémios raros podem tornar a aproximação insuficiente.",
+            "Amostra não demonstra frequência da cauda nem ausência de eventos não observados.",
+            "Totais monetários e quadrados exportados como strings inteiras exatas; momentos estatísticos usam ponto flutuante."
+          ]
+        }
+      ]
+    },
+    {
+      "summary": {
+        "mode": "superior",
+        "rounds": 100000,
+        "buyCostX": 220,
+        "observedRtpPercent": 167.01747431818183,
+        "ci95RtpPercent": [
+          163.89944799422707,
+          170.13550064213658
+        ],
+        "meanReturnX": 367.4384435,
+        "profitFrequency": 0.2411,
+        "capCount": 510
+      },
+      "batches": [
+        {
+          "bonusHunt": false,
+          "configVersion": "0.9.1",
+          "configHash": "bfb91c8f0904fd0c89fa91614aab006a06146e3d9543dedec6fc78a8a83edc36",
+          "seed": "balance-091-superior-a",
+          "rng": "FNV-1a + Mulberry32",
+          "finalRngState": 1873465227,
+          "mode": "superior",
+          "betCents": 20,
+          "rounds": 50000,
+          "totalSpins": 526223,
+          "totalCostCents": "220000000",
+          "totalPaidCents": "373284632",
+          "sumSquaredPaidCents": "28046615533526",
+          "targetRtpPercent": 65,
+          "observedRtpPercent": 169.67483272727273,
+          "sdReturnPerCost": 5.108360147677001,
+          "ci95RtpPercent": [
+            165.19715763412054,
+            174.15250782042574
+          ],
+          "contributionsPercentagePoints": {
+            "base": 0,
+            "bonus": 169.67483272727273
+          },
+          "hitFrequency": 0.99998,
+          "profitFrequency": 0.2423,
+          "belowCostCount": 37884,
+          "equalCostCount": 0,
+          "zeroCount": 1,
+          "scatters": {
+            "three": 0,
+            "four": 0,
+            "threeFrequency": 0,
+            "fourFrequency": 0,
+            "five": 0,
+            "fiveFrequency": 0
+          },
+          "bonus": {
+            "normal": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "superior": {
+              "count": 50000,
+              "meanReturnX": 373.2846319999981,
+              "sdX": 1123.8392324889403,
+              "meanSpins": 10.52446,
+              "distribution": {
+                "zero": 1,
+                "(0,1]": 74,
+                "(1,5]": 2214,
+                "(5,20]": 11045,
+                "(20,100]": 17717,
+                "(100,500]": 12028,
+                "(500,2000]": 4721,
+                "(2000,10000]": 2200
+              },
+              "quantileIntervalsX": {
+                "0.5": "(20,100]",
+                "0.9": "(500,2000]",
+                "0.95": "(500,2000]",
+                "0.99": "(2000,10000]"
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "legend": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            }
+          },
+          "metrics": {
+            "eligible": 527581,
+            "wilds": 1193220,
+            "success": 527581,
+            "powers": [
+              221791,
+              152880,
+              97483,
+              55427
+            ],
+            "newSticky": 113340,
+            "retriggers": 5333,
+            "extraFreeSpins": 26665
+          },
+          "maxObservedX": 10000,
+          "capCount": 260,
+          "capFrequency": 0.0052,
+          "distributionReference": "Total da ronda dividido pela aposta de referência; não pelo preço da compra.",
+          "distribution": {
+            "zero": 1,
+            "(0,1]": 74,
+            "(1,5]": 2214,
+            "(5,20]": 11045,
+            "(20,100]": 17717,
+            "(100,500]": 12028,
+            "(500,2000]": 4721,
+            "(2000,10000]": 2200
+          },
+          "limitations": [
+            "Estimativa empírica da configuração identificada, não prova de RTP teórico.",
+            "IC95 normal aproximado calculado por ronda completa; prémios raros podem tornar a aproximação insuficiente.",
+            "Amostra não demonstra frequência da cauda nem ausência de eventos não observados.",
+            "Totais monetários e quadrados exportados como strings inteiras exatas; momentos estatísticos usam ponto flutuante."
+          ]
+        },
+        {
+          "bonusHunt": false,
+          "configVersion": "0.9.1",
+          "configHash": "bfb91c8f0904fd0c89fa91614aab006a06146e3d9543dedec6fc78a8a83edc36",
+          "seed": "balance-091-superior-b",
+          "rng": "FNV-1a + Mulberry32",
+          "finalRngState": 3945916996,
+          "mode": "superior",
+          "betCents": 20,
+          "rounds": 50000,
+          "totalSpins": 525619,
+          "totalCostCents": "220000000",
+          "totalPaidCents": "361592255",
+          "sumSquaredPaidCents": "26348448066237",
+          "targetRtpPercent": 65,
+          "observedRtpPercent": 164.3601159090909,
+          "sdReturnPerCost": 4.951619608105674,
+          "ci95RtpPercent": [
+            160.019829956451,
+            168.700401861728
+          ],
+          "contributionsPercentagePoints": {
+            "base": 0,
+            "bonus": 164.3601159090909
+          },
+          "hitFrequency": 0.99998,
+          "profitFrequency": 0.2399,
+          "belowCostCount": 38002,
+          "equalCostCount": 2,
+          "zeroCount": 1,
+          "scatters": {
+            "three": 0,
+            "four": 0,
+            "threeFrequency": 0,
+            "fourFrequency": 0,
+            "five": 0,
+            "fiveFrequency": 0
+          },
+          "bonus": {
+            "normal": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "superior": {
+              "count": 50000,
+              "meanReturnX": 361.59225500000116,
+              "sdX": 1089.35631378325,
+              "meanSpins": 10.51238,
+              "distribution": {
+                "zero": 1,
+                "(0,1]": 53,
+                "(1,5]": 2155,
+                "(5,20]": 11093,
+                "(20,100]": 17831,
+                "(100,500]": 11978,
+                "(500,2000]": 4820,
+                "(2000,10000]": 2069
+              },
+              "quantileIntervalsX": {
+                "0.5": "(20,100]",
+                "0.9": "(500,2000]",
+                "0.95": "(500,2000]",
+                "0.99": "(2000,10000]"
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "legend": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            }
+          },
+          "metrics": {
+            "eligible": 528185,
+            "wilds": 1190660,
+            "success": 528185,
+            "powers": [
+              222387,
+              152963,
+              96711,
+              56124
+            ],
+            "newSticky": 113209,
+            "retriggers": 5202,
+            "extraFreeSpins": 26010
+          },
+          "maxObservedX": 10000,
+          "capCount": 250,
+          "capFrequency": 0.005,
+          "distributionReference": "Total da ronda dividido pela aposta de referência; não pelo preço da compra.",
+          "distribution": {
+            "zero": 1,
+            "(0,1]": 53,
+            "(1,5]": 2155,
+            "(5,20]": 11093,
+            "(20,100]": 17831,
+            "(100,500]": 11978,
+            "(500,2000]": 4820,
+            "(2000,10000]": 2069
+          },
+          "limitations": [
+            "Estimativa empírica da configuração identificada, não prova de RTP teórico.",
+            "IC95 normal aproximado calculado por ronda completa; prémios raros podem tornar a aproximação insuficiente.",
+            "Amostra não demonstra frequência da cauda nem ausência de eventos não observados.",
+            "Totais monetários e quadrados exportados como strings inteiras exatas; momentos estatísticos usam ponto flutuante."
+          ]
+        }
+      ]
+    },
+    {
+      "summary": {
+        "mode": "legend",
+        "rounds": 100000,
+        "buyCostX": 450,
+        "observedRtpPercent": 240.71141522222223,
+        "ci95RtpPercent": [
+          237.82398066947457,
+          243.5988497749699
+        ],
+        "meanReturnX": 1083.2013685,
+        "profitFrequency": 0.37912,
+        "capCount": 2525
+      },
+      "batches": [
+        {
+          "bonusHunt": false,
+          "configVersion": "0.9.1",
+          "configHash": "bfb91c8f0904fd0c89fa91614aab006a06146e3d9543dedec6fc78a8a83edc36",
+          "seed": "balance-091-legend-a",
+          "rng": "FNV-1a + Mulberry32",
+          "finalRngState": 1076399764,
+          "mode": "legend",
+          "betCents": 20,
+          "rounds": 50000,
+          "totalSpins": 524360,
+          "totalCostCents": "450000000",
+          "totalPaidCents": "1082326854",
+          "sumSquaredPaidCents": "111096103208282",
+          "targetRtpPercent": 65,
+          "observedRtpPercent": 240.51707866666666,
+          "sdReturnPerCost": 4.652603896321176,
+          "ci95RtpPercent": [
+            236.43889154152143,
+            244.59526579181215
+          ],
+          "contributionsPercentagePoints": {
+            "base": 0,
+            "bonus": 240.51707866666666
+          },
+          "hitFrequency": 0.99998,
+          "profitFrequency": 0.3773,
+          "belowCostCount": 31134,
+          "equalCostCount": 0,
+          "zeroCount": 1,
+          "scatters": {
+            "three": 0,
+            "four": 0,
+            "threeFrequency": 0,
+            "fourFrequency": 0,
+            "five": 0,
+            "fiveFrequency": 0
+          },
+          "bonus": {
+            "normal": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "superior": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "legend": {
+              "count": 50000,
+              "meanReturnX": 1082.3268539999835,
+              "sdX": 2093.67175334454,
+              "meanSpins": 10.4872,
+              "distribution": {
+                "zero": 1,
+                "(0,1]": 17,
+                "(1,5]": 439,
+                "(5,20]": 3702,
+                "(20,100]": 12124,
+                "(100,500]": 15861,
+                "(500,2000]": 10396,
+                "(2000,10000]": 7460
+              },
+              "quantileIntervalsX": {
+                "0.5": "(100,500]",
+                "0.9": "(2000,10000]",
+                "0.95": "(2000,10000]",
+                "0.99": "(2000,10000]"
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            }
+          },
+          "metrics": {
+            "eligible": 755992,
+            "wilds": 1801635,
+            "success": 755992,
+            "powers": [
+              318566,
+              219043,
+              139239,
+              79144
+            ],
+            "newSticky": 199805,
+            "retriggers": 5298,
+            "extraFreeSpins": 26490
+          },
+          "maxObservedX": 10000,
+          "capCount": 1243,
+          "capFrequency": 0.02486,
+          "distributionReference": "Total da ronda dividido pela aposta de referência; não pelo preço da compra.",
+          "distribution": {
+            "zero": 1,
+            "(0,1]": 17,
+            "(1,5]": 439,
+            "(5,20]": 3702,
+            "(20,100]": 12124,
+            "(100,500]": 15861,
+            "(500,2000]": 10396,
+            "(2000,10000]": 7460
+          },
+          "limitations": [
+            "Estimativa empírica da configuração identificada, não prova de RTP teórico.",
+            "IC95 normal aproximado calculado por ronda completa; prémios raros podem tornar a aproximação insuficiente.",
+            "Amostra não demonstra frequência da cauda nem ausência de eventos não observados.",
+            "Totais monetários e quadrados exportados como strings inteiras exatas; momentos estatísticos usam ponto flutuante."
+          ]
+        },
+        {
+          "bonusHunt": false,
+          "configVersion": "0.9.1",
+          "configHash": "bfb91c8f0904fd0c89fa91614aab006a06146e3d9543dedec6fc78a8a83edc36",
+          "seed": "balance-091-legend-b",
+          "rng": "FNV-1a + Mulberry32",
+          "finalRngState": 4037205179,
+          "mode": "legend",
+          "betCents": 20,
+          "rounds": 50000,
+          "totalSpins": 524020,
+          "totalCostCents": "450000000",
+          "totalPaidCents": "1084075883",
+          "sumSquaredPaidCents": "111626364792343",
+          "targetRtpPercent": 65,
+          "observedRtpPercent": 240.90575177777777,
+          "sdReturnPerCost": 4.664648157762024,
+          "ci95RtpPercent": [
+            236.8170073920036,
+            244.99449616355363
+          ],
+          "contributionsPercentagePoints": {
+            "base": 0,
+            "bonus": 240.90575177777777
+          },
+          "hitFrequency": 0.99996,
+          "profitFrequency": 0.38094,
+          "belowCostCount": 30950,
+          "equalCostCount": 1,
+          "zeroCount": 2,
+          "scatters": {
+            "three": 0,
+            "four": 0,
+            "threeFrequency": 0,
+            "fourFrequency": 0,
+            "five": 0,
+            "fiveFrequency": 0
+          },
+          "bonus": {
+            "normal": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "superior": {
+              "count": 0,
+              "meanReturnX": null,
+              "sdX": null,
+              "meanSpins": null,
+              "distribution": {
+                "zero": 0,
+                "(0,1]": 0,
+                "(1,5]": 0,
+                "(5,20]": 0,
+                "(20,100]": 0,
+                "(100,500]": 0,
+                "(500,2000]": 0,
+                "(2000,10000]": 0
+              },
+              "quantileIntervalsX": {
+                "0.5": null,
+                "0.9": null,
+                "0.95": null,
+                "0.99": null
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            },
+            "legend": {
+              "count": 50000,
+              "meanReturnX": 1084.075882999999,
+              "sdX": 2099.0916709929097,
+              "meanSpins": 10.4804,
+              "distribution": {
+                "zero": 2,
+                "(0,1]": 13,
+                "(1,5]": 434,
+                "(5,20]": 3638,
+                "(20,100]": 12131,
+                "(100,500]": 15716,
+                "(500,2000]": 10679,
+                "(2000,10000]": 7387
+              },
+              "quantileIntervalsX": {
+                "0.5": "(100,500]",
+                "0.9": "(2000,10000]",
+                "0.95": "(2000,10000]",
+                "0.99": "(2000,10000]"
+              },
+              "quantileMethod": "Intervalos do histograma; não são quantis pontuais."
+            }
+          },
+          "metrics": {
+            "eligible": 755339,
+            "wilds": 1802545,
+            "success": 755339,
+            "powers": [
+              318969,
+              217734,
+              138876,
+              79760
+            ],
+            "newSticky": 200770,
+            "retriggers": 5258,
+            "extraFreeSpins": 26290
+          },
+          "maxObservedX": 10000,
+          "capCount": 1282,
+          "capFrequency": 0.02564,
+          "distributionReference": "Total da ronda dividido pela aposta de referência; não pelo preço da compra.",
+          "distribution": {
+            "zero": 2,
+            "(0,1]": 13,
+            "(1,5]": 434,
+            "(5,20]": 3638,
+            "(20,100]": 12131,
+            "(100,500]": 15716,
+            "(500,2000]": 10679,
+            "(2000,10000]": 7387
+          },
+          "limitations": [
+            "Estimativa empírica da configuração identificada, não prova de RTP teórico.",
+            "IC95 normal aproximado calculado por ronda completa; prémios raros podem tornar a aproximação insuficiente.",
+            "Amostra não demonstra frequência da cauda nem ausência de eventos não observados.",
+            "Totais monetários e quadrados exportados como strings inteiras exatas; momentos estatísticos usam ponto flutuante."
+          ]
+        }
+      ]
+    }
+  ]
+}

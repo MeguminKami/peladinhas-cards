@@ -75,7 +75,11 @@ try {
       document.querySelector(".casino-balance strong")?.textContent === "100",
   );
 
+  const initialHeight = (await page.locator('.casino-rejuice').boundingBox()).height;
+  assert.equal(await page.locator('.casino-rejuice-token .djabucoin').count(), 1);
+  assert.equal(await page.locator('[data-rejuice]').innerText(), 'Pedir Rejuice');
   await page.locator('[data-rejuice]').click();
+  assert.equal((await page.locator('.casino-rejuice').boundingBox()).height, initialHeight);
   assert.equal(await page.evaluate(() => window.__casinoCalls.length), 1);
   assert.match(await page.locator('.casino-rejuice-notice').innerText(), /Ainda tens/);
   for (const width of [1440, 768, 390, 320]) {
@@ -98,16 +102,19 @@ try {
   const mobile = await low.newPage();
   await mobile.goto(`${base}/#/casino`);
   await mobile.waitForFunction(() => document.querySelector('.casino-balance strong')?.textContent === '4,99');
+  const mobileHeight = (await mobile.locator('.casino-rejuice').boundingBox()).height;
   await mobile.evaluate(() => { window.__casinoLoseResponse = true; });
   await mobile.locator('[data-rejuice]').click();
   await mobile.getByText('Não foi possível confirmar o Rejuice.',{exact:false}).waitFor();
   await mobile.locator('.casino-rejuice-notice').scrollIntoViewIfNeeded();
   await mobile.waitForTimeout(400);
+  assert.equal((await mobile.locator('.casino-rejuice').boundingBox()).height, mobileHeight);
   await mobile.screenshot({path:'test-results/rejuice-error.png'});
   await mobile.evaluate(() => { window.__casinoLoseResponse = false; });
   await mobile.locator('[data-rejuice]').click();
   await mobile.waitForFunction(() => document.querySelector('.casino-balance strong')?.textContent === '54,99');
   assert.match(await mobile.locator('.casino-rejuice-notice').innerText(),/Rejuice aprovado/);
+  assert.equal((await mobile.locator('.casino-rejuice').boundingBox()).height, mobileHeight);
   const ledger = await mobile.evaluate(() => JSON.parse(sessionStorage.getItem('casino-fixture-wallet')));
   assert.equal(ledger.wallet.balance, 5499);
   assert.equal(ledger.wallet.recent.filter(e => e.kind === 'rejuice').length,1);

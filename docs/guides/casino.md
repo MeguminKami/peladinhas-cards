@@ -4,6 +4,8 @@
 
 O casino está em `#/casino`; `/casino` redireciona para essa rota. O convite aparece no início, imediatamente abaixo do pódio. A entrada exige uma conta ativa. Os cinco jogos usam as fontes de `games` e a mesma carteira.
 
+No telemóvel, blackjack e roleta usam as mesmas fichas selecionáveis do computador, sem dropdown. Em retrato, os nove valores ficam visíveis em duas filas. Abrir o chat não ativa o campo de mensagem; o teclado só é solicitado ao tocar nesse campo.
+
 ## Economia e reinício
 
 A edição `official-2026-10-27-reset-200` inicia cada carteira com **200 DJC**. O reinício é aplicado atomicamente no primeiro acesso à carteira, recompensa ou envio administrativo depois da publicação do servidor. Não exige percorrer a base de dados. Carteiras da edição atual conservam o saldo. Sessões e snapshots anteriores ficam isolados pela versão, sem recuperar saldos de teste.
@@ -127,7 +129,7 @@ Reset de 27/10/2026: a edição `official-2026-10-27-reset-200` começa com 200 
 Validação local da integração: `npm.cmd run test:casino:cardoso`.
 # Rejuice
 
-A Vault pessoal está descrita no [relatório de implementação de 29/10/2026](../reports/casino-vault-2026-10-29.md): depósitos definitivos no cabeçalho do salão, sem levantamentos e com saldo separado das apostas. O total para a [loja da conta](casino-shop.md) soma carteira e Vault.
+A Vault pessoal está descrita no [relatório de implementação de 29/10/2026](../reports/casino-vault-2026-10-29.md): depósitos definitivos no cabeçalho do salão, sem levantamentos e com saldo separado das apostas. O total para a [loja da conta](casino-shop.md) soma carteira e Vault. O painel abre num popup ancorado ao botão Vault e fecha ao clicar fora, mover o foco para outro controlo ou premir Escape.
 
 O salão apresenta sempre «Pedir Rejuice (+50 Djabucoins)». Com saldo local de pelo menos 5 DJC, o clique mostra uma mensagem sem chamar o servidor. Abaixo desse valor, a carteira envia uma confirmação `casinoSession` com `rejuice: true`, incluindo os totais pendentes. Não há limite diário.
 
@@ -138,3 +140,5 @@ Uma confirmação normal utiliza duas leituras transacionais (carteira e sessão
 Segurança: esta validação protege a atribuição contra saldo concorrente e repetição. Os jogos locais continuam a enviar totais calculados pelo navegador, conforme a arquitetura existente; não há validação autoritativa de cada resultado. Garantir resistência à falsificação desses totais exige migrar a execução dos jogos para o servidor.
 
 Validação local: `node tests/casino-rejuice.mjs`, `node --test tests/casino-session.test.js tests/casino.test.js` e `npm.cmd run test:casino:backend` (emulador). Publicar primeiro `npx.cmd firebase deploy --only functions:peladinhas:casinoSession` e depois `npm.cmd run deploy:frontend`. Não é necessário recalcular carteiras nem alterar semanas fechadas.
+
+O Rejuice apresenta +50 com o símbolo DJC e o botão **Pedir Rejuice**. As mensagens substituem o texto no mesmo espaço, mantendo o tamanho da secção em cada largura de ecrã.

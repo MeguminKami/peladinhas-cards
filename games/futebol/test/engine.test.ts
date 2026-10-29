@@ -11,15 +11,15 @@ import {simulate} from '../src/simulate.ts';
 import {spawnSync} from 'node:child_process';
 const zero:Random={next:()=>0};
 const high:Random={next:()=>0.999999};
-test('global persiste nos FS, soma P4 e multiplica P1 sem reiniciar',()=>{
+test('global persiste nos FS e P1 não acrescenta multiplicadores',()=>{
   const b=Array(24).fill('S') as Board;b[7]='W';b[6]='P4';
   const first=spin(start('superior'),20,zero,single(),true,b);
   assert.equal(first.next.global,3);
-  const line=Array(24).fill('S') as Board;for(let i=0;i<6;i++)line[i]='N1';line[1]='W';line[7]='P1';
+  const line=Array(24).fill('S') as Board;for(let i=0;i<6;i++)line[i]='P1';line[1]='W';line[7]='P1';
   const second=spin(first.next,20,zero,single(),true,line);
   assert.equal(second.detail!.globalBefore,3);assert.equal(second.detail!.global,3);
-  assert.equal(second.detail!.lines[0].global,3);assert.equal(second.detail!.lines[0].local,2);
-  assert.equal(second.paid,120);
+  assert.equal(second.detail!.lines[0].global,3);assert.equal(second.detail!.lines[0].local,1);
+  assert.equal(second.paid,324);
   const third=spin(second.next,20,zero,single(),true,b);assert.equal(third.next.global,5);
   assert.equal(start('superior').global,1);
 });
@@ -45,13 +45,13 @@ test('interrupção e sentido de avaliação',()=>{
 });
 test('wilds iniciais, intermédios e linha só de wilds',()=>{
   const b=blank();b.splice(0,6,'W','P4','W','P4','P4','P4');assert.equal(evaluate(b,new Set(),1,single()).wins[0].symbol,'P4');
-  b.splice(0,6,'W','W','W','W','W','W');const w=evaluate(b,new Set(),1,single()).wins[0];assert.equal(w.symbol,'P4');assert.equal(w.length,6);assert.equal(w.hundredths,2000);
+  b.splice(0,6,'W','W','W','W','W','W');const w=evaluate(b,new Set(),1,single()).wins[0];assert.equal(w.symbol,'P4');assert.equal(w.length,6);assert.equal(w.hundredths,1800);
 });
 test('escolhe maior pagamento final e desempata comprimento',()=>{
-  const b=blank();b.splice(0,6,'W','W','W','N1','S','S');const c=single();c.pays[7][0]=100;assert.equal(evaluate(b,new Set(),1,c).wins[0].symbol,'P4');for(const pay of c.pays)pay[0]=10;assert.equal(evaluate(b,new Set(),1,c).wins[0].symbol,'N1');
+  const b=blank();b.splice(0,6,'W','W','W','N1','S','S');const c=single();c.pays[7][0]=100;assert.equal(evaluate(b,new Set(),1,c).wins[0].symbol,'P4');for(const pay of c.pays)pay[0]=10;c.pays[0][1]=10;assert.equal(evaluate(b,new Set(),1,c).wins[0].symbol,'N1');
 });
-test('amplificação só na sequência paga, teto local ×8 e global',()=>{
-  const b=blank();b.splice(0,6,'W','W','W','W','W','W');assert.equal(evaluate(b,new Set([0,1,2,3,4,5]),5,single()).hundredths,2000*8*5);
+test('avaliação não aplica multiplicadores locais antigos; global aplica uma vez',()=>{
+  const b=blank();b.splice(0,6,'W','W','W','W','W','W');assert.equal(evaluate(b,new Set([0,1,2,3,4,5]),5,single()).hundredths,1800*5);
   b.splice(0,6,'N1','N1','N1','S','W','W');assert.equal(evaluate(b,new Set([4,5]),1,single()).hundredths,3);
 });
 test('adjacência nas quatro direções, sem diagonais/wrap',()=>{
@@ -61,15 +61,15 @@ test('adjacência nas quatro direções, sem diagonais/wrap',()=>{
   const edge=blank();edge[5]='W';edge[6]='P1';assert.equal(resolve(edge,'superior',zero).steals[0].success,false);
 });
 test('probabilidades de roubo e ausência de premium',()=>{
-  const b=blank();b[7]='W';assert.equal(resolve(b,'superior',zero).steals[0].success,false);b[1]='P1';assert.equal(resolve(b,'base',high).steals[0].success,false);assert.equal(resolve(b,'base',zero).amplified.has(7),true);
+  const b=blank();b[7]='W';assert.equal(resolve(b,'superior',zero).steals[0].success,false);b[1]='P1';assert.equal(resolve(b,'base',high).steals[0].success,false);assert.equal(resolve(b,'base',zero).amplified.has(7),false);
 });
 test('P2 protege scatters, não cria roubo recursivo e permite sobreposição',()=>{
-  const b=blank();b[7]='W';b[6]='P2';b[1]='N1';b[13]='N1';b[0]='P4';const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.equal(r.board[13],'W');assert.equal(r.steals.length,1);assert.equal(r.global,1);
+  const b=blank();b[7]='W';b[6]='P2';b[1]='N1';b[13]='N1';b[0]='P4';const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.equal(r.board[13]==='W',false);assert.equal(r.steals.length,1);assert.equal(r.global,1);
   b[13]='S';assert.equal(resolve(b,'superior',zero).board[13],'S');
 });
 test('P3 converte depois de P2 e protege todos os Wilds',()=>{
   const b=blank();b[7]='W';b[6]='P2';b[1]='N1';b[13]='N2';b[10]='W';b[9]='P3';
-  const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.equal(r.board[13],'W');
+  const r=resolve(b,'superior',zero);assert.equal(r.board[1],'W');assert.notEqual(r.board[13],'W');
   for(const e of r.events.filter(e=>e.power==='P3'))for(const p of e.targets)assert.notEqual(r.board[p],'W');
 });
 
@@ -83,7 +83,7 @@ test('P3 usa a distribuição aprovada e limita aos alvos não Wild',()=>{
   for(let roll=0;roll<100;roll++){
     const b=Array(24).fill('N1') as Board;b[7]='W';b[6]='P3';let calls=0;
     const r=resolve(b,'superior',{next:()=>++calls===4?(roll+.5)/100:0});
-    const e=r.events[0];counts[e.requested!-2]++;assert.equal(e.targets.length,e.requested);assert.equal(new Set(e.targets).size,e.requested);
+    const e=r.events[0];counts[e.requested!-2]++;assert.equal(e.targets.length,e.requested!+1);assert.equal(new Set(e.targets).size,e.requested!+1);
   }
   assert.deepEqual(counts,[18,16,14,12,11,9,8,7,5]);
   const b=Array(24).fill('W') as Board;b[6]='P3';const r=resolve(b,'superior',zero);
@@ -100,11 +100,11 @@ test('P3 converte premiums e Scatters e preserva retrigger e ativação natural'
   }
 });
 
-test('P1 multiplica pelo global final aditivo, sem somar ou aplicar global duas vezes',()=>{
-  const b=blank();b[0]='N1';b[1]='W';b[2]='N1';b[7]='P1';b[10]='W';b[16]='P4';b[22]='W';
-  const powers=resolve(b,'superior',zero);assert.equal(powers.global,5);assert.equal(powers.amplified.has(1),true);
-  const win=evaluate(powers.board,powers.amplified,powers.global,single()).wins[0];assert.equal(win.local,2);assert.equal(win.global,5);assert.equal(win.hundredths,3*2*5);
-  const p1=powers.events.find(e=>e.power==='P1')!;assert.equal(p1.factor,2);
+test('P1 converte um normal adjacente sem amplificação nem alteração do global',()=>{
+  const b=blank();b[0]='P1';b[1]='W';b[2]='N1';b[7]='P1';b[10]='W';b[16]='P4';b[22]='W';
+  const powers=resolve(b,'superior',zero);assert.equal(powers.global,5);assert.equal(powers.amplified.has(1),false);
+  const win=evaluate(powers.board,powers.amplified,powers.global,single()).wins[0];assert.equal(win.local,1);assert.equal(win.global,5);assert.equal(win.hundredths,10*5);
+  const p1=powers.events.find(e=>e.power==='P1')!;assert.equal(p1.factor,1);
 });
 test('stickies persistem, roubam novamente, poderes expiram e não repetem sorteio sticky',()=>{
   const b=blank();b[7]='W';b[6]='P1';const first=spin(start('superior'),20,zero,config,true,b);assert.deepEqual(first.next.sticky,[7]);assert.equal(first.detail!.lines.length,0);
@@ -128,8 +128,8 @@ test('compras, custo, aposta de referência e sem grelha de ativação',()=>{
 });
 test('teto acumulado, alcançabilidade e terminação antecipada',()=>{
   const b=Array(24).fill('W') as Board;const s={...start('superior'),accumulated:199999,remaining:8};const r=spin(s,20,zero,config,true,b);assert.equal(r.paid,1);assert.equal(r.next.accumulated,200000);assert.equal(r.next.done,true);assert.equal(r.next.remaining,0);assert.throws(()=>spin(r.next,20,zero));
-  // Valid state with amplified all-wild board exceeds the configured round cap.
-  assert.ok(evaluate(b,new Set(Array.from({length:24},(_,i)=>i)),5).hundredths/100>10000);
+  // A sufficiently large accumulated global exceeds the round cap without P1.
+  assert.ok(evaluate(b,new Set(),20).hundredths/100>10000);
   const attainable=Array(24).fill('W') as Board;attainable[0]='P4';let state=start('superior');let spins=0;
   while(!state.done){state=spin(state,20,high,config,true,attainable).next;spins++;}
   assert.equal(state.accumulated,200000);assert.ok(spins<10);
@@ -151,7 +151,7 @@ test('estatísticas por ronda, custo das compras e histogramas completos',()=>{
 test('fatores estáticos por modo antes do arredondamento e do teto',()=>{
   assert.equal(settle(3,20,100,30000).paid,1);assert.equal(settle(3,20,100,220000).paid,13);
   assert.equal(settle(3,20,100,190000).paid,11);assert.equal(settle(10000,20,10,220000).paid,10);
-  const b=Array(24).fill('N1') as Board;for(const mode of ['base','normal','superior'] as Mode[]){const s=spin(start(mode),20,zero,config,true,b);assert.equal(s.beforeCap,settle(4000,20,200000,config.payoutScaleBps[mode]).paid);}
+  const b=Array(24).fill('N1') as Board;for(const mode of ['base','normal','superior'] as Mode[]){const s=spin(start(mode),20,zero,config,true,b);assert.equal(s.beforeCap,settle(3600,20,200000,config.payoutScaleBps[mode]).paid);}
 });
 test('CLI valida argumentos e mostra tabuleiro manual',()=>{
   for(const args of [['simulate','--rounds','1.5'],['simulate','--bet','0.21'],['buy','--mode','base'],['spin','--mode','superior'],['spin','--unknown','x']]){const r=spawnSync(process.execPath,['src/cli.ts',...args],{encoding:'utf8'});assert.equal(r.status,1);assert.match(r.stderr,/Erro:/);}

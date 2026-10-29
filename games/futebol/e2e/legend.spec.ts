@@ -16,6 +16,9 @@ test('loja adapta a aposta e os três preços em 320, 390, 768 e desktop',async(
   await page.locator('#shop-bet').selectOption('40');await expect(page.locator('#bet')).toHaveValue('40');
   await expect(page.locator('#buy-legend')).toContainText('180,00');
   await expect(page.locator('#buy-normal')).toContainText('36,00');
+  await expect(page.locator('.bonus-shop-options')).not.toContainText(/sticky/i);
+  const sizes=await page.locator('.bonus-shop-options>button').evaluateAll(buttons=>buttons.map(b=>{const r=b.getBoundingClientRect();return {w:r.width,h:r.height};}));
+  for(const size of sizes){expect(Math.abs(size.w-sizes[0].w)).toBeLessThan(1);expect(Math.abs(size.h-sizes[0].h)).toBeLessThan(1);}
   const layout=await page.evaluate(()=>{const panel=document.querySelector('#bonus-shop-panel')!;return {page:document.documentElement.scrollWidth<=innerWidth,panel:panel.scrollWidth<=panel.clientWidth};});
   expect(layout).toEqual({page:true,panel:true});
   await page.locator('#shop-bet').focus();await expect(page.locator('#shop-bet')).toBeFocused();
@@ -26,7 +29,7 @@ test('loja adapta a aposta e os três preços em 320, 390, 768 e desktop',async(
 test('compra Lendas cobra 450× uma vez, entrada e retoma preservam estado',async({page})=>{
  test.setTimeout(45000);const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.locator('#bonus-shop').click();await page.locator('#buy-legend').click();
- await expect(page.locator('#modal-content')).toContainText('36%');await page.locator('#confirm-buy').click();
+ await expect(page.locator('#modal-content')).toContainText('450×');await expect(page.locator('#modal-content')).not.toContainText(/sticky/i);await page.locator('#confirm-buy').click();
  await expect(page.locator('#enter-bonus')).toBeVisible();
  await expect(page.locator('.bonus-entry-stage')).toHaveAttribute('data-mode','legend');
  await page.screenshot({path:'test-results/legend-entry.png'});

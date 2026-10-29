@@ -71,29 +71,32 @@
   background: var(--bg-surface);
 }
 .casino-rejuice-token {
-  display: grid;
-  place-items: center;
-  flex: 0 0 64px;
-  height: 64px;
-  border: 2px dashed var(--casino-gold);
-  border-radius: 50%;
-  background: var(--casino-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
   color: var(--casino-gold);
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  transform: rotate(-8deg);
+  font-variant-numeric: tabular-nums;
 }
-.casino-rejuice-copy { flex: 1 1 260px; min-width: 0; display: grid; gap: 8px; }
+.casino-rejuice-token .djabucoin { width: 40px; height: 40px; font-size: 1.3rem; }
+.casino-rejuice-copy { position: relative; flex: 1 1 260px; min-width: 0; height: 112px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.casino-rejuice-copy.has-feedback > h2, .casino-rejuice-copy.has-feedback > p:not(.casino-rejuice-notice) { visibility: hidden; }
 .casino-rejuice h2 { font-size: clamp(1.1rem, 2vw, 1.4rem); line-height: 1.25; letter-spacing: -.03em; }
 .casino-rejuice p { color: var(--text-secondary); line-height: 1.5; }
 .casino-rejuice-notice:empty { display: none; }
 .casino-rejuice-notice {
   --feedback-color: var(--text-primary);
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
-  margin-top: 6px !important;
+  margin: 0 !important;
   border-inline-start: 3px solid var(--feedback-color);
   border-radius: 4px 12px 12px 4px;
   background: color-mix(in srgb, var(--feedback-color) 9%, var(--bg-surface));
@@ -127,6 +130,7 @@
 @media (max-width: 600px) {
   .casino-rejuice { padding: 20px; gap: 16px; }
   .casino-rejuice .casino-button { width: 100%; }
+  .casino-rejuice-copy { height: 168px; }
   .casino-rejuice-notice { display: grid; grid-template-columns: 32px minmax(0, 1fr); }
   .casino-rejuice-credit { grid-column: 2; justify-self: start; }
 }
@@ -810,24 +814,26 @@
 .casino-brand b { color: var(--accent); }
 .casino-wallet { margin-left: auto; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; min-width: 0; }
 .casino-vault-trigger { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 14px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--bg-surface); color: var(--text-primary); cursor: pointer; text-align: left; transition: border-color 160ms, transform 160ms; }
-.casino-vault-trigger > .ui-icon { color: var(--accent); }
-.casino-vault-trigger > span { display: grid; gap: 4px; }
+.casino-vault-trigger > .ui-icon { width: 40px; height: 40px; flex: none; padding: 9px; border: 1px solid #ebcd8b60; border-radius: 50%; background: linear-gradient(140deg, #143d33, #081f1b); color: var(--casino-gold); }
+.casino-vault-trigger > span { display: grid; gap: 3px; }
 .casino-vault-trigger small { font-size: .65rem; color: var(--text-secondary); }
-.casino-vault-trigger strong { font-size: 1rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.casino-vault-trigger strong { font-size: 1.4rem; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .casino-vault-trigger:hover { border-color: var(--accent); transform: translateY(-1px); }
 .casino-vault-trigger:active { transform: scale(.98); }
 .casino-vault-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.casino-vault { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 24px; padding: 24px; border: 1px solid var(--border-strong); border-radius: 20px; background: var(--bg-surface); }
+.casino-vault { position: fixed; z-index: 40; width: min(460px, calc(100vw - 24px)); overflow-y: auto; overscroll-behavior: contain; display: grid; grid-template-columns: minmax(0, 1fr); padding: 24px; border: 1px solid var(--border-strong); border-radius: 20px; background: var(--bg-surface); box-shadow: 0 20px 60px #0006; transform-origin: var(--vault-anchor, 80%) top; animation: casino-vault-open 160ms ease-out; }
+@keyframes casino-vault-open { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+.casino-vault-trigger[aria-expanded="true"] { border-color: var(--casino-gold); background: var(--bg-elevated, var(--bg-surface)); }
 .casino-vault[hidden] { display: none; }
-.casino-vault-art { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; align-self: start; min-height: 120px; border: 1px solid #ebcd8b60; border-radius: 16px; background: linear-gradient(140deg, #143d33, #081f1b); color: var(--casino-gold); box-shadow: inset 0 0 0 8px #081f1b, inset 0 0 0 9px #ebcd8b40; }
+.casino-vault-art { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 16px; align-self: start; min-height: 120px; border: 1px solid #ebcd8b60; border-radius: 16px; background: linear-gradient(140deg, #143d33, #081f1b); color: var(--casino-gold); box-shadow: inset 0 0 0 8px #081f1b, inset 0 0 0 9px #ebcd8b40; }
 .casino-vault-art .ui-icon { width: 48px; height: 48px; }
 .casino-vault-art span { font-size: .7rem; letter-spacing: .24em; font-weight: 800; }
 .casino-vault-content { min-width: 0; display: grid; gap: 16px; }
 .casino-vault-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.casino-vault-heading h2 { font-size: 1.8rem; letter-spacing: -.04em; }
+.casino-vault-heading h2 { font-size: 1.4rem; letter-spacing: -.04em; }
 .casino-vault-content > p { color: var(--text-secondary); line-height: 1.5; }
-.casino-vault-totals { display: flex; flex-wrap: wrap; gap: 24px; }
-.casino-vault-totals > span { display: grid; gap: 6px; font-size: .8rem; color: var(--text-secondary); min-width: 0; }
+.casino-vault-totals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-block: 16px; border-block: 1px solid var(--border); }
+.casino-vault-totals > span { display: grid; align-content: start; gap: 6px; font-size: .8rem; color: var(--text-secondary); min-width: 0; }
 .casino-vault-totals strong { color: var(--text-primary); font-size: 1.4rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .casino-vault-totals small { font-size: .75rem; }
 .casino-vault-form { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
@@ -839,6 +845,7 @@
 .casino-vault-feedback:empty { display: none; }
 .casino-vault-feedback[data-state="success"] { color: var(--accent); }
 .casino-vault-feedback[data-state="error"] { color: var(--danger); }
+.casino-vault-form button { width: 100%; justify-content: center; }
 .casino-vault-form button:disabled { opacity: .65; cursor: wait; }
 .is-playing .casino-vault-trigger, .is-playing .casino-vault { display: none; }
 @media (max-width: 600px) {
@@ -849,6 +856,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .casino-vault-trigger { transition: none; transform: none; }
+  .casino-vault { animation: none; }
 }
 .casino-wallet-total { display: flex; align-items: center; gap: 10px; }
 .casino-wallet-total > span:last-child { display: grid; gap: 3px; }
@@ -938,7 +946,9 @@
   .casino-toolbar { gap: 8px; }
   .casino-wallet .djabucoin { width: 32px; height: 32px; font-size: 1rem; }
   .casino-wallet-total { gap: 8px; }
-  .casino-wallet-total strong { font-size: 1.15rem; }
+  .casino-wallet-total strong, .casino-vault-trigger strong { font-size: 1.15rem; }
+  .casino-vault-trigger { padding: 6px 8px; gap: 8px; }
+  .casino-vault-trigger > .ui-icon { width: 32px; height: 32px; padding: 6px; }
   .casino-wallet-actions { gap: 8px; }
   .casino-wallet { column-gap: 8px; }
   .casino-wallet-actions [data-wallet-history] { padding-inline: 6px; }

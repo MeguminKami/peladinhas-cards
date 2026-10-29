@@ -15,12 +15,14 @@ test('5 Scatters naturais em colunas distintas ativam Lendas do Bairro',()=>{
  assert.equal(r.next.mode,'legend');assert.equal(r.next.remaining,10);
  assert.equal(makeBonusActivationBoard('legend').filter(s=>s==='S').length,5);
 });
-test('Wild +10% relativo exato e sticky 36% apenas no nascimento',()=>{
+test('Wild a 7% e sticky 25% apenas no nascimento',()=>{
  const chance=(mode:'legend'|'superior')=>config.weights[mode][8]/config.weights[mode].reduce((a,b)=>a+b);
- assert.ok(Math.abs(chance('legend')/chance('superior')-1.1)<1e-12);
+ assert.ok(Math.abs(chance('legend')-.07)<1e-12);
+ const previous=[470160,421185,362415,303645,156720,107745,68565,39180];
+ for(let i=1;i<8;i++)assert.ok(Math.abs(config.weights.legend[i]/config.weights.legend[0]-previous[i]/previous[0])<1e-12);
  const b=Array(24).fill('N1') as Board;b[8]='W';
- assert.deepEqual(spin(start('legend'),20,{next:()=>.35999},config,true,b).next.sticky,[8]);
- assert.deepEqual(spin(start('legend'),20,{next:()=>.36},config,true,b).next.sticky,[]);
+ assert.deepEqual(spin(start('legend'),20,{next:()=>.24999},config,true,b).next.sticky,[8]);
+ assert.deepEqual(spin(start('legend'),20,{next:()=>.25},config,true,b).next.sticky,[]);
  const s={...start('legend'),sticky:[8]};
  assert.deepEqual(spin(s,20,{next:()=>.99},config,true,b).next.sticky,[8]);
  b[0]=b[1]=b[2]='S';
@@ -35,5 +37,8 @@ test('compra 450× é idempotente, retoma RNG e mantém teto pela aposta base',(
  const a=round('legend',20,new SeededRandom('replay')),b=round('legend',20,new SeededRandom('replay'));
  assert.deepEqual(a,b);assert.ok(a.paid<=200000);assert.equal(a.cost,9000);
  const old={...createSession('migration-070'),configVersion:'0.7.0'};
- const migrated=restoreSession(old);assert.equal(migrated.rngState,old.rngState);assert.equal(migrated.balance,old.balance);assert.equal(migrated.configVersion,'0.8.0');
+ const migrated=restoreSession(old);assert.equal(migrated.rngState,old.rngState);assert.equal(migrated.balance,old.balance);assert.equal(migrated.configVersion,config.version);
+ const prior={...s,configVersion:'0.8.1'};const updated=restoreSession(prior);
+ assert.equal(updated.rngState,prior.rngState);assert.equal(updated.balance,prior.balance);
+ assert.deepEqual(updated.active,prior.active);assert.deepEqual(updated.history[0].spins,prior.history[0].spins);
 });

@@ -1,6 +1,7 @@
 import "./main"; // Reuse the established table, typography, chips and interaction styles.
 import "./multiplayer.css";
 import { patchHTML } from "./live-dom";
+import { pendingBets, confirmBets } from "./ready-bets";
 import { BlackjackScene } from "./scene";
 import { cardHTML, avatarHTML, dealerAvatarHTML, dealerName } from "./cards";
 import { chipSelectorHTML } from "./chip-selector";
@@ -106,6 +107,7 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     ) || view?.table?.players.find((p) => p.uid === view.uid);
   const owned = () =>
     view?.table?.players.filter((p) => p.uid === view.uid) || [];
+  const pendingBetsForPlayer = () => pendingBets(owned(), drafts.map((amount, i) => i + 1 === mine()?.seat ? bet : amount));
   function banner(kind: string, net: number) {
     const labels: Record<string, [string, string]> = {
       blackjack: ["BLACKJACK", "♠"],
@@ -217,9 +219,9 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     chatError = "";
     syncChatSubscription();
     renderOnline();
-    if (open && tab === "chat")
-      root.querySelector<HTMLInputElement>(".online-chat-input")?.focus({ preventScroll: true });
-    else if (!open) root.querySelector<HTMLButtonElement>(`[data-action="chat"]`)?.focus();
+    if (open)
+      root.querySelector<HTMLButtonElement>(`[data-online-tab="${tab}"]`)?.focus({ preventScroll: true });
+    else root.querySelector<HTMLButtonElement>(`[data-action="chat"]`)?.focus();
   }
   async function sendChat(event: SubmitEvent) {
     event.preventDefault();
@@ -329,7 +331,7 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
         ["clear", "Limpar", !bet || !!p?.bet],
         ["repeat", "Repetir", !p || !previousBets[p.seat - 1] || !!p?.bet || previousBets[p.seat-1] > view.balance],
         ["double-bet", "Dobrar aposta", !p || !previousBets[p.seat-1] || !!p?.bet || previousBets[p.seat-1]*2 > Math.min(view.balance,100000)],
-        ["bet", p?.bet ? "Pronto ✓" : "Pronto", !bet || !!p?.bet],
+        ["bet", pendingBetsForPlayer().length ? "Pronto" : owned().some(p => p.bet) ? "Pronto ✓" : "Pronto", !pendingBetsForPlayer().length],
       ]);
     } else if (t.round.phase === "insurance") {
       const seat = t.round.seats.find((s) => s.number === p?.seat);
@@ -661,20 +663,25 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     message = "";
     render();
     try {
-      const confirmedBet=bet, confirmedSeat=mine()?.seat;
-      await connection.command(
+      if (name === "bet") {
+        await confirmBets(pendingBetsForPlayer(), view.balance,
+          async (amount, seat) => {
+            if (view.table?.round) throw Error("A ronda começou. Confirma as apostas restantes na próxima ronda.");
+            await connection.command("bet", amount, seat);
+          },
+          (amount, seat) => {
+            previousBets[seat - 1] = amount;
+            try { localStorage.setItem(`atelier:blackjack:previous:${view.uid}`, JSON.stringify(previousBets)); } catch {}
+          });
+      } else await connection.command(
         name,
-        name === "bet" ? bet : undefined,
+        undefined,
         ["hit", "stand", "double", "split"].includes(name)
           ? view.table?.round?.seats.find((s) =>
               s.hands.some((h) => h.id === view.table?.round?.active),
             )?.number
           : mine()?.seat,
       );
-      if(name==="bet" && confirmedSeat) {
-        previousBets[confirmedSeat-1]=confirmedBet;
-        try { localStorage.setItem(`atelier:blackjack:previous:${view.uid}`,JSON.stringify(previousBets)); } catch {}
-      }
     } finally {
       working = false;
       render();

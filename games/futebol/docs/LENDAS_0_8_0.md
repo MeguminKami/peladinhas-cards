@@ -1,4 +1,14 @@
-# Lendas do Bairro — configuração 0.8.0
+# Lendas do Bairro — histórico 0.8.2
+
+> Vigente: [0.9.0 — novos poderes](PODERES_0_9_0.md). As regras e medições abaixo descrevem versões anteriores.
+
+Atualização de 29/10/2026: Wilds com probabilidade exata de **7% por posição livre antes dos Scatters**; cada Wild diretamente sorteado tem **25% de chance de ficar sticky**, uma tentativa no nascimento. Pesos N1…W: `4464,3999,3441,2883,1488,1023,651,372,1379` (total 19700). Preservadas as proporções entre símbolos não-Wild, compra 450×, retriggers e restantes regras. Sessões 0.8.1 migram preservando saldo, RNG e resultados confirmados; próximas jogadas usam 0.8.2. RTP desta versão ainda não medido; relatórios anteriores não a validam.
+
+## Histórico 0.8.1
+
+Atualização de 29/10/2026: probabilidade de Wild em Lendas duplicada face ao valor vigente da 0.8.0, de 5,8173076923% para 11,6346153846% por posição livre antes dos Scatters. Compra 450× e sticky 36% mantidos; proporções dos restantes símbolos preservadas. Pesos N1…W: `44112,39517,34003,28489,14704,10109,6433,3676,23837`. A medição posterior de 100 000 compras da 0.8.1 deu RTP observado de 1027,57% ([relatório](../reports/lendas-0.8.1-100k.json)); as simulações abaixo são históricas da 0.8.0 e não validam esta mudança. Sessões 0.8.0 preservam saldo, RNG e resultados confirmados ao migrar; próximas jogadas usam 0.8.1.
+
+## Histórico 0.8.0
 
 Implementado em 29/10/2026. Acrescenta um terceiro bónus à [0.7.0](MAESTRO_0_7_0.md). Preço escolhido pelo utilizador: **450×**, sem calibração para o alvo de 65%.
 
@@ -15,7 +25,9 @@ Implementado em 29/10/2026. Acrescenta um terceiro bónus à [0.7.0](MAESTRO_0_7
 
 ## Interface e integração
 
-Emblema vetorial de cinco estrelas com acabamento violeta/dourado. Compra com cinco bilhetes animados, transição e entrada próprias; animações existentes de poderes, aquisição sticky, prolongamento e resumo ligadas ao modo `legend`. Respeita movimento reduzido e interrupção da apresentação sem alterar resultados/RNG.
+Emblema ilustrado de cinco bilhetes e cinco estrelas, com ouro luminoso, violeta e magenta, em PNG transparente. Compra com cinco bilhetes animados, transição e entrada próprias; animações existentes de poderes, aquisição sticky, prolongamento e resumo ligadas ao modo `legend`. Respeita movimento reduzido e interrupção da apresentação sem alterar resultados/RNG.
+
+As três opções de compra têm a mesma geometria e dimensões; mostram apenas a quantidade de Scatters, sem informação sticky na loja nem na confirmação.
 
 Loja com seletor «Valor da moeda / aposta base». Usa a escada existente em créditos fictícios, atualiza os três preços e sincroniza o controlo principal; não converte divisas nem altera o saldo. Bloqueado durante rondas. SDK e histórico reconhecem `legend`; débito idempotente de 450× na compra.
 

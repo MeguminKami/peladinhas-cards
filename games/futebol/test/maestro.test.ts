@@ -5,16 +5,16 @@ import {resolve} from '../src/powers.ts';
 import type {Board} from '../src/board.ts';
 import {createSession,execute,restoreSession} from '../src/session.ts';
 
-test('Maestro sorteia quatro intervalos iguais e partilha o premium entre ativações',()=>{
- for(const [i,symbol] of ['P1','P2','P3','P4'].entries()){
+test('Maestro sorteia três intervalos iguais e partilha o premium entre ativações',()=>{
+ for(const [i,symbol] of ['P1','P2','P4'].entries()){
   const board=Array(24).fill('N1') as Board;
   board[0]='W';board[1]='P3';board[22]='P3';board[23]='W';
   let calls=0;
-  const result=resolve(board,'superior',{next:()=>++calls===5?(i+.5)/4:0});
+  const result=resolve(board,'superior',{next:()=>++calls===5?(i+.5)/3:0});
   const events=result.events.filter(e=>e.power==='P3');
   assert.equal(events.length,2);
-  for(const event of events){assert.equal(event.conversionSymbol,symbol);assert.equal(event.targets.length,2);for(const p of event.targets)assert.equal(result.board[p],symbol);}
-  assert.equal(new Set(events.flatMap(e=>e.targets)).size,4);
+  for(const event of events){assert.equal(event.conversionSymbol,symbol);assert.equal(event.targets.length,3);for(const p of event.targets)assert.equal(result.board[p],symbol);}
+  assert.equal(new Set(events.flatMap(e=>e.targets)).size,6);
  }
 });
 

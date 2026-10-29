@@ -1,5 +1,7 @@
 # Blackjack BJ-4D-S17-DAS-1
 
+Na mesa multiplayer, Pronto confirma todos os lugares do jogador com fichas por confirmar, independentemente do lugar em foco. O saldo disponível tem de cobrir o total. Lugares sem fichas não são confirmados. Se uma confirmação falhar ou a ronda começar entretanto, o envio para e preserva as apostas já confirmadas.
+
 Cinco lugares para a mesma pessoa. Antes de cada ronda, quatro baralhos completos (208 IDs físicos únicos) são embaralhados com Fisher–Yates. Todos os lugares e dealer partilham esse conjunto até ao fim. A expressão «quatro baralhos a cada mão» é interpretada como cada ronda completa, sem reiniciar a seed nem embaralhar entre lugares.
 
 Distribuição: primeira carta por lugar em ordem, dealer aberto, segunda por lugar, dealer fechado. Áses valem 1/11. Blackjack natural, apenas duas cartas iniciais não divididas, paga 3:2 de lucro. Vitória normal 1:1; push devolve a aposta. Dealer S17. Hole card e peek com A/10; com A o seguro é decidido antes do peek. Dois naturais empatam; natural vence 21 de três cartas. Bust perde independentemente do dealer.

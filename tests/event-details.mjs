@@ -78,7 +78,8 @@ try {
       ovr: 84,
       stats: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 70])),
     };
-    window.__renderDetails = async (mode, mixed = false) => {
+    window.__renderDetails = async (mode, mixed = false, winners = 1) => {
+      const users = [...state.users, { uid: "podium-long-name", displayName: "Pedro Alexandre da Conceição e Silva" }];
       const reward = {
         boosts: mixed
           ? { pace: 2, passing: 1 }
@@ -87,6 +88,10 @@ try {
         specialId: "in-form",
         cardTheme: { name: "Homem da Noite" },
       };
+      if (mode === "closed") Object.assign(reward, {
+        boosts: { shooting: 10 }, statDuration: "monthly", cardDuration: "permanent",
+        specialId: "saved:goals-fixture", cardTheme: { name: "Goleador DBS" },
+      });
       const objective = {
         metric:
           mode === "goals"
@@ -114,10 +119,10 @@ try {
         id: "details-test",
         schemaVersion: 2,
         title: "Missão de avaliação",
-        kind: mode === "goals" ? "event" : "mission",
+        kind: ["goals", "closed"].includes(mode) ? "event" : "mission",
         method:
           mode === "vote" ? "vote" : mode === "admin" ? "admin" : "objective",
-        status: "open",
+        status: mode === "closed" ? "closed" : "open",
         startsAt: "2026-10-01",
         endsAt: "2026-12-01",
         participantIds: ["pedro", "joao"],
@@ -126,7 +131,7 @@ try {
         maxRepeats: 1,
         scope: "individual",
         winnerCount: 1,
-        winners: [],
+        winners: mode === "closed" ? users.slice(0, winners).map((user, index) => ({ uid: user.uid, position: index + 1, reward })) : [],
         ranking: [],
         progress: [],
         deliveries: [],
@@ -145,7 +150,7 @@ try {
       await managedEventPage(
         {
           user: state.users[0],
-          league: { users: state.users, players: [player] },
+          league: { users, players: [player] },
           render: (html) => (document.querySelector("#main").innerHTML = html),
         },
         event,
@@ -222,6 +227,20 @@ try {
       ),
       false,
     );
+  }
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1200 });
+    for (const count of [1, 2, 3]) {
+      await page.evaluate(count => window.__renderDetails("closed", false, count), count);
+      assert.equal(await page.locator(".podium-award").count(), count);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `closed/${count}/${width}`);
+      const headings = await page.locator(".podium-award .reward-section-heading h4").evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().height));
+      assert.ok(headings.every(height => height < 60), `reward labels must not wrap vertically: ${width}`);
+      if (count === 1) {
+        await page.locator("#event-leaderboard").screenshot({ path: `test-results/event-final-${width}.png` });
+        if (width === 1440) await page.locator(".event-detail-layout").screenshot({ path: "test-results/event-final-desktop.png" });
+      }
+    }
   }
   await page.evaluate(async()=>{
     const {managedEventPage}=await import("/js/event-pages.js");

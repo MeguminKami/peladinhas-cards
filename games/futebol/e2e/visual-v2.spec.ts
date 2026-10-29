@@ -42,7 +42,7 @@ test('roubo tem energia visível, emblemas e multiplicador à esquerda',async({p
   await setup(page,'retrigger-fixture-0');await page.locator('#bonus-shop').click();await page.locator('#buy-superior').click();await page.locator('#confirm-buy').click();await page.locator('#enter-bonus').click({timeout:20000});
   await expect(page.locator('.v2-energy').first()).toBeVisible({timeout:20000});
   await expect(page.locator('.power-announcement')).toBeVisible();
-  await expect(page.locator('.power-announcement strong')).toHaveText(/Toque de Classe|Glória do Bairro/);
+  await expect(page.locator('.power-announcement strong')).toHaveText(/Passe Curto|Glória do Bairro/);
   await expect(page.locator('.power-announcement .power-player')).toBeVisible();
   await page.screenshot({path:'test-results/v2-power-transfer.png'});
   await expect(page.locator('#spin')).toHaveText('PRÓXIMO FS',{timeout:15000});

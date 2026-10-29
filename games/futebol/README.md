@@ -2,7 +2,7 @@
 
 Guia reutilizável para novos projetos: [guia-prompt de desenvolvimento completo de uma slot](docs/GUIA_DESENVOLVIMENTO_SLOT.md), com bloco de input, metodologia, produção de assets, simulação, GUI e integração.
 
-Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Configuração matemática **0.8.0**: [Lendas do Bairro](docs/LENDAS_0_8_0.md), ativação por 5 Scatters e compra 450×. RTP não calibrado; amostras exploratórias locais não confirmam o alvo de 65%.
+Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Configuração matemática **0.9.2**: [Novos poderes](docs/PODERES_0_9_0.md), ativação por 5 Scatters e compra 450×, com Wilds a 7% por posição livre e sticky a 25%. RTP não calibrado; amostras exploratórias locais não confirmam o alvo de 65%.
 
 ## Executar e testar
 

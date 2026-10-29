@@ -15,8 +15,8 @@ export const symbolArt:Record<SymbolId,{name:string;src:string}>={
   S:{name:'Bilhete Scatter',src:root+'symbols/s-ticket.png'},
 };
 export const modeTitles:Record<Mode,string>={base:'Torneio Noturno',normal:'Final do Bairro',superior:'Noite de Glória',legend:'Lendas do Bairro'};
-export const bonusArt={normal:symbolArt.S.src,superior:root+'symbols/bonus-four-scatter-v1.png',legend:root+'symbols/bonus-five-scatter.svg'};
-export const powerTitles:Record<string,string>={P1:'Toque de Classe',P2:'Arranque Explosivo',P3:'Passes de Maestro',P4:'Glória do Bairro'};
+export const bonusArt={normal:symbolArt.S.src,superior:root+'symbols/bonus-four-scatter-v1.png',legend:root+'symbols/bonus-five-scatter-v2.png'};
+export const powerTitles:Record<string,string>={P1:'Passe Curto',P2:'Arranque Explosivo',P3:'Passes de Maestro',P4:'Glória do Bairro'};
 // An authored display before the first wager, never evaluated or paid.
 export const previewBoard:SymbolId[]=['N1','P1','N2','P2','N3','P3','N4','P4','N1','W','N2','P1','N3','P2','P3','N4','S','P4','P1','N2','W','N3','P2','N4'];
 const reelSprites=new Map<SymbolId,string>();

@@ -76,7 +76,24 @@ try {
   );
 
 
-  await page.locator('[data-wallet-vault]').click();
+  const trigger = page.locator('[data-wallet-vault]');
+  const panel = page.locator('.casino-vault');
+  await trigger.click();
+  assert.equal(await page.locator('#vault-amount').evaluate(el => el === document.activeElement), true);
+  await page.keyboard.press('Escape');
+  assert.equal(await panel.isVisible(), false);
+  assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+  assert.equal(await trigger.evaluate(el => el === document.activeElement), true);
+  await trigger.click();
+  await page.locator('#casino-title').click();
+  assert.equal(await panel.isVisible(), false);
+  await trigger.click();
+  await page.locator('[data-wallet-history]').focus();
+  assert.equal(await panel.isVisible(), false);
+  await trigger.click();
+  await trigger.click();
+  assert.equal(await panel.isVisible(), false);
+  await trigger.click();
   assert.equal(await page.evaluate(() => window.__casinoCalls.length), 1);
   await page.locator('#vault-amount').fill('25,50');
   await page.evaluate(() => { window.__casinoLoseResponse = true; });
@@ -100,6 +117,11 @@ try {
       await page.setViewportSize({width,height:1100});
       await page.evaluate(() => scrollTo(0,0));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      const bounds = await panel.boundingBox();
+      const anchor = await trigger.boundingBox();
+      assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width, `popup fits ${width}`);
+      assert.ok(Math.abs(bounds.y - anchor.y - anchor.height - 10) < 2, `anchored ${width}`);
+      assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
       await page.screenshot({path:`test-results/vault-${theme}-${width}.png`});
     }
   }

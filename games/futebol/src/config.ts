@@ -2,19 +2,19 @@ export type Mode = 'base' | 'normal' | 'superior' | 'legend';
 export const symbols = ['N1','N2','N3','N4','P1','P2','P3','P4','W','S'] as const;
 export type SymbolId = typeof symbols[number];
 export const config = {
-  version: '0.8.0', targetRtpPercent:65,
+  version: '0.9.2', targetRtpPercent:65,
   // Static payout factors in basis points; selected before play, never adaptive.
   payoutScaleBps:{base:27200,normal:117700,superior:30000,legend:30000},
   bets: [20,40,60,80,100,150,200,300,400,500,750,1000],
   lines: '111111 444444 222222 333333 123432 432123 234321 321234 112211 443344 223322 332233 122221 433334 233332 322223 123321 432234 234432 321123 121212 434343 232323 323232 212121 343434 112233 443322 332211 223344 122334 433221 211223 344332 123444 432111 111234 444321 222333 333222'.split(' ').map(s=>[...s].map(n=>Number(n)-1)),
   // Hundredths of a total-bet multiplier.
-  pays: [[3,10,30,100],[4,12,40,140],[5,16,55,200],[6,20,75,300],[10,40,150,600],[12,50,200,800],[15,70,300,1200],[20,100,500,2000]],
-  weights: {base:[240,215,185,155,80,55,35,20,15],normal:[240,215,185,155,80,55,35,20,45],superior:[240,215,185,155,80,55,35,20,55],legend:[470160,421185,362415,303645,156720,107745,68565,39180,119185]},
+  pays: [[3,9,30,90],[4,11,40,126],[5,14,55,180],[6,18,75,270],[10,36,150,540],[12,45,200,720],[15,63,300,1080],[20,90,500,1800]],
+  weights: {base:[240,215,185,155,80,55,35,20,15],normal:[18672,16727,14393,12059,6224,4279,2723,1556,4925],superior:[240,215,185,155,80,55,35,20,55],legend:[4464,3999,3441,2883,1488,1023,651,372,1379]},
   scatterWeights: [149990,40000,9300,640,60,10],
   huntScatterWeights:[249970,120000,27900,1920,180,30], huntCostMultiplier:3,
   bonusScatterWeights:[8000,1400,500,100], retriggerFreeSpins:5,
-  steal: {base:12,normal:35,superior:100,legend:100},
-  sticky:18, legendSticky:36, freeSpins:10, prices:{normal:90,superior:220,legend:450}, cap:10000,
+  steal: {base:12,normal:50,superior:100,legend:100},
+  sticky:18, legendSticky:25, freeSpins:10, prices:{normal:90,superior:220,legend:450}, cap:10000,
   overloadWeights:[75,23,2], overloadValues:[2,3,5], conversionMin:2,conversionMax:10,conversionWeights:[18,16,14,12,11,9,8,7,5],localCap:8,
 };
 export type Config = typeof config;
