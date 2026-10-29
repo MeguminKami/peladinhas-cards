@@ -22,7 +22,7 @@ export function cardStatsMarkup(player) {
   return ATTRIBUTES.slice(0, 8).map(([key, , abbr]) => {
     const current = permanent?.[key], previous = player.previousStats?.[key];
     const delta = Number.isFinite(current) && Number.isFinite(previous)
-      ? Math.round((current - previous) * 100) / 100 : 0;
+      ? Math.round(current) - Math.round(previous) : 0;
     const trend = player.hasCard !== false && delta
       ? `<sup class="card-stat-trend ${delta > 0 ? "positive" : "negative"}" aria-label="${delta > 0 ? "Subiu" : "Desceu"} nos atributos permanentes face à semana anterior" title="Atributos permanentes face à semana anterior, sem bónus temporários">${trendArrow(delta)}</sup>` : "";
     return `<span><b>${player.hasCard === false ? "—" : (stats[key] ?? 0)}${trend}</b><small>${abbr}</small></span>`;

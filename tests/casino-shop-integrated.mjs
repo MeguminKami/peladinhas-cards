@@ -112,6 +112,7 @@ try {
   await purchased.waitFor();
   assert.equal(await purchased.locator(".sca-stats > span").count(), 8);
   await purchased.click();
+  await page.locator("#save-card").click();
   await page.locator(".player-hero .sca-football-p1").waitFor();
   assert.equal(await page.locator(".player-hero .sca-stats > span").count(), 8);
   await page.screenshot({ path: "artifacts/casino-shop/square-purchased-profile-320.png" });

@@ -1838,6 +1838,48 @@ p {
 
 /* Primary entry to the player's card collection, on home and profile. */
 .card-selection-entry { margin-bottom: 24px; }
+.dashboard-greeting:has(.dashboard-card-action) { gap: 24px; padding-block: 8px 24px; border-bottom: 1px solid var(--border); }
+.dashboard-greeting > div { min-width: 0; }
+.dashboard-greeting .eyebrow { margin-bottom: 10px; }
+.dashboard-greeting h1 { margin: 0; overflow-wrap: anywhere; }
+.dashboard-card-action { display: flex; align-items: center; gap: 16px; flex: 0 1 310px; min-height: 52px; padding: 12px 0 12px 20px; border: 0; border-left: 1px solid var(--border-strong); border-radius: 0; background: transparent; color: var(--text-primary); text-align: left; font: inherit; font-size: .92rem; font-weight: 650; cursor: pointer; }
+.dashboard-card-action span { max-width: 220px; }
+.dashboard-card-action svg { flex-shrink: 0; width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--accent); color: var(--on-accent, #08110a); transition: transform 180ms ease; }
+.dashboard-card-action:hover svg { transform: translateX(4px); }
+.dashboard-card-action:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; border-radius: 8px; }
+.modal.card-picker { display: flex; flex-direction: column; gap: 20px; width: min(100%, 1040px); max-width: 1040px; max-height: calc(100dvh - 40px); padding: 28px; background: var(--bg-panel); }
+.modal.card-picker > h2 { margin: 0; padding: 0 30px; text-align: center; font-size: 1.4rem; letter-spacing: -.03em; }
+.card-picker-actions { display: flex; justify-content: center; gap: 12px; }
+.card-picker-actions .btn { min-width: 130px; min-height: 46px; }
+.card-picker-save { background: #35e96b; border-color: #35e96b; color: #062d12; }
+.card-picker-save:hover:not(:disabled) { background: #67f08f; border-color: #67f08f; }
+.card-picker-cancel { background: var(--danger-tint); border-color: var(--danger); color: var(--danger); }
+.card-picker-cancel:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 18%, var(--bg-panel)); }
+.card-picker-gallery { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 5px; scrollbar-width: thin; }
+.card-picker .weekly-card-choices { grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr)); gap: 16px; }
+.card-picker .weekly-card-choice { position: relative; min-width: 0; gap: 10px; padding: 24px 12px 18px; border: 1px solid var(--border-strong); background: var(--bg-surface); color: var(--text-primary); transition: border-color 180ms ease, background 180ms ease; }
+.card-picker .weekly-card-choice:hover { border-color: var(--accent); }
+.card-picker .weekly-card-choice[aria-pressed="true"] { border-color: var(--accent); background: linear-gradient(155deg, var(--accent-tint), transparent 70%), var(--bg-surface); box-shadow: inset 0 0 0 1px var(--accent); }
+.card-picker .weekly-card-choice > strong { font-size: .92rem; }
+.card-picker .weekly-card-choice > small { color: var(--text-secondary); font-size: .75rem; }
+.card-picker-mark { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--on-accent, #08110a); visibility: hidden; }
+.card-picker-mark svg { width: 16px; height: 16px; }
+.weekly-card-choice[aria-pressed="true"] .card-picker-mark { visibility: visible; }
+@media (max-width: 800px) {
+  .dashboard-greeting:has(.dashboard-card-action) { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .dashboard-card-action { flex: auto; width: 100%; justify-content: space-between; border-left: 0; padding: 4px 0; }
+  .dashboard-card-action span { max-width: none; }
+}
+@media (max-width: 480px) {
+  .backdrop:has(.card-picker) { padding: 10px; }
+  .modal.card-picker { max-height: calc(100dvh - 20px); padding: 24px 12px 12px; gap: 16px; border-radius: 20px; }
+  .card-picker-actions { gap: 10px; }
+  .card-picker-actions .btn { min-width: 116px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-card-action svg, .card-picker .weekly-card-choice { transition: none; }
+  .dashboard-card-action:hover svg { transform: none; }
+}
 .card-selection-button {
   position: relative;
   isolation: isolate;

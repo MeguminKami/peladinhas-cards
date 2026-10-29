@@ -109,7 +109,7 @@ export function weeklyEvolution(player) {
     ([key]) =>
       Number.isFinite(permanentStats?.[key]) &&
       Number.isFinite(player.previousStats?.[key]),
-  ).map(([key]) => permanentStats[key] - player.previousStats[key]);
+  ).map(([key]) => Math.round(permanentStats[key]) - Math.round(player.previousStats[key]));
   const up = changes.filter((value) => value > 0).length;
   const down = changes.filter((value) => value < 0).length;
   return `<div class="weekly-evolution" aria-label="Evolução dos valores permanentes face à carta da semana anterior"><span class="weekly-evolution-label">Permanentes · Face à semana anterior</span><span class="weekly-evolution-value ${delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"}">${delta ? trendArrow(delta) : ""}${delta > 0 ? "+" : delta < 0 ? "−" : "= "}${Math.abs(delta)} OVR</span>${up ? `<span class="weekly-evolution-value positive">${trendArrow(1)} ${up} atributos</span>` : ""}${down ? `<span class="weekly-evolution-value negative">${trendArrow(-1)} ${down} atributos</span>` : ""}</div>`;

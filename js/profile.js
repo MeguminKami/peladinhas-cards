@@ -1,4 +1,4 @@
-import { cardSelectionEntry } from "./card-selection-entry.js";
+import { cardSelectionEntry, openCardSelection } from "./card-selection-entry.js";
 import { matchRatingSeries, matchAverageSummary, matchComponentAverages } from "./match-rating-summary.js";
 import { weeklyComparison } from "./weekly-comparison.js";
 import { trendArrow } from "./icons.js";
@@ -19,11 +19,6 @@ import { esc, empty, linkButton, pageHead, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
 import * as DB from "./db.js";
 import { communityReviewBanner } from "./community-review.js";
-import {
-  durationName,
-  validCardSelection,
-  CARD_POLICY,
-} from "./card-achievements.js";
 export function profileFields(p = {}) {
   return `<div class="form-grid"><label>Nome de jogador<input name="displayName" required maxlength="30" value="${esc(p.displayName || "")}"></label><label>País<select name="countryCode" required>${COUNTRIES.map(([c, n]) => `<option value="${c}" ${p.countryCode === c ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>Data de nascimento<input name="birthDate" type="date" required max="${new Date().toISOString().slice(0, 10)}" value="${esc(p.birthDate || "")}"></label><label>Altura (cm)<input name="heightCm" type="number" required min="120" max="230" value="${p.heightCm || ""}"></label><label>Peso (kg) <span class="muted">opcional</span><input name="weightKg" type="number" min="30" max="250" step=".1" value="${p.weightKg || ""}"></label><label>Pé preferido<select name="preferredFoot" required><option value="">Escolher</option>${[
     ["right", "Direito"],
@@ -194,7 +189,7 @@ export async function playerPage(ctx, uid) {
     p.previousStats && p.permanentStats
       ? ATTRIBUTES.map(([key, name]) => ({
           name,
-          delta: p.permanentStats[key] - p.previousStats[key],
+          delta: Math.round(p.permanentStats[key]) - Math.round(p.previousStats[key]),
         })).sort((a, b) => b.delta - a.delta)[0]
       : null;
   ctx.render(
@@ -285,38 +280,7 @@ export async function playerPage(ctx, uid) {
   document
     .querySelector("#choose-weekly-card")
     ?.addEventListener("click", () => {
-      const selected = validCardSelection(p.selectedCardId, p.specials);
-      const close = modal(
-        "Escolher carta",
-        `<p>Escolhe a carta normal ou uma especial disponível. As conquistas permanentes ficam na tua coleção. Ao expirar uma carta, voltas à carta normal.</p><div class="weekly-card-choices">${cardChoices.map((choice) => `<button type="button" class="weekly-card-choice" data-select-card="${esc(choice.id)}" aria-pressed="${choice.id === selected}" aria-label="Escolher ${esc(choice.name)}">${card(p, { size: "sm", preview: true, theme: choice.id === "base" ? p.cardType : choice.id })}<strong>${esc(choice.name)}</strong><small>${choice.id === "base" ? "Sempre disponível" : `${durationName(choice.duration || CARD_POLICY[choice.themeId || choice.id]?.duration)}${choice.expiresAt ? ` · Até ${formatDate(choice.expiresAt)}` : ""}`}</small><span>${choice.id === selected ? "✓ Selecionada" : "Escolher esta carta"}</span></button>`).join("")}</div>${collectionProof}`,
-      );
-      const root = document.querySelector("#modal-root");
-      bindImages(root);
-      const buttons = [...root.querySelectorAll("[data-select-card]")];
-      buttons.forEach((button) => {
-        button.onclick = async () => {
-          buttons.forEach((item) => {
-            item.disabled = true;
-          });
-          try {
-            await busy(button, async () => {
-              await DB.callAdmin("selectWeeklyCard", {
-                weekId: cardWeek().weekId,
-                cardId: button.dataset.selectCard,
-              });
-              close();
-              toast("Carta selecionada.");
-              await ctx.refresh();
-              ctx.go(`#/player/${uid}`);
-            });
-          } catch {
-          } finally {
-            buttons.forEach((item) => {
-              item.disabled = false;
-            });
-          }
-        };
-      });
+      openCardSelection(ctx, p, { proof: collectionProof });
     });
   if (canChooseCard && location.hash === "#/profile/cards") {
     document.querySelector("#choose-weekly-card")?.click();
@@ -366,9 +330,9 @@ export function historicalPlayer(player, snapshot, previous) {
 function attributeChange(current, previous) {
   if (!Number.isFinite(current) || !Number.isFinite(previous))
     return '<small class="attribute-change is-neutral" title="Sem valores permanentes da semana anterior para comparar">—</small>';
-  const delta = Math.round((current - previous) * 100) / 100;
+  const delta = Math.round(current) - Math.round(previous);
   const amount = Math.abs(delta).toLocaleString("pt-PT", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   });
   const description =
     delta > 0

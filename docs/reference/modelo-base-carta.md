@@ -35,7 +35,7 @@ O nome da edição, o tier, o preço, os requisitos e as ações pertencem à fi
 - Desde a progressão v3, conservar decimais nos cálculos e nos campos exatos guardados; `stats` é a projeção inteira de apresentação. O OVR é ponderado a partir dos valores exatos e arredondado no fim. Ver [progressão](progression.md) para expectativas por atributo e versões históricas.
 - Reutilizar `cardStatsMarkup`, `cardOvrTrend` e `cardPlaystyles` de [card-player-content.js](../../js/card-player-content.js). Não copiar a lógica para um renderer novo.
 - Respeitar os estados existentes: com `hasCard === false`, mostrar «—» no OVR e nos atributos e não apresentar evolução nem playstyles. Com carta existente e atributo ausente, respeitar o fallback comum, atualmente `0`.
-- Comparar evolução apenas com os valores permanentes da semana anterior válida, através de [weekly-comparison.js](../../js/weekly-comparison.js). Não tratar bónus temporários como evolução permanente. Sem comparação válida, não inventar setas.
+- Comparar evolução apenas com os valores permanentes da semana anterior válida, através de [weekly-comparison.js](../../js/weekly-comparison.js). Não tratar bónus temporários como evolução permanente. Sem comparação válida, não inventar setas. A variação apresentada e as setas comparam os dois valores permanentes arredondados às unidades (atual menos anterior); valores que resultam no mesmo inteiro não indicam subida ou descida. Preservar os decimais nos cálculos e dados guardados.
 - Os playstyles usam os ícones partilhados dos atributos elegíveis com valor de pelo menos 90, ordenados por valor, com um máximo de três. Não inventar outro limiar ou outra regra por edição.
 - Escapar nomes e texto variável, validar imagens pelo mecanismo existente e garantir identificadores SVG únicos para várias cartas na mesma página.
 
@@ -62,6 +62,7 @@ Verificar os consumidores aplicáveis: loja, pré-visualização ampliada, catá
 - Propriedade e disponibilidade seguem [card-achievements.js](../../js/card-achievements.js). Respeitar duração, expiração, revogação e seleção válida.
 - Uma compra da loja concede o acabamento permanente e disponibiliza-o em **Perfil → Escolher carta**. Não o selecionar automaticamente. A descoberta no álbum público não concede propriedade.
 - Validar no servidor a compra, a atribuição e a seleção; o cliente não pode conceder cartas a si próprio. Reutilizar a transação de [casino-shop.js](../../functions/casino-shop.js) para compras da loja.
+- O início e o perfil abrem o mesmo seletor de aparência. Escolher uma carta no popup apenas marca a opção; «Guardar» confirma a seleção no servidor e «Cancelar» ou fechar descarta a escolha. As ações ficam centradas no topo, acima das cartas.
 - Preservar outras conquistas, atributos e semanas fechadas. Uma aparência nova não exige recalcular jogadores ou reescrever históricos.
 
 ## 5. Critério de conclusão
