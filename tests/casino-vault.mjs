@@ -117,6 +117,7 @@ try {
       await page.setViewportSize({width,height:1100});
       await page.evaluate(() => scrollTo(0,0));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await panel.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
       const bounds = await panel.boundingBox();
       const anchor = await trigger.boundingBox();
       assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= width, `popup fits ${width}`);

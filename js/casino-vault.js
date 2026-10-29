@@ -1,11 +1,12 @@
 import { esc } from "./ui.js";
 import { icon } from "./icons.js";
+import { djabucoin } from "./djabucoin.js";
 
 const format = value => new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 2 }).format(value / 100);
 
 export function mountCasinoVault(root, localWallet, getWallet) {
   const toolbar = root.querySelector(".casino-toolbar");
-  toolbar.insertAdjacentHTML("afterend", `<section id="casino-vault-panel" class="casino-vault" hidden role="dialog" aria-modal="false" aria-labelledby="vault-title"><div class="casino-vault-art" aria-hidden="true">${icon("lock")}<span>VAULT</span></div><div class="casino-vault-content"><div class="casino-vault-heading"><div><p class="casino-kicker">FORA DA MESA. DENTRO DOS TEUS PLANOS.</p><h2 id="vault-title">A tua Vault</h2></div><button type="button" class="casino-tool" data-vault-close aria-label="Fechar Vault">${icon("close")}</button></div><p>Guarda para a próxima conquista. O que entra aqui não volta às apostas.</p><div class="casino-vault-totals"><span>Na Vault<strong data-vault-balance>—</strong></span><span>Carteira + Vault<small>Disponível para a loja</small><strong data-vault-total>—</strong></span></div><form class="casino-vault-form"><label for="vault-amount">Depositar Djabucoins<input id="vault-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" required aria-describedby="vault-help"></label><button type="submit" class="casino-button">${icon("lock")} Guardar na Vault</button></form><p id="vault-help" class="casino-vault-help">Depósito definitivo. Sem levantamentos. As moedas da Vault só servem para compras na loja.</p><p class="casino-vault-feedback" role="status" aria-live="polite"></p></div></section>`);
+  toolbar.insertAdjacentHTML("afterend", `<section id="casino-vault-panel" class="casino-vault" hidden role="dialog" aria-modal="false" aria-labelledby="vault-title"><div class="casino-vault-content"><div class="casino-vault-heading"><h2 id="vault-title">${icon("lock")} Vault</h2><button type="button" class="casino-tool" data-vault-close aria-label="Fechar Vault">${icon("close")}</button></div><div class="casino-vault-totals"><div><span>Na Vault</span><span class="casino-vault-value">${djabucoin()}<strong data-vault-balance>—</strong><small>DJC</small></span></div><div><span>Para a loja<small>Carteira + Vault</small></span><span class="casino-vault-value">${djabucoin()}<strong data-vault-total>—</strong><small>DJC</small></span></div></div><form class="casino-vault-form"><label for="vault-amount">Depositar na Vault <span class="casino-vault-input"><input id="vault-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" required aria-describedby="vault-help"><span>DJC</span></span></label><button type="submit" class="casino-button">${icon("lock")} Depositar</button></form><p id="vault-help" class="casino-vault-help">Só para compras na loja. Depósitos definitivos, sem levantamentos nem apostas.</p><p class="casino-vault-feedback" role="status" aria-live="polite"></p></div></section>`);
   const panel = root.querySelector(".casino-vault");
   const form = panel.querySelector("form");
   const input = form.elements.amount;
@@ -14,8 +15,8 @@ export function mountCasinoVault(root, localWallet, getWallet) {
   let busy = false;
   const update = () => {
     const wallet = getWallet();
-    panel.querySelector("[data-vault-balance]").textContent = wallet ? `${format(wallet.vaultBalance || 0)} DJC` : "—";
-    panel.querySelector("[data-vault-total]").textContent = wallet ? `${format(wallet.balance + (wallet.vaultBalance || 0))} DJC` : "—";
+    panel.querySelector("[data-vault-balance]").textContent = wallet ? format(wallet.vaultBalance || 0) : "—";
+    panel.querySelector("[data-vault-total]").textContent = wallet ? format(wallet.balance + (wallet.vaultBalance || 0)) : "—";
   };
   const trigger = () => root.querySelector("[data-wallet-vault]");
   const position = () => {
