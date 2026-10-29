@@ -1,4 +1,18 @@
-# Loja do casino · desenvolvimento local
+# Loja do casino
+
+## Loja da conta
+
+O botão **Loja do casino** no salão abre o catálogo dentro do casino. O saldo apresentado soma carteira e Vault; as compras gastam primeiro a Vault. O preço e o requisito de OVR são definidos pelo catálogo do servidor. O OVR usado é o de `weeklyCards/{uid}`; sem carta registada, o requisito não é cumprido.
+
+A compra usa `casinoSession`, confirma as jogadas pendentes e grava o débito e a conquista permanente em `cardCollections/{uid}` na mesma transação. Uma resposta perdida pode ser recuperada sem nova cobrança. Compras concorrentes da mesma carta só atribuem uma unidade. O acabamento pode ser escolhido na coleção do perfil; as semanas fechadas mantêm os seus snapshots. A compra não aumenta atributos.
+
+Abrir a loja consulta a carteira, sessão, carta semanal e coleção do próprio jogador. As jogadas normais não ganham leituras adicionais. Uma compra nova acrescenta a escrita da coleção às escritas existentes de carteira e sessão. Mantêm-se as leituras de política e utilizador e as tentativas internas por contenção. Não há listeners da loja nem pesquisas de coleções completas.
+
+Validar com `node --test tests/casino-store.test.js tests/casino-shop.test.js`, `node tests/casino-store.mjs` e `npm.cmd run test:casino:backend`. Publicar primeiro `npx.cmd firebase deploy --only functions:peladinhas:casinoSession` e depois `npm.cmd run deploy:frontend`. Não há migração de compras de demonstração para contas reais.
+
+## Laboratório separado
+
+A demonstração soma o saldo de teste da carteira e da Vault. As compras gastam primeiro a Vault e depois a carteira; o laboratório permite definir os dois valores separadamente. Esta carteira de demonstração continua independente da Vault real do jogador no salão. Para os detalhes da implementação, consultar o [relatório da Vault](../reports/casino-vault-2026-10-29.md).
 
 A loja está disponível no servidor de fixtures. Iniciar com `npm.cmd run dev:casino`, abrir `http://localhost:8081/#/casino` e escolher **Loja de cartas · Pré-visualização local**. Acesso direto: `http://localhost:8081/assets/casino/shop/`.
 

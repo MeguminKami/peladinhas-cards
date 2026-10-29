@@ -13,6 +13,7 @@ import { cardWeek } from "../js/card-week.js";
 import { policyAt } from "../js/system-policy.js";
 import { participants } from "../js/utils.js";
 import { performanceWeek } from "../js/performance-week.js";
+import { writeMaintenanceSignals } from "./maintenance-inputs.js";
 
 const db = () => getFirestore();
 const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
@@ -32,42 +33,6 @@ const inputs = new Set([
   "settings",
 ]);
 const ownInputs = new Set(["pathStates", "communityRatings"]);
-const maintenanceInputs = {
-  closeEvents: new Set([
-    "users",
-    "games",
-    "gameSummaries",
-    "events",
-    "eventRewards",
-    "settings",
-  ]),
-  settlePaths: new Set([
-    "users",
-    "games",
-    "gameSummaries",
-    "pathStates",
-    "eventRewards",
-    "settings",
-  ]),
-  refreshCardCollection: new Set([
-    "users",
-    "games",
-    "gameSummaries",
-    "communitySummaries",
-    "initialRatings",
-    "events",
-    "eventRewards",
-    "settings",
-  ]),
-  scheduledNotifications: new Set([
-    "users",
-    "games",
-    "feedback",
-    "events",
-    "eventRewards",
-    "settings",
-  ]),
-};
 const pending = new Map();
 const HOME_CACHE_VERSION = "2026-10-26-cycles-v1";
 // Cache documents are server-only. Timestamps become ISO strings, understood by
@@ -416,9 +381,7 @@ export async function invalidateHome(collection, id, before, after) {
     });
   // Each job observes only its inputs. Published cards never re-enqueue their
   // own calculation, and choosing a path does not rescan all league events.
-  for (const [name, sources] of Object.entries(maintenanceInputs))
-    if (sources.has(collection))
-      batch.set(db().doc(`maintenanceSignals/${name}`), { version });
+  writeMaintenanceSignals(batch, collection, id, before, after);
   const owners = new Set(
     collection === "pathStates"
       ? [id]

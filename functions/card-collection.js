@@ -37,12 +37,18 @@ import {
 } from "../js/utils.js";
 import { calculateGameAggregate } from "../js/utils.js";
 import { applyEventRewards } from "../js/event-rules.js";
+import { rewardDocuments } from "./reward-queries.js";
+import { writeMaintenanceSignals } from "./maintenance-inputs.js";
 import { balanceMatches } from "../js/team-balance.js";
 const rows = (snap) => snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 const dateValue = (value) => +asDate(value);
 
-export async function collectionContext(date = new Date(), { repair = false } = {}) {
+export async function collectionContext(date = new Date(), { repair = false, uids = null } = {}) {
   const db = getFirestore();
+  const selected = uids && [...new Set(uids)];
+  const personal = async path => selected
+    ? { docs: selected.length ? (await db.getAll(...selected.map(uid => db.doc(`${path}/${uid}`)))).filter(doc => doc.exists) : [] }
+    : db.collection(path).get();
   const reads = createReadContext();
   const [
     users,
@@ -54,14 +60,14 @@ export async function collectionContext(date = new Date(), { repair = false } = 
     weights,
     rewards,
   ] = await Promise.all([
-    db.collection("users").get(),
+    personal("users"),
     db.collection("games").get(),
     db.collection("gameSummaries").get(),
     db.collection("gameBalances").get(),
-    db.collection("initialRatings").get(),
-    db.collection("communitySummaries").get(),
+    personal("initialRatings"),
+    personal("communitySummaries"),
     db.doc("settings/ovr").get(),
-    db.collection("eventRewards").get(),
+    selected ? rewardDocuments("uid", selected) : db.collection("eventRewards").get(),
   ]);
   const summaryRows = rows(summaries);
   for (const game of rows(games).filter(
@@ -447,5 +453,6 @@ export async function ensureFuttiesVote(context = null) {
         },
       },
     });
+    writeMaintenanceSignals(tx, "events", ref.id, null, { status: "open" });
   });
 }

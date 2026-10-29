@@ -20,6 +20,8 @@ export async function casinoFixture(name, input) {
       state.wallet,
       state.sessions[input.id],
       input,
+      Date.now(),
+      { ovr: window.__casinoShopOvr ?? 80 },
     ); } catch (error) {
       error.details = { definitive: true, reason: error.reason || "invalid-checkpoint" };
       throw error;
@@ -33,6 +35,9 @@ export async function casinoFixture(name, input) {
       if (window.__casinoLoseOpenResponse && input.action === "open")
         throw Error("Resposta de entrada perdida.");
     }
+    if (input.action === "shop" || input.shopCard) result.response.shop = {
+      ovr: window.__casinoShopOvr ?? 80, owned: result.wallet.shopOwned || [], name: "Pedro", position: "MC",
+    };
     return { data: structuredClone(result.response) };
   }
   if (name === "grantCasinoCoins") {

@@ -7,10 +7,10 @@ import {start,spin,round} from '../src/engine.ts';
 import {SeededRandom} from '../src/random.ts';
 import {simulate} from '../src/simulate.ts';
 
-test('Hunt aumenta exatamente 50% as probabilidades de 1, 2, 3 e 4 scatters',()=>{
- const frequencies=(hunt:boolean,count:number)=>{const counts=[0,0,0,0,0];for(let i=0;i<count;i++){let first=true;const board=generate('base',[],{next:()=>{if(first){first=false;return (i+.5)/count;}return .99;}},config,hunt);counts[board.filter(s=>s==='S').length]++;}return counts;};
- assert.deepEqual(frequencies(false,10000),config.scatterWeights);assert.deepEqual(frequencies(true,20000),config.huntScatterWeights);
- for(let i=1;i<5;i++)assert.equal(config.huntScatterWeights[i],config.scatterWeights[i]*3);
+test('Hunt aumenta exatamente 50% as probabilidades de 1 a 5 scatters',()=>{
+ const frequencies=(hunt:boolean,count:number)=>{const counts=[0,0,0,0,0,0];for(let i=0;i<count;i++){let first=true;const board=generate('base',[],{next:()=>{if(first){first=false;return (i+.5)/count;}return .99;}},config,hunt);counts[board.filter(s=>s==='S').length]++;}return counts;};
+ assert.deepEqual(frequencies(false,200000),config.scatterWeights);assert.deepEqual(frequencies(true,400000),config.huntScatterWeights);
+ for(let i=1;i<6;i++)assert.equal(config.huntScatterWeights[i],config.scatterWeights[i]*3);
 });
 
 test('Hunt cobra 3×, conserva a referência dos prémios e só se aplica ao base',()=>{

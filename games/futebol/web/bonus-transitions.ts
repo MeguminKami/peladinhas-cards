@@ -2,7 +2,7 @@
 import {audioCue} from './audio.ts';
 import './bonus-transitions.css';
 
-type Transition={kind:'entry'|'retrigger'|'final';mode:'normal'|'superior';reduced:boolean;signal:AbortSignal};
+type Transition={kind:'entry'|'retrigger'|'final';mode:'normal'|'superior'|'legend';reduced:boolean;signal:AbortSignal};
 /** Presentation only: never reads or changes the game session. */
 export async function presentBonusTransition({kind,mode,reduced,signal}:Transition){
  const board=document.getElementById('board')!;

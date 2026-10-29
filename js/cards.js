@@ -8,6 +8,8 @@ import { ATTRIBUTES, flag, informTheme, INFORM_THEMES, calculateBaseCard } from 
 import { SCRAP_OUTLINE, scrapArt } from "./card-scrap.js";
 import { esc } from "./ui.js";
 import { safeImage, ASSET_PATHS, PLAYSTYLE_ICONS } from "./assets.js";
+import { renderCasinoShopCard } from "./casino-shop-art.js";
+import { SHOP_CARDS, SHOP_ARCHIVED_CARDS } from "./casino-shop-catalog.js";
 export function cardPlaystyles(player) {
   if (player.hasCard === false) return [];
   return ATTRIBUTES.filter(
@@ -40,6 +42,13 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.specials?.[0]?.id ||
     playerBase ||
     "bronze-common";
+  const purchased = [...SHOP_CARDS, ...SHOP_ARCHIVED_CARDS].find(item => chosenTheme === `casino-shop-${item.id}`);
+  if (purchased) {
+    const artwork = renderCasinoShopCard(purchased, { name: player.displayName || player.username,
+      ovr: player.ovr, position: player.primaryPosition, stats: player.stats,
+      photoURL: safeImage(player.cardPhoto?.photoURL || player.photoURL), fullStats: true });
+    return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}" aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`} class="football-card card-${esc(size)} casino-purchased-card">${artwork}</${preview ? "div" : "a"}>`;
+  }
   const template = player.specials?.find(
     (sp) => sp.id === chosenTheme,
   )?.cardTheme;

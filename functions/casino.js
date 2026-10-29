@@ -15,6 +15,7 @@ import {
   settleCasinoSlot,
 } from "../js/casino-economy.js";
 import { createHash } from "node:crypto";
+import { SHOP_CARDS } from "../js/casino-shop-catalog.js";
 import {
   casinoSessionInput,
   applyCasinoSession,
@@ -94,7 +95,7 @@ export function casinoFunctions() {
       return { balance };
     });
   });
-  const casinoSession = walletCall(async (request) => {
+  const casinoSession = walletCall(async (request, user) => {
     let input;
     try {
       input = casinoSessionInput(request.data);
@@ -113,12 +114,21 @@ export function casinoFunctions() {
       sessionRef = ref.collection("sessions").doc(input.id);
     return db.runTransaction(async (tx) => {
       const [wallet, session] = await tx.getAll(ref, sessionRef);
+      const shopping = input.action === "shop" || !!input.shopCard;
+      const [player, collection] = shopping ? await tx.getAll(
+        db.doc(`weeklyCards/${request.auth.uid}`), db.doc(`cardCollections/${request.auth.uid}`),
+      ) : [];
+      const awards = collection?.data()?.awards || [];
+      const shop = { ovr: player?.data()?.ovr || 0,
+        owned: awards.filter(award => award.source === "casino-shop" && !award.revokedAt).map(award => award.shopCardId) };
       let result;
       try {
         result = applyCasinoSession(
           currentCasinoWallet(wallet.data()),
           session.data(),
           input,
+          Date.now(),
+          shop,
         );
       } catch (error) {
         throw new HttpsError("failed-precondition", error.message, {
@@ -129,7 +139,20 @@ export function casinoFunctions() {
       if (result.write) {
         tx.set(ref, counted(result.wallet));
         tx.set(sessionRef, result.session);
+        if (result.response.purchase?.ok) {
+          const card = SHOP_CARDS.find(card => card.id === input.shopCard);
+          const award = { id: `casino-shop-${card.id}`, shopCardId: card.id,
+            name: card.name, themeId: `casino-shop-${card.id}`, duration: "permanent",
+            source: "casino-shop", earnedAt: new Date().toISOString(),
+            description: card.description, rarity: card.rarity };
+          tx.set(db.doc(`cardCollections/${request.auth.uid}`), {
+            uid: request.auth.uid, awards: [...awards.filter(prior => prior.id !== award.id), award],
+          }, { merge: true });
+        }
       }
+      if (shopping) result.response.shop = { ...shop,
+        owned: [...new Set([...(result.wallet.shopOwned || []), ...shop.owned])],
+        name: user.displayName || user.username || "A tua carta", position: player?.data()?.primaryPosition || user.primaryPosition || "MC" };
       return result.response;
     });
   });

@@ -10,6 +10,8 @@ import { medal, rewardText, hasTemporaryReward } from "../js/event-model.js";
 import { getFirestore } from "firebase-admin/firestore";
 import { asDate, participants } from "../js/utils.js";
 import { votersFor, candidatesFor, eventOutcome } from "../js/event-rules.js";
+import { rewardDocuments } from "./reward-queries.js";
+import { signalMaintenance } from "./maintenance-inputs.js";
 const db = () => getFirestore();
 const rows = (snapshot) =>
   snapshot.docs.map((d) => ({ ...d.data(), uid: d.id, id: d.id }));
@@ -198,10 +200,11 @@ export function notificationFunctions(notify) {
         after, pending: true, token: event.id || hash([revision(before), revision(after), after?.updatedAt || null]),
         updatedAt: new Date() });
     });
+    await signalMaintenance("games", event.params.gid, before, after);
   }, { readPolicy: false });
   async function eventNotices(id, event, users, games, now) {
     const completions = event.prerequisites?.missionIds?.length
-      ? rows(await db().collection("eventRewards").get())
+      ? rows(await rewardDocuments("eventId", event.prerequisites.missionIds))
       : [];
     const send = (uid, key, value) =>
       notify(uid, key, value, async (tx) => {
@@ -339,6 +342,7 @@ export function notificationFunctions(notify) {
     async (event) => {
       if (!event.data.after.data() || event.data.after.data().status === "draft") return;
       await db().doc(`eventNoticeWork/${event.params.eid}`).set({ pending: true, token: randomUUID() });
+      await signalMaintenance("events", event.params.eid, event.data.before?.data(), event.data.after.data());
     }, { readPolicy: false },
   );
   const scheduledNotifications = policySchedule("scheduledNotifications",

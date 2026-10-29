@@ -1,4 +1,4 @@
-# RIFT//CORE: OVERDRIVE — rift-4.15
+# RIFT//CORE: OVERDRIVE — rift-4.16
 
 ## Preços fixos e bónus
 
@@ -20,6 +20,7 @@ REACTOR PULSE 35% / 45% / 60% na terceira, sexta, nona… vitória.
 Wild natural dos FS 1,5% / 2% / 2%. Pesos fixos por coluna com bias
 2,8 / 3,415 / 5,88, aumentando as oportunidades de formar ways face à 4.13.
 
+Retriggers: com 3 Scatters, aplica-se o prémio base abaixo; cada Scatter adicional dá +2 FS. O limite total continua a ser 40 FS.
 CORE: 8 FS, global inicial ×1 / máximo ×25, retrigger +4.
 RIFT: 10 FS, global inicial ×3 / máximo ×50, retrigger +5.
 OVERDRIVE: 12 FS (14 com 6 Scatters), global inicial ×5 / máximo ×100,
@@ -48,7 +49,7 @@ Perfis pagos: bias por coluna 4,06 e 4,24, respetivamente; Wild 0,1% e 4,16%.
 A configuração atual ultrapassa 100% de RTP estimado e não está equilibrada
 para o alvo anterior de 96%. Os restantes parâmetros e preços não foram
 ajustados para compensar o aumento pedido. Não é certificação.
-Relatório, incerteza e conferências de rondas completas: RTP-v4.15.md.
+Regra atual e limites da validação RTP: [RTP-v4.16.md](./RTP-v4.16.md). O relatório 4.15 é histórico.
 
 Barra Normal compacta, sem campo Ganho do bónus. A presença de uma futura
 ronda de bónus não altera o layout enquanto o spin base ainda é apresentado.

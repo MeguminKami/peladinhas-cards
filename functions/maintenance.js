@@ -1,4 +1,6 @@
 import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
+import { writeMaintenanceSignals } from "./maintenance-inputs.js";
+import { nextHomeBoundary } from "../js/data-boundary.js";
 import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { getApp } from "firebase-admin/app";
@@ -969,41 +971,42 @@ export function maintenanceFunctions({
           .collection("eventRewards")
           .where("pending", "==", true)
           .get();
-        for (const candidate of pending.docs) {
+        for (const uid of new Set(pending.docs.map(doc => doc.data().uid))) {
           const delivered = await db().runTransaction(async (tx) => {
-            const [fresh, ledger] = await Promise.all([
-              tx.get(candidate.ref),
-              tx.get(
-                db()
-                  .collection("eventRewards")
-                  .where("uid", "==", candidate.data().uid),
-              ),
-            ]);
-            const reward = fresh.data();
-            if (!reward?.pending || reward.revokedAt) return false;
-            const allocation = rewardBudget(
-              reward.configuredReward,
-              rows(ledger),
-              reward.source || "event",
-            );
-            if (allocation.reduced) return false;
-            const now = new Date(),
-              cycle = cardWeek(now),
-              start = cycle.phase === "closed" ? cycle.nextOpensAt : now;
-            tx.update(candidate.ref, {
-              pending: false,
-              reward: { ...reward.reward, boosts: allocation.boosts },
-              startsAt: start,
-              cardStartsAt: now,
-              expiresAt: rewardExpiry(start, reward.reward.statDuration),
-              deliveredAt: now,
-              deliveredPolicyVersion: policyVersion(),
-            });
-            return true;
+            const ledger = rows(await tx.get(db().collection("eventRewards").where("uid", "==", uid)));
+            let changed = false;
+            for (const reward of ledger.filter(row => row.pending && !row.revokedAt)) {
+              const allocation = rewardBudget(
+                reward.configuredReward,
+                ledger,
+                reward.source || "event",
+              );
+              if (allocation.reduced) continue;
+              const now = new Date(),
+                cycle = cardWeek(now),
+                start = cycle.phase === "closed" ? cycle.nextOpensAt : now;
+              const update = {
+                pending: false,
+                reward: { ...reward.reward, boosts: allocation.boosts },
+                startsAt: start,
+                cardStartsAt: now,
+                expiresAt: rewardExpiry(start, reward.reward.statDuration),
+                deliveredAt: now,
+                deliveredPolicyVersion: policyVersion(),
+                expirationProcessed: false,
+              };
+              tx.update(db().doc(`eventRewards/${reward.id}`), update);
+              const value = { ...reward, ...update };
+              writeMaintenanceSignals(tx, "eventRewards", reward.id, reward, value);
+              Object.assign(reward, update);
+              changed = true;
+            }
+            return changed;
           });
-          if (delivered && !event?.cycle) await rebuildPlayer(candidate.data().uid);
+          if (delivered && !event?.cycle) await rebuildPlayer(uid);
         }
       }
+      return { ok: true, nextAt: nextHomeBoundary([]) };
     },
   );
   const systemCleanup = policySchedule(

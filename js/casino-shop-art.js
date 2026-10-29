@@ -59,6 +59,7 @@ export function renderCasinoShopCard(item, player = {}) {
     ["DRI", "dribbling"],
     ["DEF", "defending"],
     ["FIS", "physical"],
+    ...(player.fullStats ? [["RES", "stamina"], ["GR", "goalkeeping"]] : []),
   ];
   const statMarkup = attrs
     .map(([label, key]) => {
@@ -69,7 +70,7 @@ export function renderCasinoShopCard(item, player = {}) {
       return `<span><b>${value}</b><small>${label}</small></span>`;
     })
     .join("");
-  const portrait = `<g class="sca-portrait">
+  const portrait = player.photoURL ? `<image href="${esc(player.photoURL)}" x="64" y="82" width="172" height="240" preserveAspectRatio="xMidYMid slice"/>` : `<g class="sca-portrait">
     <path class="sca-collar" d="m118 188 32 14 32-14 34 19 22 57-26 13-14-30 6 68H96l6-68-14 30-26-13 22-57Z"/>
     <path class="sca-shirt-line" d="m118 188 32 14 32-14m-32 14v91m-48-46-6 68m102-68 6 68"/>
     <path d="M138 172h24l5 20-17 13-17-13Z" fill="#aa7354"/>

@@ -1,0 +1,13 @@
+# Loja da conta — 29/10/2026
+
+Implementada a loja dentro do casino, acessível por um botão no salão. Mantém o catálogo de 13 edições e permite filtrar metais, jogos e compras da conta. Mostra o saldo conjunto da carteira e da Vault e o OVR registado. O laboratório em `assets/casino/shop/` continua independente e não atribui compras reais.
+
+`casinoSession` suporta a ação `shop` para consultar o perfil da loja e o campo `shopCard` nas confirmações. O servidor lê apenas os documentos pessoais de carta semanal e coleção, confirma o preço estático e o OVR, e grava carteira, sessão e conquista permanente numa transação. Não aceita preço, OVR ou identidade de outro comprador. A sequência e o fingerprint existentes protegem a repetição após falhas de rede. A coleção e a carteira impedem recompra concorrente do mesmo acabamento. O pagamento usa centésimos, primeiro da Vault e depois da carteira.
+
+As conquistas usam IDs `casino-shop-{id}`, fonte `casino-shop` e duração permanente. O seletor existente do perfil aceita estas conquistas; o renderizador usa o acabamento comprado com nome, fotografia, OVR, posição e oito atributos do jogador. A cache local da liga é invalidada após a compra, sem consulta adicional nesse momento. A escolha atual continua separada dos snapshots de semanas fechadas. Não há recálculo retroativo nem migração de compras locais fictícias.
+
+Validação: 17 testes unitários de loja, sessões e Vault; 10 testes de backend no emulador, incluindo compra concorrente com pagamento repartido e propriedade única; testes de carteira local e Rejuice passaram. A loja foi verificada no navegador nos quatro temas e em 320/390/768/1440 px, incluindo teclado, redução de movimento, recusa por OVR, resposta perdida e renderização do acabamento. Capturas em `test-results/casino-store-*.png`. O emulador usou configuração temporária `test-results/firebase.store.json` porque as portas de outras instâncias estavam ocupadas. Sem acesso ao Firebase real e sem publicação.
+
+Limitação herdada: os jogos do casino calculam resultados no cliente. A compra valida o saldo armazenado e o requisito de OVR no servidor; não valida os resultados individuais que deram origem ao saldo. Migrar esses resultados para execução autoritativa é trabalho separado.
+
+Publicação deste âmbito: `npx.cmd firebase deploy --only functions:peladinhas:casinoSession`, seguido de `npm.cmd run deploy:frontend`. O módulo de sessão é importado apenas por esta callable no servidor; regras e índices existentes já bloqueiam a escrita direta. As outras alterações de backend presentes na árvore de trabalho pertencem a tarefas distintas.

@@ -1,5 +1,5 @@
 import type {Session} from '../src/session.ts';
-export interface WalletTransaction {id:string;debit:number;credit:number;roundId:number;spin:number;configVersion:string;bet:number;mode:'base'|'normal'|'superior';bonusHunt:boolean;progress?:Session;bonusComplete?:boolean}
+export interface WalletTransaction {id:string;debit:number;credit:number;roundId:number;spin:number;configVersion:string;bet:number;mode:'base'|'normal'|'superior'|'legend';bonusHunt:boolean;progress?:Session;bonusComplete?:boolean}
 export interface MountSlotOptions {src:string;playerId:string;getBalance:()=>Promise<number>;settle:(transaction:WalletTransaction)=>Promise<{balance:number}>}
 
 /** Mount an isolated game. The host owns the fictional-credit wallet. */

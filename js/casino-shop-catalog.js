@@ -1,3 +1,4 @@
+import { shopFunds, payFromCasinoFunds } from "./casino-shop-payment.js";
 // Public, static catalogue. Opening it never needs a wallet or player read.
 export const SHOP_CARDS = Object.freeze(
   [
@@ -183,13 +184,13 @@ export function buyShopCard(state, id) {
     throw Error(
       `Precisas de ${card.minOvr} OVR. O teu jogador tem ${state.ovr} OVR.`,
     );
-  if (state.balance < card.price)
+  const available = shopFunds(state);
+  if (available < card.price)
     throw Error(
-      `Saldo insuficiente. Faltam ${new Intl.NumberFormat("pt-PT").format(card.price - state.balance)} DJC.`,
+      `Saldo insuficiente. Faltam ${new Intl.NumberFormat("pt-PT").format(card.price - available)} DJC.`,
     );
   return {
-    ...state,
-    balance: state.balance - card.price,
+    ...payFromCasinoFunds(state, card.price),
     owned: [...state.owned, id],
   };
 }

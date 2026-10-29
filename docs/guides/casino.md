@@ -92,3 +92,16 @@ O jogo usa a carteira partilhada em Djabucoin. Cada aposta, passo e levantamento
 O reset por edição invalida os snapshots e sessões anteriores dos cinco jogos; não apaga fisicamente o arquivo da base de dados. `scripts/reset-casino.mjs` permite materializar o saldo nas contas existentes, com limite de 500 documentos por coleção e precondições para não sobrescrever alterações concorrentes. O modo real exige autorização prévia para as leituras e os argumentos `--live --repair --apply --scope DESCRICAO --max-reads 1500`. Não repetir o reset mudando a edição sem um novo pedido explícito.
 
 Validação local da integração: `npm.cmd run test:casino:cardoso`.
+# Rejuice
+
+A Vault pessoal está descrita no [relatório de implementação de 29/10/2026](../reports/casino-vault-2026-10-29.md): depósitos definitivos no cabeçalho do salão, sem levantamentos e com saldo separado das apostas. O total para a [loja da conta](casino-shop.md) soma carteira e Vault.
+
+O salão apresenta sempre «Pedir Rejuice (+50 Djabucoins)». Com saldo local de pelo menos 5 DJC, o clique mostra uma mensagem sem chamar o servidor. Abaixo desse valor, a carteira envia uma confirmação `casinoSession` com `rejuice: true`, incluindo os totais pendentes. Não há limite diário.
+
+Na mesma transação, o servidor aplica os totais, verifica o saldo real resultante e acrescenta 5000 centésimos apenas se o saldo estiver entre 0 e 499. A sequência e o fingerprint da sessão tornam a repetição idempotente; o pedido fica persistido antes do envio e a resposta atualiza a carteira local sem leitura adicional nem novo listener. Pedidos concorrentes são serializados pela transação. O cliente bloqueia cliques durante o processamento.
+
+Uma confirmação normal utiliza duas leituras transacionais (carteira e sessão) e duas escritas, além das leituras existentes de política e utilizador. Repetir a mesma confirmação não escreve. A contenção pode exigir novas tentativas internas do Firestore. Não são criados documentos de recibo adicionais.
+
+Segurança: esta validação protege a atribuição contra saldo concorrente e repetição. Os jogos locais continuam a enviar totais calculados pelo navegador, conforme a arquitetura existente; não há validação autoritativa de cada resultado. Garantir resistência à falsificação desses totais exige migrar a execução dos jogos para o servidor.
+
+Validação local: `node tests/casino-rejuice.mjs`, `node --test tests/casino-session.test.js tests/casino.test.js` e `npm.cmd run test:casino:backend` (emulador). Publicar primeiro `npx.cmd firebase deploy --only functions:peladinhas:casinoSession` e depois `npm.cmd run deploy:frontend`. Não é necessário recalcular carteiras nem alterar semanas fechadas.

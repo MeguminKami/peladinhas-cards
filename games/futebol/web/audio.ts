@@ -1,5 +1,5 @@
 // Original procedural score and sound design. No external recordings or samples.
-export type AudioScene='base'|'normal'|'superior'|'entry'|'win'|'summary';
+export type AudioScene='base'|'normal'|'superior'|'legend'|'entry'|'win'|'summary';
 export interface AudioSettings {sound:boolean;masterVolume:number;musicVolume:number;effectsVolume:number;ambienceVolume:number}
 export const audioDefaults:AudioSettings={sound:true,masterVolume:.7,musicVolume:.4,effectsVolume:.75,ambienceVolume:.25};
 type Voice={source:AudioScheduledSourceNode;nodes:AudioNode[];bus:'music'|'effects'|'ambience'};
@@ -44,7 +44,7 @@ function schedule(){
  if(!ready())return;
  const now=ctx!.currentTime;ramp(duck.gain,now<duckUntil?.35:1,.1);
  if(nextBeat<now-.2)nextBeat=now+.02;
- const bpm=scene==='superior'?128:scene==='normal'?120:scene==='win'?116:105,step=60/bpm/2;
+ const bpm=scene==='legend'?136:scene==='superior'?128:scene==='normal'?120:scene==='win'?116:105,step=60/bpm/2;
  while(nextBeat<now+.18){
   const t=nextBeat,b=beat++%32,quiet=scene==='entry'||scene==='summary',root=[146.832,130.813,116.541,130.813][Math.floor(b/8)];
   if(b%4===0){tone(root/2,t,.35,quiet?.035:.085,'triangle','music');tone(root,t,.65,.018,'sine','music');tone(root*1.4983,t,.65,.014,'sine','music');}
@@ -53,8 +53,8 @@ function schedule(){
    if(b%4===2){noise(t,.13,.055,1700,'music');noise(t+.035,.08,.035,2200,'music');}
    noise(t,.04,.012,b%2?6500:4500,'music');
    if(b%2===0)tone(root*2*Math.pow(2,melody[(b/2)%16]/12),t,.21,.027,'triangle','music');
-   if((scene==='normal'||scene==='superior')&&remainingFs<=3&&b%2===1)noise(t,.055,.025,2800,'music');
-   if(scene==='superior'||scene==='win'&&tier>=5){if(b%8===0){tone(root*2,t,.45,.025,'sawtooth','music');tone(root*2.5,t,.45,.018,'triangle','music');}}
+   if((scene==='normal'||scene==='superior'||scene==='legend')&&remainingFs<=3&&b%2===1)noise(t,.055,.025,2800,'music');
+   if(scene==='legend'||scene==='superior'||scene==='win'&&tier>=5){if(b%8===0){tone(root*2,t,.45,.025,'sawtooth','music');tone(root*2.5,t,.45,.018,'triangle','music');}}
   }else if(b%8===0)tone(root*4,t,.7,.025,'sine','music');
   if(b%8===0){noise(t,1.8,.028,650,'ambience');noise(t+.1,1.5,.012,1800,'ambience');}
   if(rolling)noise(t,.12,.025,850,'effects');

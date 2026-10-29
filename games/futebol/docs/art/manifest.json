@@ -1,8 +1,8 @@
 {
   "theme": "Futebol de Bairro — Noite de Glória",
   "artVersion": "p2-wild-identities-v3",
-  "mathVersion": "0.6.0",
-  "date": "2026-10-24",
+  "mathVersion": "0.8.0",
+  "date": "2026-10-29",
   "sourceImages": "Originals copied unmodified; generated alpha preserved.",
   "entries": [
     {
@@ -533,6 +533,17 @@
       "status": "ready-static-marketing",
       "tool": "built-in image_gen",
       "promptRecord": "THUMBNAIL_V1.md"
+    },
+    {
+      "id": "bonus-five-scatter",
+      "path": "public/assets/football/symbols/bonus-five-scatter.svg",
+      "role": "bonus-legend-emblem",
+      "alpha": true,
+      "width": 256,
+      "height": 256,
+      "status": "ready-vector",
+      "tool": "authored SVG",
+      "animation": "CSS/WAAPI presentation; no rig"
     }
   ],
   "animationStatus": "WAAPI reel strips, scatter anticipation, power transfer and impacts, sticky acquisition and persistent gold aura. No exported GIF, Spine rigs or audio.",

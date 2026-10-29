@@ -66,3 +66,8 @@ Revisão vigente: `p1-personal-v2.png` a `p4-personal-v2.png`. Proporções fís
 
 P1–P4 usam agora `p1-personal-v1.png` a `p4-personal-v1.png`, com as pessoas das quatro fotografias fornecidas pelo utilizador. P3 está careca, sem chapéu. Prompts e correspondências em [PREMIUM_PESSOAS.md](PREMIUM_PESSOAS.md); dimensões reais no manifest. As quatro cartas anteriores estão arquivadas fora da distribuição pública. As notas seguintes descrevem entregas anteriores.
 
+
+
+## Lendas do Bairro — 29/10/2026
+
+Emblema vetorial original de cinco estrelas em [SVG](../../public/assets/football/symbols/bonus-five-scatter.svg), violeta e dourado, sem título dentro do emblema. Reutiliza a coreografia existente de rolos, transferência dos Scatters, poderes, entrada, prolongamento e apito final; aquisição sticky e entrada com acabamento próprio CSS/WAAPI. Não são rigs nem animações exportadas. Movimento reduzido mantém controlos disponíveis. Ver [regras e validação](../LENDAS_0_8_0.md).

@@ -332,8 +332,8 @@ export function policySchedule(name, options, handler) {
       }
       try {
         return await runTracked(name, () =>
-          ["closeEvents", "settlePaths", "refreshCardCollection", "scheduledNotifications"].includes(name) && (event?.scheduleTime || event?.incremental)
-            ? runChangedMaintenance(name, () => handler(event))
+          ["closeEvents", "settlePaths", "refreshCardCollection", "scheduledNotifications", "systemHeartbeat"].includes(name) && (event?.scheduleTime || event?.incremental)
+            ? runChangedMaintenance(name, maintenance => handler({ ...event, maintenance }))
             : handler(event), cycleKey);
       } catch (error) {
         if (error.code === "aborted") return { running: true };

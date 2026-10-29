@@ -9,6 +9,9 @@ import { getFirestore, FieldValue, Timestamp, Filter } from "firebase-admin/fire
 import { HttpsError } from "firebase-functions/v2/https";
 import { createHash } from "node:crypto";
 import { coalesceWork } from "./coalesce-work.js";
+import { rewardDocuments } from "./reward-queries.js";
+import { expireRewards } from "./reward-expirations.js";
+import { writeMaintenanceSignals, signalMaintenance } from "./maintenance-inputs.js";
 import { cardWeek } from "../js/card-week.js";
 import { votersFor } from "../js/event-rules.js";
 import { asDate, ATTRIBUTES } from "../js/utils.js";
@@ -64,7 +67,7 @@ export async function checkObjectiveProgress(id) {
   const event = snap.exists ? { ...snap.data(), id } : null;
   if (!event || event.method !== "objective" || !["open", "scheduled"].includes(event.status)) return;
   const [games, ledger] = await Promise.all([
-    objectiveGames(null, usesRatingObjective(event.objective)), db().collection("eventRewards").get(),
+    objectiveGames(null, usesRatingObjective(event.objective)), rewardDocuments("eventId", event.prerequisites?.missionIds || []),
   ]);
   return publishObjectiveProgress(event, rows(games), rows(ledger));
 }
@@ -448,6 +451,7 @@ export function grant(
     awardedBy: actorId,
   };
   tx.set(db().doc(`eventRewards/${key}`), value);
+  writeMaintenanceSignals(tx, "eventRewards", key, null, value);
   existing.push({ ...value, id: key });
   return value;
 }
@@ -619,7 +623,7 @@ export function managedEvents(rebuild) {
         tx.get(ref.collection("votes")),
         objectiveGames(tx, usesRatingObjective(event.objective)),
         tx.get(ref.collection("private").doc("rewards")),
-        tx.get(db().collection("eventRewards")),
+        rewardDocuments("uid", event.participantIds || [], tx),
       ]);
       const votes = rows(votesSnap),
         games = rows(gamesSnap),
@@ -823,6 +827,7 @@ export function managedEvents(rebuild) {
       latest = await ref.get();
     if (latest.data()?.status === "closed")
       await ref.update({ rewardsApplied: true });
+    await signalMaintenance("events", eventId, null, latest.data());
     return { ok: true };
   }
   async function vote(request) {
@@ -879,7 +884,7 @@ export function managedEvents(rebuild) {
       throw new HttpsError("permission-denied", "Evento indisponível.");
     const completionLedger =
       event.kind === "mission"
-        ? rows(await (context ? context.read("rewards", () => db().collection("eventRewards").where("uid", "==", request.auth.uid).get()) : db().collection("eventRewards").get()))
+        ? rows(await (context ? context.read("rewards", () => db().collection("eventRewards").where("uid", "==", request.auth.uid).get()) : rewardDocuments("uid", [...(event.participantIds || []), request.auth.uid])))
         : [];
     if (
       user.role !== "admin" &&
@@ -1079,26 +1084,16 @@ export function managedEvents(rebuild) {
       () => claimOnce(request));
   }
   async function scheduled() {
-    const ledger = rows(await db().collection("eventRewards").where("expiresAt", "<=", Timestamp.fromMillis(Date.now())).get());
-    const expired = ledger.filter(
-      (r) =>
-        r.schemaVersion === 2 &&
-        !r.expirationProcessed &&
-        +asDate(r.expiresAt) <= Date.now(),
-    );
-    for (const uid of new Set(expired.map((r) => r.uid))) await rebuild(uid);
-    for (const reward of expired)
-      await db()
-        .doc(`eventRewards/${reward.id}`)
-        .update({ expirationProcessed: true });
+    const expiration = await expireRewards();
+    for (const uid of expiration.uids) await rebuild(uid);
     const events = rows(await db().collection("events").where(Filter.or(
       Filter.where("status", "in", ["open", "scheduled"]),
-      Filter.where("rewardsApplied", "==", false),
+      Filter.and(Filter.where("status", "==", "closed"), Filter.where("rewardsApplied", "==", false)),
     )).get());
     const objectives = events.filter(e => e.schemaVersion === 2 && e.method === "objective" && ["open", "scheduled"].includes(e.status) && +asDate(e.startsAt) <= Date.now());
     const liveVotes = events.filter(e => e.schemaVersion === 2 && e.method === "vote" && e.liveResults && e.status === "open");
     const games = objectives.length || liveVotes.length ? rows(await objectiveGames(null, objectives.some(e => usesRatingObjective(e.objective)))) : [];
-    const completionLedger = objectives.length ? rows(await db().collection("eventRewards").get()) : [];
+    const completionLedger = rows(await rewardDocuments("eventId", objectives.flatMap(event => event.prerequisites?.missionIds || [])));
     const issues=[];
     for (const event of events.filter((e) => e.schemaVersion === 2)) {
       try {
@@ -1145,8 +1140,9 @@ export function managedEvents(rebuild) {
         );
       } catch(error) {await recordTaskFailure(event.id,error,issues);}
     }
-    const futureReward = await db().collection("eventRewards").where("expiresAt", ">", Timestamp.fromMillis(Date.now())).orderBy("expiresAt").limit(1).get();
-    return { issues, events, futureRewards: rows(futureReward) };
+    const periods = events.filter(event => ["daily", "weekly"].includes(event.cadence))
+      .map(event => ({ endsAt: periodWindow(event).end }));
+    return { issues, events, futureRewards: [{ expiresAt: expiration.nextAt }, ...periods] };
   }
   return { action, vote, details, claim, scheduled };
 }

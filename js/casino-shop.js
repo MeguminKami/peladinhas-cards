@@ -1,3 +1,4 @@
+import { shopFunds } from "./casino-shop-payment.js";
 import {
   SHOP_CARDS,
   SHOP_ARCHIVED_CARDS,
@@ -81,7 +82,13 @@ function setFilter(value) {
   cards();
 }
 function totals() {
-  root.querySelector("#shop-balance").textContent = number(state.balance);
+  root.querySelector("#shop-balance").textContent = number(shopFunds(state));
+  let detail = root.querySelector("#shop-funds-detail");
+  if (!detail) {
+    root.querySelector("#shop-balance").parentElement.insertAdjacentHTML("afterend", '<p id="shop-funds-detail"></p>');
+    detail = root.querySelector("#shop-funds-detail");
+  }
+  detail.textContent = `${number(state.balance)} DJC na carteira + ${number(state.vaultBalance || 0)} DJC na Vault`;
   const archived = SHOP_ARCHIVED_CARDS.filter((card) =>
     state.owned.includes(card.id),
   ).length;
@@ -112,6 +119,7 @@ root.innerHTML = `<div class="shop-shell"><header class="shop-toolbar"><a href="
   )}</div><p class="shop-preview-note">Retrato ilustrativo · OVR de referência de cada edição. A compra desbloqueia o acabamento.</p><div id="shop-grid" class="shop-grid"></div></section></main><footer class="shop-footer">PELADINHAS CARDS <span>Do campo para a tua coleção.</span></footer></div><div id="shop-feedback" class="shop-toast is-hidden" role="status" aria-live="polite" aria-atomic="true"></div>`;
 totals();
 cards();
+root.querySelector('#shop-fixtures button').insertAdjacentHTML("beforebegin", `<label>Vault de teste · DJC<input name="vaultBalance" type="number" min="0" max="1000000" step="1" value="${state.vaultBalance || 0}" required></label>`);
 const dialog = document.createElement("dialog");
 dialog.className = "shop-preview-dialog";
 dialog.setAttribute("aria-labelledby", "shop-preview-title");
@@ -146,6 +154,7 @@ root.querySelector("#shop-fixtures").onsubmit = (event) => {
     const next = {
       ...read(),
       balance: Number(data.get("balance")),
+      vaultBalance: Number(data.get("vaultBalance")),
       ovr: Number(data.get("ovr")),
     };
     localStorage.setItem(key, JSON.stringify(next));

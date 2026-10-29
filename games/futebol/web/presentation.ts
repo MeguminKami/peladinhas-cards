@@ -151,8 +151,8 @@ export async function presentSpin(result:SpinResult,options:Options){
     if(!signal.aborted&&detail.newSticky.length){audioCue('sticky');clean(root);sticky.push(...detail.newSticky);options.draw({board:[...current],events:[...events],sticky});for(const e of events)badge(e.position,e.power);for(const p of detail.newSticky){cell(p)?.classList.add('sticky','sticky-acquired-v2');}options.message('Craque fixo!',`${detail.newSticky.length} Wild(s) dourados ficam ancorados até ao fim do bónus.`);await pause(duration,signal);}
   }finally{root.querySelectorAll('.power-announcement').forEach(el=>el.remove());clean(root);hud?.classList.remove('global-impact');ctx.dispose();}
 }
-export function makeBonusActivationBoard(mode:'normal'|'superior'):Board{
-  const board:Board=previewBoard.map(s=>s==='S'?'N1':s),count=mode==='normal'?3:4;
+export function makeBonusActivationBoard(mode:'normal'|'superior'|'legend'):Board{
+  const board:Board=previewBoard.map(s=>s==='S'?'N1':s),count=mode==='normal'?3:mode==='legend'?5:4;
   // Presentation-only entropy, independent of the persisted mathematical RNG.
   const random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
   const columns=[0,1,2,3,4,5];
@@ -160,8 +160,8 @@ export function makeBonusActivationBoard(mode:'normal'|'superior'):Board{
   for(const col of columns.slice(0,count))board[Math.floor(random()*4)*6+col]='S';
   return board;
 }
-export async function presentBonusActivation(mode:'normal'|'superior',options:Options){
-  const ctx=context(options),board=makeBonusActivationBoard(mode),count=mode==='normal'?3:4;
+export async function presentBonusActivation(mode:'normal'|'superior'|'legend',options:Options){
+  const ctx=context(options),board=makeBonusActivationBoard(mode),count=mode==='normal'?3:mode==='legend'?5:4;
   try{options.message('Os bilhetes estão a entrar…','Apresentação da compra de bónus — 10 jogadas grátis.');await reels(board,[],options,ctx.signal,count);}
   finally{clean(document.getElementById('board')!);ctx.dispose();}
 }

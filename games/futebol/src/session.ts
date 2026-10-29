@@ -8,7 +8,7 @@ export interface Session {schema:1;configVersion:string;revision:number;balance:
 export type Command={type:'start';mode:Mode;bonusHunt?:boolean}|{type:'next'};
 export function createSession(seed:string):Session{return {schema:1,configVersion:config.version,revision:0,balance:100000,bet:20,rngState:new SeededRandom(seed).state(),seed:{value:seed,generation:1,renewedAt:null},counter:0,active:null,pendingRetrigger:null,history:[],requestIds:[],topups:0};}
 export function restoreSession(input:Session):Session{
-  if(input?.schema===1&&['0.5.0','0.5.1','0.6.0'].includes(input.configVersion)){
+  if(input?.schema===1&&['0.5.0','0.5.1','0.6.0','0.7.0'].includes(input.configVersion)){
     const s=structuredClone(input);s.configVersion=config.version;s.revision++;
     if(s.active)s.history[0].configVersion=input.configVersion+' → '+config.version;
     validateSession(s);return s;
@@ -43,7 +43,7 @@ export function execute(snapshot:Session,command:Command,requestId:string,date:s
   let state:State;
   if(command.type==='start'){
     if(s.active)throw Error('Termina os free spins antes de iniciar outra ronda');
-    if(!['base','normal','superior'].includes(command.mode))throw Error('Modo inválido');
+    if(!['base','normal','superior','legend'].includes(command.mode))throw Error('Modo inválido');
     if(command.bonusHunt&&command.mode!=='base')throw Error('Bonus Hunt apenas no jogo base');
     const cost=s.bet*(command.mode==='base'?(command.bonusHunt?config.huntCostMultiplier:1):config.prices[command.mode]);
     if(s.balance<cost)throw Error('Saldo fictício insuficiente');

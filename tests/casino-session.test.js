@@ -131,3 +131,35 @@ test("stale/negative/malformed confirmations cannot change the wallet", () => {
     /sequência/,
   );
 });
+
+
+test("Rejuice checks the settled balance, adds 50 once and records the receipt", () => {
+  for (const balance of [0, 1, 499, 500, 501]) {
+    const initial = applyCasinoSession({ ...newCasinoWallet(), balance }, undefined, open);
+    const body = sync({ spent: 0, won: 0, rejuice: true });
+    const result = applyCasinoSession(initial.wallet, initial.session, body);
+    const eligible = balance < 500;
+    assert.equal(result.wallet.balance, balance + (eligible ? 5000 : 0));
+    assert.equal(result.response.rejuice, eligible);
+    const replay = applyCasinoSession(result.wallet, result.session, body);
+    assert.equal(replay.write, false);
+    assert.equal(replay.wallet.balance, result.wallet.balance);
+    assert.equal(replay.response.rejuice, eligible);
+    assert.throws(() => applyCasinoSession(result.wallet, result.session, { ...body, rejuice: undefined }));
+  }
+});
+test("Rejuice incorporates pending games and concurrent credits before checking eligibility", () => {
+  const initial = applyCasinoSession({ ...newCasinoWallet(), balance: 1000 }, undefined, open);
+  const body = sync({ spent: 501, won: 0, rejuice: true });
+  const first = applyCasinoSession(initial.wallet, initial.session, body);
+  assert.equal(first.wallet.balance, 5499);
+  const otherDevice = applyCasinoSession(first.wallet, undefined, { ...open, id: 'another-device-session' });
+  const refused = applyCasinoSession(otherDevice.wallet, otherDevice.session, { ...body, id: 'another-device-session', spent: 0 });
+  assert.equal(refused.response.rejuice, false);
+  const credited = applyCasinoSession({ ...initial.wallet, balance: 1001 }, initial.session, body);
+  assert.equal(credited.wallet.balance, 500);
+  assert.equal(credited.response.rejuice, false);
+  assert.throws(() => applyCasinoSession(initial.wallet, initial.session, { ...body, spent: 1001 }));
+  assert.throws(() => casinoSessionInput({ ...body, release: true }));
+  assert.throws(() => casinoSessionInput({ ...body, rejuice: 5000 }));
+});

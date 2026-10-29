@@ -15,9 +15,9 @@ function main(){
   const [command='help',...args]=process.argv.slice(2),opts:Record<string,string>={};
   const allowed=new Set(['seed','spins','rounds','bet','mode','output','board','bonus-hunt']);
   for(let i=0;i<args.length;i+=2){const key=args[i].slice(2);if(!args[i].startsWith('--')||!allowed.has(key)||!args[i+1]||args[i+1].startsWith('--')||key in opts)throw Error(`Argumento inválido: ${args[i]}`);opts[key]=args[i+1];}
-  if(command==='help'){console.log('Comandos: spin | round | buy | simulate | evaluate\n--mode base|normal|superior --bet 0.20 --seed exemplo --bonus-hunt on|off --rounds 1000 --output reports/test.json\nevaluate --board board.json (matriz 4×6 ou lista de 24 símbolos). buy exige normal ou superior.');return;}
+  if(command==='help'){console.log('Comandos: spin | round | buy | simulate | evaluate\n--mode base|normal|superior|legend --bet 0.20 --seed exemplo --bonus-hunt on|off --rounds 1000 --output reports/test.json\nevaluate --board board.json (matriz 4×6 ou lista de 24 símbolos). buy exige normal, superior ou legend.');return;}
   if(!['spin','round','buy','simulate','evaluate'].includes(command))throw Error('Comando desconhecido');
-  const mode=opts.mode??(command==='buy'?'normal':'base');if(!['base','normal','superior'].includes(mode))throw Error('Modo inválido');
+  const mode=opts.mode??(command==='buy'?'normal':'base');if(!['base','normal','superior','legend'].includes(mode))throw Error('Modo inválido');
   if(opts['bonus-hunt']&&!['on','off'].includes(opts['bonus-hunt']))throw Error('--bonus-hunt exige on ou off');const bonusHunt=opts['bonus-hunt']==='on';if(bonusHunt&&mode!=='base')throw Error('Bonus Hunt apenas no jogo base');
   const m=mode as Mode,betText=(opts.bet??'0.20').replace(',','.');if(!/^\d+(\.\d{1,2})?$/.test(betText))throw Error('Aposta deve ter até duas casas decimais');
   const [whole,frac='']=betText.split('.'),bet=Number(whole)*100+Number(frac.padEnd(2,'0'));if(!config.bets.includes(bet))throw Error('Aposta fora da escada');
@@ -32,7 +32,7 @@ function main(){
     const s=spin(start(m,config,bonusHunt),bet,rng,config,true,board);result=s;showSpin(s);
     if(command==='evaluate')console.log('Modo de depuração: poderes e regras são aplicados ao tabuleiro fornecido.');
   }else{
-    if(command==='buy'&&m==='base')throw Error('Compra exige modo normal ou superior');if(command==='round'&&m!=='base')throw Error('round exige modo base');
+    if(command==='buy'&&m==='base')throw Error('Compra exige modo normal, superior ou legend');if(command==='round'&&m!=='base')throw Error('round exige modo base');
     const r=round(m,bet,rng,config,true,bonusHunt);result=r;r.records.forEach(showSpin);console.log(`\nCusto: ${(r.cost/100).toFixed(2)} | pago: ${(r.paid/100).toFixed(2)} | retorno: ${(r.paid/bet).toFixed(2)}×`);
   }
   if(opts.output){mkdirSync(dirname(opts.output),{recursive:true});const output=command==='simulate'?result:{seed,finalRngState:rng.state(),result};writeFileSync(opts.output,JSON.stringify(output,null,2)+'\n');console.log(`Guardado: ${opts.output}`);}

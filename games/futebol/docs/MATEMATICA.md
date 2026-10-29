@@ -1,5 +1,7 @@
 # Especificação matemática — proposta 0.1
 
+> Vigente: **0.8.0**, [Lendas do Bairro](LENDAS_0_8_0.md). Compra 450×, sticky 36%, Wilds +10% relativo ao superior. As notas abaixo são históricas. RTP não calibrado.
+
 > Configuração vigente **0.6.0**: Bonus Hunt opcional, custo 3× e chances positivas de Scatters multiplicadas por 1,5 no jogo base. [Regras atuais](BONUS_HUNT_0_6_0.md). RTP atual não medido. Esta nota prevalece sobre as atualizações históricas abaixo.
 
 

@@ -1,4 +1,7 @@
 import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
+import { signalMaintenance, queuePlayerRefresh } from "./maintenance-inputs.js";
+import { cardRefreshPlan, acknowledgeCardRefresh, nextCollectionCalendar } from "./card-refresh.js";
+import { rewardDocuments } from "./reward-queries.js";
 import { ratingQuorum, ratingWaiverTimes } from "../js/rating-quorum.js";
 import { casinoFunctions } from './casino.js';
 import { blackjackFunctions } from './blackjack.js';
@@ -285,15 +288,24 @@ async function captureGameBalance(gid, g) {
     existing.data().closedAt?.toMillis?.() === closedAt
   )
     return;
+  const ids = participants(g);
+  const personal = async path => ({ docs: ids.length
+    ? (await db.getAll(...ids.map(uid => db.doc(`${path}/${uid}`)))).filter(doc => doc.exists) : [] });
+  const communityVotes = async () => {
+    const docs = [];
+    for (let i = 0; i < ids.length; i += 30)
+      docs.push(...(await db.collection("communityRatings").where("targetId", "in", ids.slice(i, i + 30)).get()).docs);
+    return { docs };
+  };
   const [initials, votes, games, balances, settings, users, rewards] =
     await Promise.all([
-      db.collection("initialRatings").get(),
-      db.collection("communityRatings").get(),
+      personal("initialRatings"),
+      communityVotes(),
       db.collection("games").get(),
       db.collection("gameBalances").get(),
       db.doc("settings/ovr").get(),
-      db.collection("users").get(),
-      db.collection("eventRewards").get(),
+      personal("users"),
+      rewardDocuments("uid", ids),
     ]);
   const weights = normalizeOvrWeights(settings.data());
   const initialRows = data(initials),
@@ -478,13 +490,13 @@ async function aggregateGame(gid) {
 async function buildHistories(uids) {
   const unique = [...new Set(uids)];
   if (!unique.length) return;
-  const context = await collectionContext();
+  const context = await collectionContext(new Date(), { uids: unique });
   // Bound concurrent transactions while sharing immutable inputs for this batch.
   for (let i = 0; i < unique.length; i += 3)
     await Promise.all(unique.slice(i, i + 3).map(uid => buildHistory(uid, context)));
 }
 async function buildHistory(uid, shared = null, { refreshCollection = true } = {}) {
-  const context = shared?.snapshots ? shared : await collectionContext();
+  const context = shared?.snapshots ? shared : await collectionContext(new Date(), { uids: [uid] });
   const earnedCards = refreshCollection ? await refreshPlayerCollection(uid, context)
     : availableCardAchievements((await db.doc(`cardCollections/${uid}`).get()).data()?.awards || []);
   const now = new Date();
@@ -765,6 +777,7 @@ export const processFeedback = policySchedule("processFeedback", {
     if (game.status === "closed") await captureGameBalance(gid, game);
     else await db.doc(`gameBalances/${gid}`).delete();
     await aggregateGame(gid);
+    await signalMaintenance("gameSummaries", gid, null, { ...game, revision: randomUUID() });
     return participants(game || {});
   },
   rebuild: async () => {
@@ -898,6 +911,7 @@ export const onGame = policyWritten("games/{gid}", async (event) => {
       );
     if (core(before) === core(after)) return;
   }
+  await signalMaintenance("games", event.params.gid, before, after);
   if (!after?.derivedWorkToken || after.derivedWorkToken === before?.derivedWorkToken)
     await db.doc(`feedbackWork/${event.params.gid}`).set({ token: randomUUID(),
       pending: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
@@ -1006,17 +1020,32 @@ export const ensureHistory = policyCall("ensureHistory",async (request) => {
 export const refreshCardCollection = policySchedule("refreshCardCollection",
   { schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon", timeoutSeconds: 540 },
   async (event) => {
-    const context = await collectionContext();
+    const plan = await cardRefreshPlan(event?.maintenance);
+    const calendarAt = nextCollectionCalendar();
+    const checkpoint = { calendarAt, fullVersion: event?.maintenance?.signal.fullVersion || null };
+    if (!plan.full && !plan.uids.length) {
+      const future = await db.collection("cardRefreshWork").where("nextAt", ">", Date.now()).orderBy("nextAt").limit(1).get();
+      return { ok: true, nextAt: Math.min(calendarAt, future.docs[0]?.data().nextAt || calendarAt), checkpoint };
+    }
+    const context = await collectionContext(new Date(), { uids: plan.uids });
     const collectionEnabled = policyAt().automation.collection !== false;
-    if (collectionEnabled) {
+    if (collectionEnabled && plan.full) {
       await settleCollectionPeriods(context);
       await ensureFuttiesVote(context);
     }
-    for (const user of context.users)
+    const deadlines = [calendarAt];
+    for (const user of context.users) {
       if (event?.cycle && policyAt().automation.cards !== false)
         await buildHistory(user.uid, context, { refreshCollection: collectionEnabled });
       else if (collectionEnabled) await refreshPlayerCollection(user.uid, context);
-    return { ok: true, nextAt: nextHomeBoundary([context.games, context.rewards]) };
+      deadlines.push(await acknowledgeCardRefresh(user.uid, plan.jobs.find(job => job.id === user.uid), context));
+    }
+    // Deleted/disabled profiles must not keep a due queue entry alive forever.
+    for (const job of plan.jobs.filter(job => !context.users.some(user => user.uid === job.id)))
+      deadlines.push(await acknowledgeCardRefresh(job.id, job, context));
+    const future = await db.collection("cardRefreshWork").where("nextAt", ">", Date.now()).orderBy("nextAt").limit(1).get();
+    if (!future.empty) deadlines.push(future.docs[0].data().nextAt);
+    return { ok: true, nextAt: Math.min(...deadlines), checkpoint };
   },
 );
 export const selectWeeklyCard = policyCall("selectWeeklyCard",async (request) => {
@@ -1432,13 +1461,13 @@ export const {
   getEvent,
   listEvents,
   claimMission,
-} = eventFunctions(async () => {});
+} = eventFunctions(queuePlayerRefresh);
 
 export const { getHome, onHomeSource, onHomeFeedback, onHomeVote } = homeFunctions(listEvents, {
   loadEvent: (request, eventId) => getEvent.run({ ...request, data: { eventId } }),
 });
 
-const pathEndpoints = pathFunctions(async () => {});
+const pathEndpoints = pathFunctions(queuePlayerRefresh);
 export const { getPath, pathAction, onPathGame, onPathSummary, settlePaths } = pathEndpoints;
 export const { gameAction, feedbackAction, ratingWaiverAction } = gameFlowFunctions(async gid => {
   await captureGameCards(gid);
@@ -1468,6 +1497,7 @@ async function executeAutomationCycle(key) {
       ? await db.collection("communityWork").where("pending", "==", true).get() : { docs: [] };
     for (const job of community.docs) {
       await aggregateCommunity(job.id);
+      await signalMaintenance("communitySummaries", job.id, null, { uid: job.id, revision: randomUUID() });
       await db.runTransaction(async tx => {
         if ((await tx.get(job.ref)).data()?.token === job.data().token)
           tx.update(job.ref, { pending: false });
@@ -1479,12 +1509,15 @@ async function executeAutomationCycle(key) {
       if (feedback.running) throw Error("O processamento de jogos está em execução.");
     }
     while (feedback.processed === 50);
+    let changed = community.docs.length > 0;
     for (const job of [settlePaths, closeEvents, systemHeartbeat, refreshCardCollection, scheduledNotifications]) {
-      const result = await job.run({ cycle: true });
+      const result = await job.run({ cycle: true, incremental: true });
+      if (!result?.current && !result?.paused) changed = true;
       if (result?.running || result?.ok === false || result?.issues?.length)
         throw Error("Uma tarefa do ciclo ficou pendente.");
     }
-    await invalidateHome("games", "automation-cycle", null, { key });
+    // Invalidate the published view without feeding maintenance back into itself.
+    if (changed) await invalidateHome("weeklyCards", "automation-cycle", null, { key });
     return { ok: true };
   }));
 }

@@ -31,7 +31,7 @@ test('ativação natural leva o global da jogada base para o bónus',()=>{
   assert.equal(fs.detail!.globalBefore,3);assert.equal(fs.detail!.global,3);
 });
 function blank():Board{return Array(24).fill('S');}
-function single():Config{return {...structuredClone(config),payoutScaleBps:{base:10000,normal:10000,superior:10000},lines:[[0,0,0,0,0,0]]};}
+function single():Config{return {...structuredClone(config),payoutScaleBps:{base:10000,normal:10000,superior:10000,legend:10000},lines:[[0,0,0,0,0,0]]};}
 test('configuração: 40 linhas únicas e dimensões/probabilidades válidas',()=>{
   validateConfig(config);assert.equal(new Set(config.lines.map(l=>l.join(''))).size,40);
   for(const mutate of [(c:Config)=>c.lines[0][0]=4,(c:Config)=>c.weights.base[0]=-1,(c:Config)=>c.steal.base=101,(c:Config)=>c.pays[0][0]=-1]){const c=structuredClone(config);mutate(c);assert.throws(()=>validateConfig(c));}

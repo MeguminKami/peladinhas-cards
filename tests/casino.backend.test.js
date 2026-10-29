@@ -281,3 +281,64 @@ test("Firestore rules deny direct wallet and receipt access, including administr
     await environment.cleanup();
   }
 });
+
+
+test("real shop atomically charges, awards permanent ownership and refuses concurrent duplicate purchases", async () => {
+  const uid = await player();
+  const ids = [randomUUID(), randomUUID()];
+  for (const id of ids) await casinoSession.run(request(uid, { action: "open", id, owner: uid }));
+  const ref = db.doc(`casinoWallets/${uid}`);
+  await ref.update({ balance: 40000, vaultBalance: 60000 });
+  await db.doc(`weeklyCards/${uid}`).set({ uid, ovr: 50 });
+  const inputs = ids.map(id => ({ action: "sync", owner: uid, id, sequence: 1, spent: 0, won: 0, release: false, shopCard: "bronze-foundry" }));
+  const results = await Promise.all(inputs.map(body => casinoSession.run(request(uid, body))));
+  assert.equal(results.filter(result => result.purchase.ok).length, 1);
+  for (const body of inputs) await casinoSession.run(request(uid, body));
+  const wallet = (await ref.get()).data();
+  assert.equal(wallet.balance, 0);
+  assert.equal(wallet.vaultBalance, 0);
+  const awards = (await db.doc(`cardCollections/${uid}`).get()).data().awards;
+  assert.equal(awards.length, 1);
+  assert.equal(awards[0].duration, "permanent");
+  assert.equal(awards[0].id, "casino-shop-bronze-foundry");
+  const view = await casinoSession.run(request(uid, { action: "shop", owner: uid, id: ids[0] }));
+  assert.equal(view.shop.ovr, 50);
+  assert.deepEqual(view.shop.owned, ["bronze-foundry"]);
+  const rejected = await casinoSession.run(request(uid, { ...inputs[0], sequence: 2, shopCard: "silver-mirror" }));
+  assert.equal(rejected.purchase.reason, "ovr");
+  await assert.rejects(casinoSession.run(request(uid, { ...inputs[0], sequence: 3, price: 0 })));
+});
+
+test("concurrent Vault deposits cannot overspend or duplicate a transfer", async () => {
+  const uid = await player();
+  const ref = db.doc(`casinoWallets/${uid}`);
+  const ids = [randomUUID(), randomUUID()];
+  for (const id of ids) await casinoSession.run(request(uid, { action: "open", id, owner: uid }));
+  await ref.update({ balance: 1000 });
+  const inputs = ids.map(id => ({ action: "sync", owner: uid, id, sequence: 1, spent: 0, won: 0, release: false, vaultDeposit: 750 }));
+  const results = await Promise.all(inputs.map(body => casinoSession.run(request(uid, body))));
+  assert.equal(results.filter(result => result.vaultDeposited === 750).length, 1);
+  for (const body of inputs) await casinoSession.run(request(uid, body));
+  const wallet = (await ref.get()).data();
+  assert.equal(wallet.balance, 250);
+  assert.equal(wallet.vaultBalance, 750);
+  await assert.rejects(casinoSession.run(request(uid, { ...inputs[0], sequence: 2, vaultDeposit: -750 })));
+});
+
+test("concurrent Rejuice claims and replay only award once", async () => {
+  const uid = await player();
+  const ref = db.doc(`casinoWallets/${uid}`);
+  const ids = [randomUUID(), randomUUID()];
+  for (const id of ids) await casinoSession.run(request(uid, { action: "open", id, owner: uid }));
+  await ref.update({ balance: 499 });
+  const inputs = ids.map(id => ({ action: "sync", owner: uid, id, sequence: 1, spent: 0, won: 0, release: false, rejuice: true }));
+  const results = await Promise.all(inputs.map(body => casinoSession.run(request(uid, body))));
+  assert.equal(results.filter(r => r.rejuice).length, 1);
+  assert.equal((await ref.get()).data().balance, 5499);
+  // Even after the balance is spent again, replay cannot award twice.
+  await ref.update({ balance: 0 });
+  for (const body of inputs) await casinoSession.run(request(uid, body));
+  assert.equal((await ref.get()).data().balance, 0);
+  const next = await casinoSession.run(request(uid, { ...inputs[0], sequence: 2 }));
+  assert.equal(next.wallet.balance, 5000);
+});

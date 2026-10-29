@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "rewardsApplied", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "communityRatings",
       "queryScope": "COLLECTION",
       "fields": [

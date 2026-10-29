@@ -38,6 +38,8 @@
 
 [Implementação e publicação dos ciclos — 26/10/2026](reports/automation-cycles-2026-10-26.md).
 
+[Atualizações seletivas e redução de leituras — 28–29/10/2026](reports/2026-10-28-selective-updates.md).
+
 [Diagnóstico de permissões nas avaliações da app](reports/feedback-mobile-access-2026-10-19.md).
 
 [Explorar estatísticas e construir consultas](reference/statistics.md) · [Validação da nova tabela](reports/statistics-explorer-2026-10-19.md).

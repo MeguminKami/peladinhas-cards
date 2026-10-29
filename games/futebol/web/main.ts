@@ -8,6 +8,7 @@ import './polish-v2.css';
 import './console.css';
 import './compact-layout.css';
 import './stadium-console.css';
+import './legend-bonus.css';
 import {presentBonusTransition} from './bonus-transitions.ts';
 import {bonusSummaryMarkup} from './bonus-summary.ts';
 import {linePrizes} from './line-prizes.ts';
@@ -47,12 +48,12 @@ function bonusEntryId(){const row=session.history[0];return row?`${row.id}:${row
 function needsBonusEntry(){return !!session.active&&session.history[0].spins.filter(s=>s.mode!=='base').length<=1&&localStorage.getItem(BONUS_ENTRY_KEY)!==bonusEntryId();}
 // Presentation follows entry -> free spins -> final win -> summary -> base.
 let bonusView:Pick<NonNullable<Session['active']>,'mode'|'remaining'|'totalFreeSpins'>|null=session.active&&!needsBonusEntry()?{...session.active}:null;
-async function showBonusEntry(mode:'normal'|'superior'){
-  if(!needsBonusEntry())return;bonusEntryWaiting=true;cancelAuto();setAudioScene('entry');audioCue('bonus',mode==='superior'?4:3);
-  const explanation=mode==='normal'
+async function showBonusEntry(mode:'normal'|'superior'|'legend'){
+  if(!needsBonusEntry())return;bonusEntryWaiting=true;cancelAuto();setAudioScene('entry');audioCue('bonus',mode==='legend'?5:mode==='superior'?4:3);
+  const explanation=mode==='legend'?'10 jogadas grátis com Wilds 10% mais frequentes do que no superior e 36% de chance de cada Wild novo ficar fixo. Roubo garantido com premium adjacente, global acumulado e +5 FS com 3 Scatters.':mode==='normal'
     ?'Recebeste 10 jogadas grátis! Os Wilds aparecem com mais frequência e têm mais hipóteses de roubar poderes aos jogadores premium. O multiplicador global mantém-se entre jogadas e 3 Scatters dão mais 5 free spins.'
     :'Recebeste 10 jogadas grátis no bónus superior! Os Wilds roubam sempre um poder quando têm um premium ao lado e podem ficar fixos até ao fim. O global acumula entre jogadas e 3 Scatters dão mais 5 free spins.';
-  modal('Bónus conquistado!',`<div class="bonus-entry-stage"><div class="bonus-entry-rays" aria-hidden="true"></div><img src="${bonusArt[mode]}" alt=""><span class="eyebrow">${mode==='normal'?'3 SCATTERS':'4 SCATTERS'} · A FINAL ESPERA POR TI</span><h3>${modeName(mode)}</h3><strong>10 FREE SPINS</strong><p>${explanation}</p><small>Aposta fixa: ${money(session.history[0].bet)} · sem custo adicional pelos FS</small><button id="enter-bonus" class="primary">CONTINUAR</button><span class="bonus-entry-manual">O bónus começa quando quiseres.</span></div>`,'bonus-entry');
+  modal('Bónus conquistado!',`<div class="bonus-entry-stage" data-mode="${mode}"><div class="bonus-entry-rays" aria-hidden="true"></div><img src="${bonusArt[mode]}" alt=""><span class="eyebrow">${mode==='normal'?'3 SCATTERS':mode==='legend'?'5 SCATTERS':'4 SCATTERS'} · A FINAL ESPERA POR TI</span><h3>${modeName(mode)}</h3><strong>10 FREE SPINS</strong><p>${explanation}</p><small>Aposta fixa: ${money(session.history[0].bet)} · sem custo adicional pelos FS</small><button id="enter-bonus" class="primary">CONTINUAR</button><span class="bonus-entry-manual">O bónus começa quando quiseres.</span></div>`,'bonus-entry');
   $('modal').classList.toggle('reduced-entry',prefs.reduced);
   await new Promise<void>(resolve=>{$('enter-bonus').onclick=()=>{localStorage.setItem(BONUS_ENTRY_KEY,bonusEntryId());bonusEntryWaiting=false;setAudioScene(mode);bonusView=session.active?{...session.active}:null;if(bonusView&&session.history[0].mode!=='base'&&session.history[0].spins.length===1){bonusView.remaining=config.freeSpins;bonusView.totalFreeSpins=config.freeSpins;}renderFreeSpins();$<HTMLDialogElement>('modal').close();render();resolve();};});
 }
@@ -80,7 +81,7 @@ document.querySelector('#app')!.innerHTML=`<main class="machine">
   </section>
   </div>
   <footer class="footer"><span>CRÉDITOS FICTÍCIOS · v${config.version} · MÁX. 10 000×</span><span class="keyboard-hint">ESPAÇO para jogar e continuar</span><button id="statistics">RTP / sessão</button></footer>
-  <section id="bonus-shop-panel" popover aria-labelledby="bonus-shop-title"><header><div><small>ESCOLHE A TUA FINAL</small><h2 id="bonus-shop-title">COMPRA DE BÓNUS</h2></div><button popovertarget="bonus-shop-panel" popovertargetaction="hide" aria-label="Fechar compras">×</button></header><p>10 free spins · aposta atual · créditos fictícios</p><div class="bonus-shop-options buybar"><button id="buy-normal"></button><button id="buy-superior"></button></div><small>Escolhe uma opção para veres os detalhes e confirmares a compra.</small></section>
+  <section id="bonus-shop-panel" popover aria-labelledby="bonus-shop-title"><header><div><small>ESCOLHE A TUA FINAL</small><h2 id="bonus-shop-title">COMPRA DE BÓNUS</h2></div><button popovertarget="bonus-shop-panel" popovertargetaction="hide" aria-label="Fechar compras">×</button></header><p>10 free spins · créditos fictícios</p><div class="shop-wager"><label for="shop-bet">Valor da moeda / aposta base</label><select id="shop-bet">${config.bets.map(b=>`<option value="${b}">${money(b)}</option>`).join('')}</select><small>Os três preços acompanham este valor. A aposta fica fixa durante o bónus.</small></div><div class="bonus-shop-options buybar"><button id="buy-normal"></button><button id="buy-superior"></button><button id="buy-legend"></button></div><small>Escolhe uma opção para veres os detalhes e confirmares a compra.</small></section>
   <div id="autospin-panel" popover="auto" role="dialog" aria-label="Configurar spins automáticos"><div class="autospin-heading"><strong>SPINS AUTOMÁTICOS</strong><button id="autospin-close" aria-label="Fechar spins automáticos">×</button></div><output id="autospin-selected" for="autospin-range">10</output><label for="autospin-range">Número de spins</label><input id="autospin-range" type="range" min="0" max="${autoSpinCounts.length-1}" step="1" value="0" aria-label="Número de spins automáticos" aria-valuetext="10 spins"><div class="autospin-scale"><span>10</span><span>100</span><span>500</span></div><p>Usa a velocidade selecionada. Free spins não descontam desta quantidade.</p><button id="autospin-start" class="primary">INICIAR 10 SPINS</button></div>
   <aside class="inspector-source" hidden><ul id="events"></ul><small id="line-count"></small><div id="lines"></div></aside>
   <dialog id="modal"><div class="dialoghead"><h2 id="modal-title"></h2><button id="close-modal" aria-label="Fechar">✕</button></div><div id="modal-content"></div></dialog><div id="toast" class="toast hidden" role="alert"></div>
@@ -172,7 +173,8 @@ function render(){
   $<HTMLSelectElement>('bet').querySelectorAll('option').forEach(option=>option.textContent=money(Number(option.value)*(prefs.bonusHunt&&visualMode==='base'?config.huntCostMultiplier:1)));
   $<HTMLSelectElement>('bet').value=String(session.bet);$<HTMLSelectElement>('bet').disabled=locked;
   $<HTMLButtonElement>('minus').disabled=locked||session.bet===config.bets[0];$<HTMLButtonElement>('plus').disabled=locked||session.bet===config.bets.at(-1);
-  for(const m of ['normal','superior'] as const){const b=$<HTMLButtonElement>('buy-'+m),cost=session.bet*config.prices[m];b.innerHTML=`<span class="buy-art"><img src="${bonusArt[m]}" alt=""></span><span class="buy-label"><b>${modeName(m)}</b><small>10 FREE SPINS</small></span><span class="buy-price">${money(cost)}<small>${config.prices[m]}× APOSTA</small></span>`;b.setAttribute('aria-label',`Comprar ${modeName(m)}, ${money(cost)} créditos, ${config.prices[m]} vezes a aposta`);b.disabled=locked||!assetsReady||session.balance<cost;}
+  $<HTMLSelectElement>('shop-bet').value=String(session.bet);$<HTMLSelectElement>('shop-bet').disabled=locked;
+  for(const m of ['normal','superior','legend'] as const){const b=$<HTMLButtonElement>('buy-'+m),cost=session.bet*config.prices[m];b.innerHTML=`<span class="buy-art"><img src="${bonusArt[m]}" alt=""></span><span class="buy-label"><b>${modeName(m)}</b><small>${m==='legend'?'5 SCATTERS · STICKY 36%':m==='superior'?'4 SCATTERS · STICKY 12%':'3 SCATTERS · SEM STICKY'}</small></span><span class="buy-price">${money(cost)}<small>${config.prices[m]}× APOSTA</small></span>`;b.setAttribute('aria-label',`Comprar ${modeName(m)}, ${money(cost)} créditos, ${config.prices[m]} vezes a aposta`);b.disabled=locked||!assetsReady||session.balance<cost;}
   const spinButton=$<HTMLButtonElement>('spin');spinButton.textContent=autoPlaying?'PARAR':busy?'CONCLUIR':session.pendingRetrigger?'NOVOS FS':reviewPending?'VER RESUMO':session.active?'PRÓXIMO FS':'SPIN';spinButton.setAttribute('aria-label',spinButton.textContent!);spinButton.title=spinButton.textContent!;spinButton.disabled=hasPendingWallet()||!assetsReady||!!storageError||!!session.pendingRetrigger||(!busy&&!reviewPending&&!session.active&&session.balance<baseSpinCost());
   $<HTMLSelectElement>('speed').value=prefs.speed;
   $<HTMLButtonElement>('autospin').disabled=!autoPlaying&&(!assetsReady||busy||reviewPending||!!session.active||!!storageError||hasPendingWallet()||session.balance<baseSpinCost());
@@ -213,8 +215,8 @@ function positionAutoPanel(){
 function clearRetriggerTimers(){clearTimeout(retriggerTimer);clearInterval(retriggerCountdown);retriggerTimer=undefined;retriggerCountdown=undefined;}
 function showRetrigger(){
   const pending=session.pendingRetrigger;if(!pending)return;clearRetriggerTimers();bonusView=session.active?{...session.active}:null;renderFreeSpins();audioCue('retrigger');
-  const mode=session.active?.mode==='superior'?'superior':'normal';
-  modal('Prolongamento!',`<div class="retrigger-celebration"><div class="retrigger-rays" aria-hidden="true"></div><img src="${bonusArt[mode]}" alt="Bilhetes de prolongamento"><span class="eyebrow">O JOGO CONTINUA!</span><strong class="retrigger-award">+${pending.awarded}</strong><h3>FREE SPINS</h3><p>Mais ${pending.awarded} jogadas grátis · global e Wilds fixos mantidos.</p><button id="continue-retrigger" class="primary">CONTINUAR</button><small>Ou continua automaticamente em <span id="retrigger-countdown">10</span> s</small><div class="retrigger-progress" aria-hidden="true"><i></i></div></div>`,'retrigger');
+  const mode=session.active?.mode==='legend'?'legend':session.active?.mode==='superior'?'superior':'normal';
+  modal('Prolongamento!',`<div class="retrigger-celebration" data-mode="${mode}"><div class="retrigger-rays" aria-hidden="true"></div><img src="${bonusArt[mode]}" alt="Bilhetes de prolongamento"><span class="eyebrow">O JOGO CONTINUA!</span><strong class="retrigger-award">+${pending.awarded}</strong><h3>FREE SPINS</h3><p>Mais ${pending.awarded} jogadas grátis · global e Wilds fixos mantidos.</p><button id="continue-retrigger" class="primary">CONTINUAR</button><small>Ou continua automaticamente em <span id="retrigger-countdown">10</span> s</small><div class="retrigger-progress" aria-hidden="true"><i></i></div></div>`,'retrigger');
   $('modal').classList.toggle('reduced-retrigger',prefs.reduced);
   $('modal-content').querySelector<HTMLElement>('.retrigger-celebration')!.onclick=()=>void finishRetrigger();
   const deadline=Date.now()+10000;
@@ -267,7 +269,7 @@ async function play(command:Command){
   try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
     const controller=new AbortController();finishAnimation=()=>{controller.abort();stopEffects();};interruptPresentation=()=>{controller.abort();stopEffects();};
     if(command.type==='start'&&command.mode!=='base'){
-      document.querySelector<HTMLElement>('.machine')!.dataset.presentation='purchase-activation';$('round-note').textContent='Ativação da compra · '+(command.mode==='normal'?3:4)+' bilhetes';
+      document.querySelector<HTMLElement>('.machine')!.dataset.presentation='purchase-activation';$('round-note').textContent='Ativação da compra · '+(command.mode==='normal'?3:command.mode==='legend'?5:4)+' bilhetes';
       await presentBonusActivation(command.mode,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message});
       delete document.querySelector<HTMLElement>('.machine')!.dataset.presentation;
       document.querySelector<HTMLElement>('.machine')!.dataset.mode='base';$('mode').textContent=modeName('base');$('round-note').textContent='Free spin 1 de '+config.freeSpins+' · aposta '+money(session.bet);
@@ -281,24 +283,24 @@ async function play(command:Command){
     await celebrateWin(result.paid,session.history[0].bet,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,control:finish=>finishAnimation=finish,cue:tier=>victoryAudio(tier)});
     finishAnimation=undefined;
     const completedRow=session.history[0];
-    const transitionMode=bonusView?.mode==='superior'?'superior':'normal';
+    const transitionMode=bonusView?.mode==='legend'?'legend':bonusView?.mode==='superior'?'superior':'normal';
     if(result.next.done&&(completedRow.spins.length>1||completedRow.mode!=='base'))await presentBonusTransition({kind:'final',mode:transitionMode,reduced:prefs.reduced,signal:controller.signal});
     else if(result.retrigger&&session.pendingRetrigger)await presentBonusTransition({kind:'retrigger',mode:transitionMode,reduced:prefs.reduced,signal:controller.signal});
-    else if(session.active&&result.mode==='base')await presentBonusTransition({kind:'entry',mode:session.active.mode as 'normal'|'superior',reduced:prefs.reduced,signal:controller.signal});
+    else if(session.active&&result.mode==='base')await presentBonusTransition({kind:'entry',mode:session.active.mode as 'normal'|'superior'|'legend',reduced:prefs.reduced,signal:controller.signal});
     interruptPresentation=undefined;
     busy=false;$('board').classList.remove('busy');render();const row=session.history[0];
     message(prizeClass(result.paid,row.bet,row.paid===config.cap*row.bet),`Spin ${money(result.paid)} · ${x(result.paid,row.bet)}${session.active?' · '+session.active.remaining+' FS por jogar':row.paid<row.cost?' · retorno inferior ao custo da ronda':''}`);
     if(result.next.done&&(row.spins.length>1||row.mode!=='base'))summary(row);
     else if(result.retrigger&&session.pendingRetrigger)showRetrigger();
     else if(session.active&&result.mode==='base'){
-      await showBonusEntry(session.active.mode as 'normal'|'superior');scheduleAuto();
+      await showBonusEntry(session.active.mode as 'normal'|'superior'|'legend');scheduleAuto();
     }else scheduleAuto();
   }catch(error){autoPlaying=false;autoRemaining=0;cancelAuto();interruptPresentation?.();interruptPresentation=undefined;finishAnimation=undefined;busy=false;$('board').classList.remove('busy');render();notify(error instanceof Error?error.message:String(error));}
 }
-function buy(mode:'normal'|'superior'){
+function buy(mode:'normal'|'superior'|'legend'){
   if(busy||session.active||reviewPending)return;
   $('bonus-shop-panel').hidePopover();
-  modal(modeName(mode),`<div class="bonus-hero"><img src="${bonusArt[mode]}" alt=""><span class="eyebrow">${mode==='normal'?'Bónus normal':'Bónus superior'}</span><h3>${config.freeSpins} FREE SPINS</h3></div><p>Aposta fixa ${money(session.bet)}</p><div class="large-pay">${money(session.bet*config.prices[mode])}</div><p class="muted">Créditos fictícios · ${config.prices[mode]}× a aposta · sem prémio mínimo garantido.</p><div class="actions"><button id="cancel-buy">Cancelar</button><button id="confirm-buy" class="primary">Confirmar compra</button></div>`,'bonus');
+  modal(modeName(mode),`<div class="bonus-hero" data-mode="${mode}"><img src="${bonusArt[mode]}" alt=""><span class="eyebrow">${mode==='normal'?'Bónus normal':mode==='legend'?'5 Scatters · Wilds +10% · sticky 36%':'Bónus superior'}</span><h3>${config.freeSpins} FREE SPINS</h3></div><p>Aposta fixa ${money(session.bet)}</p><div class="large-pay">${money(session.bet*config.prices[mode])}</div><p class="muted">Créditos fictícios · ${config.prices[mode]}× a aposta · sem prémio mínimo garantido.</p><div class="actions"><button id="cancel-buy">Cancelar</button><button id="confirm-buy" class="primary">Confirmar compra</button></div>`,'bonus');
   $('cancel-buy').onclick=closeModal;$('confirm-buy').onclick=()=>{closeModal();void play({type:'start',mode});};
 }
 async function changeBet(value:number){if(busy||reviewPending)return;try{await mutate(s=>setBet(s,value));render();}catch(error){render();notify(String(error));}}
@@ -315,7 +317,7 @@ function settings(){
 function showHistory(){
   const filtered=session.history.filter(r=>historyFilter==='all'||historyFilter==='natural'&&r.mode==='base'&&r.spins.some(s=>s.mode!=='base')||r.mode===historyFilter);
   historyPage=Math.max(0,Math.min(historyPage,Math.ceil(filtered.length/20)-1));const page=filtered.slice(historyPage*20,historyPage*20+20);
-  modal('Histórico de rondas',`<div class="actions"><select id="history-filter" aria-label="Filtrar histórico"><option value="all">Todas</option><option value="base">Base</option><option value="normal">Compra normal</option><option value="superior">Compra superior</option><option value="natural">Bónus natural</option></select><span class="muted">${filtered.length} ronda(s) · últimas 500</span></div><div class="table-wrap"><table><thead><tr><th>Ronda / modo</th><th>Aposta</th><th>Custo</th><th>Pago</th><th>Líquido</th><th></th></tr></thead><tbody>${page.map(r=>`<tr class="history-row"><td>#${r.id} · ${modeName(r.mode)}${r.bonusHunt?' · Bonus Hunt':''}${r.complete?'':' · em curso'}</td><td>${money(r.bet)}</td><td>${money(r.cost)}</td><td>${money(r.paid)}</td><td class="${r.paid>=r.cost?'positive':'negative'}">${money(r.paid-r.cost)}</td><td><button data-round="${r.id}" aria-label="Ver ronda ${r.id}">Ver</button></td></tr>`).join('')||'<tr><td colspan="6">Ainda não existem rondas.</td></tr>'}</tbody></table></div><div class="pager"><button id="previous-page" ${historyPage===0?'disabled':''}>Anterior</button><span>Página ${historyPage+1}</span><button id="next-page" ${(historyPage+1)*20>=filtered.length?'disabled':''}>Seguinte</button></div>`);
+  modal('Histórico de rondas',`<div class="actions"><select id="history-filter" aria-label="Filtrar histórico"><option value="all">Todas</option><option value="base">Base</option><option value="normal">Compra normal</option><option value="superior">Compra superior</option><option value="legend">Compra Lendas do Bairro</option><option value="natural">Bónus natural</option></select><span class="muted">${filtered.length} ronda(s) · últimas 500</span></div><div class="table-wrap"><table><thead><tr><th>Ronda / modo</th><th>Aposta</th><th>Custo</th><th>Pago</th><th>Líquido</th><th></th></tr></thead><tbody>${page.map(r=>`<tr class="history-row"><td>#${r.id} · ${modeName(r.mode)}${r.bonusHunt?' · Bonus Hunt':''}${r.complete?'':' · em curso'}</td><td>${money(r.bet)}</td><td>${money(r.cost)}</td><td>${money(r.paid)}</td><td class="${r.paid>=r.cost?'positive':'negative'}">${money(r.paid-r.cost)}</td><td><button data-round="${r.id}" aria-label="Ver ronda ${r.id}">Ver</button></td></tr>`).join('')||'<tr><td colspan="6">Ainda não existem rondas.</td></tr>'}</tbody></table></div><div class="pager"><button id="previous-page" ${historyPage===0?'disabled':''}>Anterior</button><span>Página ${historyPage+1}</span><button id="next-page" ${(historyPage+1)*20>=filtered.length?'disabled':''}>Seguinte</button></div>`);
   $<HTMLSelectElement>('history-filter').value=historyFilter;$<HTMLSelectElement>('history-filter').onchange=e=>{historyFilter=(e.target as HTMLSelectElement).value;historyPage=0;showHistory();};
   $('previous-page').onclick=()=>{historyPage--;showHistory();};$('next-page').onclick=()=>{historyPage++;showHistory();};
   $('modal-content').querySelectorAll<HTMLButtonElement>('[data-round]').forEach(b=>b.onclick=()=>historyDetail(Number(b.dataset.round),0));
@@ -363,7 +365,8 @@ $('bonus-hunt').onclick=()=>{if(busy||autoPlaying||session.active||reviewPending
 $('main-volume').oninput=()=>{prefs.masterVolume=Number($<HTMLInputElement>('main-volume').value)/100;savePrefs();};
 $('minus').onclick=()=>void changeBet(config.bets[config.bets.indexOf(session.bet)-1]);$('plus').onclick=()=>void changeBet(config.bets[config.bets.indexOf(session.bet)+1]);$<HTMLSelectElement>('bet').onchange=e=>void changeBet(Number((e.target as HTMLSelectElement).value));
 $<HTMLSelectElement>('speed').onchange=e=>{prefs.speed=(e.target as HTMLSelectElement).value as Speed;savePrefs();};
-$('buy-normal').onclick=()=>buy('normal');$('buy-superior').onclick=()=>buy('superior');$('history').onclick=showHistory;$('settings').onclick=settings;$('rules').onclick=rules;$('close-modal').onclick=closeModal;
+$<HTMLSelectElement>('shop-bet').onchange=e=>void changeBet(Number((e.target as HTMLSelectElement).value));
+$('buy-legend').onclick=()=>buy('legend');$('buy-normal').onclick=()=>buy('normal');$('buy-superior').onclick=()=>buy('superior');$('history').onclick=showHistory;$('settings').onclick=settings;$('rules').onclick=rules;$('close-modal').onclick=closeModal;
 $<HTMLDialogElement>('modal').addEventListener('close',()=>{finishSummaryCount=undefined;if(reviewPending){reviewPending=false;bonusView=null;setAudioScene('base');render();}scheduleAuto();});
 $<HTMLDialogElement>('modal').addEventListener('cancel',event=>{if(session.pendingRetrigger||bonusEntryWaiting)event.preventDefault();});
 installSpaceContinuation(()=>{
@@ -391,6 +394,6 @@ async function loadArt(){
   const failed=await preloadArt((loaded,total)=>{$<HTMLProgressElement>('asset-progress').max=total;$<HTMLProgressElement>('asset-progress').value=loaded;$('asset-status').textContent=`A preparar o campo · ${loaded}/${total}`;});
   if(failed.length){$('asset-status').textContent=`Não foi possível carregar ${failed.length} recurso(s).`;$('asset-retry').classList.remove('hidden');document.body.dataset.assets='error';return;}
   if(externalWallet&&!storageError){try{if(!navigator.locks)throw Error('O browser não suporta bloqueio local.');await navigator.locks.request(KEY,async()=>{const stored=restoreSession(JSON.parse(localStorage.getItem(KEY)!));persist(await prepareWallet(stored));walletCommitted(session);});bonusView=session.active&&!needsBonusEntry()?{...session.active}:null;}catch(error){$('asset-status').textContent=error instanceof Error?error.message:String(error);$('asset-retry').classList.remove('hidden');return;}}
-  if(bonusView)setAudioScene(bonusView.mode==='superior'?'superior':'normal');assetsReady=true;document.body.dataset.assets='ready';$('loading-screen').hidden=true;render();if(needsBonusEntry())await showBonusEntry(session.active!.mode as 'normal'|'superior');if(session.pendingRetrigger)showRetrigger();
+  if(bonusView)setAudioScene(bonusView.mode==='legend'?'legend':bonusView.mode==='superior'?'superior':'normal');assetsReady=true;document.body.dataset.assets='ready';$('loading-screen').hidden=true;render();if(needsBonusEntry())await showBonusEntry(session.active!.mode as 'normal'|'superior'|'legend');if(session.pendingRetrigger)showRetrigger();
 }
 $('asset-retry').onclick=()=>void loadArt();void loadArt();

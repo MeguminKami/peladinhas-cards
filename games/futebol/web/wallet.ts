@@ -23,7 +23,7 @@ function rpc(method:string,payload:unknown={}):Promise<{balance:number}>{
   window.addEventListener('message',receive);parent.postMessage({channel,kind:'request',id,method,player,payload},origin);
  });
 }
-interface Pending {before:number;next:Session;transaction:{id:string;debit:number;credit:number;roundId:number;spin:number;configVersion:string;bet:number;mode:'base'|'normal'|'superior';bonusHunt:boolean;progress?:Session;bonusComplete?:boolean}}
+interface Pending {before:number;next:Session;transaction:{id:string;debit:number;credit:number;roundId:number;spin:number;configVersion:string;bet:number;mode:'base'|'normal'|'superior'|'legend';bonusHunt:boolean;progress?:Session;bonusComplete?:boolean}}
 function pending():Pending|null{const raw=localStorage.getItem(pendingKey);if(!raw)return null;const p=JSON.parse(raw) as Pending;const prior=p.next.revision;p.next=restoreSession(p.next);p.before+=p.next.revision-prior;if(!Number.isSafeInteger(p.before)||typeof p.transaction?.id!=='string'||!p.transaction.id)throw Error('Pedido de saldo pendente inválido');return p;}
 export function hasPendingWallet(){return externalWallet&&localStorage.getItem(pendingKey)!==null;}
 function applyBalance(next:Session,balance:number,settled=true){next.balance=balance;if(settled&&next.history[0])next.history[0].balance=balance;return next;}

@@ -446,6 +446,7 @@ async function route({ cachedOnly = false } = {}) {
     if (isCurrent()) ctx.go(hash);
   };
   pageCtx.refresh = () => ctx.refresh();
+  pageCtx.invalidateLeague = () => { ctx.league = null; };
   pageCtx.refreshNotifications = () => ctx.refreshNotifications();
   for (const fn of ctx.disposers.splice(0)) {
     try {

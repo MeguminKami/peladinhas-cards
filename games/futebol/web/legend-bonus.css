@@ -1,0 +1,39 @@
+/* Lendas do Bairro shares the existing event choreography and has its own finish. */
+.machine[data-mode=legend]{--accent:#d9bdff;--gold:#f4d78f}
+.machine[data-mode=legend] .playfield{border-color:#bca0ef;box-shadow:0 0 28px #9962d630,inset 0 0 20px #080d24}
+.machine[data-mode=legend] .sticky{box-shadow:inset 0 0 0 2px #ffe5a1,inset 0 0 24px #ac77e766,0 0 12px #b58aed66}
+.machine[data-mode=legend] .sticky-acquired-v2{animation:legend-anchor 650ms ease-out both}
+@keyframes legend-anchor{0%{transform:scale(.87);filter:brightness(1)}45%{transform:scale(1.08);filter:brightness(1.8)}100%{transform:scale(1);filter:brightness(1)}}
+#board .bonus-transition[data-mode=legend]{background:radial-gradient(ellipse at center,#51376bef,#10152bf5)}
+.bonus-transition[data-mode=legend] .bonus-transition-core img{filter:drop-shadow(0 0 22px #be91f7aa)}
+.bonus-entry-stage[data-mode=legend] img,.retrigger-celebration[data-mode=legend] img{filter:drop-shadow(0 8px 28px #b780ee88);animation:legend-emblem 700ms cubic-bezier(.2,.7,.2,1) both}
+.bonus-entry-stage[data-mode=legend] .bonus-entry-rays,.retrigger-celebration[data-mode=legend] .retrigger-rays{background:conic-gradient(from 0deg,transparent,#b798f533,transparent,#ffe4a233,transparent)}
+.finale[data-mode=legend] .finale-halo{background:radial-gradient(circle,#a47ae466,transparent 65%)}
+.finale[data-mode=legend] .finale-mode{color:#dec7ff}
+@keyframes legend-emblem{from{opacity:0;transform:translateY(18px) scale(.7) rotate(-12deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+.shop-wager{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,140px);align-items:center;gap:8px 16px;margin:20px 0 24px;padding:16px 0;border-block:1px solid #a1b6cb44}
+.shop-wager label{font-size:16px;font-weight:600;color:#f7dfaa}
+.shop-wager select{min-height:44px;width:100%;padding:8px 12px;font:600 18px var(--display);font-variant-numeric:tabular-nums;background:#10273c;color:#fff1ce;border:1px solid #b89e69;border-radius:6px}
+.shop-wager small{grid-column:1/-1;color:#bfd1e3;font-size:13px;line-height:1.4}
+#bonus-shop-panel #buy-legend{grid-column:1/-1;display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:16px;text-align:left;padding:16px 20px;border:1px solid #bc9ce7;background:linear-gradient(115deg,#322d50,#1a233b);color:#fff2d5}
+#bonus-shop-panel #buy-legend .buy-label{align-items:flex-start;min-width:0}
+#bonus-shop-panel #buy-legend .buy-label b{color:#ead5ff;font-size:24px}
+#bonus-shop-panel #buy-legend .buy-price{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+#bonus-shop-panel #buy-legend:not(:disabled):hover{border-color:#ffe6a1;transform:translateY(-2px)}
+#bonus-shop-panel #buy-legend:not(:disabled):active{transform:translateY(0) scale(.99)}
+#bonus-shop-panel :is(button,select):focus-visible{outline:3px solid #e6c1ff;outline-offset:3px}
+#bonus-shop-panel button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:420px){
+ .shop-wager{grid-template-columns:minmax(0,1fr) 90px;gap:8px;margin:16px 0;padding:12px 0}.shop-wager label{font-size:15px}.shop-wager small{grid-column:1/-1}
+ #bonus-shop-panel .bonus-shop-options{grid-template-columns:minmax(0,1fr);gap:10px}
+ #bonus-shop-panel .bonus-shop-options>button,#bonus-shop-panel #buy-legend{grid-column:auto;display:grid;grid-template-columns:52px minmax(0,1fr);padding:12px;gap:6px 12px;text-align:left}
+ #bonus-shop-panel .bonus-shop-options .buy-art{display:block;width:52px;height:52px;grid-row:1/3}
+ #bonus-shop-panel .bonus-shop-options .buy-label{min-width:0;align-items:flex-start}
+ #bonus-shop-panel .bonus-shop-options .buy-label b,#bonus-shop-panel #buy-legend .buy-label b{font-size:19px;white-space:normal;line-height:1.15}
+ #bonus-shop-panel .bonus-shop-options .buy-price,#bonus-shop-panel #buy-legend .buy-price{grid-column:2;text-align:left;font-size:22px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+ #bonus-shop-panel .bonus-shop-options .buy-price small{margin:0}
+ #bonus-shop-panel .buy-label small{line-height:1.4;white-space:normal}
+}
+@media(prefers-reduced-motion:reduce){.machine[data-mode=legend] .sticky-acquired-v2,.bonus-entry-stage[data-mode=legend] img,.retrigger-celebration[data-mode=legend] img{animation:none}#bonus-shop-panel #buy-legend{transition:none}}
+body[data-reduced=true] .sticky-acquired-v2,.machine:has(#board.reduced) .sticky-acquired-v2{animation:none}
+.reduced-entry .bonus-entry-stage[data-mode=legend] img,.reduced-retrigger .retrigger-celebration[data-mode=legend] img{animation:none}

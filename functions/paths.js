@@ -1,4 +1,5 @@
 import { AUTOMATION_SCHEDULE } from "./automation-cycle.js";
+import { writeMaintenanceSignals } from "./maintenance-inputs.js";
 import { pathGameCoreSignature } from "./path-game-signature.js";
 import { sameData } from "./equal-data.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
@@ -582,7 +583,11 @@ export function pathFunctions(rebuildPlayer) {
       }
       if (changed) {
         state.updatedAt = now;
-        for (const [target, value] of writes) tx.set(target, value);
+        for (const [target, value] of writes) {
+          tx.set(target, value);
+          if (target.parent.id === "eventRewards")
+            writeMaintenanceSignals(tx, "eventRewards", target.id, null, value);
+        }
         for (const attempt of state.history)
           if (!knownAttempts.has(attempt.id)) {
             tx.set(ref.collection("attempts").doc(attempt.id), attempt);
@@ -648,7 +653,7 @@ export function pathFunctions(rebuildPlayer) {
     }
     return sync(request.auth.uid, { ...input, actorId: request.auth.uid });
   });
-  async function sweep({ gameId, summaryId } = {}) {
+  async function sweep({ gameId, summaryId, maintenance } = {}) {
     if (
       policyAt().features.mode !== "normal" ||
       policyAt().automation.events === false ||
@@ -665,9 +670,20 @@ export function pathFunctions(rebuildPlayer) {
       : new Set();
     const game = gameId ? (await db().doc(`games/${gameId}`).get()).data() : null;
     const ids = gameId ? [...new Set([...linked, ...participants(game || {})])] : [];
+    const full = !maintenance || !maintenance.previous?.pathInitialized || maintenance.policyChanged ||
+      maintenance.previous.fullVersion !== (maintenance.signal.fullVersion || null);
+    let queued = [];
+    if (maintenance) {
+      const [pending, due] = await Promise.all([
+        db().collection("pathRefreshWork").where("pending", "==", true).get(),
+        db().collection("pathRefreshWork").where("nextAt", "<=", Date.now()).get(),
+      ]);
+      queued = [...new Map([...pending.docs, ...due.docs].map(doc => [doc.id, doc])).values()];
+    }
     const states = gameId
       ? { docs: ids.length ? (await db().getAll(...ids.map(uid => db().doc(`pathStates/${uid}`)))).filter(doc => doc.exists) : [] }
-      : await db().collection("pathStates").get();
+      : full ? await db().collection("pathStates").get()
+        : { docs: queued.length ? (await db().getAll(...queued.map(doc => db().doc(`pathStates/${doc.id}`)))).filter(doc => doc.exists) : [] };
     const failures = [];
     for (const doc of states.docs) {
       const state = doc.data();
@@ -697,7 +713,22 @@ export function pathFunctions(rebuildPlayer) {
       }
     }
     if (failures.length) throw Error(failures.join("; "));
-    return { ok: true, nextAt: nextHomeBoundary(states.docs.map(doc => doc.data())) };
+    if (maintenance) {
+      for (const uid of new Set([...queued.map(doc => doc.id), ...states.docs.map(doc => doc.id)])) {
+        const job = queued.find(doc => doc.id === uid);
+        await db().runTransaction(async tx => {
+          const ref = db().doc(`pathRefreshWork/${uid}`);
+          const [current, state] = await tx.getAll(ref, db().doc(`pathStates/${uid}`));
+          if (job ? current.data()?.token !== job.data().token : current.data()?.pending) return;
+          const value = state.data();
+          const needsClock = value?.active || value?.pending?.length || value?.rebuildPending;
+          tx.set(ref, { pending: false, nextAt: needsClock ? nextHomeBoundary(value) : Number.MAX_SAFE_INTEGER }, { merge: true });
+        });
+      }
+    }
+    const next = maintenance ? await db().collection("pathRefreshWork").orderBy("nextAt").limit(1).get() : null;
+    return { ok: true, nextAt: next?.docs[0]?.data().nextAt || nextHomeBoundary(states.docs.map(doc => doc.data())),
+      checkpoint: { pathInitialized: true, fullVersion: maintenance?.signal.fullVersion || null } };
   }
   return {
     syncGame: (gameId) => sweep({ gameId }),
@@ -709,7 +740,7 @@ export function pathFunctions(rebuildPlayer) {
     settlePaths: policySchedule(
       "settlePaths",
       { schedule: AUTOMATION_SCHEDULE, timeZone: "Europe/Lisbon" },
-      () => sweep(),
+      event => sweep({ maintenance: event?.maintenance }),
     ),
   };
 }

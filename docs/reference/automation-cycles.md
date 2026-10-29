@@ -8,7 +8,13 @@ Missões, percursos, eventos, avaliações derivadas, cartas e lembretes são pr
 
 O cron é `0 8,12,17,22 * * *`. Os endpoints agendados existentes continuam publicados, mas entram no mesmo ciclo coordenado. Um checkpoint por instante do scheduler permite que apenas uma entrega execute o trabalho. Um fecho de jogo tem uma chave própria. As execuções dispõem de 540 segundos; entregas falhadas podem repetir-se.
 
-Cada ciclo consulta a informação atual: primeiro avaliações comunitárias e jogos pendentes; depois percursos, eventos e recompensas pendentes; por fim cartas/coleções e lembretes. A publicação de cartas partilha um contexto de leitura por lote e respeita as pausas configuradas.
+Cada ciclo verifica versões duráveis e prazos antes de carregar os dados: primeiro avaliações comunitárias e jogos pendentes; depois percursos, eventos e recompensas pendentes; por fim cartas/coleções e lembretes. Sem alterações nem prazos vencidos, a tarefa termina após consultar metadados. Isto também se aplica aos ciclos de fecho de jogo.
+
+As cartas usam `cardRefreshWork/{uid}` e os percursos `pathRefreshWork/{uid}`: só jogadores alterados ou com prazos vencidos são processados. O contexto das cartas lê perfis, avaliações iniciais, resumos comunitários e recompensas desses jogadores; jogos e resumos partilhados continuam a ser consultados quando necessários ao cálculo. Publicar cartas não enfileira o próprio cálculo. Escolher um percurso não força apuramento dos eventos.
+
+Recompensas e resumos produzidos pelo ciclo sinalizam os consumidores antes das tarefas seguintes. Uma recompensa entregue continua a atualizar a carta no mesmo ciclo. O heartbeat agrupa as entregas adiadas por jogador e usa um só histórico transacional por jogador, atualizando o orçamento entre entregas. As regras de reclamação manual e os limites mantêm-se.
+
+Verificações globais continuam necessárias na inicialização, nas alterações de configuração e nas transições relevantes do calendário das cartas/coleções. Na última semana da época, enquanto a votação FUTTIES não existir, alterações de elegibilidade podem exigir o contexto global. Os horários não obrigam, por si só, a reconstruir todas as cartas.
 
 A limpeza de dados transitórios e entregas push é diária às 08:00. Não se aumenta a frequência destas tarefas para quatro vezes por dia.
 
@@ -32,14 +38,20 @@ Escrever avaliações, votar, preparar uma missão, escolher uma carta e reclama
 
 Os checkpoints são conservados por 30 dias e removidos pela limpeza das 08:00. As filas usam tokens: só é confirmada a geração processada, preservando alterações posteriores.
 
+`maintenanceRuns/{task}` guarda versão, política aplicável e próximo prazo. Falhas não confirmam a versão; alterações concorrentes continuam pendentes. A política entra na comparação para que uma versão agendada produza trabalho mesmo sem uma nova escrita na hora de entrada em vigor.
+
+As expirações usam `rewardExpirations/{rewardId}`, consultando apenas entradas vencidas e removendo as processadas. A primeira execução inicializa este índice operacional a partir das recompensas existentes, incluindo documentos antigos sem `expirationProcessed`. Essa passagem lê uma vez a coleção completa; as execuções seguintes não voltam a ler todo o histórico expirado. Atribuições novas atualizam a fila na transação da recompensa.
+
+Os objetivos consultam as conclusões dos pré-requisitos necessários; as operações de recompensa consultam o histórico dos participantes relevantes. A manutenção de eventos inclui abertos/agendados e fechados com entrega incompleta, excluindo rascunhos só por terem `rewardsApplied: false`. Ainda há consultas partilhadas de eventos ativos e notificações quando as suas dependências mudam; esta otimização não elimina todas as consultas globais.
+
 Reclamações simultâneas da mesma missão/jogador são agrupadas por instância e recebem o mesmo resultado final. Não são guardados resultados concluídos em memória; a transação e o documento de entrega continuam a proteger repetições entre instâncias.
 
 Entregas duplicadas continuam a ler metadados, mas o trabalho de domínio executa uma vez. Há também leituras de consulta e validação das ações. Quatro ciclos em vez de 24 não equivale à mesma redução percentual de leituras faturadas; a poupança cloud precisa de medição posterior.
 
 ## Publicação
 
-`npm.cmd run deploy:cycles` contém seletores `functions:peladinhas:NOME` para os consumidores do runtime partilhado, incluindo agendamentos antigos, triggers e callables abrangidas. Não publica regras, índices ou Storage. Os três triggers de invalidação do início conservam a implementação e não precisam de publicação nesta alteração.
+Para a implementação seletiva, usar `npm.cmd run deploy:selective-updates`: executa `npx.cmd firebase deploy` com os seletores individuais dos consumidores do runtime partilhado, os três triggers `onHomeSource`, `onHomeFeedback` e `onHomeVote`, e `firestore:indexes`. A lista completa está no script de [package.json](../../package.json). Inclui os consumidores de eventos, percursos, cartas, manutenção, notificações e os endpoints agendados antigos. Não publica regras nem Storage.
 
-Publicar depois o frontend com `npm.cmd run deploy:frontend`. Não é necessário recalcular dados existentes: os ciclos criam snapshots em falta, preservando semanas fechadas. Até ao primeiro ciclo, objetivos sem snapshot aguardam apuramento.
+Esta alteração seletiva é exclusivamente backend e índices: não exige frontend. O primeiro ciclo inicializa as filas e os checkpoints, preservando semanas fechadas; não é necessário pedir uma reconstrução manual da liga. A primeira inicialização tem custo superior aos ciclos seguintes. Publicação e consumo real só ficam confirmados após execução e medição cloud.
 
 Verificação local: `npm.cmd run test:cycles`, `npm.cmd test`, `npm.cmd run test:read-safety`, `npm.cmd run check` e `npm.cmd run test:docs`. Estes procedimentos não exigem dados de produção.

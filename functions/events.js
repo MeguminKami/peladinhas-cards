@@ -6,6 +6,8 @@ import { policyAt, canManage } from "../js/system-policy.js";
 import { policyCall, policySchedule, policyWritten, policyCreated, recordTaskFailure } from "./policy-runtime.js";
 import { missionUnlocked, usesRatingObjective } from "../js/event-model.js";
 import { CARD_CRITERIA } from "./card-unlock-rules.js";
+import { rewardDocuments } from "./reward-queries.js";
+import { signalMaintenance } from "./maintenance-inputs.js";
 import {
   managedEvents,
   publicManagedEvent,
@@ -141,7 +143,7 @@ export function eventFunctions(rebuild) {
         return [...new Set((event.winners || []).flatMap((w) => w.uids))];
       if (event.status !== "open" && event.status !== "draft") return [];
       const rewardRef = ref.collection("private").doc("rewards");
-      const ledgerSnapshot = await tx.get(db().collection("eventRewards"));
+      const ledgerSnapshot = await rewardDocuments("uid", event.questions.flatMap(question => question.candidateIds || []), tx);
       const ledger = rows(ledgerSnapshot);
       const [users, games, votes, rewardSnap] = await Promise.all([
         tx.get(db().collection("users")),
@@ -216,6 +218,7 @@ export function eventFunctions(rebuild) {
     });
     for (const uid of affected) await rebuild(uid);
     await db().doc(`events/${id}`).update({ rewardsApplied: true });
+    await signalMaintenance("events", id, null, { status: "closed" });
     return { ok: true };
   }
   const eventAction = policyCall("eventAction",async (request) => {

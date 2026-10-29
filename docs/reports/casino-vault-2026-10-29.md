@@ -1,0 +1,11 @@
+# Vault do casino — 29/10/2026
+
+A carteira mostra uma Vault pessoal no cabeçalho do salão. O painel permite depósitos definitivos, mostra carteira e Vault somadas e explica que não existem levantamentos. A Vault não participa no saldo disponível para apostas nem na condição de saldo do Rejuice.
+
+`casinoSession` aceita `vaultDeposit` em centésimos positivos. Aplica os totais pendentes e transfere o valor entre `balance` e `vaultBalance` na mesma transação, com o fingerprint e a sequência já existentes. Saldo insuficiente após concorrência confirma uma recusa sem transferência. A intenção fica guardada localmente antes do envio; repetir recupera o resultado sem duplicação. Não são adicionados listeners, coleções ou leituras de inicialização. Cada novo depósito reutiliza duas leituras transacionais e duas escritas, além das verificações existentes de utilizador e política; contenção pode repetir a transação.
+
+A loja existente continua a ser uma demonstração local, separada da carteira real. A função de compra agora soma carteira e Vault e desconta primeiro a Vault. O laboratório inclui saldo da Vault para testar compras repartidas. O módulo `casino-shop-payment.js` aceita as unidades do chamador: centésimos na carteira, DJC inteiros na demonstração. Não foram criadas compras reais, endpoints de compra ou atribuição de cartas à conta.
+
+Validação local: 15 testes unitários de sessão, Vault e loja; 9 testes de backend no emulador, incluindo depósitos concorrentes, repetição e proibição de valores negativos. O teste de navegador `node tests/casino-vault.mjs` cobre resposta perdida, validação local, os quatro temas, 320/390/768/1440 px e teclado. Capturas em `test-results/vault-*.png`. O emulador usou configuração temporária em `test-results/firebase.vault.json` porque a porta padrão estava ocupada. Não houve consulta a dados reais nem deploy.
+
+Publicar primeiro `npx.cmd firebase deploy --only functions:peladinhas:casinoSession` e depois `npm.cmd run deploy:frontend`. O módulo de sessão partilhado é consumido no servidor apenas por `casinoSession`. Não é necessário recalcular carteiras: ausência de `vaultBalance` equivale a zero; semanas fechadas não são alteradas. As restantes mudanças de backend presentes na árvore de trabalho pertencem a outros trabalhos e não estão abrangidas por esta indicação.

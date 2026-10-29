@@ -164,3 +164,8 @@ Esta continuidade é por browser/perfil e origem, não por conta em qualquer dis
 | `dist/` | Resultado publicável de `npm run build` |
 
 O README anterior foi preservado em `docs/HISTORICO_README.md`; os seus números e versões são históricos. As regras atuais estão em `docs/MATEMATICA.md` e `docs/MAESTRO_0_5_1.md`. Os sons são sintetizados no browser, conforme `docs/AUDIO.md`.
+
+
+## Lendas do Bairro — 0.8.0
+
+O modo `legend` é um terceiro bónus, com compra 450× a aposta base. O SDK envia `mode: "legend"` e o débito inteiro correspondente à carteira. Sem função cloud de jogo nova; mesma idempotência e retoma. Sessões 0.7.0 preservam saldo, RNG, histórico e tentativas pendentes. Ver [regras atuais](LENDAS_0_8_0.md).

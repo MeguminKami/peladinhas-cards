@@ -15,14 +15,14 @@ export function spin(state:State,bet:number,rng:Random,c:Config=config,details=t
   const lines=evaluate(powers.board,powers.amplified,powers.global,c,details);
   const payment=settle(lines.hundredths,bet,c.cap*bet-state.accumulated,c.payoutScaleBps[state.mode]);
   const newSticky:number[]=[];
-  if(state.mode==='superior')for(let p=0;p<24;p++)if(initial[p]==='W'&&!state.sticky.includes(p)&&rng.next()*100<c.sticky)newSticky.push(p);
+  if(state.mode==='superior'||state.mode==='legend')for(let p=0;p<24;p++)if(initial[p]==='W'&&!state.sticky.includes(p)&&rng.next()*100<(state.mode==='legend'?c.legendSticky:c.sticky))newSticky.push(p);
   const accumulated=state.accumulated+payment.paid;
   const retrigger=state.mode!=='base'&&scatters.length>=3&&accumulated<c.cap*bet?{awarded:c.retriggerFreeSpins,scatters:scatters.length}:null;
   const totalFreeSpins=(state.totalFreeSpins??(state.mode==='base'?0:c.freeSpins))+(retrigger?.awarded??0);
   let next:State;
   if(accumulated>=c.cap*bet)next={mode:state.mode,remaining:0,sticky:[],accumulated,global:powers.global,totalFreeSpins,done:true};
   else if(state.mode==='base'){
-    const mode:Mode=scatters.length===3?'normal':scatters.length===4?'superior':'base';
+    const mode:Mode=scatters.length===3?'normal':scatters.length===4?'superior':scatters.length>=5?'legend':'base';
     next={mode,remaining:mode==='base'?0:c.freeSpins,sticky:[],accumulated,global:powers.global,totalFreeSpins:mode==='base'?0:c.freeSpins,done:mode==='base'};
   }else{const remaining=state.remaining-1+(retrigger?.awarded??0);next={mode:state.mode,remaining,sticky:remaining?[...state.sticky,...newSticky]:[],accumulated,global:powers.global,totalFreeSpins,done:remaining===0};}
   const metrics={eligible:powers.steals.filter(s=>s.eligible.length>0).length,wilds:powers.steals.length,success:powers.steals.filter(s=>s.success).length,powers:[0,0,0,0],newSticky:newSticky.length,retriggers:retrigger?1:0,extraFreeSpins:retrigger?.awarded??0};

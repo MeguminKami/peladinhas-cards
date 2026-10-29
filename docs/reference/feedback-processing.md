@@ -26,4 +26,4 @@ Semanas fechadas permanecem preservadas. Correções, dispensas e eliminações 
 
 `npm.cmd run test:cycles` verifica coordenação, falhas, duplicações, publicação e consultas sem apuramento, com dados sintéticos em emulador. `npm.cmd run test:feedback-hourly` continua a testar a fila; o nome histórico não representa a cadência atual.
 
-Publicar com `npm.cmd run deploy:cycles` e depois `npm.cmd run deploy:frontend`. Não é necessário reconstruir a liga nem reabrir semanas fechadas. Os primeiros ciclos criam os resultados guardados em falta.
+Para a implementação atual com filas seletivas, publicar com `npm.cmd run deploy:selective-updates`, que inclui os consumidores partilhados, triggers de invalidação e índices. Esta otimização não exige frontend. Não é necessário reconstruir a liga nem reabrir semanas fechadas. Os primeiros ciclos inicializam as filas e criam os resultados guardados em falta. [Âmbito e custo da inicialização](automation-cycles.md#publicação).

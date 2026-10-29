@@ -14,8 +14,8 @@ export const symbolArt:Record<SymbolId,{name:string;src:string}>={
   W:{name:'Craque Wild',src:root+'symbols/w-personal-v3.png'},
   S:{name:'Bilhete Scatter',src:root+'symbols/s-ticket.png'},
 };
-export const modeTitles:Record<Mode,string>={base:'Torneio Noturno',normal:'Final do Bairro',superior:'Noite de Glória'};
-export const bonusArt={normal:symbolArt.S.src,superior:root+'symbols/bonus-four-scatter-v1.png'};
+export const modeTitles:Record<Mode,string>={base:'Torneio Noturno',normal:'Final do Bairro',superior:'Noite de Glória',legend:'Lendas do Bairro'};
+export const bonusArt={normal:symbolArt.S.src,superior:root+'symbols/bonus-four-scatter-v1.png',legend:root+'symbols/bonus-five-scatter.svg'};
 export const powerTitles:Record<string,string>={P1:'Toque de Classe',P2:'Arranque Explosivo',P3:'Passes de Maestro',P4:'Glória do Bairro'};
 // An authored display before the first wager, never evaluated or paid.
 export const previewBoard:SymbolId[]=['N1','P1','N2','P2','N3','P3','N4','P4','N1','W','N2','P1','N3','P2','P3','N4','S','P4','P1','N2','W','N3','P2','N4'];
@@ -32,7 +32,7 @@ function cacheReelSprite(src:string,img:HTMLImageElement){
   reelSprites.set(entry[0] as SymbolId,canvas.toDataURL('image/webp',.9));
 }
 export async function preloadArt(onProgress:(loaded:number,total:number)=>void){
-  const urls=[...new Set([background,...Object.values(symbolArt).map(s=>s.src),bonusArt.superior])];let loaded=0;const failed:string[]=[];
+  const urls=[...new Set([background,...Object.values(symbolArt).map(s=>s.src),...Object.values(bonusArt)])];let loaded=0;const failed:string[]=[];
   await Promise.all(urls.map(src=>new Promise<void>(resolve=>{const img=new Image();let finished=false;const finish=(ok:boolean)=>{if(finished)return;finished=true;clearTimeout(timer);if(!ok)failed.push(src);onProgress(++loaded,urls.length);resolve();};const timer=setTimeout(()=>finish(false),12000);img.onload=()=>{try{cacheReelSprite(src,img);}catch{/* Original image remains a safe fallback. */}finish(true);};img.onerror=()=>finish(false);img.src=src;})));
   return failed;
 }

@@ -114,6 +114,9 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       confirmedWon: payload.won,
       confirmedNormalSpins: payload.normalSpins || 0,
       pending: null,
+      lastRejuice: payload.body.rejuice ? result.rejuice : state.lastRejuice,
+      lastVaultDeposit: payload.body.vaultDeposit ? result.vaultDeposited : state.lastVaultDeposit,
+      lastPurchase: payload.body.shopCard ? result.purchase : state.lastPurchase,
       closed: result.closed,
       checkedAt: Date.now(),
       syncError: balance < 0 ? "O saldo mudou noutro dispositivo. Atualiza para confirmar o lote pendente antes de continuar." : "",
@@ -519,6 +522,85 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       });
     return synchronizing;
   }
+  async function loadShop() {
+    await checkpoint("exit", { strict: true });
+    return lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para visitar a loja.");
+      const result = await send({ action: "shop", id: state.id });
+      const balance = result.wallet.balance + state.won - state.confirmedWon - (state.spent - state.confirmedSpent);
+      await save({ ...state, wallet: result.wallet, balance: Math.max(0, balance), syncBlocked: balance < 0 });
+      return result.shop;
+    });
+  }
+  async function buyShopCard(cardId) {
+    if (synchronizing) await synchronizing;
+    return lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para comprar.");
+      if (state.pending) {
+        const recovering = state.pending.body.shopCard;
+        await flush();
+        if (recovering) return state.lastPurchase;
+      }
+      assertPlayable();
+      const pending = {
+        body: { action: "sync", id: state.id, sequence: state.sequence + 1,
+          spent: state.spent, won: state.won, release: false, shopCard: cardId },
+        spent: state.spent, won: state.won, progressRevision: state.progressRevision,
+        normalSpins: state.normalSpins || 0,
+      };
+      await save({ ...state, pending });
+      const result = await send(pending.body);
+      await accept(result, pending);
+      return result.purchase;
+    });
+  }
+  async function depositVault(amount) {
+    if (synchronizing) await synchronizing;
+    return lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Espera pela carteira ou volta a abrir o casino.");
+      if (state.pending) {
+        const recovering = state.pending.body.vaultDeposit;
+        await flush();
+        if (recovering) return state.lastVaultDeposit;
+      }
+      assertPlayable();
+      if (!Number.isSafeInteger(amount) || amount <= 0 || amount > state.balance)
+        throw Error("Escolhe um valor até ao saldo disponível na carteira.");
+      const pending = {
+        body: { action: "sync", id: state.id, sequence: state.sequence + 1,
+          spent: state.spent, won: state.won, release: false, vaultDeposit: amount },
+        spent: state.spent, won: state.won, progressRevision: state.progressRevision,
+        normalSpins: state.normalSpins || 0,
+      };
+      await save({ ...state, pending });
+      const result = await send(pending.body);
+      await accept(result, pending);
+      return result.vaultDeposited;
+    });
+  }
+  async function rejuice() {
+    if (synchronizing) await synchronizing;
+    return lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Espera pela carteira ou volta a abrir o casino.");
+      if (state.pending) {
+        const recoveringRejuice = state.pending.body.rejuice;
+        await flush();
+        if (recoveringRejuice) return state.lastRejuice;
+      }
+      assertPlayable();
+      if (state.balance >= 500) return false;
+      const pending = {
+        body: { action: "sync", id: state.id, sequence: state.sequence + 1,
+          spent: state.spent, won: state.won, release: false, rejuice: true },
+        spent: state.spent, won: state.won, progressRevision: state.progressRevision,
+        normalSpins: state.normalSpins || 0,
+      };
+      await save({ ...state, pending });
+      const result = await send(pending.body);
+      await accept(result, pending);
+      return result.rejuice;
+    });
+  }
   async function close() {
     if (closing) return closing;
     stopped = true;
@@ -555,6 +637,10 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
   }
   return {
     start,
+    rejuice,
+    depositVault,
+    loadShop,
+    buyShopCard,
     async enterGame() {
       await start();
       return checkpoint("game-entry", { strict: true });
