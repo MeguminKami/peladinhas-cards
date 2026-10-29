@@ -248,7 +248,7 @@ try {
   });
   await page.locator(".game-list").waitFor();
   await page.evaluate(() => { location.hash = "#/game/postmatch-test"; });
-  const editRatings = page.getByRole("link", { name: "Editar avalia??es", exact: true });
+  const editRatings = page.getByRole("link", { name: "Editar avaliações", exact: true });
   await editRatings.waitFor();
   await editRatings.click();
   await page.locator('.feedback-form[data-target="player-1"][data-submitted="false"]').waitFor({ state: "attached" });
