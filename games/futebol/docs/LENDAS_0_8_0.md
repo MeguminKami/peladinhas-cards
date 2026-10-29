@@ -8,7 +8,7 @@ Implementado em 29/10/2026. Acrescenta um terceiro bónus à [0.7.0](MAESTRO_0_7
 - 10 FS iniciais; 3 Scatters durante o bónus dão +5 FS, repetíveis, sem mudar de modo.
 - Wilds diretamente sorteados: 36% de chance de ficar sticky, uma tentativa no nascimento. Persistem até ao fim, sem conservar poderes locais. Wilds de expansão não ficam sticky.
 - Roubo a 100% havendo premium ortogonal elegível. Global persistente, poderes, arredondamento e fator de pagamento ×3 iguais ao superior.
-- Wild por posição livre antes dos Scatters: `(55 / 1040) × 1,10 = 5,8173076923%`. Os não-Wilds preservam as proporções relativas. Pesos inteiros N1…W: `47760,42785,36815,30845,15920,10945,6965,3980,12012`; total 206960.
+- Wild por posição livre antes dos Scatters: `(55 / 1040) × 1,10 = 5,8173076923%`. Os não-Wilds preservam as proporções relativas. Pesos inteiros N1…W: `470160,421185,362415,303645,156720,107745,68565,39180,119185`; total 2048800.
 - 5 Scatters no base: 0,005%, 1 em 20 000. Esta massa sai de zero Scatters; probabilidades de 1–4 mantidas. Pesos para 0…5: `149990,40000,9300,640,60,10`, total 200000.
 - Hunt mantém custo 3× e boost relativo de 50% nas quantidades positivas. Pesos: `249970,120000,27900,1920,180,30`, total 400000. Cinco: 0,0075%, 1 em 13 333,33.
 - Teto 10 000× a aposta base, incluindo a ronda natural completa; nunca o custo 450× da compra. Atingir o teto termina a ronda.

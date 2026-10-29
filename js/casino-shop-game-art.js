@@ -123,7 +123,186 @@ const refinements = {
   glory: `<g class="scg-gold-filaments"><path d="M65 211q12-17 27-16t27-13M69 217q15-17 28-16t24-14M235 211q-12-17-27-16t-27-13M231 217q-15-17-28-16t-24-14M81 182l9 13-2 14m124-27-9 13 2 14"/></g><g class="scg-lit-particles"><circle cx="83" cy="194" r="1.5"/><circle cx="102" cy="186" r="1.1"/><circle cx="116" cy="177" r="1"/><circle cx="220" cy="194" r="1.6"/><circle cx="197" cy="185" r="1.2"/><circle cx="185" cy="176" r=".9"/><circle cx="74" cy="225" r=".8"/><circle cx="226" cy="227" r=".8"/></g><path class="scg-gold-wear" d="m44 48 9-2m-12 8 5-1m43-23 7-5m26-8 9 1m60 1 6 1m36 18 4 5m25 6 8 3M38 357l3 6m12 15 7 1m32 13 11 3m103-1 8-3m29-16 6-4"/>`,
 };
 
+// Premium editions reinterpret the symbol materials across the entire card.
+// All paint IDs come from the renderer, so repeated previews never share gradients.
+const premiumPaint = (id, colors) => `<defs>
+  <linearGradient id="${id}-alloy" x1="0" y1="0" x2="1" y2=".8"><stop stop-color="${colors[0]}"/><stop offset=".17" stop-color="${colors[1]}"/><stop offset=".3" stop-color="${colors[2]}"/><stop offset=".44" stop-color="${colors[0]}"/><stop offset=".48" stop-color="${colors[3]}"/><stop offset=".68" stop-color="${colors[1]}"/><stop offset=".83" stop-color="${colors[2]}"/><stop offset="1" stop-color="${colors[0]}"/></linearGradient>
+  <linearGradient id="${id}-gem" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${colors[4]}"/><stop offset=".4" stop-color="${colors[5]}"/><stop offset=".65" stop-color="${colors[4]}"/><stop offset="1" stop-color="${colors[3]}"/></linearGradient>
+  <radialGradient id="${id}-aura" cx=".56" cy=".38" r=".65"><stop stop-color="${colors[5]}" stop-opacity=".55"/><stop offset=".65" stop-color="${colors[4]}" stop-opacity=".15"/><stop offset="1" stop-color="${colors[3]}"/></radialGradient>
+  <pattern id="${id}-weave" width="10" height="10" patternUnits="userSpaceOnUse"><path d="m0 5 5-5 5 5-5 5Z M3 5l2-2 2 2-2 2Z" fill="none" stroke="${colors[0]}" stroke-width=".45" opacity=".22"/></pattern>
+</defs>`;
+const premiumGem = (id, x, y, size = 13) =>
+  `<g transform="translate(${x} ${y})"><path d="M0 ${-size - 5} ${size + 5} 0 0 ${size + 5} ${-size - 5} 0Z" fill="url(#${id}-alloy)" stroke="#fff1bd" stroke-width=".7"/><path d="M0 ${-size} ${size} 0 0 ${size} ${-size} 0Z" fill="url(#${id}-gem)" stroke="#ffffffc0" stroke-width=".65"/><path d="M0 ${-size} 4 -3 ${size} 0 3 4 0 ${size} -4 3 ${-size} 0 -3 -4Z" fill="#ffffff" opacity=".25"/><path d="M0 ${-size} 0 ${size} M${-size} 0 ${size} 0 M-3 -4 3 4M4 -3 -4 3" fill="none" stroke="#ffffffb0" stroke-width=".5"/><path d="m-3 -4 7 1-1 7-7-1Z" fill="#fff" opacity=".45"/></g>`;
+const premiumStars = (points) =>
+  points
+    .map(
+      ([x, y, s = 3]) =>
+        `<path d="M${x - s} ${y}h${s * 2}M${x} ${y - s}v${s * 2}" stroke="#fff3c9" stroke-width=".8"/><circle cx="${x}" cy="${y}" r=".9" fill="#fff"/>`,
+    )
+    .join("");
+const premiumMesh = (id, path) =>
+  `<path d="${path}" fill="url(#${id}-weave)"/>`;
+const bronzePremium = (id) => {
+  const field = "M43 57 150 27 257 57 252 332 229 368 150 394 71 368 48 332Z";
+  return (
+    premiumPaint(id, [
+      "#ffe0a3",
+      "#ca733b",
+      "#ffb663",
+      "#39170f",
+      "#063e35",
+      "#3c9c73",
+    ]) +
+    `
+ <path d="M150 5 273 39 292 64 284 340 258 382 150 418 42 382 16 340 8 64 27 39Z" fill="url(#${id}-alloy)" stroke="#ffc484" stroke-width="1.3"/>
+ <path d="M150 17 267 48 280 68 273 336 249 373 150 405 51 373 27 336 20 68 33 48Z" fill="#341b12" stroke="#ffc586" stroke-width="1"/>
+ <path d="${field}" fill="#092d29" stroke="#b16433" stroke-width="3"/>
+ <path d="${field}" fill="url(#${id}-aura)"/>${premiumMesh(id, field)}
+ <path d="m96 45 50-14 102 28-3 42-36 7-15-33Z M49 205l199-133-1 20L49 224Zm1 54 194-128v13L50 273Z" fill="url(#${id}-alloy)" opacity=".32"/>
+ <path d="M32 65 150 30 268 65M33 77l5 248 22 35 90 30 90-30 22-35 5-248" fill="none" stroke="#ffb56c" stroke-width="2"/>
+ <path d="M18 74 24 329 47 368M282 74l-6 255-23 39M53 383l97 32 97-32" fill="none" stroke="#ff8d38" stroke-width="2"/>
+ <path d="M22 87 29 312M278 87l-7 225M62 376l88 28 88-28" fill="none" stroke="#ffdf9a" stroke-width=".7"/>
+ <g fill="none" stroke="#e6a365" stroke-width=".55" opacity=".7">${[98, 132, 166, 200, 234, 268].map((y) => `<path d="m25 ${y} 7 6-6 8 7 7m242-21-7 6 6 8-7 7"/>`).join("")}</g>
+ <path d="m30 345 20 24 100 33 100-33 20-24-15 2-17 15-88 29-88-29-17-15Z" fill="url(#${id}-alloy)"/>
+ <path d="M48 61h37l-1 97H48Z" fill="#102d29" opacity=".95"/>
+ ${premiumStars([
+   [30, 55, 5],
+   [269, 56, 4],
+   [46, 369, 3],
+   [251, 372, 3],
+ ])}`
+  );
+};
+const silverPremium = (id) => {
+  const field =
+    "M45 60Q95 46 150 25q55 21 105 35l-8 264q-10 47-97 74-87-27-97-74Z";
+  return (
+    premiumPaint(id, [
+      "#f6fcff",
+      "#7b98b9",
+      "#d4eaff",
+      "#0a193d",
+      "#06378f",
+      "#25c8ff",
+    ]) +
+    `
+ <path d="M150 4q46 28 118 29l-4 27 23 26-13 47 11 184q-1 52-66 78l-69 24-69-24q-65-26-66-78l11-184L13 86l23-26-4-27Q104 32 150 4Z" fill="url(#${id}-alloy)" stroke="#e3f5ff"/>
+ <path d="M150 19q50 27 104 29l-8 24 23 19-13 40 13 184q-2 43-65 67l-54 20-54-20q-63-24-65-67l13-184-13-40 23-19-8-24q54-2 104-29Z" fill="#061735" stroke="#95dcff" stroke-width="1.4"/>
+ <path d="${field}" fill="url(#${id}-aura)"/>${premiumMesh(id, field)}
+ <g fill="none" stroke-linecap="round">${[0, 1, 2, 3, 4].map((i) => `<path d="M${97 + i * 37} 59 ${53 + i * 39} 244" stroke="#0388ef" stroke-width="5" opacity=".18"/><path d="M${97 + i * 37} 59 ${53 + i * 39} 244" stroke="#65efff" stroke-width="1.1" opacity=".7"/>`).join("")}</g>
+ <path d="M26 138q20 32 7 119t18 91q36 9 55 29-62-3-80-43-13-26 0-196Zm248 0q-20 32-7 119t-18 91q-36 9-55 29 62-3 80-43 13-26 0-196Z" fill="url(#${id}-alloy)" stroke="#e7f8ff" stroke-width=".8"/>
+ <path d="M38 272q-4 71 67 100l45 31 45-31q71-29 67-100-12 59-65 74l-47 28-47-28q-53-15-65-74Z" fill="url(#${id}-alloy)" stroke="#3aa0de"/>
+ <path d="M28 110q12-24 22-31M272 110q-12-24-22-31M32 311q3 33 36 51m200-51q-3 33-36 51" fill="none" stroke="#bcefff" stroke-width="1.8"/>
+ ${premiumGem(id, 27, 207, 13)}${premiumGem(id, 273, 207, 13)}
+ <path d="M48 62h37v100H48Z" fill="#0b2344" opacity=".95"/>
+ ${premiumStars([
+   [53, 48, 4],
+   [248, 49, 4],
+   [27, 207, 3],
+   [271, 207, 3],
+   [150, 402, 4],
+ ])}`
+  );
+};
+const goldPremium = (id) => {
+  const field =
+    "M45 64 92 55 150 35 208 55 255 64 252 331 230 369 150 397 70 369 48 331Z";
+  const leaves = Array.from({ length: 5 }, (_, i) => {
+    const y = 326 - i * 38;
+    return `<path d="M33 ${y + 29}q-27-35-18-54 24 13 26 42l-8 12Zm234 0q27-35 18-54-24 13-26 42l8 12Z" fill="url(#${id}-alloy)" stroke="#ffd970" stroke-width=".8"/><path d="M32 ${y + 20} 20 ${y - 10}m248 30 12-30" fill="none" stroke="#7b4014" stroke-width="1.2"/>`;
+  }).join("");
+  return (
+    premiumPaint(id, [
+      "#fff0a0",
+      "#ca811b",
+      "#ffd94e",
+      "#281039",
+      "#5515a6",
+      "#d08eff",
+    ]) +
+    `
+ <path d="M150 3 171 28 202 13 207 45 239 31 244 55 275 63 279 327 260 375 150 419 40 375 21 327 25 63 56 55 61 31 93 45 98 13 129 28Z" fill="url(#${id}-alloy)" stroke="#ffe59a" stroke-width="1.4"/>
+ <path d="M42 73 99 62 150 42 201 62 258 73 257 326 240 361 150 399 60 361 43 326Z" fill="#1b092f" stroke="#f1b83e" stroke-width="2"/>
+ <path d="${field}" fill="url(#${id}-aura)"/>${premiumMesh(id, field)}
+ <g fill="none" stroke="url(#${id}-alloy)" stroke-width="4">${[0, 1, 2].map((i) => `<path d="M${45 + i * 18} ${88 + i * 9}Q${120 - i * 12} 81 150 221Q${180 + i * 12} 81 ${255 - i * 18} ${88 + i * 9}"/>`).join("")}</g>
+ <path d="m102 27 4 27 23-11Zm96 0-4 27-23-11Z" fill="#6422b0" stroke="#ffdc68"/>
+ ${leaves}
+ <path d="M37 340q41 31 113 55 72-24 113-55l-9 30-104 44-104-44Z" fill="url(#${id}-alloy)"/>
+ ${premiumGem(id, 150, 30, 16)}${premiumGem(id, 41, 89, 10)}${premiumGem(id, 259, 89, 10)}${premiumGem(id, 150, 393, 13)}
+ <g fill="#ffe392" opacity=".7">${[0, 1, 2, 3, 4, 5, 6].map((i) => `<circle cx="${93 + i * 18}" cy="${85 + (i % 3) * 14}" r=".85"/><circle cx="${49 + i * 3}" cy="${189 + i * 14}" r=".7"/><circle cx="${251 - i * 3}" cy="${189 + i * 14}" r=".7"/>`).join("")}</g>
+ <path d="M49 68h37v96H49Z" fill="#281039" opacity=".94"/>
+ ${premiumStars([
+   [98, 22, 4],
+   [203, 24, 4],
+   [38, 333, 3],
+   [263, 334, 3],
+ ])}`
+  );
+};
+const blackPremium = (id) => {
+  const field =
+    "M48 59 106 38 150 23 194 38 252 59 251 333 225 370 150 398 75 370 49 333Z";
+  const petals = Array.from({ length: 4 }, (_, i) => {
+    const y = 118 + i * 57;
+    return `<path d="M26 ${y - 25} 8 ${y - 43} 15 ${y + 2} 35 ${y + 27} 42 ${y + 9}Z M274 ${y - 25} 292 ${y - 43} 285 ${y + 2} 265 ${y + 27} 258 ${y + 9}Z" fill="url(#${id}-alloy)" stroke="#ffdf83" stroke-width=".85"/><path d="m20 ${y - 15} 11 23-4 9-10-17Zm260 0-11 23 4 9 10-17Z" fill="#0c1116" stroke="#8f6927" stroke-width=".6"/>`;
+  }).join("");
+  return (
+    premiumPaint(id, [
+      "#fff0b0",
+      "#b97716",
+      "#ffd564",
+      "#090e13",
+      "#aeb8cc",
+      "#ffffff",
+    ]) +
+    `
+ <path d="M150 3 178 27 229 36 249 23 260 49 281 65 273 117 285 159 276 205 285 253 274 299 281 344 252 383 150 419 48 383 19 344 26 299 15 253 24 205 15 159 27 117 19 65 40 49 51 23 71 36 122 27Z" fill="url(#${id}-alloy)" stroke="#ffe2a0" stroke-width="1.2"/>
+ <path d="M150 17 178 39 246 54 263 72 254 333 235 369 150 403 65 369 46 333 37 72 54 54 122 39Z" fill="#080d13" stroke="#cc9a37" stroke-width="2"/>
+ <path d="${field}" fill="#071f1c"/>${premiumMesh(id, field)}
+ <path d="m95 47 55-19 55 19 46 36v125l-35-79-66-66-66 66-35 79V83Z" fill="#101519"/>
+ <path d="m49 158 101-97 101 97M49 186 150 87l101 99M49 221l101-108 101 108M52 253l98-113 98 113" fill="none" stroke="url(#${id}-alloy)" stroke-width="1.5" opacity=".65"/>
+ <path d="m57 68 93-32 93 32-3 20-90-36-90 36Z" fill="url(#${id}-alloy)"/>
+ ${petals}
+ <path d="M33 335 58 370 150 406 242 370 267 335 251 340 230 360 150 391 70 360 49 340Z" fill="url(#${id}-alloy)"/>
+ <path d="M56 365 150 402 244 365M40 88l7 54m213-54-7 54" fill="none" stroke="#fff0a6" stroke-width=".7"/>
+ ${premiumGem(id, 150, 26, 12)}${premiumGem(id, 27, 204, 13)}${premiumGem(id, 273, 204, 13)}${premiumGem(id, 60, 368, 8)}${premiumGem(id, 240, 368, 8)}
+ <g fill="none" stroke="#e6bd62" stroke-width=".5" opacity=".6">${[0, 1, 2, 3, 4].map((i) => `<path d="m47 ${280 + i * 9} 8 5-5 7m203-12-8 5 5 7"/>`).join("")}</g>
+ <path d="M49 61h37v102H49Z" fill="#0a1717" opacity=".96"/>
+ ${premiumStars([
+   [49, 49, 5],
+   [249, 49, 5],
+   [150, 9, 4],
+   [27, 189, 3],
+   [272, 219, 3],
+   [149, 407, 4],
+ ])}`
+  );
+};
+const PREMIUM_DESIGNS = {
+  "football-p1": {
+    shape:
+      "150,5 273,39 292,64 284,340 258,382 150,418 42,382 16,340 8,64 27,39",
+    art: bronzePremium,
+  },
+  "football-p2": {
+    shape:
+      "150,4 268,33 264,60 287,86 274,133 285,317 264,365 219,395 150,419 81,395 36,365 15,317 26,133 13,86 36,60 32,33",
+    art: silverPremium,
+  },
+  "football-p3": {
+    shape:
+      "150,3 171,28 202,13 207,45 239,31 244,55 275,63 279,327 260,375 150,419 40,375 21,327 25,63 56,55 61,31 93,45 98,13 129,28",
+    art: goldPremium,
+  },
+  "football-p4": {
+    shape:
+      "150,3 178,27 229,36 249,23 260,49 281,65 273,117 285,159 276,205 285,253 274,299 281,344 252,383 150,419 48,383 19,344 26,299 15,253 24,205 15,159 27,117 19,65 40,49 51,23 71,36 122,27",
+    art: blackPremium,
+  },
+};
+
 export const GAME_DESIGNS = Object.freeze({
+  ...PREMIUM_DESIGNS,
   "blackjack-private": {
     shape:
       "43,9 257,9 282,29 290,62 282,341 257,385 150,418 43,385 18,341 10,62 18,29",

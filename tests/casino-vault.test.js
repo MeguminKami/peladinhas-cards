@@ -12,9 +12,9 @@ const input = { action: "sync", owner: "player", id, sequence: 1, spent: 0, won:
 test("Vault deposits transfer money once and do not alter the combined total", () => {
   const start = applyCasinoSession(newCasinoWallet(), undefined, open);
   const next = applyCasinoSession(start.wallet, start.session, input);
-  assert.equal(next.wallet.balance, 24000);
+  assert.equal(next.wallet.balance, 19000);
   assert.equal(next.wallet.vaultBalance, 1000);
-  assert.equal(shopFunds(next.wallet), 25000);
+  assert.equal(shopFunds(next.wallet), 20000);
   assert.equal(next.response.vaultDeposited, 1000);
   const replay = applyCasinoSession(next.wallet, next.session, input);
   assert.equal(replay.write, false);

@@ -131,7 +131,7 @@ export async function playerPage(ctx, uid) {
     uid !== ctx.user.uid
       ? linkButton(
           `#/missions/new/${uid}`,
-          myRating?.reviewState === "required" ? "Rever a minha avaliação" : myRating?.reviewAttempts >= 2 ? "Consultar a minha avaliação" : myRating?.submitted ? "Editar a minha avaliação" : "Avaliar jogador",
+          myRating?.reviewState === "required" && myRating?.reviewGrantedAt ? "Rever a minha avaliação" : ["invalid", "ignored", "required"].includes(myRating?.reviewState) || myRating?.reviewAttempts >= 2 ? "Consultar a minha avaliação" : myRating?.submitted ? "Editar a minha avaliação" : "Avaliar jogador",
           "primary",
           "edit",
         )
@@ -176,7 +176,7 @@ export async function playerPage(ctx, uid) {
   const reviewNotices = own
     ? (ctx.missions || []).filter(mission => mission.type === "COMMUNITY_RATING_REVIEW").map(mission => {
         const target = ctx.league.players.find(player => player.uid === mission.href.split("/").at(-1));
-        return communityReviewBanner(target?.displayName || target?.username || "este jogador",{reviewState:"required"},mission.href);
+        return communityReviewBanner(target?.displayName || target?.username || "este jogador",{reviewState:"required",reviewGrantedAt:true},mission.href);
       }).join("")
     : communityReviewBanner(p.displayName || p.username,myRating,`#/missions/new/${uid}`);
   const attributePrevious = history.find((h) => h.weekId === previousWeek);

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { getFirestore, Timestamp, FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { policyCall, assertFeature } from "./policy-runtime.js";
-import { policyAt } from "../js/system-policy.js";
+import { policyAt, canManage } from "../js/system-policy.js";
 import { canEditRating } from "../js/rating-window.js";
 import { ATTRIBUTES, completeInitial } from "../js/utils.js";
 import {
@@ -10,15 +10,15 @@ import {
   communityReviewNotice,
 } from "./community-rating-policy.js";
 
-export function requiredCommunityReview(now = Timestamp.now()) {
+export function requiredCommunityReview(now = Timestamp.now(), authorized = false) {
   return {
-    reviewState: "required",
+    reviewState: authorized ? "required" : "invalid",
     reviewAttempts: 1,
-    reviewToken: randomUUID(),
+    reviewToken: authorized ? randomUUID() : null,
     reviewRequestedAt: now,
-    reviewDeadline: Timestamp.fromMillis(
+    reviewDeadline: authorized ? Timestamp.fromMillis(
       now.toMillis() + policyAt().rules.ratingEditDays * 86400000,
-    ),
+    ) : null,
   };
 }
 export function writeCommunityNotice(tx, db, row, targetName, state) {
@@ -35,6 +35,48 @@ export function writeCommunityNotice(tx, db, row, targetName, state) {
   );
 }
 export function communityRatingFunctions(rebuild) {
+  const listCommunityRatingsForAdmin = policyCall("listCommunityRatingsForAdmin", async (request) => {
+    if (!canManage(request.systemActor, "ratings"))
+      throw new HttpsError("permission-denied", "Acesso reservado à administração de avaliações.");
+    const snapshot = await getFirestore().collection("communityRatings").get();
+    return { rows: snapshot.docs.map(doc => {
+      const row = { ...doc.data(), id: doc.id };
+      // Classify legacy submissions too, without changing their stored values on a read.
+      if (row.submitted && completeInitial(row.ratings20) &&
+          !eligibleCommunityRating({ ...row, reviewState: null }) &&
+          !["required", "ignored", "invalid"].includes(row.reviewState)) row.reviewState = "invalid";
+      for (const [key, value] of Object.entries(row))
+        if (value?.toDate) row[key] = value.toDate().toISOString();
+      return row;
+    }) };
+  });
+  const grantCommunityRatingRetry = policyCall("grantCommunityRatingRetry", async (request) => {
+    if (!canManage(request.systemActor, "ratings"))
+      throw new HttpsError("permission-denied", "Acesso reservado à administração de avaliações.");
+    const { id } = request.data || {};
+    if (typeof id !== "string" || !/^[A-Za-z0-9_-]{1,260}$/.test(id))
+      throw new HttpsError("invalid-argument", "Avaliação inválida.");
+    const db = getFirestore(), ref = db.doc(`communityRatings/${id}`), now = Timestamp.now();
+    return db.runTransaction(async (tx) => {
+      const snapshot = await tx.get(ref), row = snapshot.data();
+      if (!row) throw new HttpsError("not-found", "Avaliação não encontrada.");
+      const target = await tx.get(db.doc(`users/${row.targetId}`));
+      if (!row.submitted || !completeInitial(row.ratings20) ||
+          eligibleCommunityRating({ ...row, reviewState: null }) ||
+          (row.reviewAttempts || 0) >= 2 || row.reviewGrantedAt)
+        throw new HttpsError("failed-precondition", "Esta avaliação não permite outra tentativa.");
+      const value = { ...row, ...requiredCommunityReview(now, true),
+        reviewGrantedAt: now, reviewGrantedBy: request.auth.uid, updatedAt: now };
+      tx.set(ref, value);
+      tx.set(db.collection("systemAudit").doc(), {
+        actorId: request.auth.uid, action: "grantCommunityRatingRetry",
+        details: { id, raterId: row.raterId, targetId: row.targetId },
+        status: "completed", createdAt: now,
+      });
+      writeCommunityNotice(tx, db, value, target.data()?.displayName || target.data()?.username || "este jogador", "required");
+      return { reviewState: "required" };
+    });
+  });
   const communityRatingAction = policyCall(
     "communityRatingAction",
     async (request) => {
@@ -109,12 +151,15 @@ export function communityRatingFunctions(rebuild) {
               "Esta submissão já foi recebida.",
             );
           return {
-            reviewState: old.reviewState || "accepted",
+            reviewState: old.reviewState || (eligibleCommunityRating(old) ? "accepted" : "invalid"),
             submitted: true,
             repeated: true,
           };
         }
-        if ((old.reviewAttempts || 0) >= 2 || old.reviewState === "ignored")
+        if ((old.reviewAttempts || 0) >= 2 || old.reviewState === "ignored" || old.reviewState === "invalid" ||
+            (old.reviewState === "required" && !old.reviewGrantedAt) ||
+            (old.submitted && completeInitial(old.ratings20) &&
+              !eligibleCommunityRating({ ...old, reviewState: null }) && !old.reviewGrantedAt))
           throw new HttpsError(
             "failed-precondition",
             "Esta avaliação já está encerrada.",
@@ -164,7 +209,7 @@ export function communityRatingFunctions(rebuild) {
         });
         if (!old.submitted) value.submittedAt = now;
         delete value.draftRatings20;
-        const accepted = eligibleCommunityRating(value);
+        const accepted = eligibleCommunityRating({ ...value, reviewState: null });
         if (pending) {
           Object.assign(value, {
             reviewAttempts: 2,
@@ -189,7 +234,7 @@ export function communityRatingFunctions(rebuild) {
             target.data().displayName ||
               target.data().username ||
               "este jogador",
-            "required",
+            "invalid",
           );
         }
         value.communityBatchToken = randomUUID();
@@ -202,9 +247,9 @@ export function communityRatingFunctions(rebuild) {
           reviewState: value.reviewState || "accepted",
         };
       });
-      if (submit && !result.repeated) await rebuild(targetId);
+      if (submit) await rebuild(targetId);
       return result;
     },
   );
-  return { communityRatingAction };
+  return { communityRatingAction, grantCommunityRatingRetry, listCommunityRatingsForAdmin };
 }

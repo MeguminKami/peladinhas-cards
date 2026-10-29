@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { card } from "../js/cards.js";
+import { ATTRIBUTES, flag } from "../js/utils.js";
+import { cardStatsMarkup } from "../js/card-player-content.js";
 import {
   SHOP_CARDS,
   SHOP_ARCHIVED_CARDS,
@@ -10,6 +13,31 @@ import {
   CASINO_SHOP_ART_IDS,
   renderCasinoShopCard,
 } from "../js/casino-shop-art.js";
+test("every shop finish shares official values, eight attributes, country, trends and playstyles", () => {
+  const player = {
+    displayName: "Jogador", name: "Jogador", ovr: 87, primaryPosition: "GR", countryCode: "PT",
+    stats: Object.fromEntries(ATTRIBUTES.map(([key], i) => [key, 93 - i])),
+    previousStats: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 75])),
+    ovrDelta: 2, photoURL: "./assets/default-avatar.svg",
+    photoDesign: { photoX: -50, photoY: 100, photoWidth: 160, photoHeight: 120, photoScale: 200 },
+  };
+  const stats = cardStatsMarkup(player);
+  assert.ok(card(player, { preview: true, theme: "gold-common" }).includes(stats));
+  for (const edition of SHOP_CARDS) {
+    const markup = renderCasinoShopCard(edition, player);
+    assert.ok(markup.includes(stats), edition.id);
+    assert.ok(markup.includes(flag("PT")), edition.id);
+    assert.ok(markup.includes("87 OVR, GR"), edition.id);
+    assert.equal((markup.match(/data-playstyle=/g) || []).length, 3);
+    assert.ok(markup.includes('class="sca-photo-frame"'));
+    assert.ok(!markup.includes("left:-50%"));
+    assert.ok(!markup.includes("width:160%"));
+    const missing = renderCasinoShopCard(edition, { ...player, hasCard: false });
+    assert.ok(missing.includes(cardStatsMarkup({ ...player, hasCard: false })));
+    assert.ok(!missing.includes("data-playstyle="));
+  }
+  assert.ok(renderCasinoShopCard(SHOP_CARDS[0], { ovr: 80 }).includes('<b>0</b><small>GR</small>'));
+});
 test("catalogue starts at 1000; every edition has an OVR requirement", () => {
   assert.equal(Math.min(...SHOP_CARDS.map((card) => card.price)), 1000);
   assert.equal(
@@ -69,7 +97,7 @@ test("metals follow league thresholds and prestige runs from 85 to 95", () => {
     );
   }
 });
-test("five game editions replace generic editions without erasing owned cards", () => {
+test("nine game editions replace generic editions without erasing owned cards", () => {
   assert.deepEqual(
     SHOP_CARDS.filter((card) => card.group === "games").map((card) => card.id),
     [
@@ -78,6 +106,10 @@ test("five game editions replace generic editions without erasing owned cards", 
       "cardoso-asphalt",
       "rift-core",
       "glory-night",
+      "football-p1",
+      "football-p2",
+      "football-p3",
+      "football-p4",
     ],
   );
   const owned = SHOP_ARCHIVED_CARDS.map((card) => card.id);
@@ -97,10 +129,45 @@ test("card preview escapes identity and repeated previews have unique paint ids"
     position: "<script>",
   });
   const second = renderCasinoShopCard(card);
-  assert.ok(!first.includes("<img"));
+  assert.ok(!first.includes("<img src=x"));
   assert.ok(first.includes("&lt;img"));
   assert.notEqual(
     first.match(/id="([^"]+)-metal"/)[1],
     second.match(/id="([^"]+)-metal"/)[1],
   );
+});
+
+test("Football premium editions require 70 OVR and start at 8000 DJC", () => {
+  const cards = SHOP_CARDS.filter(card => card.id.startsWith("football-p"));
+  assert.deepEqual(cards.map(card => card.price), [8000, 10000, 12000, 15000]);
+  for (const card of cards) {
+    assert.equal(card.minOvr, 70);
+    assert.throws(() => buyShopCard({balance: 100000, ovr: 69, owned: []}, card.id), /70 OVR/);
+    assert.deepEqual(buyShopCard({balance: card.price, ovr: 70, owned: []}, card.id), {balance: 0, vaultBalance: 0, ovr: 70, owned: [card.id]});
+  }
+});
+
+test("premium finishes preserve player identity without embedding slot symbols", () => {
+  const cards = SHOP_CARDS.filter((card) => card.id.startsWith("football-p"));
+  const seenIds = new Set();
+  for (const card of cards) {
+    for (let repeat = 0; repeat < 2; repeat++) {
+      const markup = renderCasinoShopCard(card, {
+        name: "JOÃO & MIGUEL",
+        ovr: 87,
+        position: "GR",
+      });
+      assert.ok(!markup.includes("<image"), `${card.id} embeds a symbol`);
+      assert.ok(markup.includes("JOÃO &amp; MIGUEL"));
+      assert.ok(markup.includes("87 OVR, GR"));
+      const ids = [...markup.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
+      for (const id of ids) {
+        assert.ok(!seenIds.has(id), `duplicate SVG id: ${id}`);
+        seenIds.add(id);
+      }
+      for (const [, reference] of markup.matchAll(/url\(#([^)]+)\)/g)) {
+        assert.ok(ids.includes(reference), `missing SVG paint: ${reference}`);
+      }
+    }
+  }
 });

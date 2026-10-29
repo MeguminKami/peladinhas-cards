@@ -1,3 +1,4 @@
+import { SHOP_CARDS } from "./casino-shop-catalog.js";
 import { THEMES, themeName, calculateBaseCard, asDate } from './utils.js';
 import { CARD_POLICY, durationName } from './card-achievements.js';
 import { CARD_CRITERIA } from './card-catalog-rules.js';
@@ -24,6 +25,8 @@ const SUMMARIES = {
 };
 const time = value => { const n = +asDate(value); return value && Number.isFinite(n) ? n : null; };
 export function catalogRequirements(id, record = {}) {
+  const shop = SHOP_CARDS.find(card => card.id === id);
+  if (shop) return { summary: `${shop.minOvr} OVR · ${shop.price.toLocaleString("pt-PT")} DJC`, rules: [`Comprar na loja por ${shop.price.toLocaleString("pt-PT")} DJC.`, `Ter uma carta oficial com pelo menos ${shop.minOvr} OVR.`], note: "Acabamento permanente e pessoal. Não aumenta atributos." };
   const base = BASE_EDITIONS.find(([key]) => key === id);
   if (base) return { summary: `${base[1]}–${base[2]} OVR`, rules: [`Ter uma carta base com OVR entre ${base[1]} e ${base[2]}.`], note: 'O acabamento da carta base acompanha o OVR. Não é uma recompensa temporária.' };
   const policy = CARD_POLICY[id];
@@ -40,8 +43,9 @@ export function catalogRequirements(id, record = {}) {
 
 // Only recorded appearances count. Never infer that a player crossed lower OVR tiers.
 export function buildCardCatalog(league, now = Date.now()) {
-  const entries = new Map([...new Set(THEMES)].map(id => [id, { id, name: themeName(id), holders: new Map(), records: [] }]));
+  const entries = new Map([...new Set([...THEMES, ...SHOP_CARDS.map(card => card.id)])].map(id => [id, { id, name: SHOP_CARDS.find(card => card.id === id)?.name || themeName(id), holders: new Map(), records: [] }]));
   const add = (uid, id, record = {}, dated = true) => {
+    if (record.source === "casino-shop") id = record.shopCardId || id?.replace(/^casino-shop-/, "");
     if (!uid || !id || record.revokedAt || record.pending) return;
     if (time(record.earnedAt || record.createdAt) > now) return;
     if (!entries.has(id)) entries.set(id, { id, name: record.cardTheme?.name || record.name || themeName(id), holders: new Map(), records: [] });
@@ -76,6 +80,7 @@ export function buildCardCatalog(league, now = Date.now()) {
     ['permanent', { name: 'Exclusivas', detail: 'Conquistas permanentes', entries: [] }],
     ['path', { name: 'Percursos', detail: 'Provas finais', entries: [] }],
     ['ultimate', { name: 'Ultimate', detail: 'As metas dos percursos', entries: [] }],
+    ['shop', { name: 'Loja do casino', detail: 'Edições descobertas com a primeira compra', entries: [] }],
     ['event', { name: 'Edições da liga', detail: 'Recompensas de eventos', entries: [] }],
   ]);
   const baseOrder = BASE_EDITIONS.map(([id]) => id);
@@ -85,7 +90,7 @@ export function buildCardCatalog(league, now = Date.now()) {
   });
   for (const entry of ordered) {
     const duration = CARD_POLICY[entry.id]?.duration;
-    const group = baseOrder.includes(entry.id) ? 'base' : entry.id.startsWith('ultimate-') ? 'ultimate' : entry.id.startsWith('path-') ? 'path' : ['season','year'].includes(duration) ? 'season' : duration || 'event';
+    const group = SHOP_CARDS.some(card => card.id === entry.id) ? 'shop' : baseOrder.includes(entry.id) ? 'base' : entry.id.startsWith('ultimate-') ? 'ultimate' : entry.id.startsWith('path-') ? 'path' : ['season','year'].includes(duration) ? 'season' : duration || 'event';
     entry.seen = entry.holders.size > 0;
     entry.record = { ...entry.records[0], ...entry.records.find(r => r.criterion), ...entry.records.find(r => r.cardTheme) };
     entry.requirements = catalogRequirements(entry.id, entry.record);

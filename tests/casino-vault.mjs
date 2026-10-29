@@ -45,7 +45,7 @@ try {
   });
   const fixtureSession=createSession('casino-ui-fixed');fixtureSession.balance=10000;
   await context.addInitScript(snapshot=>{
-    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset';
+    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200';
     if(!localStorage.getItem(key)) localStorage.setItem(key,JSON.stringify(snapshot));
   },fixtureSession);
   await context.route("**/js/firebase.js", (r) =>
@@ -107,6 +107,7 @@ try {
   await page.locator('#vault-amount').focus();
   await page.keyboard.press('Tab');
   assert.equal(await page.locator('.casino-vault-form button').evaluate(el => el.matches(':focus-visible')),true);
+  await context.route('**/js/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'export const runtimeMode="fixtures";' }));
   await page.goto(`${base}/assets/casino/shop/index.html`);
   await page.locator('.shop-test summary').click();
   await page.locator('[name="balance"]').fill('400');

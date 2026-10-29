@@ -56,7 +56,7 @@ function autosave(ctx, form, save, onComplete) {
     try {
       await busy(e.submitter, async () => {
         const result = await save(readRatings(form), true);
-        toast(result?.reviewState === "required" ? "A tua avaliação precisa de revisão. Tens mais uma oportunidade." : result?.reviewState === "ignored" ? "Revisão recebida. Esta avaliação ficou encerrada." : "Avaliação concluída.");
+        toast(result?.reviewState === "invalid" ? "Avaliação nula. A administração pode autorizar uma última tentativa." : result?.reviewState === "required" ? "A tua avaliação precisa de revisão. Tens mais uma oportunidade." : result?.reviewState === "ignored" ? "Revisão recebida. Esta avaliação ficou encerrada." : "Avaliação concluída.");
         await onComplete();
       });
     } catch {}
@@ -113,8 +113,9 @@ export async function initialMission(ctx, targetId, adminInitial = false) {
   const form = document.querySelector("form");
   if (!self && saved?.reviewState) form.insertAdjacentHTML("beforebegin",communityReviewBanner(player.displayName || player.username,saved));
   if (!self && saved?.reviewState === "required") form.querySelector('button.btn-primary').innerHTML = `${icon("check")}Submeter revisão definitiva`;
+  if (!self && ["invalid", "required", "ignored"].includes(saved?.reviewState)) form.querySelector(".save-state").textContent = "Nula";
   const deadline = ratingEditDeadline(saved, self);
-  if (deadline && (self || (saved?.reviewAttempts || 0) < 2))
+  if (deadline && (self || (!locked && (saved?.reviewAttempts || 0) < 2)))
     form.insertAdjacentHTML(
       "afterbegin",
       `<p class="muted">${locked ? "Prazo de edição terminado em" : "Podes editar até"} ${deadline.toLocaleString("pt-PT", { timeZone: "Europe/Lisbon" })}.</p>`,

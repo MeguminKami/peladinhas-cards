@@ -70,7 +70,9 @@ try {
   await page.evaluate(() => {
     const target = window.__testState.users.find((u) => u.uid === "joao");
     target.displayName = "Cabeça · Nome comprido de avaliação";
+    target.username = "cabeca_nome_comprido_de_avaliacao";
     window.__testState.communityRatings.push({
+      id: "pedro_joao",
       raterId: "pedro",
       targetId: "joao",
       ratings20: Object.fromEntries(
@@ -91,16 +93,51 @@ try {
       ),
       submitted: true,
       submittedAt: new Date("2026-10-01"),
-      reviewState: "required",
+      reviewState: "invalid",
       reviewAttempts: 1,
-      reviewToken: "test-review-token",
-      reviewDeadline: new Date("2026-11-02"),
+      reviewToken: null,
+      reviewDeadline: null,
     });
   });
   const seeded = await page.evaluate(() => window.__testState);
   await context.addInitScript((state) => (window.__testState = state), seeded);
   await page.reload();
   await page.locator(".dashboard-greeting").waitFor();
+  await page.evaluate(() => (location.hash = "#/missions/new/joao"));
+  await page.locator(".rating-form").waitFor();
+  assert.equal(await page.locator(".rating-form input:enabled").count(), 0);
+  assert.equal(await page.locator(".save-state").textContent(), "Nula");
+  await page.evaluate(() => (location.hash = "#/admin/ratings"));
+  await page.locator("[data-grant-review]").waitFor();
+  assert.match(await page.locator("#raw-list").textContent(), /Nula/);
+  assert.equal(await page.locator("[data-correct]").count(), 0);
+  await page.locator("#raw-status").selectOption("sent");
+  assert.equal(await page.locator("[data-grant-review]").count(), 0);
+  await page.getByRole("heading", { name: "Sem avaliações", exact: true }).waitFor();
+  await page.locator("#raw-status").selectOption("null");
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 1050 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `admin/${width}`);
+    const grantSize = await page.locator("[data-grant-review]").boundingBox();
+    assert.ok(grantSize.height >= 44 && grantSize.width > 150, `grant/${width}`);
+    await page.screenshot({ path: `test-results/community-null-admin-${width}.png`, fullPage: true });
+  }
+  await page.evaluate(() => (window.__communityGrantError = true));
+  await page.locator("[data-grant-review]").click();
+  await page.getByText("Não foi possível autorizar. Tenta novamente.", { exact: true }).waitFor();
+  assert.equal(await page.locator("[data-grant-review]").isEnabled(), true);
+  await page.evaluate(() => (window.__communityGrantError = false));
+  const grant = page.locator("[data-grant-review]");
+  await grant.focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  assert.ok(await grant.evaluate(node => {
+    const style = getComputedStyle(node);
+    return document.activeElement === node && (style.outlineStyle !== "none" || style.boxShadow !== "none");
+  }));
+  await page.keyboard.press("Enter");
+  await page.getByText("Tentativa autorizada", { exact: true }).waitFor();
+  assert.equal(await page.locator("[data-grant-review]").count(), 0);
   await page.evaluate(() => (location.hash = "#/profile"));
   await page.locator(".community-review-notice").waitFor();
   assert.doesNotMatch(

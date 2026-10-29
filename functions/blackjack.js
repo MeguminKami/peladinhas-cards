@@ -1,4 +1,4 @@
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { randomUUID } from "node:crypto";
@@ -10,6 +10,9 @@ import {
   tableView,
   expiredPlayer,
   roomExpired,
+  BJ_CHAT,
+  chatColor,
+  newChatMessage,
 } from "./blackjack-table.js";
 import { currentCasinoWallet, CASINO_EDITION } from "../js/casino-economy.js";
 
@@ -49,19 +52,19 @@ export async function runBlackjack(
   now = Date.now(),
   db = getFirestore(),
   forcedShoe,
+  photo,
 ) {
   const ref = db.doc(BLACKJACK_PRIVATE),
     publicRef = db.doc(BLACKJACK_PUBLIC);
   return db.runTransaction(async (tx) => {
     const snapshot = await tx.get(ref);
-    const old = snapshot.data();
-    if (old && old.edition !== CASINO_EDITION)
-      throw new HttpsError(
-        "failed-precondition",
-        "A mesa pertence a outra edição. Contacta a administração.",
-      );
-    if (!old && input.action !== "join")
+    // A reset discards the previous edition's table and wagers. Never refund
+    // old stakes into the new wallets or leave the shared table unusable.
+    const old = snapshot.data()?.edition === CASINO_EDITION ? snapshot.data() : null;
+    if (!old && input.action !== "join") {
+      if (snapshot.exists) { tx.delete(ref); tx.delete(publicRef); }
       return { table: null, balance: null, seat: null };
+    }
     if (input.action === "balance") {
       if (input.table !== old.id || !old.players.some((p) => p.uid === uid))
         throw new HttpsError(
@@ -74,6 +77,36 @@ export async function runBlackjack(
         serverNow: now,
       };
     }
+    if (input.action === "chat") {
+      const chatRef = publicRef.collection("blackjackMessages").doc(`${uid}_${input.id}`);
+      const chatSnapshot = await tx.get(chatRef);
+      if (input.table !== old.id)
+        throw new HttpsError("failed-precondition", "A mesa terminou. Volta ao casino.");
+      if (chatSnapshot.exists) return { ...playerView(old, uid, null), serverNow: now };
+      const owned = old.players.filter((p) => p.uid === uid && !p.leaving);
+      if (!owned.length || owned.every((p) => expiredPlayer(p, old, now)))
+        throw new HttpsError("failed-precondition", "Entra novamente na mesa para conversar.");
+      if (now - Math.max(...owned.map((p) => p.lastChatAt || 0)) < BJ_CHAT.interval)
+        throw new HttpsError("resource-exhausted", "Aguarda um instante antes de enviar outra mensagem.");
+      if (typeof input.message !== "string")
+        throw new HttpsError("invalid-argument", "Mensagem inválida.", { definitive: true });
+      const color = owned.find((p) => p.color)?.color || chatColor(old.players, uid);
+      let message;
+      try {
+        message = newChatMessage(uid, owned[0].name, color, input.message, now);
+      } catch (error) {
+        throw new HttpsError("invalid-argument", error.message, { definitive: true });
+      }
+      const table = structuredClone(old);
+      table.players.forEach((p) => {
+        if (p.uid !== uid) return;
+        p.lastChatAt = now;
+        p.color ||= color;
+      });
+      tx.create(chatRef, { ...message, expireAt: Timestamp.fromMillis(now + BJ_CHAT.window) });
+      tx.set(ref, table);
+      return { ...playerView(table, uid, null), serverNow: now };
+    }
     // Presence does not read wallets. Financial actions include every possible recipient,
     // because a decision/timeout may finish the round in the same transaction.
     const ids = neededWallets(old, input, uid, now);
@@ -85,7 +118,7 @@ export async function runBlackjack(
     );
     let result;
     try {
-      result = tableCommand(input, uid, name, old, wallets, now, forcedShoe);
+      result = tableCommand(input, uid, name, old, wallets, now, forcedShoe, photo);
     } catch (e) {
       throw new HttpsError("failed-precondition", e.message);
     }
@@ -118,7 +151,7 @@ export function blackjackFunctions() {
       !input ||
       Object.keys(input).some(
         (k) =>
-          !["action", "id", "table", "revision", "amount", "seat"].includes(k),
+          !["action", "id", "table", "revision", "amount", "seat", "message"].includes(k),
       ) ||
       (input.action === "tick" && !input.table)
     )
@@ -127,6 +160,10 @@ export function blackjackFunctions() {
       input,
       request.auth.uid,
       user.displayName || user.username,
+      Date.now(),
+      undefined,
+      undefined,
+      user.photoURL,
     );
   });
 

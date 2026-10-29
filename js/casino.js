@@ -5,6 +5,7 @@ import { icon } from "./icons.js";
 import { createCasinoLocalWallet } from "./casino-local-wallet.js";
 import { CASINO_CATALOG, CASINO_TABLES_ENABLED } from "./casino-catalog.js";
 import { DJABUCOIN, CASINO_EDITION } from "./casino-economy.js";
+import { djabucoin } from "./djabucoin.js";
 
 const number = (value) =>
   new Intl.NumberFormat("pt-PT", { maximumFractionDigits: 2 }).format(
@@ -16,8 +17,7 @@ function catalogCount(category = "all") {
   const label = category === "slots" ? "slots" : category === "tables" ? "mesas" : "jogos";
   return games.length + " " + label + " \u00b7 " + available + (available === 1 ? " dispon\u00edvel" : " dispon\u00edveis");
 }
-const coin =
-  '<span class="djabucoin" aria-hidden="true">D<span>₫</span></span>';
+const coin = djabucoin();
 export function casinoArt(kind) {
   if (kind === "reels")
     return `<div class="casino-reels" aria-hidden="true"><div>7</div><div>7</div><div>7</div></div><span class="casino-art-caption" aria-hidden="true">PELADINHAS ORIGINALS</span>`;
@@ -27,7 +27,7 @@ export function casinoArt(kind) {
 }
 function gameCard(game) {
   const artwork = game.thumbnail
-    ? `<img class="casino-game-thumbnail" src="${esc(game.thumbnail)}" alt="" width="800" height="1200" loading="lazy" decoding="async">`
+    ? `<img class="casino-game-thumbnail" src="${esc(new URL("../"+game.thumbnail,import.meta.url).href)}" alt="" width="800" height="1200" loading="eager" decoding="async">`
     : casinoArt(game.art);
   return `<article class="casino-game${game.thumbnail ? " casino-game-has-thumbnail" : ""}"><div class="casino-game-art casino-art-${game.art}">${artwork}<span class="casino-coming ${game.available ? "is-available" : ""}">${game.available ? "Disponível" : "Em breve"}</span></div><div class="casino-game-copy"><span class="casino-kicker">${game.category === "slots" ? "ROLOS & COMBINAÇÕES" : "JOGOS DE MESA"}</span><h3>${esc(game.title)}</h3><p>${esc(game.label)}</p><button class="casino-text-button" type="button" data-casino-game="${game.id}" ${game.available ? 'aria-controls="casino-play-area"' : 'aria-haspopup="dialog"'}>${game.available ? "Jogar agora" : `Conhecer ${esc(game.title)}`} ${icon("arrow")}</button></div></article>`;
 }
@@ -57,7 +57,7 @@ export async function casinoPage(ctx) {
     window.removeEventListener("pageshow", returning);
     window.removeEventListener("peladinhas-before-logout", beforeLogout);
     document.removeEventListener("visibilitychange", visibility);
-    void localWallet.close().catch(() => {});
+    return localWallet.close().catch(() => {});
   });
   const leaving = () => {
     void localWallet.close().catch(() => {});
@@ -91,12 +91,18 @@ export async function casinoPage(ctx) {
   shopButton.dataset.casinoStore = '';
   shopButton.innerHTML = `${icon('cards')}<span><strong>Loja do casino</strong><small>A sorte passa. A tua carta fica.</small></span>${icon('arrow')}`;
   shopButton.onclick = store.open;
+  const shopLink = document.createElement('a');
+  shopLink.href = '#/shop';
+  shopLink.className = 'casino-button casino-button-outline casino-shop-link';
+  shopLink.innerHTML = `${icon('shop')} Loja de cartas ${icon('arrow')}`;
+  root.querySelector('.casino-filters').after(shopLink);
   root.querySelector('.casino-filters').after(shopButton);
   const appHeader = document.querySelector("#header");
   const bottomNav = document.querySelector(".bottom-nav");
   const headerSize = new ResizeObserver(() => {
     root.style.setProperty("--casino-header-height", `${appHeader.getBoundingClientRect().height}px`);
     root.style.setProperty("--casino-bottom-height", `${bottomNav?.getBoundingClientRect().height || 0}px`);
+    sizeCenteredGame();
   });
   if (appHeader) headerSize.observe(appHeader);
   if (bottomNav) headerSize.observe(bottomNav);
@@ -107,6 +113,7 @@ export async function casinoPage(ctx) {
   const toolbar = root.querySelector(".casino-toolbar");
   const toolbarSize = new ResizeObserver(() => {
     root.style.setProperty("--casino-toolbar-height", `${toolbar.getBoundingClientRect().height}px`);
+    sizeCenteredGame();
   });
   toolbarSize.observe(toolbar);
   ctx.cleanup(() => toolbarSize.disconnect());
@@ -161,16 +168,30 @@ export async function casinoPage(ctx) {
       button.onclick = () => { if (canCloseGame()) window.history.back(); };
     });
   }
+  function sizeCenteredGame() {
+    if (!root.classList.contains("is-centered")) return;
+    const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
+    const bottom = bottomNav && getComputedStyle(bottomNav).display !== "none" ? bottomNav.getBoundingClientRect().height : 0;
+    const height = `${Math.max(160, innerHeight - header - bottom - 16)}px`;
+    if (root.style.getPropertyValue("--casino-fit-height") !== height) root.style.setProperty("--casino-fit-height", height);
+  }
+  window.addEventListener("resize", sizeCenteredGame);
+  ctx.cleanup(() => window.removeEventListener("resize", sizeCenteredGame));
   root.querySelector("[data-center-game]").onclick = () => {
     const game = playArea.querySelector(".casino-slot-mount");
     if (!game) return;
-    const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
-    const nav = document.querySelector(".bottom-nav");
-    const bottom = nav && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect().height : 0;
-    const available = innerHeight - header - bottom;
-    const box = game.getBoundingClientRect();
-    const top = scrollY + box.top - header - Math.max(0, (available - box.height) / 2);
-    window.scrollTo({ top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    if (game.classList.contains("casino-blackjack-mount")) {
+      root.classList.add("is-centered");
+      sizeCenteredGame();
+    }
+    requestAnimationFrame(() => {
+      const header = (appHeader?.getBoundingClientRect().height || 0) + toolbar.getBoundingClientRect().height;
+      const bottom = bottomNav && getComputedStyle(bottomNav).display !== "none" ? bottomNav.getBoundingClientRect().height : 0;
+      const available = innerHeight - header - bottom;
+      const box = game.getBoundingClientRect();
+      const top = scrollY + box.top - header - Math.max(0, (available - box.height) / 2);
+      window.scrollTo({ top, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    });
   };
   async function openSlot(button, game) {
     // Let pre-multiplayer rounds finish through their original wallet adapter.
@@ -200,12 +221,12 @@ export async function casinoPage(ctx) {
     button.setAttribute("aria-busy", "true");
     showGame(button);
     bindClose();
-    root.querySelector(".casino-game-nav h2").textContent = game.title;
+    root.querySelector(".casino-game-nav h2").innerHTML = game.id === "cardoso-road" ? '<span class="cardoso-toolbar-logo">CARDOSO<em>ROAD</em></span>' : esc(game.title);
     root.classList.toggle("is-table", game.category === "tables" || game.id === "rift" || game.id === "cardoso-road");
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
       const [sdk, latest] = await Promise.all([
-        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
+        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "roulette" ? import("./casino-roulette.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
         localWallet.enterGame(),
       ]);
       if (!active || run !== gameRun) return;
@@ -217,12 +238,20 @@ export async function casinoPage(ctx) {
         streamId = crypto.randomUUID();
         localStorage.setItem(key, streamId);
       }
-      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}"></div>`;
+      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}${game.id === "blackjack" ? " casino-blackjack-mount" : ""}"></div>`;
       if (game.id === "blackjack" && !legacyBlackjack) {
         slot = sdk.mountBlackjackMultiplayer(playArea.querySelector(".casino-slot-mount"), {
           uid,
           onBalance: balance => { if (active && run === gameRun) { onlineBalance = balance; wallet = { ...wallet, balance }; drawWallet(); } },
           onExit: message => { if (active && run === gameRun) { closeGame(); modal("Mesa de Blackjack", `<p>${esc(message)}</p>`); void loadWallet(true); } },
+        });
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "roulette") {
+        slot = sdk.mountRouletteMultiplayer(playArea.querySelector(".casino-slot-mount"), {
+          uid,
+          onBalance: balance => { if (active && run === gameRun) { onlineBalance = balance; wallet = { ...wallet, balance }; drawWallet(); } },
+          onExit: message => { if (active && run === gameRun) { closeGame(); modal("Mesa de Roleta", `<p>${esc(message)}</p>`); void loadWallet(true); } },
         });
         await slot.ready;
         if (!active || run !== gameRun) return;

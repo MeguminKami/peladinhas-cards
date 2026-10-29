@@ -45,7 +45,7 @@ try {
   });
   const fixtureSession=createSession('casino-ui-fixed');fixtureSession.balance=10000;
   await context.addInitScript(snapshot=>{
-    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset';
+    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200';
     if(!localStorage.getItem(key)) localStorage.setItem(key,JSON.stringify(snapshot));
   },fixtureSession);
   await context.route("**/js/firebase.js", (r) =>
@@ -94,7 +94,7 @@ try {
   const low = await browser.newContext({ viewport: {width: 390, height: 1000}, serviceWorkers: 'block' });
   await low.route('**/js/firebase.js', r => r.fulfill({contentType:'text/javascript',body:'export const configured=true;'}));
   for (const name of ['auth','db']) await low.route(`**/js/${name}.js`, r => r.fulfill({contentType:'text/javascript',body:readFileSync(`tests/fixtures/${name}.js`,'utf8').replaceAll('../../js/','./')}));
-  await low.addInitScript(() => sessionStorage.setItem('casino-fixture-wallet',JSON.stringify({wallet:{edition:'official-2026-10-26-cardoso-reset',sessionProtocol:5,balance:499,revision:1,recent:[]},sessions:{},operations:{},rounds:{}})));
+  await low.addInitScript(() => sessionStorage.setItem('casino-fixture-wallet',JSON.stringify({wallet:{edition:'official-2026-10-27-reset-200',sessionProtocol:5,balance:499,revision:1,recent:[]},sessions:{},operations:{},rounds:{}})));
   const mobile = await low.newPage();
   await mobile.goto(`${base}/#/casino`);
   await mobile.waitForFunction(() => document.querySelector('.casino-balance strong')?.textContent === '4,99');

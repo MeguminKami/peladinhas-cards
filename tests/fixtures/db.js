@@ -6,6 +6,27 @@ export function watchBlackjack(callback, error) {
   void poll();const timer=setInterval(poll,300);
   return ()=>{active=false;clearInterval(timer);};
 }
+export function watchBlackjackChat(callback) {
+  callback([]);
+  return () => {};
+}
+export function watchRoulette(callback, error) {
+  const subscribers = window.__rouletteSubscribers ||= new Set();
+  subscribers.add(callback);
+  callback(window.__rouletteRoom || null);
+  return () => subscribers.delete(callback);
+}
+export function watchRouletteChat(callback, error) {
+  const subscribers = window.__rouletteChatSubscribers ||= new Set();
+  subscribers.add(callback);
+  callback((window.__rouletteMessages || []).filter(message => message.createdAt >= Date.now() - 30 * 60 * 1000).slice(-100));
+  return () => subscribers.delete(callback);
+}
+window.__notifyRoulette = () => {
+  for (const callback of window.__rouletteSubscribers || []) callback(window.__rouletteRoom || null);
+  const messages = (window.__rouletteMessages || []).filter(message => message.createdAt >= Date.now() - 30 * 60 * 1000).slice(-100);
+  for (const callback of window.__rouletteChatSubscribers || []) callback(messages);
+};
 import { cardWeek } from "../../js/card-week.js";
 const now = {
   seconds: Math.floor(Date.now() / 1000),
@@ -176,13 +197,26 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if (name === "listCommunityRatingsForAdmin") return { data: { rows: state.communityRatings } };
+  if (name === "grantCommunityRatingRetry") {
+    if (window.__communityGrantError) throw Error("Não foi possível autorizar. Tenta novamente.");
+    const row = state.communityRatings.find(row => row.id === data.id);
+    if (!row || row.reviewGrantedAt || row.reviewAttempts >= 2) throw Error("Tentativa indisponível.");
+    Object.assign(row, { reviewState: "required", reviewGrantedAt: new Date(),
+      reviewToken: "test-review-token", reviewDeadline: new Date(Date.now() + 7 * 86400000) });
+    return { data: { reviewState: "required" } };
+  }
   if(name === 'blackjackAction') {
     const response=await fetch('/__blackjack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:window.__blackjackUid||'pedro',name:window.__blackjackName||'Pedro',input:data})});
     const body=await response.json();
     if(!response.ok){const error=new Error(body.error);error.code='functions/failed-precondition';throw error;}
     return {data:body};
   }
-  if(name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession' || name === 'grantCasinoCoins') {
+  if(name === 'rouletteAction') {
+    const {rouletteFixture}=await import('../tests/fixtures/casino.js');
+    return {data:await rouletteFixture(data)};
+  }
+  if(name === 'getCasinoPlayerBalance' || name === 'getCasinoShop' || name === 'buyCasinoCard' || name === 'getCasinoWallet' || name === 'settleCasinoSlot' || name === 'casinoSession' || name === 'grantCasinoCoins') {
     const {casinoFixture}=await import('../tests/fixtures/casino.js');
     return casinoFixture(name,data);
   }

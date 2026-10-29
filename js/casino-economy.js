@@ -1,15 +1,15 @@
 // Integer coins only. Casino outcomes never award participation coins.
 import { matchPerformance } from "./utils.js";
-export const CASINO_EDITION = "official-2026-10-26-cardoso-reset";
+export const CASINO_EDITION = "official-2026-10-27-reset-200";
 export const DJABUCOIN = Object.freeze({
   scale: 100,
-  initial: 25000,
+  initial: 20000,
   perMatch: 2000,
   recentLimit: 12,
 });
 
 export const SLOT_RULES = Object.freeze({
-  version: "0.7.0",
+  version: "0.8.0",
   bets: [20, 40, 60, 80, 100, 150, 200, 300, 400, 500, 750, 1000],
   cap: 10000,
 });
@@ -36,9 +36,10 @@ export function validateSlotTransaction(input) {
     typeof input.streamId !== "string" ||
     !/^[\w-]{16,80}$/.test(input.id || "") ||
     !/^[\w-]{16,80}$/.test(input.streamId || "") ||
-    input.configVersion !== SLOT_RULES.version ||
+    // Keep already queued 0.7.0 receipts valid across the sticky update.
+    ![SLOT_RULES.version, "0.7.1", "0.7.0"].includes(input.configVersion) ||
     !SLOT_RULES.bets.includes(input.bet) ||
-    !["base", "normal", "superior"].includes(input.mode) ||
+    !["base", "normal", "superior", "legend"].includes(input.mode) ||
     typeof input.bonusHunt !== "boolean" ||
     (input.bonusHunt && input.mode !== "base") ||
     ![input.debit, input.credit, input.roundId, input.spin].every(
@@ -60,7 +61,7 @@ export function validateSlotTransaction(input) {
         : 1
       : input.mode === "normal"
         ? 90
-        : 220);
+        : input.mode === "legend" ? 450 : 220);
   if (input.debit !== (input.spin === 1 ? cost : 0))
     throw Error("Custo da jogada inválido.");
   return Object.fromEntries(keys.map((key) => [key, input[key]]));

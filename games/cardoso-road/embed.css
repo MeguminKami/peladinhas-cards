@@ -1,115 +1,75 @@
-/* The game surface has a finite height supplied by its host, not a page layout. */
+/* Integrated game: the website toolbar owns the logo and DJC wallet. */
 html,body{height:100%;min-height:0;background:#10121e}
 body{display:block}
-.game{height:100%;width:100%;max-width:none;margin:0;padding:6px;display:grid;grid-template-rows:36px minmax(180px,1fr) auto auto auto;gap:4px;overflow:auto;align-content:stretch}
+.game{height:100%;width:100%;max-width:none;margin:0;padding:6px;display:grid;grid-template-rows:36px minmax(180px,1fr) auto auto auto;gap:8px;overflow:auto;align-content:stretch}
 .game>header{grid-row:1;min-height:0;padding:0 6px;gap:12px;flex-wrap:nowrap}
 .game>header h1{font-size:17px;border:0;padding:0;white-space:nowrap}
 .game>header h1>span{display:none}
-.game>header .demo{font-size:7px;padding:5px 7px;letter-spacing:.4px}
-.game>header .wallet{min-width:0}
+.game>header .demo{font-size:7px;padding:5px 7px}
 .game>header .wallet strong{font-size:18px}
-.game>header .wallet small{font-size:6px;letter-spacing:.7px;margin:0}
+.game>header .wallet small{font-size:8px;margin:0}
 .game>.arena{grid-row:2;height:auto;min-height:180px;border-radius:9px;box-shadow:none}
 .arena .scene-top{top:8px;left:8px;right:8px}
-.arena .scene-top>span{padding:6px 8px;font-size:8px}
+.arena .scene-top>span{padding:6px 8px;font-size:9px}
 .arena .journey{padding:7px 9px}
 .arena .journey>span{display:none}
 .arena #markers{margin:0;gap:5px}
 .arena #markers i{width:16px;height:4px}
 .scene-bottom{display:none}
-.game>.round-strip{grid-row:3;gap:12px;min-height:36px;padding:0 6px;flex-wrap:wrap;letter-spacing:.5px}
+.game>.round-strip{grid-row:3;gap:12px;min-height:36px;padding:0 6px;flex-wrap:wrap}
 .round-strip>span{gap:6px}
 .round-strip>button{min-height:36px}
 .round-strip .target-info,.round-strip #success,.round-strip #potential{display:none!important}
-.game>.console{grid-row:4;position:static;gap:8px;padding:8px;box-shadow:none;grid-template-columns:minmax(160px,1fr) minmax(210px,1.2fr) minmax(80px,.4fr) minmax(120px,.65fr) minmax(95px,.55fr)}
-.console .stake,.console .difficulty,.console .risk{grid-area:auto}
+.game>.console{grid-row:4;position:static;gap:10px;padding:10px;box-shadow:none;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) minmax(70px,.5fr) minmax(110px,.7fr) minmax(100px,.7fr)}
+.console .stake,.console .difficulty,.console .risk,.console .cashout,.console .primary{grid-area:auto;min-width:0}
 .console .stake{display:block}
-.console label{font-size:8px;line-height:12px;margin-bottom:6px}
-.console .bet-input button{width:34px;min-height:36px}
-.console .bet-tools button{min-height:32px}
-.console .bet-tools{margin-top:4px}
-.console #modes{height:72px}
-.console #modes button{font-size:10px;min-height:44px}
-.console .difficulty>label{padding:0}
-.console .risk{display:flex;justify-self:auto;align-self:auto;transform:none;text-align:center}
-.console .risk label{font-size:7px;margin:0 0 6px}
+.console label{font-size:10px;line-height:1.3;margin-bottom:6px}
+.console .bet-input input{width:100%;min-width:0}
+.console .bet-input button{width:36px;min-height:36px}
+.console .bet-tools{margin-top:6px;gap:6px}
+.console .bet-tools button{min-height:36px}
+.console #modes{height:76px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.console #modes button{font-size:11px;min-height:44px;padding:6px 4px;min-width:0}
+.console .risk{display:flex;flex-direction:column;justify-content:center;justify-self:stretch;align-self:stretch;transform:none;text-align:center}
+.console .risk label{font-size:9px;margin:0 0 6px}
 .console .risk strong{font-size:24px}
-.console .risk small{display:block}
-.console .cashout,.console .primary{grid-area:auto;min-height:72px}
+.console .risk small{display:block;font-size:10px}
+.console .cashout,.console .primary{min-height:76px}
 .console .cashout{display:flex}
-.console .cashout strong{font-size:20px}
+.console .cashout strong{font-size:22px}
 .console .primary{font-size:22px}
-.game>footer{grid-row:5;min-height:44px;margin:0;padding:0 6px;display:flex;flex-wrap:nowrap;gap:12px}
-footer .speech{position:static;flex:1;min-width:0;max-width:none;border:0;background:none;box-shadow:none;padding:0;font-size:10px;line-height:1.4;pointer-events:none}
-footer #training-open{color:#f0f3ff;flex:none;min-height:44px;font-size:11px;padding:8px 14px}
-.celebrating footer .speech{display:block}
-.game>.error:not(:empty){grid-row:6;margin:0;padding:8px;font-size:11px}
+.game>footer{grid-row:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;min-width:0;margin:0;padding:10px}
+.music-control{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 320px}
+.music-control button{min-height:44px;font-size:11px;padding:8px;flex:none}
+.music-control label{font-size:10px;margin:0;letter-spacing:0}
+.music-control input{width:80px;min-width:40px;min-height:44px;flex:1;accent-color:#bbfa77}
+.music-control output{font-size:10px;min-width:30px;color:#bbfa77}
+.footer-tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px}
+.footer-tools button{min-height:44px;padding:10px 12px;font-size:12px;cursor:pointer}
+.game>.error:not(:empty){grid-row:6;margin:0;padding:8px;font-size:12px}
 .game>.error:empty{display:none}
-#training-panel{padding:20px}
-#training-panel .more-body{display:grid;grid-template-columns:1fr;gap:18px;padding:0}
-#training-panel .more-body p{grid-column:auto}
-#training-difficulty:empty{display:none}
-#training-difficulty #modes{height:48px}
-#training-difficulty #modes button{min-height:44px;flex-direction:row;font-size:12px}
-.training-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
-.training-actions button{min-height:44px;font-size:12px}
-#training-close{float:right;margin:0 0 12px 12px}
 dialog{max-height:calc(100dvh - 24px)}
+body.integrated .game{grid-template-rows:minmax(180px,1fr) auto auto auto}
+body.integrated .game>header{display:none}
+body.integrated .game>.arena{grid-row:1}
+body.integrated .game>.round-strip{grid-row:2}
+body.integrated .game>.console{grid-row:3}
+body.integrated .game>footer{grid-row:4}
+body.integrated .game>.error:not(:empty){grid-row:5}
 @media(max-width:950px){
- .game>.console{grid-template-columns:minmax(155px,1fr) minmax(200px,1.2fr) minmax(100px,.65fr) minmax(90px,.55fr)}
- .console .stake{grid-column:1;grid-row:1}
- .console .difficulty{grid-column:2;grid-row:1}
- .console .risk{grid-column:2;grid-row:1;justify-self:end;align-self:start;display:block;text-align:right;line-height:12px}
- .console .risk label{display:inline;margin:0 4px 0 0;font-size:7px}
- .console .risk strong{font-size:11px}
- .console .risk small{display:none}
- .console .difficulty>label{padding-right:90px}
- .console .cashout{grid-column:3;grid-row:1}
- .console .primary{grid-column:4;grid-row:1}
+ .game>.console{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(90px,.7fr) minmax(80px,.6fr)}
+ .console .risk{grid-column:1/-1;flex-direction:row;align-items:center;gap:10px}
+ .console .risk label{margin:0}.console .risk strong{font-size:18px}
 }
 @media(max-width:620px){
- .game{padding:4px;gap:4px;grid-template-rows:32px minmax(180px,1fr) auto auto auto}
- .game>header{gap:8px;padding:0 2px}
- .game>header h1{font-size:15px}
- .game>header .demo{font-size:6px;padding:4px 5px}
- .game>header .wallet strong{font-size:16px}
- .game>header .wallet small{font-size:5px;letter-spacing:0}
- .arena .scene-top>span{display:none}
- .game>.round-strip{padding:0 4px;gap:10px;font-size:8px}
- .round-strip strong{font-size:15px}
- .round-strip b{font-size:11px}
- .round-strip>button{font-size:9px;padding:0;min-height:36px}
- .round-strip>button[data-panel=rules]{display:none}
- .game>.console{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:6px}
- .console .stake{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 8px}
- .console .stake>label{grid-column:1/-1;margin:0;padding-right:110px}
- .console .stake label small{display:none}
- .console .bet-input button,.console .bet-tools button{min-height:44px}
- .console .bet-tools{margin:0}
- .console .difficulty{grid-column:1/-1;grid-row:2}
- .console .risk{grid-column:1/-1;grid-row:1}
- .console .difficulty>label{font-size:8px;margin-bottom:4px}
- .console .risk label{font-size:7px}
- .console #modes{height:44px}
- .console #modes button{font-size:10px;gap:5px}
- .console .cashout{grid-column:1;grid-row:2;min-height:54px;display:grid;grid-template-columns:auto auto;column-gap:7px}
- .console .cashout span{font-size:10px}
- .console .cashout strong{font-size:18px}
- .console .cashout small{font-size:8px}
- .console .primary{grid-column:2;grid-row:2;min-height:54px;font-size:18px;gap:6px}
- .console .primary .again-label{font-size:10px}
- .game>footer{padding:0 4px;gap:8px}
- footer .speech{font-size:9px}
- footer #training-open{padding:8px 10px;font-size:10px}
+ .game{padding:4px;gap:6px}.arena .scene-top>span{display:none}
+ .game>.round-strip{padding:0 4px;gap:10px;font-size:10px}
+ .round-strip strong{font-size:15px}.round-strip b{font-size:12px}
+ .game>.console{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .console .stake,.console .difficulty{grid-column:1/-1}
+ .console #modes{height:58px}.console .risk{grid-column:1/-1}
+ .console .primary{font-size:20px}.console .cashout,.console .primary{min-height:68px}
+ .game>footer .music-control{flex-basis:100%}.music-control label{font-size:10px}
+ .footer-tools{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+ .footer-tools button{padding:8px 4px;font-size:11px}
 }
-@media(max-height:430px){.game{grid-template-rows:32px minmax(160px,1fr) auto auto auto}.game>.arena{min-height:160px}}
-
-/* Persistent music controls share the footer without shrinking the touch target. */
-.game>footer{flex-wrap:wrap;padding-block:2px;gap:8px 16px}
-.music-control{display:flex;align-items:center;gap:8px;min-width:0;flex:0 1 370px}
-.music-control button{min-height:44px;font-size:10px;padding:8px;flex:none}
-.music-control label{font-size:10px;margin:0;letter-spacing:0}
-.music-control input{width:80px;min-width:50px;min-height:44px;flex:1;accent-color:#bbfa77}
-.music-control output{font-size:10px;min-width:30px;color:#bbfa77}
-footer .speech{flex:1 1 180px}
-@media(max-width:620px){footer .speech{flex:1 1 100px}.music-control{flex-basis:100%}.music-control input{width:auto}.console .primary{font-size:18px;gap:6px}.console .primary span{font-size:16px}}

@@ -62,11 +62,11 @@ A [galeria dos 18 vilões e quatro fundos](./art-gallery.html) permite inspecion
 
 ## Correção da mistura de áudio · 27/10/2026
 
-O [controlador de áudio](./audio.mjs) usa um único canal substituível para o feedback da jogada. Início, derrota e pagamento tocam a gravação do evento, sem acrescentar uma fala antiga ou fanfarra sintetizada em paralelo. Os passos usam uma fala; com vozes desligadas, usam um sinal curto se os efeitos estiverem ligados. Com efeitos desligados, as falas antigas dos eventos continuam disponíveis através do controlo de vozes. Cada evento cancela o anterior, incluindo downloads de falas pendentes. A música baixa temporariamente para 22% do volume escolhido durante o feedback; ocultar ou fechar o jogo cancela os sons.
+O [controlador de áudio](./audio.mjs) usa um único canal substituível para o feedback da jogada. Início, derrota e pagamento tocam a gravação do evento, sem acrescentar uma fala antiga ou fanfarra sintetizada em paralelo. Os passos usam uma fala; com vozes desligadas, usam um sinal curto se os efeitos estiverem ligados. Com efeitos desligados, as falas antigas dos eventos continuam disponíveis através do controlo de vozes. Cada evento cancela o anterior, incluindo downloads de falas pendentes. A música mantém sempre o volume escolhido, mesmo durante o feedback; ocultar ou fechar o jogo cancela os sons.
 
 Diagnóstico local em 27/10/2026: os MP3 fornecidos para [fácil/normal/difícil](./assets/audio/easy_medium_hard.mp3) e [extremo](./assets/audio/extreme.mp3) têm bytes idênticos, incluindo os originais do utilizador. SHA-256 comum: `D8F44971F4F1123D2B2A6BDF1EB50A9B685C47BDEDA0475BFCFB5BF30D731112`. O seletor já aponta para o URL específico do extremo e interrompe a faixa anterior, mas uma música realmente diferente requer o ficheiro correto do utilizador. Este diagnóstico não confirma ficheiros publicados.
 
-Validação local: `npm.cmd test`, `npm.cmd run test:voices` e `node tests/audio-browser.mjs` passaram, cobrindo substituição, mute, downloads tardios, redução do volume da música e troca de URL entre dificuldades. Sem Firebase real e sem deploy.
+Validação local: `npm.cmd test`, `npm.cmd run test:voices` e `node tests/audio-browser.mjs` passaram, cobrindo substituição, mute, downloads tardios, volume constante da música durante o feedback e troca de URL entre dificuldades. Sem Firebase real e sem deploy.
 
 
 ### Faixa do Extremo substituída · 27/10/2026

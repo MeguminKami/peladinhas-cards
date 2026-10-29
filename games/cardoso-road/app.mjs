@@ -1,20 +1,32 @@
 import {CONFIG,MODES,multiplier,payout,fresh,validate,transition} from './engine.mjs';
 import {createScene,ZONES} from './scene.mjs';
 import {createAudio} from './audio.mjs';
-import {voiceForEvent,VOICE_CLIPS} from './voices.mjs';
-import {defeatVillain,VILLAINS} from './enemies.mjs';
+import {TRAVEL_MS,FIGHT_MS} from './progression.mjs';
 const $=s=>document.querySelector(s),fmt=n=>(n/100).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}),mult=n=>n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+'×';
 const integrated=new URL(location.href).searchParams.get('integrated')==='1';let casinoWallet,pendingAction;
 const unit=integrated?'DJC':'créditos';
 const key='cardoso-road-demo-v1';let state=fresh(),mode='normal',busy=false,lockOwner=false,sceneReady=false,settings={effects:true,music:true,musicVolume:.3,voices:true,volume:.3,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches};
 try{const saved=localStorage.getItem(key);if(saved&&!integrated)state=validate(JSON.parse(saved));settings={...settings,...JSON.parse(localStorage.getItem(key+'-settings')||'{}')};}catch{$('#error').textContent='Não foi possível recuperar os dados locais. Nova sessão fictícia.';}
-if(state.round)mode=state.round.mode;if(state.round?.status==='lost')$('#speech').textContent=VILLAINS[defeatVillain(state.round)].line;
+if(state.round)mode=state.round.mode;
 const audio=createAudio(()=>({...settings,mode}));
-const scene=createScene($('#world'),()=>({round:state.round,mode,reduced:settings.reduced,music:settings.music,beatAt:audio.beatAt}));
+let defeatRound=null,defeatUntil=0,defeatTimer,victoryRound=null;
+function roundForScene(){
+ const r=state.round;
+ if(!r||r.status==='paid')return null;
+ if(r.status==='lost')return defeatRound===r.id&&performance.now()<defeatUntil?r:null;
+ if(r.status==='won')return victoryRound===r.id?r:null;
+ return r;
+}
+const scene=createScene($('#world'),()=>({round:roundForScene(),mode,reduced:settings.reduced,music:settings.music,beatAt:audio.beatAt}));
+function finishDefeat(round){
+ clearTimeout(defeatTimer);defeatRound=round.id;defeatUntil=performance.now()+(settings.reduced?0:TRAVEL_MS+FIGHT_MS+400);
+ defeatTimer=setTimeout(()=>{
+  if(state.round?.id!==round.id||state.round.status!=='lost')return;
+  defeatRound=null;scene.event('idle');render();
+ },Math.max(0,defeatUntil-performance.now()));
+}
 const music=()=>audio.configure();
-const narrowFrame=matchMedia('(max-width: 620px)'),difficultyControl=$('.difficulty'),difficultyMenu=$('#training-difficulty');
-function placeDifficulty(){if(narrowFrame.matches)difficultyMenu.append(difficultyControl);else $('.console').insertBefore(difficultyControl,$('.risk'));}
-narrowFrame.addEventListener('change',placeDifficulty);placeDifficulty();
+document.body.classList.toggle('integrated',integrated);
 
 function announceReady(){if(window.parent!==window)window.parent.postMessage({type:'cardoso-road:ready',demo:!integrated},location.origin);}
 scene.ready.then(()=>{sceneReady=true;render();if(!integrated)announceReady();});
@@ -22,16 +34,24 @@ window.connectCardosoWallet=async wallet=>{if(!integrated||casinoWallet)throw Er
 window.refreshCardosoBalance=async()=>{if(casinoWallet&&!busy){state=validate(await casinoWallet.state());render();}};
 $('#markers').innerHTML=Array.from({length:10},()=>'<i aria-hidden="true"></i>').join('');
 $('#modes').innerHTML=Object.entries(MODES).map(([id,m],i)=>`<button data-mode="${id}" style="--mode-color:${['#cefa70','#89caff','#ffbc70','#ff907b'][i]}" aria-pressed="false"><span class="mode-mark" aria-hidden="true"></span>${m.name}</button>`).join('');
-$('#quick').innerHTML=CONFIG.quickBets.map(v=>`<button data-bet="${v}">${fmt(v)}</button>`).join('');
-$('#auto').insertAdjacentHTML('beforeend',Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join(''));
 function bet(){return Math.round(Number($('#bet').value.replace(/\s/g,'').replace(',','.'))*100);}
-function render(){$('#music-volume').value=settings.musicVolume;$('#music-level').textContent=Math.round(settings.musicVolume*100)+'%';$('#music-toggle').setAttribute('aria-pressed',String(settings.music));$('#music-toggle').textContent=settings.music?'Música ligada':'Música desligada';const r=state.round,active=r?.status==='active',n=active?r.step:0;document.body.dataset.mode=mode;$('#training-open').textContent='Menu / '+MODES[mode].name;document.body.classList.toggle('playing',!!active);document.body.classList.toggle('celebrating',r?.status==='won');if(active)document.getElementById("bet").value=fmt(r.bet);document.body.classList.toggle('reduced',settings.reduced);$('#balance').textContent=fmt(state.balance);$('#place').textContent=ZONES[Math.min(r?.step||0,9)].toUpperCase();$('#markers').setAttribute('aria-valuenow',String(r?.step||0));$('#markers').setAttribute('aria-valuetext',`${r?.step||0} de 10 etapas concluídas`);$('#markers').querySelectorAll('i').forEach((el,i)=>{el.className=i<(r?.step||0)?'done':i===(r?.step||0)?'next':'';});$('#success').textContent=`${Math.round(MODES[mode].p*100)}% de sucesso`;$('#risk').textContent=`${Math.round((1-MODES[mode].p)*100)}%`;$('#finish').textContent=mult(multiplier(mode,10));$('#current').textContent=mult(multiplier(mode,n));$('#next').textContent=mult(multiplier(mode,Math.min(10,n+1)));const amount=active?r.bet:bet();$('#potential').textContent=Number.isFinite(amount)?fmt(payout(amount,mode,Math.min(10,n+1)))+' '+unit:'—';$('#cashout').innerHTML=`<span>Cash Out</span><strong>${fmt(active?payout(r.bet,mode,n):0)}</strong><small>${unit}</small>`;$('#cashout').disabled=!active||n===0||busy||!lockOwner;$('#play').disabled=busy||!sceneReady||!lockOwner||(!active&&(state.balance<CONFIG.minBet));$('#play').innerHTML=active?'Avançar <span aria-hidden="true">&#8599;</span>':'Apostar';$('#play').setAttribute('aria-label',active?'Avançar':'Apostar');$('#victory-result').hidden=r?.status!=='won';$('#progress').textContent=`${active?'TREINO EM CURSO':r?.status==='lost'?'FUI FRITO!':r?'TREINO TERMINADO':'TREINO POR COMEÇAR'} · ${r?.step||0} / 10`;document.querySelectorAll('[data-bet],#bet,#auto,button[data-mode]').forEach(el=>el.disabled=!!active||busy||!lockOwner);document.querySelectorAll('button[data-mode]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.mode===mode)));}
+let advanceUntil=0,advanceTimer;
+const advanceCooling=()=>performance.now()<advanceUntil;
+function lockAdvance(){
+ advanceUntil=performance.now()+500;clearTimeout(advanceTimer);
+ advanceTimer=setTimeout(function ready(){
+  const remaining=advanceUntil-performance.now();
+  if(remaining>0){advanceTimer=setTimeout(ready,Math.ceil(remaining));return;}
+  advanceTimer=null;render();
+ },500);
+}
+function render(){$('#music-volume').value=settings.musicVolume;$('#music-level').textContent=Math.round(settings.musicVolume*100)+'%';$('#music-toggle').setAttribute('aria-pressed',String(settings.music));$('#music-toggle').textContent=settings.music?'Música ligada':'Música desligada';const r=state.round,active=r?.status==='active',n=active?r.step:0,viewStep=roundForScene()?.step??0;document.body.dataset.mode=mode;document.body.classList.toggle('playing',!!active);document.body.classList.toggle('celebrating',roundForScene()?.status==='won');if(active)document.getElementById("bet").value=fmt(r.bet);document.body.classList.toggle('reduced',settings.reduced);$('#balance').textContent=fmt(state.balance);$('#place').textContent=ZONES[Math.min(viewStep,9)].toUpperCase();$('#markers').setAttribute('aria-valuenow',String(viewStep));$('#markers').setAttribute('aria-valuetext',`${viewStep} de 10 etapas concluídas`);$('#markers').querySelectorAll('i').forEach((el,i)=>{el.className=i<(viewStep)?'done':i===(viewStep)?'next':'';});$('#success').textContent=`${Math.round(MODES[mode].p*100)}% de sucesso`;$('#risk').textContent=`${Math.round((1-MODES[mode].p)*100)}%`;$('#finish').textContent=mult(multiplier(mode,10));$('#current').textContent=mult(multiplier(mode,n));$('#next').textContent=mult(multiplier(mode,Math.min(10,n+1)));const amount=active?r.bet:bet();$('#potential').textContent=Number.isFinite(amount)?fmt(payout(amount,mode,Math.min(10,n+1)))+' '+unit:'—';$('#cashout').innerHTML=`<span>Cash Out</span><strong>${fmt(active?payout(r.bet,mode,n):0)}</strong><small>${unit}</small>`;$('#cashout').disabled=!active||n===0||busy||!lockOwner;$('#play').disabled=(active&&advanceCooling())||busy||!sceneReady||!lockOwner||(!active&&(state.balance<CONFIG.minBet));$('#play').innerHTML=active?'Avançar <span aria-hidden="true">&#8599;</span>':'Apostar';$('#play').setAttribute('aria-label',active?'Avançar':'Apostar');$('#victory-result').hidden=r?.status!=='won';$('#progress').textContent=`${active?'TREINO EM CURSO':r?.status==='lost'?'FUI FRITO!':r?'TREINO TERMINADO':'TREINO POR COMEÇAR'} · ${viewStep} / 10`;document.querySelectorAll('[data-bet],#bet,button[data-mode]').forEach(el=>el.disabled=!!active||busy||!lockOwner);document.querySelectorAll('button[data-mode]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.mode===mode)));}
 function persist(next){localStorage.setItem(key,JSON.stringify(next));state=next;}
-async function act(type){if(busy||!lockOwner||!sceneReady)return;audio.unlock();busy=true;window.cardosoBusy=true;render();try{const r=state.round;const action=type==='start'?{type,bet:bet(),mode}:{type,id:r.id};let next;if(integrated){pendingAction??={action,id:crypto.randomUUID()};next=await casinoWallet.act(pendingAction.action,pendingAction.id);type=pendingAction.action.type;pendingAction=null;state=validate(next);}else{next=transition(state,action);persist(next);}$('#error').textContent='';const current=state.round;
- if(type==='start'){$('#speech').textContent='Aposta feita. Cardoso pronto na partida. Escolhe Avançar.';scene.event('start');audio.event('start');}
- else if(current.status==='lost'){$('#speech').textContent=VILLAINS[defeatVillain(current)].line;scene.event('lost');audio.event('lost');}
- else if(current.status==='paid'||current.status==='won'){$('#speech').textContent=current.status==='won'?'ZERO ÓLEO. 100% AMOR.':`Gains no bolso: ${fmt(current.payment)} ${unit} recebidos!`;scene.event(current.status);audio.event(current.status);}
- else{scene.event('step');$('#play').classList.remove('ready');requestAnimationFrame(()=>$('#play').classList.add('ready'));$('#speech').textContent=VOICE_CLIPS[voiceForEvent('step',current.step)];audio.event('step',current.step);const auto=Number($('#auto').value);if(auto&&current.step>=auto){busy=false;return await act('cashout');}}
+async function act(type){const intended=pendingAction?.action.type??type;if(busy||!lockOwner||!sceneReady||(intended==='step'&&advanceCooling()))return;if(intended==='step')lockAdvance();audio.unlock();busy=true;window.cardosoBusy=true;render();try{const r=state.round;const action=type==='start'?{type,bet:bet(),mode}:{type,id:r.id};let next;if(integrated){pendingAction??={action,id:crypto.randomUUID()};next=await casinoWallet.act(pendingAction.action,pendingAction.id);type=pendingAction.action.type;pendingAction=null;state=validate(next);}else{next=transition(state,action);persist(next);}$('#error').textContent='';const current=state.round;if(type==='step')lockAdvance();
+ if(type==='start'){clearTimeout(defeatTimer);defeatRound=null;victoryRound=null;scene.event('start');audio.event('start');}
+ else if(current.status==='lost'){finishDefeat(current);scene.event('lost');audio.event('lost');}
+ else if(current.status==='paid'||current.status==='won'){victoryRound=current.status==='won'?current.id:null;scene.event(current.status==='paid'?'idle':current.status);audio.event(current.status);}
+ else{scene.event('step');$('#play').classList.remove('ready');requestAnimationFrame(()=>$('#play').classList.add('ready'));audio.event('step',current.step);}
  }catch(e){if(e.definitive)pendingAction=null;$('#error').textContent=e.message;}finally{busy=false;window.cardosoBusy=false;render();}}
 $('#play').onclick=()=>act(state.round?.status==='active'?'step':'start');$('#cashout').onclick=()=>act('cashout');$('#bet').oninput=render;
 document.querySelectorAll('[data-bet]').forEach(b=>b.onclick=()=>{const v=Number.isFinite(bet())?bet():CONFIG.minBet,a=b.dataset.bet;const value=({minus:v-100,plus:v+100,min:CONFIG.minBet,max:Math.min(CONFIG.maxBet,state.balance),half:Math.floor(v/2),double:v*2})[a]??Number(a);$('#bet').value=fmt(Math.max(CONFIG.minBet,Math.min(CONFIG.maxBet,state.balance,value)));render();});
@@ -44,9 +64,15 @@ function show(page){const r=state.round;let body='';
  if(page==='victory')body=`<p class="eyebrow">MISSÃO CUMPRIDA</p><h2 class="result-title">ZERO ÓLEO.<br>100% AMOR.</h2><p>O Cardoso chegou à Sofia!</p><h2>${mult(multiplier(r.mode,10))} · ${fmt(r.payment)} ${unit}</h2><p>Dez passos. Nenhum frito. Um abraço merecido.</p><button id="again">Jogar novamente</button>`;
  $('#panel-body').innerHTML=body;if(!$('#panel').open)$('#panel').showModal();
  if(page==='settings'){$('#voice-note').textContent='8 grava\u00e7\u00f5es do Cardoso. Controlos independentes de m\u00fasica, efeitos e vozes.';for(const id of ['effects','music','voices','reduced','volume']){const el=$('#'+id);if(id==='volume')el.value=settings[id];else el.checked=settings[id];el.oninput=()=>{settings[id]=id==='volume'?Number(el.value):el.checked;try{localStorage.setItem(key+'-settings',JSON.stringify(settings));}catch{}music();render();};}}
- $('#pause')?.addEventListener('click',()=>{$('#panel').close();$('#play').disabled=true;$('#speech').textContent='Pausa. Quando quiseres, continua o teu treino.';const resume=document.createElement('button');resume.textContent='Retomar treino';resume.onclick=()=>{resume.remove();render();};$('#error').replaceChildren(resume);});$('#again')?.addEventListener('click',()=>{$('#panel').close();act('start');});}
-document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{$('#training-panel').close();show(b.dataset.panel);});$('#close').onclick=()=>$('#panel').close();$('#training-open').onclick=()=>$('#training-panel').showModal();$('#training-close').onclick=()=>$('#training-panel').close();
+ $('#pause')?.addEventListener('click',()=>{$('#panel').close();$('#play').disabled=true;const resume=document.createElement('button');resume.textContent='Retomar treino';resume.onclick=()=>{resume.remove();render();};$('#error').replaceChildren(resume);});$('#again')?.addEventListener('click',()=>{$('#panel').close();act('start');});}
+document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{show(b.dataset.panel);});$('#close').onclick=()=>$('#panel').close();
 if(!integrated&&navigator.locks){navigator.locks.request(key,{ifAvailable:true},async lock=>{if(!lock){$('#error').textContent='O treino está aberto noutro separador. Fecha-o e atualiza esta página.';return;}lockOwner=true;render();await new Promise(()=>{});});}else if(!integrated){$('#error').textContent='Este browser não permite proteger a sessão entre separadores. Usa um browser moderno para jogar.';}
 $('#music-volume').oninput=e=>{settings.musicVolume=Number(e.target.value);try{localStorage.setItem(key+'-settings',JSON.stringify(settings));}catch{}music();render();};
 $('#music-toggle').onclick=()=>{settings.music=!settings.music;audio.unlock();try{localStorage.setItem(key+'-settings',JSON.stringify(settings));}catch{}music();render();};
 document.addEventListener('pointerdown',()=>audio.unlock(),{once:true});render();
+
+// Space advances only an already paid, active round; it never places a bet.
+document.addEventListener('keydown',event=>{
+ if(event.code!=='Space'||event.repeat||event.ctrlKey||event.altKey||event.metaKey||busy||!lockOwner||state.round?.status!=='active'||document.querySelector('dialog[open]')||event.target.closest('input,select,textarea,a,summary,button:not(#play),[contenteditable]'))return;
+ event.preventDefault();void act('step');
+});

@@ -1,4 +1,5 @@
 import './screen.css';
+import './animation-v2.css';
 import './football.css';
 import '@fontsource-variable/oxanium';
 import '@fontsource/barlow-condensed/500.css';
@@ -156,8 +157,8 @@ function renderFreeSpins(){
   document.querySelector('.machine')!.classList.toggle('bonus-mode',!!active);
   const played=active?active.totalFreeSpins-active.remaining:0;
   $('fs').innerHTML=active?`<span class="fs-played">${played}</span><span class="fs-divider"> / </span><span class="fs-all">${active.totalFreeSpins}</span>`:'';
-  $('fs').setAttribute('aria-label',`${played} spins rodados de ${active?.totalFreeSpins??0} totais`);
-  $('fs-total').textContent='RODADOS / TOTAL';
+  $('fs').setAttribute('aria-label',`Spin ${played} de ${active?.totalFreeSpins??0}`);
+  $('fs-total').textContent='SPIN / TOTAL';
   panel.classList.toggle('last-spins',!!active&&active.remaining<=3);panel.classList.toggle('retrigger-added',!!session.pendingRetrigger);
 }
 function baseSpinCost(){return session.bet*(prefs.bonusHunt?config.huntCostMultiplier:1);}
@@ -267,7 +268,7 @@ async function play(command:Command){
   if(!assetsReady||busy||reviewPending||session.pendingRetrigger||$<HTMLDialogElement>('modal').open)return;cancelAuto();selectedPayline=undefined;linesPresented=false;busy=true;render();
   unlockAudio();stopEffects();if(session.active?.remaining===1)audioCue('last');
   try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
-    const controller=new AbortController();finishAnimation=()=>{controller.abort();stopEffects();};interruptPresentation=()=>{controller.abort();stopEffects();};
+    let controller=new AbortController();const bindController=(grace=0)=>{const current=controller,since=performance.now();finishAnimation=()=>{if(performance.now()-since<grace)return;current.abort();stopEffects();};interruptPresentation=()=>{current.abort();stopEffects();};};bindController();
     if(command.type==='start'&&command.mode!=='base'){
       document.querySelector<HTMLElement>('.machine')!.dataset.presentation='purchase-activation';$('round-note').textContent='Ativação da compra · '+(command.mode==='normal'?3:command.mode==='legend'?5:4)+' bilhetes';
       await presentBonusActivation(command.mode,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message});
@@ -275,10 +276,13 @@ async function play(command:Command){
       document.querySelector<HTMLElement>('.machine')!.dataset.mode='base';$('mode').textContent=modeName('base');$('round-note').textContent='Free spin 1 de '+config.freeSpins+' · aposta '+money(session.bet);
       await presentBonusTransition({kind:'entry',mode:command.mode,reduced:prefs.reduced,signal:controller.signal});
       await showBonusEntry(command.mode);
+      // Skipping the purchase presentation must never skip the first free spin.
+      controller=new AbortController();bindController(700);
     }
-    await presentSpin(result,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message});
+    await presentSpin(result,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,draw:snapshot=>drawBoard(result,true,snapshot),message,onReelsStart:()=>{
+      if(result.mode!=='base'&&bonusView){bonusView={...result.next};if(result.retrigger){bonusView.remaining-=result.retrigger.awarded;bonusView.totalFreeSpins-=result.retrigger.awarded;}renderFreeSpins();}
+    }});
     drawBoard(result);
-    if(result.mode!=='base'&&bonusView){bonusView={...result.next};if(result.retrigger){bonusView.remaining-=result.retrigger.awarded;bonusView.totalFreeSpins-=result.retrigger.awarded;}renderFreeSpins();}
     await presentWinningLines(result,controller.signal);
     await celebrateWin(result.paid,session.history[0].bet,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,control:finish=>finishAnimation=finish,cue:tier=>victoryAudio(tier)});
     finishAnimation=undefined;

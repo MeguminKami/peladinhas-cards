@@ -1,6 +1,6 @@
 import type {Mode,SymbolId} from '../src/config.ts';
 
-const root=new URL('./assets/football/',document.baseURI).href;
+const root=new URL('./assets/football/',typeof document === 'undefined' ? import.meta.url : document.baseURI).href;
 export const background=root+'backgrounds/neighborhood-night-v1.png';
 export const symbolArt:Record<SymbolId,{name:string;src:string}>={
   N1:{name:'Cone de treino',src:root+'symbols/n1-cone.png'},

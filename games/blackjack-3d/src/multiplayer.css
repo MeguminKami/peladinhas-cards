@@ -1,3 +1,9 @@
+.blackjack-shell.multiplayer-shell .table-floor {
+  height: auto;
+  min-height: 104px;
+  margin-top: 0;
+  padding: 8px;
+}
 .multiplayer-shell .decision-dock {
   display: flex !important;
   flex-wrap: wrap;
@@ -27,12 +33,24 @@
 .multiplayer-shell .controls {
   display: flex;
   gap: 8px;
+  flex: 1 1 600px;
+  min-width: 0;
   flex-wrap: wrap;
   justify-content: center;
 }
 .multiplayer-shell .controls button {
-  min-width: 100px;
-  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  flex: 1 1 104px; min-width: 100px; min-height: 54px; padding: 10px 12px;
+  font-family: 'Atelier Manrope', system-ui, sans-serif; font-size: 14px; font-weight: 650; line-height: 1.25;
+  transition: filter 160ms, transform 160ms;
+}
+.multiplayer-shell .controls:has([data-action="split"]) {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.multiplayer-shell .controls:has([data-action="split"]) button {
+  min-width: 0;
+  padding-inline: 8px;
 }
 .multiplayer-shell .controls [data-action="bet"] {
   background: linear-gradient(145deg, #276d4a, #153d2d);
@@ -162,13 +180,15 @@
   .multiplayer-shell .controls {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .multiplayer-shell .controls button {
     min-width: 0;
     padding: 10px 6px;
     font-size: 12px;
   }
+  .multiplayer-shell .controls [data-action="bet"] { grid-column: 1 / -1; }
+  .multiplayer-shell .controls:has([data-action="split"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .multiplayer-shell .seat-name {
     max-width: 62px;
     font-size: 9px;
@@ -194,3 +214,140 @@
     scroll-behavior: auto !important;
   }
 }
+
+.multiplayer-shell .action-icon { width: 19px; height: 19px; flex: 0 0 19px; }
+.multiplayer-shell .controls [data-action="repeat"] { background: linear-gradient(145deg,#286b75,#163c48); border-color:#8ce4e6; color:#eaffff; }
+.multiplayer-shell .controls :is([data-action="double-bet"],[data-action="double"]) { background:linear-gradient(145deg,#654293,#362450); border-color:#d6b3ff; color:#faf0ff; }
+.multiplayer-shell .controls [data-action="hit"] { background:linear-gradient(145deg,#287453,#173b30); border-color:#9ce7be; color:#eefff5; }
+.multiplayer-shell .controls :is([data-action="stand"],[data-action="decline"]) { background:linear-gradient(145deg,#8a394b,#48202c); border-color:#f2a6b6; color:#fff1f5; }
+.multiplayer-shell .controls :is([data-action="split"],[data-action="insure"]) { background:linear-gradient(145deg,#856125,#493816); border-color:#f2d399; color:#fff7df; }
+.multiplayer-shell .controls button:active:not(:disabled) { transform:translateY(1px); }
+.multiplayer-shell .controls button:focus-visible { outline:3px solid #fff0b6; outline-offset:3px; }
+@media(prefers-reduced-motion:reduce){.multiplayer-shell .controls button{transition:none;}}
+
+/* Dealer Gormiti */
+.multiplayer-shell .dealer-id { display: flex; align-items: center; gap: 12px; }
+.multiplayer-shell .dealer-id span { display: flex; flex-direction: column; gap: 3px; text-align: left; }
+.multiplayer-shell .dealer-id strong { font-family: 'Atelier Cormorant', Georgia, serif; font-size: 24px; line-height: 1.1; color: #fff1cd; letter-spacing: .04em; }
+.multiplayer-shell .dealer-id small { font-size: 10px; letter-spacing: .2em; color: #eed39a; }
+.multiplayer-shell .dealer-portrait { width: 72px; height: 72px; flex: 0 0 72px; border-radius: 50%; border: 3px solid #dfc17b; box-shadow: 0 3px 12px #0009, 0 0 18px #62d58a40; background: #0d1f1a; }
+@media (max-width: 650px) {
+  .multiplayer-shell .dealer-hud { top: 8px; gap: 4px; padding: 6px 10px; min-width: 0; }
+  .multiplayer-shell .dealer-id { gap: 8px; }
+  .multiplayer-shell .dealer-portrait { width: 40px; height: 40px; flex-basis: 40px; border-width: 2px; }
+  .multiplayer-shell .dealer-id strong { font-size: 15px; }
+  .multiplayer-shell .dealer-id small { font-size: 8px; }
+  .multiplayer-shell .dealer-hud .card { width: 40px; height: 58px; min-width: 40px; }
+  .multiplayer-shell .dealer-total { font-size: 14px; padding: 3px 10px; min-width: 52px; }
+}
+
+/* Profile photos */
+.multiplayer-shell .avatar { position: relative; overflow: hidden; }
+.multiplayer-shell .avatar > svg, .multiplayer-shell .avatar > .avatar-photo { grid-area: 1 / 1; }
+.multiplayer-shell .avatar-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+/* Several seats owned by one person */
+.multiplayer-shell .seat-person { overflow: visible; }
+.multiplayer-shell .seat-badge { position: absolute; top: -4px; left: calc(50% - 40px); z-index: 3; min-width: 26px; height: 26px; display: grid; place-items: center; border-radius: 13px; background: #e3c57d; color: #13271c; border: 2px solid #13271c; font: 800 14px/1 'Atelier Manrope', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.multiplayer-shell .seat.active .seat-badge { background: #fff0b6; }
+.multiplayer-shell .seat-leave { position: absolute; top: -4px; left: calc(50% + 14px); z-index: 5; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: #c8352d; color: #fff; border: 2px solid #13271c; font: 800 13px/1 'Atelier Manrope', system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 8px #0008; transition: transform 160ms, background 160ms; }
+.multiplayer-shell .seat-leave::after { content: ''; position: absolute; inset: -9px; }
+.multiplayer-shell .seat-leave:hover { background: #e2453c; transform: scale(1.1); }
+.multiplayer-shell .seat-leave:active { transform: scale(.94); }
+.multiplayer-shell .seat-leave:focus-visible { outline: 3px solid #fff0b6; outline-offset: 2px; }
+.multiplayer-shell .seat-leave:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+@media (prefers-reduced-motion: reduce) { .multiplayer-shell .seat-leave { transition: none; } }
+.multiplayer-shell .seat.waiting .avatar,
+.multiplayer-shell .seat.waiting .table-hands { opacity: .55; filter: saturate(.6); transition: opacity 200ms, filter 200ms; }
+.multiplayer-shell .seat.active .avatar { animation: seat-pulse 1.4s ease-in-out infinite; border-color: #fff0b6; }
+.multiplayer-shell .seat.active .table-hands { filter: drop-shadow(0 0 10px #ffe39a99); }
+.multiplayer-shell .seat-person .turn-indicator { z-index: 4; box-shadow: 0 2px 8px #0008; font-size: 10px; padding: 5px 9px; top: calc(100% + 38px); bottom: auto; left: 50%; transform: translateX(-50%); }
+.multiplayer-shell .dealer-id small { background: none; padding: 0; }
+@keyframes seat-pulse { 50% { box-shadow: 0 0 0 5px #fff0b655, 0 0 30px #ffe39aaa; } }
+@media (max-width: 650px) {
+  .multiplayer-shell .seat-badge { left: calc(50% - 30px); top: -6px; min-width: 20px; height: 20px; font-size: 11px; }
+  .multiplayer-shell .seat-leave { left: calc(50% + 10px); top: -6px; width: 22px; height: 22px; font-size: 11px; }
+  .multiplayer-shell .seat-person .turn-indicator { font-size: 8px; padding: 3px 6px; top: calc(100% + 34px); bottom: auto; left: 50%; transform: translateX(-50%); }
+}
+
+/* Round result banner */
+.result-banner { position: fixed; left: 50%; top: 46%; z-index: 60; display: grid; justify-items: center; gap: 12px; box-sizing: border-box; width: min(360px, calc(100vw - 32px)); padding: 24px 24px 22px; border-radius: 22px; pointer-events: none; text-align: center; color: var(--rb-ink); background: radial-gradient(ellipse at 50% 0, var(--rb-a), var(--rb-b) 75%); border: 2px solid var(--rb-edge); box-shadow: 0 18px 60px #000a, 0 0 70px var(--rb-glow); transform: translate(-50%, -50%); animation: result-banner 1.5s cubic-bezier(.2, .8, .25, 1) forwards; }
+.result-banner strong { font: 700 clamp(30px, 9vw, 46px)/1 'Atelier Cormorant', Georgia, serif; letter-spacing: .06em; text-shadow: 0 3px 0 #0006; overflow-wrap: anywhere; }
+.result-banner .result-glyph { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--rb-edge); background: #0004; font-size: 22px; line-height: 1; }
+.result-banner output { display: inline-flex; align-items: baseline; justify-content: center; gap: 8px; min-width: 150px; box-sizing: border-box; padding: 8px 20px; border-radius: 999px; background: #0007; font-family: 'Atelier Manrope', system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.result-banner output b { font-size: clamp(20px, 6vw, 26px); font-weight: 800; line-height: 1.1; }
+.result-banner output small { font-size: 12px; font-weight: 700; letter-spacing: .14em; opacity: .85; }
+.result-banner.blackjack { --rb-a: #f6d775; --rb-b: #8a5b12; --rb-edge: #fff0b6; --rb-glow: #ffd35a99; --rb-ink: #231705; }
+.result-banner.win { --rb-a: #3fbf7f; --rb-b: #0f4a33; --rb-edge: #a6f0c6; --rb-glow: #3fe08a77; --rb-ink: #f2fff7; }
+.result-banner.loss, .result-banner.bust { --rb-a: #c9485c; --rb-b: #4a1420; --rb-edge: #ffb0bc; --rb-glow: #ff4d6a66; --rb-ink: #fff2f4; }
+.result-banner.push { --rb-a: #5d86b8; --rb-b: #1d2f4d; --rb-edge: #bcd6f5; --rb-glow: #6aa6ff55; --rb-ink: #f3f8ff; }
+.result-banner.blackjack output { color: #fff0b6; }
+@keyframes result-banner {
+  0% { opacity: 0; transform: translate(-50%, -42%) scale(.7); }
+  14% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
+  24% { transform: translate(-50%, -50%) scale(1); }
+  72% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -56%) scale(.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .result-banner { animation: result-banner-fade 1.5s linear forwards; }
+  @keyframes result-banner-fade { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+}
+
+.multiplayer-shell [data-action="chat"][aria-expanded="true"] { border-color: #f1d99d; color: #fff1cf; }
+.bj-online {
+  position: fixed;
+  z-index: 40;
+  top: 64px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(470px, calc(100vh - 88px));
+  padding: 14px 16px 16px;
+  box-sizing: border-box;
+  background: linear-gradient(125deg, #142c22, #201923);
+  border: 1px solid #c2a36899;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px #0009;
+  animation: bj-online-in 220ms ease-out;
+}
+.bj-online[hidden] { display: none; }
+.bj-online .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.bj-online .online-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bj-online .online-heading > div { display: grid; gap: 3px; min-width: 0; }
+.bj-online .online-heading small { font-size: 8px; letter-spacing: 1.6px; color: #c3ad79; }
+.bj-online .online-heading strong { font: 600 20px 'Atelier Cormorant', Georgia, serif; color: #f1dfbd; }
+.bj-online .online-close { flex: none; width: 44px; height: 44px; border: 1px solid #c2a36855; border-radius: 9px; background: #ffffff0a; color: #eedab3; cursor: pointer; }
+.bj-online .online-tabs { display: flex; gap: 8px; margin-top: 8px; border-bottom: 1px solid #cfb77d35; }
+.bj-online .online-tabs button { min-height: 44px; padding: 8px 14px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #aab8a8; font: 600 12px 'Atelier Manrope', sans-serif; cursor: pointer; }
+.bj-online .online-tabs button[aria-selected="true"] { border-bottom-color: #e4c47f; color: #f5dcaa; }
+.bj-online button:focus-visible,
+.bj-online .online-chat-input:focus-visible { outline: 2px solid #f4d99f; outline-offset: 3px; }
+.bj-online .online-content { display: flex; flex-direction: column; min-height: 0; min-width: 0; flex: 1; }
+.bj-online .online-player-list { display: grid; gap: 7px; list-style: none; padding: 12px 0 0; margin: 0; overflow: auto; }
+.bj-online .online-player { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 52px; padding: 8px 11px; background: #ffffff08; border-radius: 9px; }
+.bj-online .online-player-dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--player-color); box-shadow: 0 0 10px color-mix(in srgb, var(--player-color), transparent 40%); }
+.bj-online .online-player-copy { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.bj-online .online-player-copy strong { overflow-wrap: anywhere; color: var(--player-color); font-size: 12px; }
+.bj-online .online-player-copy small { color: #b8c5b5; font-size: 10px; line-height: 1.4; }
+.bj-online .online-player > b { flex: none; color: #f2dfb6; font-size: 12px; font-variant-numeric: tabular-nums; }
+.bj-online .online-empty { margin: 0; padding: 16px 4px; color: #b8c5b5; font-size: 12px; }
+.bj-online .online-chat-log { display: flex; flex-direction: column; gap: 9px; min-height: 110px; flex: 1; overflow: auto; padding: 13px 3px 8px; overscroll-behavior: contain; }
+.bj-online .online-message { align-self: flex-start; max-width: 86%; min-width: 0; padding: 8px 11px; border: 1px solid #ffffff12; border-radius: 4px 13px 13px 13px; background: #ffffff0b; }
+.bj-online .online-message.is-mine { align-self: flex-end; border-radius: 13px 4px 13px 13px; background: #d5b77912; }
+.bj-online .online-message strong { display: block; margin-bottom: 3px; color: var(--player-color); font-size: 10px; overflow-wrap: anywhere; }
+.bj-online .online-message p { margin: 0; color: #f0e9d8; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-wrap; }
+.bj-online .online-error { margin: 0 0 8px; padding: 8px 10px; border-radius: 8px; background: #ff6b6b1f; color: #ffb4b4; font-size: 11px; line-height: 1.4; }
+.bj-online .online-error[hidden] { display: none; }
+.bj-online .online-chat-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; padding-top: 10px; border-top: 1px solid #cfb77d25; }
+.bj-online .online-chat-input { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; box-sizing: border-box; border: 1px solid #c2a36855; border-radius: 9px; background: #0e1e17; color: #f4ead4; font: 12px 'Atelier Manrope', sans-serif; }
+.bj-online .online-chat-input::placeholder { color: #8e9b8e; }
+.bj-online .online-chat-form button { min-width: 78px; min-height: 44px; padding: 9px 14px; border: 1px solid #e6c982; border-radius: 9px; background: linear-gradient(135deg, #ead08f, #b48d4c); color: #2b1a22; font: 700 12px 'Atelier Manrope', sans-serif; cursor: pointer; }
+.bj-online .online-chat-form button:disabled { opacity: .6; cursor: wait; }
+@keyframes bj-online-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (max-width: 650px) {
+  .bj-online { top: auto; right: 0; bottom: 0; left: 0; width: auto; max-height: min(430px, 62vh); border-radius: 16px 16px 0 0; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+  .bj-online .online-message { max-width: 90%; }
+}
+@media (prefers-reduced-motion: reduce) { .bj-online { animation: none; } }

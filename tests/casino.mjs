@@ -45,7 +45,7 @@ try {
   });
   const fixtureSession=createSession('casino-ui-fixed');fixtureSession.balance=10000;
   await context.addInitScript(snapshot=>{
-    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset';
+    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200';
     if(!localStorage.getItem(key)) localStorage.setItem(key,JSON.stringify(snapshot));
   },fixtureSession);
   await context.route("**/js/firebase.js", (r) =>
@@ -201,7 +201,7 @@ try {
   await frame.locator("#spin:not(:disabled)").waitFor();
   const before = await page.evaluate(() => window.__casinoCalls.length);
   await frame.locator("body").evaluate(() => {
-    const key = "slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset";
+    const key = "slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200";
     localStorage.setItem(
       key + ":preferences",
       JSON.stringify({
@@ -219,15 +219,15 @@ try {
   await frame.locator("#spin").click();
   await page.waitForFunction(
     () =>
-      JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset"))?.history
+      JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200"))?.history
         ?.length === 1,
   );
   await page.waitForFunction(
-    () => !localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset:wallet-pending"),
+    () => !localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200:wallet-pending"),
   );
   const after = await page.evaluate(() => ({
     calls: window.__casinoCalls,
-    state: JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset")),
+    state: JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200")),
     wallet: JSON.parse(sessionStorage.getItem("casino-fixture-wallet")).wallet,
   }));
   assert.equal(
@@ -297,7 +297,7 @@ try {
   await frame.locator("#spin").click();
   await page.waitForFunction(
     () =>
-      JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset"))?.history
+      JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200"))?.history
         ?.length === 2,
   );
   await page.evaluate(() => {
@@ -313,7 +313,7 @@ try {
       )?.pending,
   );
   const saved = await page.evaluate(() => ({
-    progress: JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset")),
+    progress: JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200")),
     wallet: JSON.parse(sessionStorage.getItem("casino-fixture-wallet")).wallet
       .balance,
   }));
@@ -324,12 +324,12 @@ try {
   await page.locator('[data-casino-game="futebol"]').click();
   await frame.locator('body[data-assets="ready"]').waitFor({ timeout: 45000 });
   await page.waitForFunction(
-    () => !localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset:wallet-pending"),
+    () => !localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200:wallet-pending"),
   );
   assert.equal(
     await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset")).rngState,
+        JSON.parse(localStorage.getItem("slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200")).rngState,
     ),
     saved.progress.rngState,
   );

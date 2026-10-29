@@ -36,6 +36,36 @@ export const expiredPlayer = (p, table, now) =>
 const check = (ok, text) => {
   if (!ok) throw Error(text);
 };
+export const BJ_CHAT = Object.freeze({
+  window: 30 * 60 * 1000,
+  length: 180,
+  interval: 1000,
+});
+const CHAT_COLORS = Object.freeze([
+  "#f2a65a",
+  "#74c0fc",
+  "#da77f2",
+  "#69db7c",
+  "#ff8787",
+  "#ffd43b",
+  "#63e6be",
+  "#b197fc",
+  "#ffa8a8",
+  "#91a7ff",
+  "#e599f7",
+  "#a9e34b",
+]);
+export function chatColor(players, uid) {
+  const used = new Set(players.filter((p) => p.uid !== uid).map((p) => p.color));
+  const choices = CHAT_COLORS.filter((color) => !used.has(color));
+  return choices.length ? choices[randomInt(choices.length)] : CHAT_COLORS[0];
+}
+export function newChatMessage(uid, name, color, message, now = Date.now()) {
+  const user = Array.from(String(name || "Jogador").trim()).slice(0, 30).join("");
+  const body = String(message || "").trim();
+  check(user && body && body.length <= BJ_CHAT.length, "Mensagem inválida.");
+  return { uid, user, color, message: body, createdAt: now };
+}
 export function newTable(now = Date.now()) {
   return {
     id: randomUUID(),
@@ -69,9 +99,11 @@ export function tableView(table) {
       ? 0
       : (table.lastPlayAt ?? table.updatedAt) + BJ.roomIdle,
     players: table.players.map(
-      ({ uid, name, seat, bet, activeAt, leaving }) => ({
+      ({ uid, name, photo, color, seat, bet, activeAt, leaving }) => ({
         uid,
         name,
+        photo: photo || "",
+        color: color || CHAT_COLORS[0],
         seat,
         bet,
         activeUntil: activeAt + BJ.idle,
@@ -96,6 +128,7 @@ export function tableCommand(
   walletData,
   now = Date.now(),
   forcedShoe,
+  photo,
 ) {
   check(
     input && typeof input === "object" && !Array.isArray(input),
@@ -349,6 +382,15 @@ export function tableCommand(
         name: Array.from(String(name || "Jogador"))
           .slice(0, 30)
           .join(""),
+        photo:
+          typeof photo === "string" &&
+          photo.length <= 2000 &&
+          /^https:\/\//i.test(photo)
+            ? photo
+            : "",
+        color:
+          owned.find((p) => p.color)?.color || chatColor(table.players, uid),
+        lastChatAt: owned[0]?.lastChatAt || 0,
         seat,
         bet: 0,
         seenAt: now,
@@ -360,6 +402,7 @@ export function tableCommand(
     } else {
       owned.forEach((p) => {
         if (p.leaving) p.joinedRevision = table.revision + 1;
+        if (input.action === "join" && photo && /^https:\/\//i.test(photo) && photo.length <= 2000) p.photo = photo;
         p.seenAt = now;
         p.activeAt = now;
         p.leaving = false;
@@ -386,13 +429,16 @@ export function tableCommand(
       player.bet = input.amount;
       if (!table.deadline) table.deadline = now + BJ.betting;
     } else if (input.action === "leave") {
-      owned.forEach((p) => {
+      // Without a seat the whole table is left; with one, only that seat is released.
+      const leaving = input.seat === undefined ? owned : owned.filter((p) => p.seat === input.seat);
+      check(leaving.length, "Lugar inválido.");
+      leaving.forEach((p) => {
         p.leaving = true;
         p.seenAt = now - BJ.lease;
       });
       if (!table.session.round) {
-        for (const p of owned) if (p.bet) money(uid, p.bet, "refund");
-        table.players = table.players.filter((p) => p.uid !== uid);
+        for (const p of leaving) if (p.bet) money(uid, p.bet, "refund");
+        table.players = table.players.filter((p) => !leaving.includes(p));
       }
     } else if (input.action !== "heartbeat") {
       const round = table.session.round;

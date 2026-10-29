@@ -2,12 +2,12 @@ import {audioCue,reelAudio,suspenseAudio,stopEffects} from './audio.ts';
 ﻿import type {Board} from '../src/board.ts';
 import type {SpinResult} from '../src/engine.ts';
 import {powerTitles,previewBoard,symbolMarkup,symbolArt} from './theme.ts';
-import './animation-v2.css';
+
 import {landingPlan} from './reel-motion.ts';
 
 type PowerEvent=NonNullable<SpinResult['detail']>['events'][number];
 export interface Snapshot {board:Board;events:PowerEvent[];sticky?:number[]}
-export interface Options {speed:'normal'|'fast'|'super';reduced:boolean;signal:AbortSignal;draw:(snapshot:Snapshot)=>void;message:(title:string,subtitle:string)=>void}
+export interface Options {speed:'normal'|'fast'|'super';reduced:boolean;signal:AbortSignal;draw:(snapshot:Snapshot)=>void;message:(title:string,subtitle:string)=>void;onReelsStart?:()=>void}
 function pause(ms:number,signal:AbortSignal){return new Promise<void>(resolve=>{if(signal.aborted){resolve();return;}const done=()=>{clearTimeout(timer);signal.removeEventListener('abort',done);resolve();};const timer=setTimeout(done,ms);signal.addEventListener('abort',done,{once:true});});}
 const cell=(p:number)=>document.querySelector<HTMLElement>(`.cell[data-position="${p}"]`);
 function point(el:HTMLElement,root:HTMLElement){const a=el.getBoundingClientRect(),b=root.getBoundingClientRect();return {x:a.left+a.width/2-b.left,y:a.top+a.height/2-b.top};}
@@ -21,7 +21,7 @@ async function reels(board:Board,sticky:number[],options:Options,signal:AbortSig
     const original=cell(p)!;
     return {node:original.cloneNode(true) as HTMLElement,art:original.querySelector<HTMLElement>('.symbol-art')!.getBoundingClientRect()};
   });
-  options.draw({board:[...board],events:[],sticky});root.classList.add('reeling');reelAudio(true);
+  options.draw({board:[...board],events:[],sticky});root.classList.add('reeling');options.onReelsStart?.();reelAudio(true);
   const bounds=root.getBoundingClientRect(),lanes:HTMLElement[]=[],animations:Animation[]=[];
   const cycle=options.reduced?230:{normal:145,fast:95,super:55}[options.speed];
   for(let col=0;col<6;col++){

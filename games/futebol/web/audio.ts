@@ -91,5 +91,5 @@ export function audioCue(name:string,value=0,delay=0){
  }
 }
 export function audioStatus(){const samples=new Float32Array(256);meter?.getFloatTimeDomainData(samples);const rms=Math.sqrt(samples.reduce((sum,v)=>sum+v*v,0)/samples.length);return {state:ctx?.state??'locked',scene,voices:voices.size,effectVoices:[...voices].filter(v=>v.bus==='effects').length,settings:{...settings},rolling,tension,rms};}
-document.addEventListener('visibilitychange',()=>{if(!ctx)return;if(document.hidden){stopEffects();void ctx.suspend().catch(()=>{});}else if(settings.sound){nextBeat=ctx.currentTime+.04;void ctx.resume().catch(()=>{});}});
-window.addEventListener('pagehide',()=>{clearInterval(clock);stopEffects();void ctx?.close().catch(()=>{});});
+if(typeof document !== 'undefined') document.addEventListener('visibilitychange',()=>{if(!ctx)return;if(document.hidden){stopEffects();void ctx.suspend().catch(()=>{});}else if(settings.sound){nextBeat=ctx.currentTime+.04;void ctx.resume().catch(()=>{});}});
+if(typeof window !== 'undefined') window.addEventListener('pagehide',()=>{clearInterval(clock);stopEffects();void ctx?.close().catch(()=>{});});

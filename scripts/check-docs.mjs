@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname, extname, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const documents = [resolve(root, "README.md"), resolve(root, "QuestETC.md")];
+const documents = [resolve(root, "README.md"), resolve(root, "QuestETC.md"), resolve(root, "DEPLOY.md")];
 function scan(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = resolve(dir, entry.name);

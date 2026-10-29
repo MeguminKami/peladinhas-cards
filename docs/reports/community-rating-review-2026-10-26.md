@@ -1,5 +1,7 @@
 # Avaliações da comunidade · exclusão e revisão única · 26/10/2026
 
+Registo histórico de 26/10. A revisão automática e a aceitação de 1,9 descritas abaixo foram substituídas pela [nulidade na submissão e autorização administrativa de 27/10](community-rating-null-2026-10-27.md).
+
 ## Comportamento implementado
 
 A média dos 12 atributos externos na escala 0–20 tem de ser pelo menos 1,9 para a avaliação contar. Valores inferiores são totalmente excluídos da média, da contagem válida e da elegibilidade comunitária reconstruída para a coleção. A média exatamente 1,9 é aceite, incluindo valores decimais. A regra é exclusivamente de comunidade: a autoavaliação inicial e o feedback dos jogos mantêm as regras anteriores.

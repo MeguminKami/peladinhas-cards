@@ -38,6 +38,13 @@ const fit=installCasinoTableFit(root);
 window.setCasinoFit=value=>fit.set(value);
 return {destroy(){fit.destroy();handle.destroy();}};
 };
+window.mountRouletteMultiplayer = connection => {
+const root=document.querySelector('#game');
+const handle=SDK.mount(root,{playerId:connection.uid,online:connection});
+const fit=installCasinoTableFit(root);
+window.setCasinoFit=value=>fit.set(value);
+return {...handle,destroy(){fit.destroy();handle.destroy();}};
+};
 window.mountCasinoTable = ({playerId,wallet}) => {
 const root=document.querySelector('#game');
 const handle=mount(root, {

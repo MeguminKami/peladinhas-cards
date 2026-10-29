@@ -12,6 +12,7 @@ import { cardWeek } from "./card-week.js";
 import { ADMIN_AREAS } from "./admin-menu.js";
 import * as DB from "./db.js";
 import { canEditRating } from "./rating-window.js";
+import { isNullCommunityRating } from "./community-review.js";
 import {
   THEMES,
   ATTRIBUTES,
@@ -91,7 +92,7 @@ export async function adminPage(ctx, section = "overview") {
         .join("") || '<p class="muted">Ainda sem jogos.</p>'
     }</section><section class="panel"><h3>Acompanhamento</h3><a class="overview-line" href="#/admin/support">${icon("tickets")}<b>Tickets abertos</b><span id="admin-open-tickets">…</span></a><a class="overview-line" href="#/admin/ratings">${icon("edit")}<b>Consultar avaliações</b>${icon("arrow")}</a><a class="overview-line" href="#/admin/weights">${icon("lab")}<b>Pesos por posição</b><span class="pill">100%</span></a><div id="admin-week-status"></div></section></div></section>`,
     weights: `<section class="panel"><h2>Pesos do OVR</h2><p>Define os pesos para cada posição. Cada posição deve somar 100%. A carta usa a posição principal do jogador. Guardar atualiza as cartas em evolução. Cartas de semanas fechadas mantêm os valores e pesos originais.</p><div id="ovr-presets"></div><form id="ovr-settings"><label>Posição<select id="ovr-position">${OVR_POSITIONS.map((p) => `<option ${p === "ALA" ? "selected" : ""}>${p}</option>`).join("")}</select></label><div class="form-grid">${ATTRIBUTES.map(([key, name]) => `<label>${esc(name)} (%)<input name="${key}" type="number" min="0" max="100" step="0.01" required value="${ctx.league.ovrWeights.positions.ALA[key]}"></label>`).join("")}</div><p id="ovr-total" aria-live="polite">Total: 100%</p><button class="btn btn-primary">Guardar pesos e recalcular</button></form></section>`,
-    players: `<section><h2>Jogadores</h2><div class="table-wrap"><table><thead><tr><th>Jogador</th><th>Perfil de acesso</th><th>OVR</th><th>Acções</th></tr></thead><tbody>${players.map((p) => `<tr><td><a href="#/player/${p.uid}">${esc(p.displayName || p.username)}<small>@${esc(p.username)}</small></a></td><td>${roleLabel(p.role)}</td><td>${p.ovr}</td><td><div class="actions compact admin-player-actions" style="--player-action-count:${p.role === "admin" ? 9 : 10}" role="group" aria-label="Acções do jogador">${playerAction(`#/admin/player/${p.uid}/edit`, "Editar jogador", "edit", "primary", "Editar")}${playerAction(`#/admin/initial/${p.uid}`, "Avaliação inicial", "missions", "secondary", "Inicial")}${playerAction(`#/admin/cards/${p.uid}`, "Pré-visualizar carta", "preview", "ghost", "Carta")}${playerAction(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "chart", "ghost", "OVR")}${playerAction(`#/admin/ratings/${p.uid}`, "Avaliações detalhadas", "ratingGames", "ghost", "Votos")}<button type="button" data-casino-grant="${esc(p.uid)}" class="btn btn-icon btn-ghost" aria-label="Enviar moedas" aria-haspopup="dialog">${icon("gift")}${actionCaption("Moedas")}</button><button type="button" data-reset-password="${esc(p.uid)}" class="btn btn-icon btn-ghost" aria-label="Reset password" aria-haspopup="dialog">${icon("resetPassword")}${actionCaption("Reset password")}</button><button data-rebuild="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Recalcular">${icon("refresh")}${actionCaption("Recalcular")}</button>${p.role !== "admin" ? `<button data-role="${p.uid}" data-target-role="${p.role === "dbs" ? "member" : "dbs"}" class="btn btn-icon ${p.role === "dbs" ? "btn-danger" : "btn-secondary"}" aria-label="${p.role === "dbs" ? "Remover DBS" : "Dar DBS"}">${icon("games")}${actionCaption(p.role === "dbs" ? "Tirar DBS" : "Dar DBS")}</button>` : ""}<button data-role="${p.uid}" class="btn btn-icon ${p.role === "admin" ? "btn-danger" : "btn-admin-access"}" aria-label="${p.role === "admin" ? "Remover admin" : "Promover admin"}" ${p.uid === ctx.user.uid ? "disabled" : ""}>${icon("shield")}${actionCaption(p.role === "admin" ? "Tirar admin" : "Dar admin")}</button></div></td></tr>`).join("")}</tbody></table></div>${!players.length ? empty("Sem jogadores", "As contas criadas aparecem aqui.") : ""}</section>`,
+    players: `<section><h2>Jogadores</h2><div class="table-wrap admin-players-table"><table><thead><tr><th>Jogador</th><th>Perfil de acesso</th><th>OVR</th><th>Acções</th></tr></thead><tbody>${players.map((p) => `<tr><td><a href="#/player/${p.uid}">${esc(p.displayName || p.username)}<small>@${esc(p.username)}</small></a></td><td>${roleLabel(p.role)}</td><td>${p.ovr}</td><td><div class="actions compact admin-player-actions" style="--player-action-count:${p.role === "admin" ? 9 : 10}" role="group" aria-label="Acções do jogador">${playerAction(`#/admin/player/${p.uid}/edit`, "Editar jogador", "edit", "primary", "Editar")}${playerAction(`#/admin/initial/${p.uid}`, "Avaliação inicial", "missions", "secondary", "Inicial")}${playerAction(`#/admin/cards/${p.uid}`, "Pré-visualizar carta", "preview", "ghost", "Carta")}${playerAction(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "chart", "ghost", "OVR")}${playerAction(`#/admin/ratings/${p.uid}`, "Avaliações detalhadas", "ratingGames", "ghost", "Votos")}<button type="button" data-casino-grant="${esc(p.uid)}" class="btn btn-icon btn-ghost" aria-label="Enviar moedas" aria-haspopup="dialog">${icon("gift")}${actionCaption("Moedas")}</button><button type="button" data-reset-password="${esc(p.uid)}" class="btn btn-icon btn-ghost" aria-label="Reset password" aria-haspopup="dialog">${icon("resetPassword")}${actionCaption("Reset password")}</button><button data-rebuild="${p.uid}" class="btn btn-icon btn-ghost" aria-label="Recalcular">${icon("refresh")}${actionCaption("Recalcular")}</button>${p.role !== "admin" ? `<button data-role="${p.uid}" data-target-role="${p.role === "dbs" ? "member" : "dbs"}" class="btn btn-icon ${p.role === "dbs" ? "btn-danger" : "btn-secondary"}" aria-label="${p.role === "dbs" ? "Remover DBS" : "Dar DBS"}">${icon("games")}${actionCaption(p.role === "dbs" ? "Tirar DBS" : "Dar DBS")}</button>` : ""}<button data-role="${p.uid}" class="btn btn-icon ${p.role === "admin" ? "btn-danger" : "btn-admin-access"}" aria-label="${p.role === "admin" ? "Remover admin" : "Promover admin"}" ${p.uid === ctx.user.uid ? "disabled" : ""}>${icon("shield")}${actionCaption(p.role === "admin" ? "Tirar admin" : "Dar admin")}</button></div></td></tr>`).join("")}</tbody></table></div>${!players.length ? empty("Sem jogadores", "As contas criadas aparecem aqui.") : ""}</section>`,
     games: `<section><h2>Jogos</h2>${games.length ? `<div class="game-list">${games.map((g) => `<div class="game-row admin-game-row"><div><b>${esc(g.title)}</b><small>${gameStatusLabel(g.status)}</small></div><div class="admin-game-actions">${g.status === "closed" ? `<button type="button" data-game-ratings="${esc(g.id)}" class="btn btn-secondary" aria-haspopup="dialog">${icon("ratingGames")}Avaliações</button>` : ""}${linkButton(`#/game/${g.id}`, "Editar", "ghost", "edit")}<button data-delete="${g.id}" class="btn btn-danger">${icon("trash")}Eliminar</button></div></div>`).join("")}</div>` : empty("Sem jogos", "Cria a primeira Peladinha.", linkButton("#/game/new", "Criar jogo"), "games")}</section>`,
     messages: `<div id="admin-message-workspace"></div>`,
     events: `<div id="event-admin"></div>`,
@@ -287,7 +288,7 @@ export async function adminEdit(ctx, uid) {
 }
 export async function rawRatings(ctx, uid) {
   const [community, ...feedback] = await Promise.all([
-    DB.list("communityRatings"),
+    DB.callAdmin("listCommunityRatingsForAdmin", {}).then(result => result.data.rows),
     ...ctx.league.games.map((g) => DB.list(`games/${g.id}/feedback`)),
   ]);
   const rows = [
@@ -295,22 +296,63 @@ export async function rawRatings(ctx, uid) {
     ...feedback.flat().map((r) => ({ ...r, kind: "Pós-jogo" })),
   ].filter((r) => !uid || r.targetId === uid);
   ctx.render(
-    `${pageHead("Administração", "Avaliações", "Pesquisa e compara votos. Identidades visíveis apenas a administradores.", linkButton("#/admin", "Administração", "ghost"))}<section class="panel ratings-browser"><div class="ratings-toolbar"><label>Pesquisar<input id="raw-search" placeholder="Jogador, avaliador ou jogo"></label><label>Origem<select id="raw-kind"><option value="">Todas</option><option>Comunidade</option><option>Pós-jogo</option></select></label><label>Estado<select id="raw-status"><option value="">Todos</option><option value="sent">Enviadas</option><option value="draft">Rascunhos</option></select></label></div><div id="raw-list"></div><div class="ratings-pagination"><button id="raw-prev" type="button" class="btn btn-secondary">${icon("arrow")}Anterior</button><span id="raw-count" aria-live="polite"></span><button id="raw-next" type="button" class="btn btn-secondary">Seguinte${icon("arrow")}</button></div></section>`,
+    `${pageHead("Administração", "Avaliações", "Pesquisa e compara votos. Identidades visíveis apenas a administradores.", linkButton("#/admin", "Administração", "ghost"))}<section class="panel ratings-browser"><div class="ratings-toolbar"><label>Pesquisar<input id="raw-search" placeholder="Jogador, avaliador ou jogo"></label><label>Ordenar por<select id="raw-sort"><option value="recent">Mais recentes</option><option value="mean-asc">Menor avaliação</option></select></label><label>Origem<select id="raw-kind"><option value="">Todas</option><option>Comunidade</option><option>Pós-jogo</option></select></label><label>Estado<select id="raw-status"><option value="">Todos</option><option value="sent">Enviadas</option><option value="draft">Rascunhos</option><option value="null">Nulas</option></select></label></div><div id="raw-list"></div><div class="ratings-pagination"><button id="raw-prev" type="button" class="btn btn-secondary">${icon("arrow")}Anterior</button><span id="raw-count" aria-live="polite"></span><button id="raw-next" type="button" class="btn btn-secondary">Seguinte${icon("arrow")}</button></div></section>`,
   );
   const name = (id) =>
     ctx.league.users.find((p) => p.uid === id)?.username || id;
+  const ratingTimestamp = (rating) => {
+    const value = rating.updatedAt ?? rating.submittedAt ?? rating.createdAt;
+    const date =
+      typeof value?.toDate === "function"
+        ? value.toDate()
+        : value instanceof Date
+          ? value
+          : null;
+    const timestamp =
+      date
+        ? date.getTime()
+        : typeof value === "number"
+          ? value
+          : Date.parse(value);
+    return Number.isFinite(timestamp) ? timestamp : Number.NEGATIVE_INFINITY;
+  };
   let page = 0;
   const draw = () => {
     const q = document.querySelector("#raw-search").value.toLowerCase(),
       kind = document.querySelector("#raw-kind").value,
-      status = document.querySelector("#raw-status").value;
+      status = document.querySelector("#raw-status").value,
+      sort = document.querySelector("#raw-sort").value;
     const filtered = rows.filter(
       (r) =>
         (!kind || r.kind === kind) &&
-        (!status || r.submitted === (status === "sent")) &&
+        (!status || (status === "null" ? r.kind === "Comunidade" && isNullCommunityRating(r) : r.submitted === (status === "sent") && !(r.kind === "Comunidade" && isNullCommunityRating(r)))) &&
         JSON.stringify([r.gameId, name(r.raterId), name(r.targetId)])
           .toLowerCase()
           .includes(q),
+    );
+    const normalizedMean = (r) => {
+      if (r.kind === "Pós-jogo") {
+        const mean = matchComponentAverages(r.ratings).withoutGoalkeeping;
+        return mean === null ? null : mean / 5;
+      }
+      const values = Object.values(r.ratings || r.ratings20 || {}).filter(Number.isFinite);
+      return values.length
+        ? values.reduce((s, v) => s + v, 0) / values.length / 20
+        : null;
+    };
+    const byTime = (a, b) => {
+      const aTimestamp = ratingTimestamp(a),
+        bTimestamp = ratingTimestamp(b);
+      return aTimestamp === bTimestamp ? 0 : aTimestamp > bTimestamp ? -1 : 1;
+    };
+    const byMean = (a, b) => {
+      const aMean = normalizedMean(a),
+        bMean = normalizedMean(b);
+      if (aMean === null || bMean === null) return aMean === bMean ? 0 : aMean === null ? 1 : -1;
+      return aMean - bMean;
+    };
+    filtered.sort((a, b) =>
+      sort === "mean-asc" ? byMean(a, b) || byTime(a, b) : byTime(a, b),
     );
     page = Math.max(0, Math.min(page, Math.ceil(filtered.length / 20) - 1));
     const shown = filtered.slice(page * 20, page * 20 + 20);
@@ -323,7 +365,8 @@ export async function rawRatings(ctx, uid) {
               mean = r.kind === "Pós-jogo" ? matchAverageSummary(matchComponentAverages(r.ratings)) : values.length
                 ? (values.reduce((s, v) => s + v, 0) / values.length).toFixed(1)
                 : "—";
-            return `<tr><td>${esc(r.kind)}<small>${esc(ctx.league.games.find((g) => g.id === r.gameId)?.title || "0–20")}</small></td><td>@${esc(name(r.raterId))}</td><td>@${esc(name(r.targetId))}</td><td><span class="rating-average">${mean}<small> / ${r.kind === "Pós-jogo" ? 5 : 20}</small></span></td><td><span class="pill ${r.submitted ? "success" : "warning"}">${r.submitted ? "Enviada" : "Rascunho"}</span></td><td><div class="actions compact"><button type="button" class="btn btn-ghost" data-view="${rows.indexOf(r)}">${icon("plus")}Ver</button><button type="button" class="btn btn-secondary" data-correct="${rows.indexOf(r)}" ${canEditRating(r) ? "" : 'disabled title="Prazo de edição de 7 dias terminado"'}>${icon("edit")}Corrigir</button></div></td></tr>`;
+            const isNull = r.kind === "Comunidade" && isNullCommunityRating(r);
+            return `<tr><td data-label="Origem / Jogo">${esc(r.kind)}<small>${esc(ctx.league.games.find((g) => g.id === r.gameId)?.title || "0–20")}</small></td><td data-label="Avaliador">@${esc(name(r.raterId))}</td><td data-label="Jogador">@${esc(name(r.targetId))}</td><td data-label="Média"><span class="rating-average">${mean}<small> / ${r.kind === "Pós-jogo" ? 5 : 20}</small></span></td><td data-label="Estado"><span class="pill ${isNull ? "warning" : r.submitted ? "success" : "warning"}">${isNull ? "Nula" : r.submitted ? "Enviada" : "Rascunho"}</span></td><td data-label="Ações"><div class="actions compact"><button type="button" class="btn btn-ghost" data-view="${rows.indexOf(r)}">${icon("plus")}Ver</button>${isNull ? ((r.reviewAttempts || 0) < 2 && !r.reviewGrantedAt ? `<button type="button" class="btn btn-secondary" data-grant-review="${rows.indexOf(r)}">${icon("refresh")}Dar mais uma tentativa</button>` : `<span class="muted">${r.reviewState === "required" ? "Tentativa autorizada" : "Tentativas esgotadas"}</span>`) : `<button type="button" class="btn btn-secondary" data-correct="${rows.indexOf(r)}" ${canEditRating(r) ? "" : 'disabled title="Prazo de edição de 7 dias terminado"'}>${icon("edit")}Corrigir</button>`}</div></td></tr>`;
           })
           .join("")}</tbody></table></div>`
       : empty("Sem avaliações", "Experimenta outros filtros.");
@@ -341,6 +384,18 @@ export async function rawRatings(ctx, uid) {
           "Detalhes da avaliação",
           `<p>@${esc(name(r.raterId))} → @${esc(name(r.targetId))}</p><div class="rating-detail-grid">${fields.map(([key, label]) => `<div><small>${esc(label)}</small><strong>${values[key] ?? "—"}<small> / ${r.kind === "Pós-jogo" ? 5 : 20}</small></strong></div>`).join("")}</div>`,
         );
+      };
+    });
+    document.querySelectorAll("[data-grant-review]").forEach((button) => {
+      button.onclick = async () => {
+        const rating = rows[Number(button.dataset.grantReview)];
+        try {
+          await busy(button, () => DB.callAdmin("grantCommunityRatingRetry", { id: rating.id }));
+          Object.assign(rating, { reviewState: "required", reviewGrantedAt: new Date() });
+          await ctx.refresh();
+          toast("Última tentativa autorizada. O jogador já pode rever a avaliação.");
+          draw();
+        } catch {}
       };
     });
     document.querySelectorAll("[data-correct]").forEach((button) => {
@@ -377,15 +432,16 @@ export async function rawRatings(ctx, uid) {
       };
     });
   };
-  document
-    .querySelectorAll(".ratings-toolbar input,.ratings-toolbar select")
-    .forEach(
-      (input) =>
-        (input.oninput = () => {
-          page = 0;
-          draw();
-        }),
-    );
+  const resetPage = () => {
+    page = 0;
+    draw();
+  };
+  document.querySelectorAll(".ratings-toolbar input").forEach((input) => {
+    input.oninput = resetPage;
+  });
+  document.querySelectorAll(".ratings-toolbar select").forEach((select) => {
+    select.onchange = resetPage;
+  });
   document.querySelector("#raw-prev").onclick = () => {
     page--;
     draw();

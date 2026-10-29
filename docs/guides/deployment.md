@@ -1,5 +1,8 @@
 # Publicação
 
+Para acompanhar pendências entre conversas, usar o [tracker local e tutorial DEPLOY.md](../../DEPLOY.md). Este fluxo mantém recibos por alvo; os comandos antigos abaixo não atualizam esses recibos.
+
+
 [← Documentação](../README.md) · [Testes](testing.md) · [PWA](pwa.md) · [Push](notifications.md)
 
 ## Escolher o menor âmbito
@@ -7,6 +10,8 @@
 Para publicar o conjunto acumulado desde o commit das fusões `b3af042`, incluindo o trabalho local de evolução: `npm.cmd run deploy:updates`. O [plano revisto de 26/10/2026](../reports/deploy-updates-since-fusions-2026-10-26.md) inclui regras Firestore, Functions em grupos e frontend, com modo local `--plan` e retoma `--from-stage N`. Não substituir este conjunto pelo deploy isolado da progressão.
 
 Executar na raiz do projeto, com Node.js 22 e acesso ao Firebase **pedalinhas-cards**. Cliente e Functions usam `europe-west1`; a codebase das Functions chama-se `peladinhas`.
+
+Criar todas as funções depois de `setGlobalOptions({ region: "europe-west1", ... })` em `functions/index.js`. A ordem é importante: funções criadas antes dessa configuração usam a região predefinida. `npm.cmd run check` também inspeciona localmente os metadados de todas as funções e rejeita qualquer região diferente de `europe-west1`, sem consultar a cloud.
 
 | Alteração                                       | Comando                                                                                                             |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |

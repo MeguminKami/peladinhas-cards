@@ -1,5 +1,7 @@
 import { TOTAL_OBJECTIVES } from "./event-totals.js";
 const paths = {
+  shop: "M3 9h18l-2-6H5Z M4 9v12h16V9 M9 21v-7h6v7 M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0",
+  casinoGames: "M5 3h14l2 3v12l-3 3H6l-3-3V5Z M8 8h.01 M16 8h.01 M12 12h.01 M8 16h.01 M16 16h.01",
   cards: "M8 3h11l2 3v13l-7 3-7-3V5Z M4 6H2v12l3 2 M10 8h8 M10 12h8 M10 16h5",
   ban: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0 M5 5l14 14",
   search: "M15 15l6 6 M17 9a8 8 0 1 1-16 0 8 8 0 0 1 16 0",

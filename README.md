@@ -27,6 +27,9 @@ Perfis individuais · Equipas e resultados · Cartas de jogador · Estatísticas
 
 </div>
 
+[Deploy: ver pendências, publicar e retomar](DEPLOY.md)
+
+
 ## O projeto
 
 **Peladinhas Cards** reúne num único website a gestão de uma comunidade de futebol amador. A organização prepara os encontros e regista o que acontece em campo; os jogadores consultam as equipas, avaliam os colegas e acompanham o seu desempenho.
@@ -348,6 +351,8 @@ A PWA utiliza o mesmo frontend e Firebase do website. A instalação atual não 
 [Conhecer a instalação, o cache e as atualizações →](docs/guides/pwa.md)
 
 ## Documentação técnica
+
+A loja de cartas está integrada em `#/shop`, com carteira DJC, compra permanente e descoberta das edições no álbum público após a primeira compra. [Catálogo, propriedade, leituras, testes e publicação da loja](docs/guides/casino-shop.md). A integração só fica ativa no site publicado após o deploy das duas funções e do frontend.
 
 O casino tem um convite abaixo do pódio no início e está em `#/casino` (ou `/casino` no Hosting). Inclui Noite de Glória, Rift Core Overdrive, Blackjack e Roleta, com carteira Djabucoin partilhada e recompensas de 20–200 DJC por peladinha. [Build, economia, testes e publicação](docs/guides/casino.md).
 

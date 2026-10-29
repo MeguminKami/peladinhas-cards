@@ -1,3 +1,4 @@
+import { SHOP_CARDS } from "./casino-shop-catalog.js";
 import { CARD_POLICY, durationName } from "./card-achievements.js";
 import { applyCardDesign } from "./card-design.js";
 import * as DB from "./db.js";
@@ -7,12 +8,13 @@ import {
   CATALOG_THEMES,
   COLLECTION_EDITIONS,
   ATTRIBUTES,
-  themeName,
+  themeName as standardThemeName,
   clamp,
 } from "./utils.js";
 import { card, bindImages } from "./cards.js";
 import { esc, pageHead, empty, linkButton, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
+const themeName = id => SHOP_CARDS.find(card => card.id === id)?.name || standardThemeName(id);
 export async function editWeeklyCardPhotoPage(ctx, uid) {
   const players = ctx.league.players;
   const player = players.find((p) => p.uid === uid);
@@ -257,6 +259,7 @@ export async function adminCardsPage(ctx, uid) {
       name: themeName(type),
       baseTheme: type,
     })),
+    ...SHOP_CARDS.map(card => ({ id: card.id, name: card.name, baseTheme: card.id, shop: card })),
     ...created.map((template) => ({
       ...template,
       id: `saved:${template.id}`,
@@ -265,6 +268,7 @@ export async function adminCardsPage(ctx, uid) {
   ];
   const previewPlayer = { ...player, cardPhoto: null };
   const decorate = (root, entry) => {
+    if (entry.shop) return;
     if (!entry.created) return;
     root.classList.add("lab-designed");
     for (const [key, studio, cardVariable] of [
@@ -289,7 +293,7 @@ export async function adminCardsPage(ctx, uid) {
       );
   };
   ctx.render(
-    `${pageHead("Administração", "Cartas", "Catálogo de tipos padrão e criados. Escolhe um jogador apenas para pré-visualizar.")}<section class="panel card-types-toolbar"><label>Perfil na pré-visualização<select id="card-types-player"><option value="">Jogador exemplo</option>${players.map((p) => `<option value="${esc(p.uid)}" ${p.uid === uid ? "selected" : ""}>${esc(p.displayName || p.username)}</option>`).join("")}</select></label><span class="pill">${CATALOG_THEMES.length - Object.keys(COLLECTION_EDITIONS).length} padrão · ${Object.keys(COLLECTION_EDITIONS).length} novas edições · ${created.length} criados</span></section><div id="card-type-gallery" class="card-type-gallery saved-card-gallery">${entries.map((entry, index) => `<button type="button" class="card-type-tile" data-card-type="${esc(entry.id)}" data-catalog-index="${index}" aria-label="Pré-visualizar ${esc(entry.name)}">${card(previewPlayer, { size: "sm", theme: entry.baseTheme || "custom-test", preview: true })}<span>${esc(entry.name)}</span><small class="muted">${entry.id === "scrap" ? "Carta base · 0–49 OVR" : entry.created ? "Criada no Card Lab" : CARD_POLICY[entry.id] ? durationName(CARD_POLICY[entry.id].duration) : COLLECTION_EDITIONS[entry.id] ? "Design em reserva" : "Tipo padrão"}</small></button>`).join("")}</div>`,
+    `${pageHead("Administração", "Cartas", "Catálogo de tipos padrão e criados. Escolhe um jogador apenas para pré-visualizar.")}<section class="panel card-types-toolbar"><label>Perfil na pré-visualização<select id="card-types-player"><option value="">Jogador exemplo</option>${players.map((p) => `<option value="${esc(p.uid)}" ${p.uid === uid ? "selected" : ""}>${esc(p.displayName || p.username)}</option>`).join("")}</select></label><span class="pill">${CATALOG_THEMES.length - Object.keys(COLLECTION_EDITIONS).length} padrão · ${Object.keys(COLLECTION_EDITIONS).length} novas edições · ${created.length} criados · ${SHOP_CARDS.length} na loja</span></section><div id="card-type-gallery" class="card-type-gallery saved-card-gallery">${entries.map((entry, index) => `<button type="button" class="card-type-tile" data-card-type="${esc(entry.id)}" data-catalog-index="${index}" aria-label="Pré-visualizar ${esc(entry.name)}">${card(previewPlayer, { size: "sm", theme: entry.baseTheme || "custom-test", preview: true })}<span>${esc(entry.name)}</span><small class="muted">${entry.id === "scrap" ? "Carta base · 0–49 OVR" : entry.shop ? `Loja · ${entry.shop.minOvr} OVR · ${entry.shop.price.toLocaleString("pt-PT")} DJC` : entry.created ? "Criada no Card Lab" : CARD_POLICY[entry.id] ? durationName(CARD_POLICY[entry.id].duration) : COLLECTION_EDITIONS[entry.id] ? "Design em reserva" : "Tipo padrão"}</small></button>`).join("")}</div>`,
   );
   document.querySelector("#card-types-player").onchange = (event) => {
     location.hash = event.target.value
@@ -314,12 +318,12 @@ export async function adminCardsPage(ctx, uid) {
       `${COLLECTION_EDITIONS[entry.id] ? `<p class="muted">${esc(COLLECTION_EDITIONS[entry.id].detail)}. ${CARD_POLICY[entry.id] ? durationName(CARD_POLICY[entry.id].duration) : "Design em reserva"}.</p>` : ""}<div class="history-card-expanded">${card(previewPlayer, { size: "lg", theme: entry.baseTheme || "custom-test", preview: true })}</div>`,
     );
     decorate(document.querySelector("#modal-root .football-card"), entry);
-    if (ctx.user.role === "admin")
+    if (ctx.user.role === "admin" && !entry.shop)
       document
         .querySelector("#modal-root .modal")
         .insertAdjacentHTML(
           "beforeend",
-          `<div class="actions">${linkButton(`#/admin/cards/${entry.id}`, "Editar carta", "primary", "edit")}</div>`,
+          `<div class="actions">${linkButton(`#/admin/cards/${entry.id}`, "Editar no Card Lab", "primary", "edit")}</div>`,
         );
     bindImages(document.querySelector("#modal-root"));
   };

@@ -1,3 +1,6 @@
+import { cardPlaystyles, cardStatsMarkup, cardOvrTrend } from "./card-player-content.js";
+import { SHOP_CARDS, SHOP_ARCHIVED_CARDS } from "./casino-shop-catalog.js";
+import { renderCasinoShopCard } from "./casino-shop-art.js";
 import { cardSymbol, fitCardSymbols } from "./card-symbol.js";
 import { trendArrow } from "./icons.js";
 import { cardClip, expandCardOutline } from "./card-geometry.js";
@@ -7,26 +10,8 @@ import { SPECIAL_CARD_DESIGNS } from "./card-specials.js";
 import { ATTRIBUTES, flag, informTheme, INFORM_THEMES, calculateBaseCard } from "./utils.js";
 import { SCRAP_OUTLINE, scrapArt } from "./card-scrap.js";
 import { esc } from "./ui.js";
-import { safeImage, ASSET_PATHS, PLAYSTYLE_ICONS } from "./assets.js";
-import { renderCasinoShopCard } from "./casino-shop-art.js";
-import { SHOP_CARDS, SHOP_ARCHIVED_CARDS } from "./casino-shop-catalog.js";
-export function cardPlaystyles(player) {
-  if (player.hasCard === false) return [];
-  return ATTRIBUTES.filter(
-    ([key]) =>
-      PLAYSTYLE_ICONS[key] &&
-      Number.isFinite(player.stats?.[key]) &&
-      player.stats[key] >= 90,
-  )
-    .sort(([a], [b]) => player.stats[b] - player.stats[a])
-    .slice(0, 3)
-    .map(([key, name]) => ({
-      key,
-      name,
-      value: player.stats[key],
-      icon: PLAYSTYLE_ICONS[key],
-    }));
-}
+import { safeImage, ASSET_PATHS } from "./assets.js";
+export { cardPlaystyles } from "./card-player-content.js";
 export function card(player, { size = "md", theme, preview = false } = {}) {
   const playerBase = player.hasCard === false && player.cardType === "scrap"
     ? "bronze-common"
@@ -42,12 +27,18 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
     player.specials?.[0]?.id ||
     playerBase ||
     "bronze-common";
-  const purchased = [...SHOP_CARDS, ...SHOP_ARCHIVED_CARDS].find(item => chosenTheme === `casino-shop-${item.id}`);
-  if (purchased) {
-    const artwork = renderCasinoShopCard(purchased, { name: player.displayName || player.username,
-      ovr: player.ovr, position: player.primaryPosition, stats: player.stats,
-      photoURL: safeImage(player.cardPhoto?.photoURL || player.photoURL), fullStats: true });
-    return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}" aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`} class="football-card card-${esc(size)} casino-purchased-card">${artwork}</${preview ? "div" : "a"}>`;
+  const shopEdition = [...SHOP_CARDS, ...SHOP_ARCHIVED_CARDS].find(card => card.id === chosenTheme || `casino-shop-${card.id}` === chosenTheme);
+  if (shopEdition) {
+    const artwork = renderCasinoShopCard(shopEdition, {
+      ...player,
+      name: player.displayName || player.username || "Jogador",
+      ovr: player.ovr,
+      position: player.primaryPosition,
+      stats: player.stats,
+      photoURL: player.cardPhoto?.photoURL || player.photoURL,
+      photoDesign: player.cardPhoto?.design,
+    });
+    return `<${preview ? "div" : "a"} class="football-card card-shop card-${size}" ${preview ? "" : `href="#/player/${esc(player.uid)}" aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${artwork}</${preview ? "div" : "a"}>`;
   }
   const template = player.specials?.find(
     (sp) => sp.id === chosenTheme,
@@ -100,36 +91,11 @@ export function card(player, { size = "md", theme, preview = false } = {}) {
           : '<path class="ornament-lines" d="M15 5H36M64 5H85M3.5 19V59M96.5 19V59M3.5 99V135M96.5 99V135M18 148H38M62 148H82"/><path class="common-edge-highlight" d="M12 3H34M66 3H88M2.5 23V52M97.5 23V52M20 147H37M63 147H80"/><path class="common-edge-inlay" d="M1 17 4 13 4 18ZM99 17 96 13 96 18ZM2 137l3 7H2ZM98 137l-3 7h3Z"/>'
       }</svg>`
     : "";
-  const stats = player.stats || {};
-  const permanentStats = Object.hasOwn(player, "permanentStats")
-    ? player.permanentStats
-    : stats;
   const photoStyles = cardPhotoStyles(player.cardPhoto?.design);
   const photoURL = player.cardPhoto?.photoURL || player.photoURL;
   const playstyles = cardPlaystyles(player);
-  const trend =
-    player.hasCard !== false &&
-    Number.isFinite(player.ovrDelta) &&
-    player.ovrDelta !== 0
-      ? `<span class="card-ovr-trend ${player.ovrDelta > 0 ? "positive" : "negative"}" role="img" aria-label="${player.ovrDelta > 0 ? "Subiu" : "Desceu"} OVR nos valores permanentes face à semana anterior">${trendArrow(player.ovrDelta)}</span>`
-      : "";
-  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.ultimate ? " card-ultimate" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${t === "scrap" ? scrapArt(clip.id) : ""}${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${ATTRIBUTES.slice(
-    0,
-    8,
-  )
-    .map(
-      ([k, , abbr]) =>
-        `<span><b>${player.hasCard === false ? "—" : (stats[k] ?? 0)}${player.hasCard === false ? "" : cardStatTrend(permanentStats?.[k], player.previousStats?.[k])}</b><small>${abbr}</small></span>`,
-    )
-    .join(
-      "",
-    )}</div></div>${playstyles.length ? `<div class="card-playstyles" aria-label="Playstyles">${playstyles.map((p) => `<img data-playstyle="${p.key}" src="${p.icon}" alt="Playstyle ${esc(p.name)}" title="${esc(p.name)} · ${p.value}" width="128" height="128">`).join("")}</div>` : ""}</${preview ? "div" : "a"}>`;
-}
-function cardStatTrend(current, previous) {
-  if (!Number.isFinite(current) || !Number.isFinite(previous)) return "";
-  const delta = Math.round((current - previous) * 100) / 100;
-  if (!delta) return "";
-  return `<sup class="card-stat-trend ${delta > 0 ? "positive" : "negative"}" aria-label="${delta > 0 ? "Subiu" : "Desceu"} nos atributos permanentes face à semana anterior" title="Atributos permanentes face à semana anterior, sem bónus temporários">${trendArrow(delta)}</sup>`;
+  const trend = cardOvrTrend(player);
+  return `<${preview ? "div" : "a"} ${preview ? "" : `href="#/player/${esc(player.uid)}"`} ${template ? `data-reward-template="${esc(JSON.stringify(template))}"` : ""} class="football-card card-${size} ${esc(t)}${informMaterial ? ` ${informMaterial}` : ""}${special ? " card-special" : ""}${special?.ultimate ? " card-ultimate" : ""}${special?.art ? " card-collection" : ""}" ${special ? `style="--special-shape:polygon(${specialShape})"` : ""} ${preview ? "" : `aria-label="Ver perfil de ${esc(player.displayName || player.username)}"`}>${clip.markup}<div class="card-surface" style="clip-path:url(#${clip.id})"><div class="card-frame"></div>${t === "scrap" ? scrapArt(clip.id) : ""}${ornament}${collectionArt}${specialArt}${rareRim}<div class="card-rating"><strong>${player.hasCard === false ? "—" : (player.ovr ?? 0)}${trend}</strong><span>OVR</span><small>${esc(player.primaryPosition || "ALA")}</small><span>${flag(player.countryCode)}</span></div><div class="card-photo"${photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img${photoStyles.image ? ` style="${photoStyles.image}"` : ""} src="${esc(safeImage(photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}"></div><div class="card-caption${(player.displayName || player.username || "").length > 16 ? " long-name" : ""}"><h3>${esc(player.displayName || player.username || "Jogador")}</h3></div><div class="card-stats">${cardStatsMarkup(player)}</div></div>${playstyles.length ? `<div class="card-playstyles" aria-label="Playstyles">${playstyles.map((p) => `<img data-playstyle="${p.key}" src="${p.icon}" alt="Playstyle ${esc(p.name)}" title="${esc(p.name)} · ${p.value}" width="128" height="128">`).join("")}</div>` : ""}</${preview ? "div" : "a"}>`;
 }
 export function weeklyEvolution(player) {
   if (!player?.hasCard) return "";

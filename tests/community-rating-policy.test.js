@@ -12,9 +12,9 @@ const vote = (n) => ({
   ratings20: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, n])),
 });
 test("community exclusion uses the complete mean on the 0–20 scale and includes the boundary", () => {
-  for (const n of [0, 1, 1.8999])
+  for (const n of [0, 1, 1.8999, 1.9])
     assert.equal(eligibleCommunityRating(vote(n)), false);
-  for (const n of [1.9, 2, 15, 20])
+  for (const n of [1.9001, 2, 15, 20])
     assert.equal(eligibleCommunityRating(vote(n)), true);
   assert.equal(
     eligibleCommunityRating({ ...vote(10), submitted: false }),
@@ -29,7 +29,7 @@ test("community exclusion uses the complete mean on the 0–20 scale and include
   assert.equal(eligibleCommunityRating(mixed), true);
 });
 test("public messages never disclose the threshold or numerical reason", () => {
-  for (const state of ["required", "ignored", "accepted"]) {
+  for (const state of ["invalid", "required", "ignored", "accepted"]) {
     const message = communityReviewNotice("Cabeça", state);
     assert.ok(message.body.includes("Cabeça"));
     assert.doesNotMatch(message.body, /1[.,]9|média|mínimo|baixa/i);
@@ -42,6 +42,7 @@ test("review deadline is independent of original submission and final submission
     submittedAt: new Date("2026-10-01"),
     reviewState: "required",
     reviewAttempts: 1,
+    reviewGrantedAt: now,
     reviewDeadline: new Date("2026-11-02"),
   };
   assert.equal(canEditRating(row, now), true);
@@ -51,4 +52,11 @@ test("review deadline is independent of original submission and final submission
   );
   assert.equal(canEditRating({ ...row, reviewState: "ignored" }, now), false);
   assert.equal(canEditRating(row, new Date("2026-11-03")), false);
+});
+
+test("null votes and legacy automatic reviews cannot be edited without admin permission", () => {
+  assert.equal(canEditRating({ reviewState: "invalid", submitted: true }), false);
+  assert.equal(canEditRating({ reviewState: "required", reviewAttempts: 1 }), false);
+  for (const reviewState of ["invalid", "required", "ignored"])
+    assert.equal(eligibleCommunityRating({ ...vote(20), reviewState }), false);
 });

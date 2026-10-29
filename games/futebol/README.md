@@ -83,7 +83,7 @@ Estas rotas são um contrato de exemplo; o repositório não inclui uma API de c
   "credit": 36,
   "roundId": 12,
   "spin": 1,
-  "configVersion": "0.7.0"
+  "configVersion": "0.7.1"
 }
 ```
 
@@ -204,3 +204,7 @@ Não houve altera??o da matem?tica nem verifica??o num aparelho real.
 ## Maestro 0.7.0
 
 P3 converte qualquer símbolo exceto Wild, incluindo premiums e Scatters, sem repetir alvos na mesma jogada. As quantidades 2?10 t?m pesos 18/16/14/12/11/9/8/7/5%. Mant?m o destino premium equiprov?vel partilhado. Scatters iniciais preservam bónus e retriggers, apresentados no final do spin. Ver [regras 0.7.0](docs/MAESTRO_0_7_0.md).
+
+## Sticky 0.7.1
+
+O b?nus superior aumenta de 12% para 18% a chance de cada Wild eleg?vel ficar sticky (+50% relativo). O b?nus normal continua sem sticky. O contador avan?a no in?cio da anima??o do spin corrente. Snapshots 0.7.0 conservam saldo e RNG ao migrar. RTP 0.7.1 ainda n?o medido.

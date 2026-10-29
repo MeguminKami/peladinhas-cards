@@ -1,3 +1,7 @@
+import { cardPlaystyles, cardStatsMarkup, cardOvrTrend } from "./card-player-content.js";
+import { flag } from "./utils.js";
+import { cardPhotoStyles } from "./card-photo.js";
+import { safeImage } from "./assets.js";
 // Shop editions are authored locally. No image requests or player reads.
 import { GAME_DESIGNS } from "./casino-shop-game-art.js";
 import { METAL_DESIGNS } from "./casino-shop-metal-art.js";
@@ -48,44 +52,13 @@ export function renderCasinoShopCard(item, player = {}) {
   const design = designs[id];
   const paint = `casino-shop-paint-${++previewSerial}`;
   const name = String(player.name || "A TUA CARTA");
-  const ovr = Number.isFinite(Number(player.ovr))
-    ? Math.max(0, Math.min(99, Math.round(Number(player.ovr))))
-    : 80;
-  const position = player.position || "MC";
-  const attrs = [
-    ["RIT", "pace"],
-    ["REM", "shooting"],
-    ["PAS", "passing"],
-    ["DRI", "dribbling"],
-    ["DEF", "defending"],
-    ["FIS", "physical"],
-    ...(player.fullStats ? [["RES", "stamina"], ["GR", "goalkeeping"]] : []),
-  ];
-  const statMarkup = attrs
-    .map(([label, key]) => {
-      const candidate = player.stats?.[key];
-      const value = Number.isFinite(Number(candidate))
-        ? Math.max(0, Math.min(99, Math.round(Number(candidate))))
-        : ovr;
-      return `<span><b>${value}</b><small>${label}</small></span>`;
-    })
-    .join("");
-  const portrait = player.photoURL ? `<image href="${esc(player.photoURL)}" x="64" y="82" width="172" height="240" preserveAspectRatio="xMidYMid slice"/>` : `<g class="sca-portrait">
-    <path class="sca-collar" d="m118 188 32 14 32-14 34 19 22 57-26 13-14-30 6 68H96l6-68-14 30-26-13 22-57Z"/>
-    <path class="sca-shirt-line" d="m118 188 32 14 32-14m-32 14v91m-48-46-6 68m102-68 6 68"/>
-    <path d="M138 172h24l5 20-17 13-17-13Z" fill="#aa7354"/>
-    <path d="m138 177 24-5v12l-24 7Z" fill="#624535"/>
-    <path d="M119 131q1-26 31-27t31 27l-5 31-13 19-13 5-13-5-13-19Z" fill="url(#${paint}-skin)"/>
-    <path d="M120 144q-11-8-8 7t12 13m55-20q11-8 8 7t-12 13" fill="#b5815e"/>
-    <path d="M118 142q-8-34 8-40l6-9 16 5 20-3 14 16-2 33-9-20-6-9-31 4-10 13Z" fill="#191b24"/>
-    <path d="m127 141 13-2m20 0 13 2" stroke="#352d2b" stroke-width="3" stroke-linecap="round"/>
-    <path d="m131 146 6 1m26 0 6-1" stroke="#221e22" stroke-width="2" stroke-linecap="round"/>
-    <path d="m149 146-4 13 7 1m-12 10q10 5 20-1" fill="none" stroke="#7f4a39" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="m124 154 4 15 13 12 9 4 13-5 12-16-5 4-9 6-11 3-10-3-10-8Z" fill="#41302c" opacity=".7"/>
-    <path class="sca-rim-light sca-rim-left" d="M123 122q-8 22 4 42m-9 24-34 19-22 57"/>
-    <path class="sca-rim-light sca-rim-right" d="M178 122q8 22-4 42m8 24 34 19 22 57"/>
-    <path class="sca-player-mark" d="m169 223 7-5 7 5v10l-7 5-7-5Z"/>
-  </g>`;
+  const ovr = player.hasCard === false ? "—" : (player.ovr ?? 0);
+  const position = player.position || player.primaryPosition || "ALA";
+  const statMarkup = cardStatsMarkup(player);
+  const playstyles = cardPlaystyles(player);
+  const playstyleMarkup = playstyles.length ? `<div class="card-playstyles" aria-label="Playstyles">${playstyles.map(p => `<img data-playstyle="${p.key}" src="${new URL(p.icon, new URL("../", import.meta.url)).href}" alt="Playstyle ${esc(p.name)}" title="${esc(p.name)} &middot; ${p.value}" width="128" height="128">`).join("")}</div>` : "";
+  const photoStyles = cardPhotoStyles(player.photoDesign);
+  const photo = `<div class="sca-photo-frame"><img src="${esc(new URL(safeImage(player.photoURL), new URL("../", import.meta.url)).href)}" alt="" data-fallback="${new URL("../assets/default-avatar.svg", import.meta.url).href}"${photoStyles.image ? ` style="${photoStyles.image}"` : ""}></div>`;
   // Unique paint IDs let several editions and repeated previews coexist.
-  return `<div class="casino-shop-card sca-${id}" style="--sca-metal-fill:url(#${paint}-metal);--sca-shell-fill:url(#${paint}-shell)" role="img" aria-label="${esc(name)}, ${ovr} OVR, ${esc(position)}"><svg class="sca-art" viewBox="0 0 300 420" aria-hidden="true"><defs><linearGradient id="${paint}-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="sca-stop-bright"/><stop offset=".18" class="sca-stop-mid"/><stop offset=".38" class="sca-stop-bright"/><stop offset=".4" class="sca-stop-mid"/><stop offset=".7" class="sca-stop-base"/><stop offset=".91" class="sca-stop-mid"/><stop offset="1" class="sca-stop-bright"/></linearGradient><radialGradient id="${paint}-shell" cx=".7" cy=".2" r=".9"><stop class="sca-stop-mid" stop-opacity=".8"/><stop offset=".48" class="sca-stop-base"/><stop offset="1" class="sca-stop-shadow"/></radialGradient><linearGradient id="${paint}-skin"><stop stop-color="#f4c598"/><stop offset=".52" stop-color="#c79370"/><stop offset="1" stop-color="#795647"/></linearGradient></defs><polygon class="sca-shell" points="${design.shape}"/><path class="sca-surface" d="M42 48h216l-9 291-20 27-79 25-79-25-20-27Z"/>${design.art}${portrait}<path class="sca-underlay" d="M48 270h204v70l-23 26-79 25-79-25-23-26Z"/><path class="sca-bottom-mark" d="m141 375 9-5 9 5-9 6Z"/></svg><div class="sca-rating" aria-hidden="true"><b>${ovr}</b><span>${esc(position)}</span><i>◆</i></div><div class="sca-identity" aria-hidden="true"><strong class="${name.length > 19 ? "sca-long-name" : ""}">${esc(name)}</strong><div class="sca-stats">${statMarkup}</div></div></div>`;
+  return `<div class="casino-shop-card sca-${id}" style="--sca-metal-fill:url(#${paint}-metal);--sca-shell-fill:url(#${paint}-shell)" role="img" aria-label="${esc(name)}, ${ovr} OVR, ${esc(position)}"><svg class="sca-art" viewBox="0 0 300 420" aria-hidden="true"><defs><linearGradient id="${paint}-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="sca-stop-bright"/><stop offset=".18" class="sca-stop-mid"/><stop offset=".38" class="sca-stop-bright"/><stop offset=".4" class="sca-stop-mid"/><stop offset=".7" class="sca-stop-base"/><stop offset=".91" class="sca-stop-mid"/><stop offset="1" class="sca-stop-bright"/></linearGradient><radialGradient id="${paint}-shell" cx=".7" cy=".2" r=".9"><stop class="sca-stop-mid" stop-opacity=".8"/><stop offset=".48" class="sca-stop-base"/><stop offset="1" class="sca-stop-shadow"/></radialGradient><linearGradient id="${paint}-skin"><stop stop-color="#f4c598"/><stop offset=".52" stop-color="#c79370"/><stop offset="1" stop-color="#795647"/></linearGradient></defs><polygon class="sca-shell" points="${design.shape}"/><path class="sca-surface" d="M42 48h216l-9 291-20 27-79 25-79-25-20-27Z"/>${typeof design.art === "function" ? design.art(paint) : design.art}<path class="sca-underlay" d="M48 270h204v70l-23 26-79 25-79-25-23-26Z"/><path class="sca-bottom-mark" d="m141 375 9-5 9 5-9 6Z"/></svg>${photo}<div class="sca-rating" aria-hidden="true"><b>${ovr}${cardOvrTrend(player)}</b><small>OVR</small><span>${esc(position)}</span><i>${flag(player.countryCode)}</i></div><div class="sca-identity" aria-hidden="true"><strong class="${name.length > 19 ? "sca-long-name" : ""}">${esc(name)}</strong><div class="sca-stats">${statMarkup}</div></div>${playstyleMarkup}</div>`;
 }

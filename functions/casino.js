@@ -120,7 +120,7 @@ export function casinoFunctions() {
       ) : [];
       const awards = collection?.data()?.awards || [];
       const shop = { ovr: player?.data()?.ovr || 0,
-        owned: awards.filter(award => award.source === "casino-shop" && !award.revokedAt).map(award => award.shopCardId) };
+        owned: awards.filter(award => award.source === "casino-shop" && !award.revokedAt).map(award => award.shopCardId || award.id.replace(/^casino-shop-/, "")) };
       let result;
       try {
         result = applyCasinoSession(

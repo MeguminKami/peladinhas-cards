@@ -1,76 +1,67 @@
-# Instruções do projeto
+﻿# Instruções de desenvolvimento
 
-## Leituras da base de dados e serviços cloud
+## Objetivo e esforço
 
-- Antes de fazer pedidos de leitura à base de dados real, pedir autorização explícita ao utilizador e aguardar a resposta. Explicar por que a leitura é necessária, que dados/coleções serão consultados e a estimativa ou o limite de leituras. Se não for possível estimar, indicar essa incerteza e propor uma consulta limitada.
-- Esta regra inclui acessos diretos e indiretos: SDK, REST, scripts, auditorias, callables e testes ou navegação que possam consultar o Firebase real. Pedidos ao Storage real também exigem autorização prévia, com explicação dos ficheiros ou metadados a consultar.
-- Preferir código, documentação, snapshots locais, fixtures e emuladores. Desenvolvimento e testes devem usar dados locais; não recorrer automaticamente à cloud se esses dados forem insuficientes ou se um teste falhar.
-- Uma autorização vale apenas para o âmbito e o limite aprovados. Não aumentar o consumo nem consultar outros dados sem nova autorização. Uma instrução explícita já dada para essa leitura dispensa perguntar novamente dentro do mesmo âmbito.
-- Ler ficheiros locais e usar emuladores locais não exige esta autorização. Indicar quando uma conclusão não pode ser confirmada sem consultar dados reais.
+- Resolver o pedido com rigor e o menor trabalho necessário. O padrão é uma execução focada; aumentar o esforço quando o risco o justifica ou o utilizador pede uma análise aprofundada.
+- Uma tarefa pequena não deve transformar-se numa auditoria, refatoração ou redesenho. Corrigir a causa dentro do âmbito pedido e preservar o comportamento restante.
+- Não confundir poucas linhas com baixo risco: permissões, dinheiro/carteiras, cálculos, persistência e fechos semanais exigem atenção mesmo em alterações curtas.
 
-## Direção de arte e qualidade da interface
+## Fluxo de trabalho
 
-- Não colocar títulos, nomes de edição, nomes de tier ou rótulos como «THE ULTIMATE» e «V2» no topo nem no interior das cartas. O nome da edição pertence ao catálogo ou à ficha, fora da carta. Dentro da carta, preservar a identidade do jogador, OVR, posição, atributos e símbolos gráficos. O tier deve reconhecer-se pelo desenho, materiais e acabamento, sem títulos acrescentados.
+1. Identificar o resultado pedido e a área afetada. Perguntar apenas se faltar uma decisão que bloqueie trabalho correto; resolver escolhas técnicas rotineiras autonomamente.
+2. Localizar com `rg` os símbolos e ficheiros relevantes. Ler trechos dirigidos, o `AGENTS.md` aplicável e as dependências diretas; alargar a pesquisa apenas perante uma dúvida concreta.
+3. Implementar nos componentes existentes. Seguir o percurso dos dados e os consumidores afetados quando houver lógica partilhada. Preservar alterações do utilizador e de outras tarefas.
+4. Executar a validação proporcional abaixo. Corrigir problemas introduzidos pela alteração e concluir quando houver evidência suficiente.
+5. Responder brevemente: resultado, verificações realizadas, limitações relevantes e comando de deploy.
 
-- Tratar cada alteração de interface como trabalho de produto e direção de arte. Entregar uma composição intencional, reconhecível como Peladinhas Cards, com hierarquia, acabamento e comportamento completos; cumprir a funcionalidade não basta para considerar a interface pronta.
-- Antes de desenhar, estudar a implementação atual do bloco de instalação da APP (`installSpotlight` em `js/pwa.js`, estilos `.install-*` em `css/experience.css`) e do ecrã de entrada (`.auth-*` e respetiva composição). São referências de qualidade: tipografia expressiva, contraste controlado, ilustração integrada, profundidade, movimento e ações claras. Confirmar os ficheiros atuais por pesquisa se estas referências mudarem.
-- Transportar esse cuidado para novas áreas sem copiar mecanicamente o telefone, as órbitas ou o mesmo cartão. Criar soluções próprias para o conteúdo: resultados com presença, progresso legível, comparações claras, recompensas com identidade e estados vazios que orientem a próxima ação. As páginas de gestão exigem o mesmo acabamento, adaptado à densidade de trabalho.
-- Definir primeiro o foco da página, a informação indispensável e a ação principal. Construir a composição em torno disso, com uma leitura evidente entre título, conteúdo, estado e ações. Preferir texto curto e concreto; usar divulgação progressiva para detalhes secundários.
-- Usar escala tipográfica, alinhamentos, proporções, cor e espaço para criar hierarquia. Não resolver todas as secções com uma grelha de painéis idênticos. Evitar decoração sem função, excesso de molduras, sombras e gradientes concorrentes, ou blocos promocionais grandes em tarefas operacionais.
-- Respeitar os tokens, temas e componentes existentes. Explorar a identidade desportiva e das cartas com escolhas visuais específicas, sem introduzir uma linguagem gráfica diferente em cada página. Manter contraste e legibilidade nos temas suportados; cor nunca deve ser o único sinal de estado.
-- Escolher ícones que expliquem ações e distingam modalidades, mantendo o mesmo sistema visual. Não reutilizar um ícone genérico para conceitos diferentes quando isso dificulta a leitura. Ações só com ícone precisam de nome acessível.
+## Evitar desperdício e desvios
 
-## Movimento e interação
+- Não reler ficheiros já compreendidos nem repetir pesquisas e testes sem informação nova. Pedir apenas o output necessário; evitar ficheiros/logs inteiros e dumps de dados.
+- Não explorar áreas sem relação com o pedido, instalar ferramentas ou criar infraestrutura para uma correção simples. Reutilizar scripts, fixtures e testes existentes.
+- Não criar testes que apenas repetem a implementação, capturas sem utilidade ou relatórios por rotina. Criar um teste quando protege uma regra, reproduz uma regressão ou verifica um risco real.
+- Depois de verificações suficientes passarem, parar. Ampliar testes apenas por mudança adicional, falha, dependência afetada ou incerteza concreta ainda não resolvida.
+- Se uma abordagem falhar, usar a evidência para ajustar a hipótese. Não repetir a mesma tentativa nem mudar ferramentas em ciclo. Explicar um bloqueio real em vez de prolongar trabalho sem progresso.
+- Não delegar por defeito. Usar agentes adicionais apenas quando o utilizador pedir delegação ou trabalho paralelo.
 
-- Desenhar o comportamento juntamente com o aspeto: estados normal, hover, foco por teclado, pressionado, desativado, carregamento, sucesso e erro, conforme se apliquem. O utilizador deve perceber imediatamente o que pode fazer e o resultado da ação.
-- Usar animações para orientar a atenção, explicar mudanças e dar personalidade. Microinterações costumam funcionar entre 120–220 ms; entradas e expansões entre 200–400 ms. Estes valores são referências, não motivos para contrariar um componente existente bem resolvido.
-- Reservar movimento contínuo para ilustrações ou momentos de destaque, discreto e sem competir com formulários, tabelas ou leitura. Não animar todas as linhas nem repetir entradas a cada atualização de dados. Não atrasar ações para terminar uma animação.
-- Preferir `transform` e `opacity`, evitar alterações de layout durante animações e reservar as dimensões de conteúdo assíncrono. Respeitar `prefers-reduced-motion`, mantendo conteúdo e controlos imediatamente disponíveis quando o movimento é reduzido.
-- Não acrescentar bibliotecas de animação para efeitos simples já possíveis com CSS ou APIs existentes.
+## Validação proporcional
 
-## Espaçamento, formulários e densidade
+Escolher o menor conjunto que verifica o comportamento alterado. Os exemplos orientam a decisão; não são uma lista cumulativa obrigatória.
 
-- Nunca deixar botões, labels, valores ou secções visualmente colados. Usar uma escala consistente, normalmente baseada em 4/8 px, e declarar espaçamentos no contentor com `gap` sempre que possível.
-- Como ponto de partida, reservar 6–8 px entre label e campo, 8–12 px entre controlos da mesma ação, 16–24 px entre grupos de campos e 24–32 px entre secções. Ajustar pela hierarquia e pelo espaço disponível, preservando sempre uma separação percetível.
-- Dar espaço interno suficiente a botões e campos; procurar alvos táteis de pelo menos 44 × 44 px. Separar ações destrutivas das ações principais por posição, estilo e espaço. Evitar filas de botões pequenos difíceis de tocar.
-- Manter labels junto dos respetivos campos, sem ambiguidades de associação. Reservar espaço próprio para ajuda, unidades, validação e erros; nunca sobrepor texto ao controlo nem usar placeholder como único label.
-- Nos grupos de ações, manter alinhamento horizontal quando couber. Em ecrãs estreitos, escolher conscientemente entre quebra, empilhamento e deslocação local, preservando a ordem e a descoberta das ações. Nunca cortar ações nem provocar deslocação horizontal da página inteira.
-- Dimensionar a informação para os valores reais: nomes longos, acentos, emojis, datas, números máximos e casas decimais com vírgula. Reservar largura para números e unidades; usar algarismos tabulares em resultados e avaliações para evitar saltos de alinhamento.
-- Evitar larguras mínimas e somas fixas de colunas que ultrapassem o contentor. Usar `minmax(0, 1fr)`, `min-width: 0`, quebra de texto e adaptação por contentor quando adequado. Não esconder overflow para disfarçar conteúdo cortado.
-- Compactar removendo redundância, reduzindo decoração e recolhendo detalhes. Não obter densidade à custa de fontes minúsculas, alvos táteis reduzidos ou desaparecimento de espaço entre elementos. Não criar grandes áreas vazias em redor de informação pequena.
+| Tipo de alteração | Validação esperada |
+| --- | --- |
+| Documentação ou instruções | Rever conteúdo e ligações; executar `npm.cmd run test:docs` quando houver Markdown/documentação alterada. Sem build, browser ou suite de lógica. |
+| Correção pequena de lógica, isolada e de baixo risco | Teste lógico dirigido ao caso alterado e limites relevantes; sintaxe do ficheiro quando útil. Sem browser, emuladores ou suite completa por rotina. |
+| Texto ou ajuste visual pequeno num componente existente, sem alterar layout/interação | Revisão local; teste lógico se houver lógica. Não exigir capturas ou testes visuais só porque um ficheiro de UI mudou. |
+| Layout, responsividade ou interação relevante | Inspecionar a área renderizada com dados locais; testar o fluxo afetado e os tamanhos que expõem o risco. Normalmente desktop e telemóvel; 320/390/768 px apenas quando grelhas, formulários ou ações o justificarem. |
+| Cálculos partilhados, permissões, carteiras, persistência ou ciclos de jogo | Testes de regressão dirigidos, consumidores e casos de fronteira; emuladores locais quando a integração é material. Não substituir estes testes por revisão visual. |
+| Mudança transversal ou pedido explícito de maior rigor | Ampliar a validação às integrações e fluxos afetados; suite geral quando houver motivo concreto. |
 
-## Critério de conclusão para alterações visuais
+- Uma alteração pequena e simples pode ficar concluída com testes lógicos dirigidos, sem validação visual. Se muda geometria ou interação de forma relevante, avaliar o resultado renderizado.
+- Em UI relevante, verificar cortes, sobreposições, overflow e estados afetados; teclado, foco e redução de movimento quando a interação mudar. Testar estados extremos pertinentes, sem montar uma bateria universal para cada correção.
+- Dizer exatamente o que foi verificado. Se uma validação necessária não foi possível, indicar a limitação; nunca afirmar que houve teste visual, consulta cloud ou deploy sem o executar.
 
-- Inspecionar a interface renderizada, além de ler o código. Para alterações relevantes de layout, verificar pelo menos um desktop e um telemóvel; quando houver grelhas, formulários ou grupos de ações, incluir larguras de 320/390 px e uma intermédia próxima de 768 px, conforme os testes disponíveis.
-- Confirmar que não existem sobreposições, texto cortado, labels encostados, botões sem separação, valores desalinhados ou overflow horizontal da página. Verificar também painéis expandidos, nomes e números longos e estados vazios/carregamento/erro aplicáveis.
-- Verificar foco visível, operação por teclado e redução de movimento nas interações alteradas. Capturar imagens quando ajudarem a avaliar composição e espaçamento; deixar animações estabilizarem antes de avaliar a imagem.
-- Corrigir os problemas encontrados antes de declarar a interface concluída. Se não for possível validar visualmente, indicar essa limitação na resposta final, sem afirmar que o resultado foi verificado.
-- Implementar a solução nos componentes e regras existentes sempre que possível. Evitar acumular overrides contraditórios no fim das folhas de estilo; consolidar as regras afetadas e manter o âmbito da alteração claro.
+## Firebase e dados reais
 
-## Coerência da documentação
+- Desenvolvimento e testes usam código, fixtures, snapshots e emuladores locais. Não recorrer à cloud automaticamente quando faltarem dados ou um teste falhar.
+- Antes de qualquer leitura da base de dados ou Storage reais, obter autorização explícita e aguardar. Explicar finalidade, coleções/ficheiros e estimativa ou limite de leituras. Se o custo for incerto, propor uma consulta limitada.
+- A regra inclui SDK, REST, scripts, callables, auditorias e navegação/testes que façam leituras indiretas. A autorização vale apenas para o âmbito e limite aprovados; não perguntar novamente dentro desse âmbito.
+- Ficheiros e emuladores locais não exigem autorização. Não executar deploy por inferir autorização a partir de um pedido de desenvolvimento.
 
-- Manter README, guias, referências e relatórios alinhados com o código e os scripts atuais. Consultar `package.json`, `firebase.json` e os módulos responsáveis antes de documentar comandos ou regras.
-- Distinguir comportamento implementado, testes locais, configuração cloud verificada e publicação executada. Uma captura ou build não confirma deploy nem entrega push num aparelho real.
-- Documentar alterações de cálculos partilhados e os consumidores que precisam de publicação; indicar quando é necessário recalcular dados existentes, preservando semanas fechadas.
-- Registar resultados datados nos relatórios. Os guias devem conter procedimentos reutilizáveis, sem transformar um diagnóstico antigo no estado permanente do serviço.
-- Validar ligações com `npm.cmd run test:docs`. As capturas de demonstração não substituem a referência funcional.
+## Contratos do produto
 
-## Indicação de deploy nas respostas
+- **Cartas:** antes de criar ou alterar uma carta, ler o [modelo base](docs/reference/modelo-base-carta.md), incluindo previews, catálogo, perfil e histórico. Reutilizar componentes e regras partilhadas para identidade, dados, atributos, evolução, playstyles, propriedade e seleção. Uma aparência nova não autoriza mudar cálculos ou dados existentes.
+- Uma mudança autorizada desse contrato exige atualizar o guia e consumidores na mesma tarefa. Preservar snapshots de semanas fechadas; indicar se dados abertos precisam de recálculo.
+- Não colocar nomes de edição, tier ou rótulos como «THE ULTIMATE» e «V2» dentro das cartas. A edição identifica-se fora da carta; o tier reconhece-se pelo desenho.
+- **Interface:** ao alterar UI, consultar apenas as secções aplicáveis da [referência visual](docs/reference/interface-quality.md). Manter identidade Peladinhas, tokens, componentes, legibilidade, espaçamento e acessibilidade. Não redesenhar a página inteira para corrigir um detalhe.
+- **Missões dos percursos:** seguir também a composição e avisos obrigatórios na mesma referência. Compactar sem remover regras de comportamento.
 
-- Terminar sempre cada resposta final com uma indicação curta, em português, de como fazer o deploy mais rápido adequado às alterações discutidas ou realizadas.
-- Se não houver alterações que precisem de publicação, terminar com: **Deploy:** não é necessário.
-- Para alterações apenas no frontend (HTML, CSS, JavaScript do navegador e assets), indicar `npm.cmd run deploy:frontend`.
-- Para alterações no servidor, identificar todas as funções afetadas, incluindo as que importam módulos partilhados alterados, e indicar um deploy seletivo: `npx.cmd firebase deploy --only functions:peladinhas:NOME`. Para várias funções, separar os seletores por vírgulas dentro de aspas.
-- Para alterações às regras ou índices, indicar apenas os seletores necessários: `firestore:rules`, `firestore:indexes` ou `storage`. Combinar seletores quando necessário.
-- Quando frontend e backend mudarem, indicar ambos os passos necessários. Não recomendar apenas frontend se existirem alterações de backend ainda por publicar no âmbito do trabalho.
-- Consultar a configuração e os scripts atuais antes de indicar comandos. Não recomendar deploy completo por defeito; `deploy:backend` publica todas as funções e as regras, e `deploy` publica todas as áreas.
-- Esta indicação é uma instrução para o utilizador, não uma autorização para executar um deploy. Não afirmar que uma alteração foi publicada sem confirmação da execução.
-- Usa sempre npm.cmd e npx.cmd
+## Documentação e entrega
 
-## Composição das missões dos percursos
-
-- Identificar o objetivo de uma tentativa por «A tua missão · No próximo jogo»; em tentativas congeladas, deixar claro que a escolha já foi associada ao jogo.
-- Preferir um bloco compacto com o tema da raridade: contexto do nó no cabeçalho, objetivo evidente e progresso/avanço/recompensa numa faixa de apoio. Evitar saltos excessivos de tamanho tipográfico e painéis laterais só para números.
-- Incorporar a recompensa à frente de «Recompensa do nó», sem caixa própria. O valor e o atributo (por exemplo, «+1 Drible») usam a mesma cor, fonte, peso e tamanho. Preservar a distinção entre avanço percentual e pontos de atributo.
-- Preservar o aviso «Se falhares» com ícone e destaque vermelho e o aviso com ícone de informação sobre poder mudar até à abertura do jogo. Não remover regras de comportamento ao compactar a interface.
-- No resumo de Missões/início, mostrar o detalhe da tentativa apenas quando há uma missão preparada ou pendente; sem escolha, manter a apresentação simples. A ligação deve abrir o nó da missão apresentada.
+- Atualizar documentação quando mudar comportamento, contrato ou procedimento; não produzir um relatório novo por cada tarefa pequena.
+- Antes de documentar comandos, confirmar os scripts/configuração pertinentes em `package.json` e `firebase.json`. Guias descrevem procedimentos atuais; relatórios registam resultados datados.
+- Distinguir implementação, testes locais, configuração cloud verificada e publicação executada. Build/captura não comprova deploy nem entrega push num aparelho.
+- Usar sempre `npm.cmd` e `npx.cmd`. Consultar [DEPLOY.md](DEPLOY.md) quando o pedido envolver publicação ou acompanhamento de pendências.
+- Terminar cada resposta final com **Deploy:** e a instrução mínima adequada. Sem alterações publicáveis: **Deploy:** não é necessário.
+- Preferir o tracker com âmbito explícito para manter os recibos: frontend `npm.cmd run deploy:pending -- --only hosting`; servidor com os seletores exatos `functions:peladinhas:NOME`; regras/índices apenas `firestore:rules`, `firestore:indexes` ou `storage`. Explicar `--initialize` só se necessário; não sugerir inicialização global por defeito.
+- Identificar consumidores de módulos partilhados, incluindo todos os passos quando frontend e backend mudam. O tracker ainda pode marcar todas as Functions conservadoramente; isso não prova que todas sejam consumidoras efetivas.
+- Se for preciso usar o CLI diretamente, indicar `npx.cmd firebase deploy --only "SELETORES"` e avisar que não atualiza os recibos. Não recomendar deploy completo por defeito nem afirmar publicação sem confirmação.

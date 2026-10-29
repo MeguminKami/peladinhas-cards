@@ -11,5 +11,9 @@ for (const dir of [".", "js", "functions", "scripts"])
       process.exitCode = 1;
     }
   }
+if (!process.exitCode) {
+  const regions = spawnSync(process.execPath, ["scripts/check-function-regions.mjs"], { stdio: "inherit" });
+  if (regions.status !== 0) process.exitCode = regions.status || 1;
+}
 if (!process.exitCode)
   console.log("Todos os módulos passam a verificação de sintaxe ES Modules.");

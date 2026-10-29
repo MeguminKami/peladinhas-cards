@@ -114,7 +114,7 @@
 }
 .sca-rating {
   position: absolute;
-  inset: 14% auto auto 17%;
+  inset: 14% auto auto 15%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -124,6 +124,7 @@
   text-shadow: 0 2px 8px #000a;
 }
 .sca-rating b {
+  position: relative;
   font-size: clamp(26px, 15cqw, 40px);
   font-weight: 850;
   letter-spacing: -0.06em;
@@ -134,21 +135,34 @@
   font-weight: 750;
   letter-spacing: 0.08em;
 }
+.sca-rating > small {
+  font-size: 3.2cqw;
+  font-weight: 600;
+}
+.sca-rating .card-ovr-trend {
+  position: absolute;
+  display: inline-flex;
+  top: 25%;
+  left: auto;
+  right: calc(100% + 1cqw);
+  width: 5cqw;
+  height: 6cqw;
+}
 .sca-rating i {
   font-size: clamp(10px, 5cqw, 14px);
   font-style: normal;
-  margin-top: 7px;
+  margin-top: 4px;
   color: var(--sca-bright);
 }
 .sca-identity {
   position: absolute;
-  top: 65%;
-  left: 19%;
-  right: 19%;
+  top: 62%;
+  left: 17%;
+  right: 17%;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 2cqw;
 }
 .sca-identity > strong {
   font-size: clamp(12px, 6.6cqw, 18px);
@@ -168,26 +182,28 @@
 }
 .sca-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px 5px;
-  padding-top: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2.5cqw 1cqw;
+  padding-top: 2.5cqw;
   border-top: 1px solid color-mix(in srgb, var(--sca-bright) 45%, transparent);
 }
 .sca-stats > span {
   display: flex;
-  gap: 3px;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 1cqw;
+  align-items: center;
   justify-content: center;
   white-space: nowrap;
 }
 .sca-stats b {
-  font-size: clamp(11px, 5.2cqw, 14px);
+  position: relative;
+  font-size: 6.3cqw;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   line-height: 1;
 }
 .sca-stats small {
-  font-size: clamp(7px, 3.2cqw, 9px);
+  font-size: 3.2cqw;
   font-weight: 600;
   line-height: 1;
   color: var(--sca-bright);
@@ -265,3 +281,47 @@
     filter: drop-shadow(0 20px 17px #0006);
   }
 }
+
+/* Larger portrait aperture; saved focus/zoom stay inside it. */
+.sca-photo-frame {
+  position: absolute;
+  left: 26%;
+  top: 10.5%;
+  width: 62%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  z-index: 1;
+}
+.sca-photo-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent);
+}
+.casino-shop-card .card-stat-trend {
+  position: absolute;
+  display: inline-flex;
+  left: calc(100% + .3cqw);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3cqw;
+  height: 3.5cqw;
+}
+.casino-shop-card :is(.card-stat-trend, .card-ovr-trend).positive { color: #22f586; }
+.casino-shop-card :is(.card-stat-trend, .card-ovr-trend).negative { color: #ff3958; }
+.casino-shop-card .card-playstyles {
+  position: absolute;
+  left: 13%;
+  top: 48%;
+  display: flex;
+  gap: 1cqw;
+  width: auto;
+  transform: none;
+  flex-direction: row;
+  z-index: 2;
+}
+.casino-shop-card .card-playstyles img { width: 9cqw; height: 9cqw; object-fit: contain; }
+.casino-shop-card :is(.sca-rating, .sca-identity) { z-index: 2; }

@@ -217,3 +217,57 @@
   stroke-width: 1;
   opacity: 0.6;
 }
+
+/* The premium symbol language is redrawn as full-card materials. */
+.sca-football-p1 {
+  --sca-bright: #ffcc91;
+  --sca-mid: #24785d;
+  --sca-base: #41271d;
+  --sca-shadow: #0b231f;
+  --sca-ink: #fff0d8;
+  --sca-edge-left: #ffb252;
+  --sca-edge-right: #70c9ee;
+}
+.sca-football-p2 {
+  --sca-bright: #e4f6ff;
+  --sca-mid: #397fbd;
+  --sca-base: #102d62;
+  --sca-shadow: #0a1a35;
+  --sca-ink: #f2fbff;
+  --sca-edge-left: #82e7ff;
+  --sca-edge-right: #41baff;
+}
+.sca-football-p3 {
+  --sca-bright: #ffe78e;
+  --sca-mid: #7734a3;
+  --sca-base: #411760;
+  --sca-shadow: #210e34;
+  --sca-ink: #fff0c6;
+  --sca-edge-left: #f5c650;
+  --sca-edge-right: #dc97ff;
+}
+.sca-football-p4 {
+  --sca-bright: #ffe6a0;
+  --sca-mid: #0b6c50;
+  --sca-base: #1b241f;
+  --sca-shadow: #0b1515;
+  --sca-ink: #fff2cb;
+  --sca-edge-left: #ffcd5a;
+  --sca-edge-right: #fff0b5;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)
+  .sca-underlay {
+  opacity: 0.96;
+  stroke: var(--sca-bright);
+  stroke-width: 0.6;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)
+  .sca-rating {
+  text-shadow:
+    0 2px 5px #000,
+    0 0 8px #000;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)
+  .sca-portrait {
+  filter: drop-shadow(0 2px 5px #000a);
+}

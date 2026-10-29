@@ -45,7 +45,7 @@ try {
   });
   const fixtureSession=createSession('casino-ui-fixed');fixtureSession.balance=10000;
   await context.addInitScript(snapshot=>{
-    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-26-cardoso-reset';
+    const key='slot-local-v1:player:pedro%3Aofficial-2026-10-27-reset-200';
     if(!localStorage.getItem(key)) localStorage.setItem(key,JSON.stringify(snapshot));
   },fixtureSession);
   await context.route("**/js/firebase.js", (r) =>
@@ -64,7 +64,7 @@ try {
         ),
       }),
     );
-  await context.addInitScript(() => sessionStorage.setItem("casino-fixture-wallet", JSON.stringify({ wallet: { edition: "official-2026-10-26-cardoso-reset", sessionProtocol: 5, balance: 250000, vaultBalance: 60000, revision: 1, recent: [] }, sessions: {} })));
+  await context.addInitScript(() => sessionStorage.setItem("casino-fixture-wallet", JSON.stringify({ wallet: { edition: "official-2026-10-27-reset-200", sessionProtocol: 5, balance: 250000, vaultBalance: 60000, revision: 1, recent: [] }, sessions: {} })));
   const page = await context.newPage(),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -79,7 +79,7 @@ try {
 
   await page.locator('[data-casino-store]').click();
   await page.locator('[data-store-buy="bronze-foundry"]').waitFor();
-  assert.equal(await page.locator('.casino-store-item').count(),13);
+  assert.equal(await page.locator('.casino-store-item').count(),17);
   for (const width of [1440,768,390,320]) {
     await page.setViewportSize({width,height:1000});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true);
@@ -119,7 +119,7 @@ try {
     document.querySelector('.casino-salon').innerHTML = card({ uid:'pedro',displayName:'Pedro da Conceicao',ovr:80,primaryPosition:'MC',selectedCardId:'casino-shop-bronze-foundry',specials:[{id:'casino-shop-bronze-foundry'}],stats:{pace:80,shooting:79,passing:81,dribbling:82,defending:70,physical:76,stamina:85,goalkeeping:40} },{preview:true});
   });
   await page.screenshot({path:'test-results/casino-store-equipped.png'});
-  assert.equal(await page.locator('.casino-purchased-card .sca-stats > span').count(),8);
+  assert.equal(await page.locator('.card-shop .sca-stats > span').count(),8);
   assert.deepEqual(errors,[]);
   console.log('Real store: catalogue, four widths, OVR refusal, lost reply, combined payment, ownership and equipped rendering passed.');
   await context.close();

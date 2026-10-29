@@ -1,4 +1,4 @@
-import { callAdmin, watchBlackjack } from "./db.js";
+import { callAdmin, watchBlackjack, watchBlackjackChat } from "./db.js";
 
 // Transport stays in the parent; the game iframe never imports a Firebase SDK.
 export function connectBlackjack(uid, onBalance, onExit) {
@@ -6,11 +6,13 @@ export function connectBlackjack(uid, onBalance, onExit) {
     balance = 0,
     stopped = false,
     unsubscribe,
+    unsubscribeChat,
     heartbeat,
     deadline,
     observer,
     pending,
-    inFlight;
+    inFlight,
+    retryTimer;
   let offset = 0,
     syncedRound;
   const key = `peladinhas:blackjack:pending:${uid}`;
@@ -54,6 +56,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
   }
   async function command(action, amount, seat) {
     if (stopped || inFlight) return;
+    clearTimeout(retryTimer);
     if (!pending) {
       pending = {
         action,
@@ -85,6 +88,11 @@ export function connectBlackjack(uid, onBalance, onExit) {
         ) {
           pending = undefined;
           sessionStorage.removeItem(key);
+        } else if (!stopped) {
+          // Repeat the persisted ID: the server can return the original result safely.
+          retryTimer = setTimeout(() => {
+            if (pending && !stopped) void command().catch(() => {});
+          }, 2000);
         }
         throw error;
       })
@@ -96,6 +104,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
   }
   function schedule() {
     clearTimeout(deadline);
+    clearTimeout(retryTimer);
     if (!state || stopped) return;
     const nextDeadline = Math.min(
       state.deadline || Infinity,
@@ -187,7 +196,7 @@ export function connectBlackjack(uid, onBalance, onExit) {
     if (stopped) return;
     stopped = true;
     unsubscribe?.();
-    clearInterval(heartbeat);
+    unsubscribeChat?.();
     clearTimeout(deadline);
     if (leave && state) {
       void Promise.resolve(inFlight)
@@ -214,6 +223,32 @@ export function connectBlackjack(uid, onBalance, onExit) {
       return () => {
         observer = undefined;
       };
+    },
+    uid,
+    subscribeChat(fn, onError = () => {}) {
+      unsubscribeChat?.();
+      unsubscribeChat = watchBlackjackChat(
+        (messages) => {
+          if (!stopped) fn(messages);
+        },
+        (error) => {
+          if (!stopped) onError(error);
+        },
+      );
+      return () => {
+        unsubscribeChat?.();
+        unsubscribeChat = undefined;
+      };
+    },
+    async sendChat(message) {
+      await ready;
+      if (stopped || !state) throw Error("A mesa ainda não está pronta.");
+      await call({
+        action: "chat",
+        table: state.id,
+        id: crypto.randomUUID(),
+        message,
+      });
     },
     destroy: stop,
   };

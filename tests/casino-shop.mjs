@@ -12,8 +12,9 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:8082/assets/casino/shop/");
   await page.locator("[data-buy]").first().waitFor();
-  assert.equal(await page.locator(".shop-item").count(), 13);
-  assert.equal(await page.locator(".shop-rank").count(), 8);
+  assert.equal(await page.locator(".shop-item").count(), 17);
+  assert.equal(await page.locator("#shop-fixtures").count(), 0);
+  assert.equal(await page.locator(".shop-local").count(), 0);
   await mkdir("artifacts/casino-shop", { recursive: true });
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
@@ -65,6 +66,11 @@ try {
       .evaluate((el) => el === document.activeElement),
     true,
   );
+  await page.locator('[data-filter="premium"]').click();
+  assert.equal(await page.locator(".shop-item").count(), 4);
+  await page.locator('[data-filter="owned"]').click();
+  await page.locator(".shop-empty").waitFor();
+  await page.locator("[data-show-all]").click();
   await page.locator('[data-filter="all"]').click();
   await page.locator('[data-buy="bronze-foundry"]').click();
   await page.locator(".shop-toast.is-success").waitFor();
@@ -76,11 +82,13 @@ try {
   await page.locator('[data-buy="bronze-foundry"]:disabled').waitFor();
   await page.locator('[data-buy="osmium-apex"]').click();
   await page.locator(".shop-toast.is-error").waitFor();
-  assert.match(await page.locator("#shop-feedback").innerText(), /95 OVR/);
-  await page.locator("summary").click();
-  await page.locator('[name="balance"]').fill("0");
-  await page.locator('[name="ovr"]').fill("99");
-  await page.locator("#shop-fixtures button").click();
+  assert.match(await page.locator("#shop-feedback").textContent(), /95 OVR/);
+  await page.evaluate(() => {
+    const key = "peladinhas:casino:shop-demo:v1";
+    const data = JSON.parse(localStorage.getItem(key));
+    localStorage.setItem(key, JSON.stringify({ ...data, balance: 0, ovr: 99 }));
+  });
+  await page.reload();
   await page.locator('[data-buy="silver-mirror"]').click();
   await page.waitForFunction(() =>
     document
@@ -88,7 +96,7 @@ try {
       .textContent.includes("Saldo insuficiente"),
   );
   assert.match(
-    await page.locator("#shop-feedback").innerText(),
+    await page.locator("#shop-feedback").textContent(),
     /Saldo insuficiente/,
   );
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -121,11 +129,11 @@ try {
   );
   assert.equal(
     await page.locator("#shop-collection-count").innerText(),
-    "2 / 15",
+    "2 / 19",
   );
   assert.equal(errors.length, 0, errors.join("\n"));
   console.log(
-    "Shop: 13 editions, four widths, preview keyboard/focus, purchase persistence, OVR and balance errors, archived collection and reduced motion passed.",
+    "Shop: 17 editions, four widths, preview keyboard/focus, purchase persistence, OVR and balance errors, archived collection and reduced motion passed.",
   );
 } finally {
   await browser.close();
