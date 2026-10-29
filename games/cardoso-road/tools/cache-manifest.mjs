@@ -13,6 +13,7 @@ export const runtimeFiles = [
   "style.css",
   "boot.mjs",
   "app.mjs",
+  "action-pipeline.mjs",
   "scene.mjs",
   "progression.mjs",
   "audio.mjs",

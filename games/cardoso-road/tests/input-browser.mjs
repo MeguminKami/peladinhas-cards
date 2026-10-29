@@ -171,6 +171,26 @@ try {
       1,
       "clicks must not construct the audio context",
     );
+    const phaseAtCashout = await frame.evaluate(
+      () => document.body.dataset.pipeline,
+    );
+    assert.equal(
+      await frame.locator("#play").isDisabled(),
+      true,
+      "another advance waits for presentation",
+    );
+    await frame.locator("#cashout").click();
+    if (rate === 1)
+      assert.equal(
+        phaseAtCashout,
+        "animate",
+        "cashout must be tested before the animation ends",
+      );
+    await frame.waitForFunction(() => !window.cardosoBusy);
+    assert.equal(
+      await frame.locator("#markers").getAttribute("aria-valuenow"),
+      "0",
+    );
     const pacing = await frame.evaluate(async () => {
       const times = [];
       for (let i = 0; i < 60; i++)
@@ -184,12 +204,6 @@ try {
         over25ms: gaps.filter((ms) => ms > 25).length,
       };
     });
-    await frame.locator("#cashout").click();
-    await frame.waitForFunction(() => !window.cardosoBusy);
-    assert.equal(
-      await frame.locator("#markers").getAttribute("aria-valuenow"),
-      "0",
-    );
     const balance = await frame.locator("#balance").textContent();
     await page.evaluate(() => (window.rejectNext = true));
     await frame.locator("#play").click();

@@ -281,6 +281,7 @@ export function createAudio(getSettings, now = () => performance.now()) {
       });
     },
     configure,
+    stop: stopFeedback,
     event,
     unlock() {
       if (destroyed) return;

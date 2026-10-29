@@ -1,4 +1,8 @@
 import {
+  createActionPipeline,
+  waitForPresentation,
+} from "./action-pipeline.mjs";
+import {
   CONFIG,
   MODES,
   multiplier,
@@ -73,7 +77,40 @@ const scene = createScene($("#world"), () => ({
   music: settings.music,
   beatAt: audio.beatAt,
 }));
-const gameReady = Promise.all([scene.ready, audio.prepare()]);
+let cacheWarmTimer;
+function warmCacheWhenIdle() {
+  clearTimeout(cacheWarmTimer);
+  if (state.round?.status === "active") return;
+  cacheWarmTimer = setTimeout(() => {
+    if (!pipeline.active && state.round?.status !== "active")
+      navigator.serviceWorker?.controller?.postMessage({
+        type: "cardoso-road:warm",
+      });
+  }, 2000);
+}
+const pipeline = createActionPipeline({
+  onPhase(phase, kind) {
+    busy = ["feedback", "confirm", "present"].includes(phase);
+    busyAction = kind;
+    window.cardosoBusy = busy;
+    document.body.dataset.pipeline = phase;
+    if (phase === "feedback") {
+      clearTimeout(cacheWarmTimer);
+      navigator.serviceWorker?.controller?.postMessage({
+        type: "cardoso-road:pause-warm",
+      });
+      visualBalance = state.balance;
+      audio.stop();
+      audio.unlock();
+    }
+    if (phase === "idle") {
+      visualBalance = null;
+      warmCacheWhenIdle();
+    }
+    render();
+  },
+});
+const gameReady = scene.ready.then(() => audio.prepare());
 function finishDefeat(round) {
   clearTimeout(defeatTimer);
   defeatRound = round.id;
@@ -102,9 +139,7 @@ function announceReady() {
 gameReady.then(() => {
   sceneReady = true;
   render();
-  navigator.serviceWorker?.controller?.postMessage({
-    type: "cardoso-road:warm",
-  });
+  warmCacheWhenIdle();
   if (!integrated) announceReady();
 });
 window.connectCardosoWallet = async (wallet) => {
@@ -121,9 +156,12 @@ window.connectCardosoWallet = async (wallet) => {
   announceReady();
 };
 window.refreshCardosoBalance = async () => {
-  if (casinoWallet && !busy) {
-    state = validate(await casinoWallet.state());
-    render();
+  if (casinoWallet && !pipeline.active) {
+    const next = validate(await casinoWallet.state());
+    if (!pipeline.active) {
+      state = next;
+      render();
+    }
   }
 };
 if (integrated && window.parent !== window)
@@ -145,22 +183,6 @@ function bet() {
   return Math.round(
     Number($("#bet").value.replace(/\s/g, "").replace(",", ".")) * 100,
   );
-}
-let advanceUntil = 0,
-  advanceTimer;
-const advanceCooling = () => performance.now() < advanceUntil;
-function lockAdvance() {
-  advanceUntil = performance.now() + 500;
-  clearTimeout(advanceTimer);
-  advanceTimer = setTimeout(function ready() {
-    const remaining = advanceUntil - performance.now();
-    if (remaining > 0) {
-      advanceTimer = setTimeout(ready, Math.ceil(remaining));
-      return;
-    }
-    advanceTimer = null;
-    render();
-  }, 500);
 }
 function render() {
   $("#music-volume").value = settings.musicVolume;
@@ -210,7 +232,7 @@ function render() {
     `<span>Cash Out</span><strong>${fmt(active ? payout(r.bet, mode, n) : 0)}</strong><small>${unit}</small>`;
   $("#cashout").disabled = !active || n === 0 || busy || !lockOwner;
   $("#play").disabled =
-    (active && advanceCooling()) ||
+    pipeline.active ||
     busy ||
     !sceneReady ||
     !lockOwner ||
@@ -236,7 +258,9 @@ function render() {
     `${active ? "TREINO EM CURSO" : r?.status === "lost" ? "FUI FRITO!" : r ? "TREINO TERMINADO" : "TREINO POR COMEÇAR"} · ${viewStep} / 10`;
   document
     .querySelectorAll("[data-bet],#bet,button[data-mode]")
-    .forEach((el) => (el.disabled = !!active || busy || !lockOwner));
+    .forEach(
+      (el) => (el.disabled = !!active || pipeline.active || busy || !lockOwner),
+    );
   document
     .querySelectorAll("button[data-mode]")
     .forEach((el) =>
@@ -245,77 +269,80 @@ function render() {
 }
 function persist(next) {
   localStorage.setItem(key, JSON.stringify(next));
-  state = next;
 }
 async function act(type) {
+  if (!lockOwner || !sceneReady) return;
   const intended = pendingAction?.action.type ?? type;
-  if (
-    busy ||
-    !lockOwner ||
-    !sceneReady ||
-    (intended === "step" && advanceCooling())
-  )
-    return;
-  if (intended === "step") lockAdvance();
-  busyAction = intended;
-  busy = true;
-  window.cardosoBusy = true;
-  visualBalance = state.balance;
-  render();
+  let presentedAt = 0;
   try {
-    audio.unlock();
-    const r = state.round;
-    const action =
-      type === "start" ? { type, bet: bet(), mode } : { type, id: r.id };
-    let next;
-    if (integrated) {
-      pendingAction ??= { action, id: crypto.randomUUID() };
-      next = await casinoWallet.act(pendingAction.action, pendingAction.id);
-      type = pendingAction.action.type;
-      pendingAction = null;
-      state = validate(next);
-    } else {
-      next = transition(state, action);
-      persist(next);
-    }
-    $("#error").textContent = "";
-    const current = state.round;
-    if (type === "step") lockAdvance();
-    if (type === "start") {
-      clearTimeout(defeatTimer);
-      defeatRound = null;
-      victoryRound = null;
-      scene.event("start");
-      audio.event("start");
-    } else if (current.status === "lost") {
-      finishDefeat(current);
-      scene.event("lost");
-      audio.event("lost");
-    } else if (current.status === "paid" || current.status === "won") {
-      victoryRound = current.status === "won" ? current.id : null;
-      scene.event(current.status === "paid" ? "idle" : current.status);
-      audio.event(current.status);
-      if (current.status === "won") {
-        render();
-        if (!settings.reduced)
-          await new Promise((resolve) =>
-            setTimeout(resolve, TRAVEL_MS + FIGHT_MS),
+    await pipeline.run(intended, {
+      async confirm() {
+        const r = state.round,
+          action =
+            intended === "start"
+              ? { type: intended, bet: bet(), mode }
+              : { type: intended, id: r.id };
+        let next,
+          actual = intended;
+        if (integrated) {
+          pendingAction ??= { action, id: crypto.randomUUID() };
+          next = validate(
+            await casinoWallet.act(pendingAction.action, pendingAction.id),
           );
-      }
-    } else {
-      scene.event("step");
-      $("#play").classList.remove("ready");
-      requestAnimationFrame(() => $("#play").classList.add("ready"));
-      audio.event("step", current.step);
-    }
-  } catch (e) {
-    if (e.definitive) pendingAction = null;
-    $("#error").textContent = e.message;
-  } finally {
-    visualBalance = null;
-    busy = false;
-    busyAction = null;
-    window.cardosoBusy = false;
+          actual = pendingAction.action.type;
+          pendingAction = null;
+        } else {
+          next = transition(state, action);
+          persist(next);
+        }
+        return { next, type: actual };
+      },
+      present({ next, type }) {
+        state = next;
+        visualBalance = null;
+        $("#error").textContent = "";
+        const current = state.round;
+        presentedAt = performance.now();
+        if (type === "start") {
+          clearTimeout(defeatTimer);
+          defeatRound = null;
+          victoryRound = null;
+          scene.event("start");
+        } else if (current.status === "lost") {
+          finishDefeat(current);
+          scene.event("lost");
+        } else if (current.status === "paid" || current.status === "won") {
+          victoryRound = current.status === "won" ? current.id : null;
+          scene.event(current.status === "paid" ? "idle" : current.status);
+        } else {
+          scene.event("step");
+          $("#play").classList.remove("ready");
+          requestAnimationFrame(() => $("#play").classList.add("ready"));
+        }
+        render();
+      },
+      animate({ type }, signal) {
+        return waitForPresentation(
+          type === "step" && !settings.reduced
+            ? TRAVEL_MS + FIGHT_MS - (performance.now() - presentedAt)
+            : 0,
+          signal,
+        );
+      },
+      sound({ next, type }) {
+        audio.event(
+          type === "start"
+            ? "start"
+            : next.round.status === "active"
+              ? "step"
+              : next.round.status,
+          next.round.step,
+        );
+      },
+    });
+  } catch (error) {
+    if (error.definitive) pendingAction = null;
+    $("#error").textContent = error.message;
     render();
   }
 }
