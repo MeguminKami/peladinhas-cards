@@ -158,6 +158,9 @@ try {
     await page.locator("#game-form, #auto-teams, .performance-counter").count(),
     0,
   );
+  assert.equal(await page.locator(".page-head .postmatch-actions").count(), 1);
+  assert.equal(await page.locator(".postmatch .postmatch-actions").count(), 0);
+  await page.getByRole("link", { name: "Avaliar jogadores", exact: true }).waitFor();
   assert.equal(await page.locator(".postmatch-player").count(), 12);
   assert.equal(await page.locator(".postmatch-player").first().locator(".postmatch-player-rating .match-stars b").textContent(),"4,0");
   assert.equal(await page.locator(".postmatch-player").first().locator(".match-rating-with-gk").textContent(),"(3,5 com GR)");
@@ -229,11 +232,29 @@ try {
     assert.equal(await player.evaluate((el) => el.open), true);
     await player.locator("summary").click();
     assert.equal(await player.evaluate((el) => el.open), false);
+    await page.evaluate(() => scrollTo(0, 0));
     await page.screenshot({
       path: `test-results/postmatch-${width}.png`,
       fullPage: true,
     });
   }
+  // Submitted ratings open directly in edit mode; expired rows stay locked.
+  await page.evaluate(() => {
+    window.__testState.feedback = [
+      { gameId: "postmatch-test", raterId: "pedro", targetId: "player-1", submitted: true, submittedAt: new Date("2026-10-16T10:00:00Z"), ratings: { attack: 4, defense: 4, teamwork: 4, goalkeeping: 3 } },
+      { gameId: "postmatch-test", raterId: "pedro", targetId: "player-2", submitted: true, submittedAt: new Date("2026-10-01T10:00:00Z"), ratings: { attack: 4, defense: 4, teamwork: 4, goalkeeping: 3 } },
+    ];
+    location.hash = "#/games";
+  });
+  await page.locator(".game-list").waitFor();
+  await page.evaluate(() => { location.hash = "#/game/postmatch-test"; });
+  const editRatings = page.getByRole("link", { name: "Editar avalia??es", exact: true });
+  await editRatings.waitFor();
+  await editRatings.click();
+  await page.locator('.feedback-form[data-target="player-1"][data-submitted="false"]').waitFor({ state: "attached" });
+  assert.equal(await page.locator('.feedback-form[data-target="player-2"]').getAttribute("data-submitted"), "true");
+  await page.evaluate(() => { location.hash = "#/game/postmatch-test"; });
+  await page.locator(".postmatch").waitFor();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByRole("link", { name: "Editar jogo", exact: true }).click();
   await page.locator("#game-form").waitFor();

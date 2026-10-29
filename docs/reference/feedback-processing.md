@@ -14,6 +14,8 @@ Sem entradas pendentes, esta fila não consulta jogos ou avaliações brutas. Co
 
 Avaliações comunitárias submetidas usam `communityWork/{uid}`. A validação de nulidade e o resumo comunitário são atualizados ao submeter, antes da resposta; a publicação de cartas permanece no ciclo. A segunda tentativa de uma avaliação nula exige autorização do ADMIN. [Regras e compatibilidade](cards-and-ratings.md). As avaliações iniciais e a posição atual são lidas na publicação das cartas; os seus triggers deixam de reconstruir históricos. A aplicação deixa de chamar `ensureHistory` ao navegar.
 
+No detalhe de um jogo encerrado, as a??es ficam no cabe?alho. Participantes veem ?Avaliar jogadores? e, quando j? existe uma avalia??o submetida, ?Editar avalia??es?, que abre diretamente o modo de edi??o. Cada avalia??o mant?m o prazo original e fica bloqueada quando este termina. ?Editar jogo? continua reservado ao administrador.
+
 ## Prazos e percursos
 
 Os prazos continuam validados na ação. Um evento terminado aguarda o próximo ciclo; isso não permite votar depois do prazo nem incluir jogos fora do período definido.

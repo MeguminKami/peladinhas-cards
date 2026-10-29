@@ -601,7 +601,7 @@ async function route({ cachedOnly = false } = {}) {
     else if (parts[0] === "games") gamesPage(pageCtx);
     else if (parts[0] === "game")
       parts[2] === "feedback"
-        ? await feedbackPage(pageCtx, parts[1])
+        ? await feedbackPage(pageCtx, parts[1], parts[3] === "edit")
         : await gamePage(pageCtx, parts[1], { edit: parts[2] === "edit" });
     else if (parts[0] === "events") await eventsPage(pageCtx);
     else if (parts[0] === "event") await eventPage(pageCtx, parts[1]);
