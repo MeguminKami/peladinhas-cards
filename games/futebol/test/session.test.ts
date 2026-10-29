@@ -3,6 +3,24 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {SeededRandom} from '../src/random.ts';
 import {createSession,restoreSession,acknowledgeRetrigger,execute,setBet,topUp,prizeClass} from '../src/session.ts';
+
+for(const version of ['0.7.1','0.9.2','0.9.3','0.9.4'])for(const active of [false,true])test(`restauro ${version} preserva a sessao e permite continuar (bonus=${active})`,()=>{
+ const saved=execute(createSession('migration-071'),{type:'start',mode:active?'superior':'base'},'buy','date');
+ saved.configVersion=version;saved.history[0].configVersion=version;
+ const original=structuredClone(saved),restored=restoreSession(JSON.parse(JSON.stringify(saved)));
+ assert.deepEqual(saved,original);
+ assert.equal(restored.configVersion,config.version);assert.equal(restored.revision,saved.revision+1);
+ for(const key of ['balance','bet','rngState','seed','counter','active','pendingRetrigger','requestIds','topups'] as const)assert.deepEqual(restored[key],saved[key]);
+ const history=structuredClone(saved.history);if(saved.active)history[0].configVersion=version+' → '+config.version;
+ assert.deepEqual(restored.history,history);assert.deepEqual(restoreSession(restored),restored);
+ const ready=restored.pendingRetrigger?acknowledgeRetrigger(restored,restored.pendingRetrigger):restored;
+ assert.doesNotThrow(()=>execute(ready,ready.active?{type:'next'}:{type:'start',mode:'base'},'continue','date'));
+});
+
+test('restauro continua a rejeitar versoes desconhecidas e saldo invalido',()=>{
+ assert.throws(()=>restoreSession({...createSession('unknown'),configVersion:'99.0.0'}),/incompat/);
+ assert.throws(()=>restoreSession({...createSession('invalid'),configVersion:'0.7.1',balance:-1}),/incompat/);
+});
 test('restauro RNG retoma exatamente a sequência, sem voltar ao primeiro sorteio',()=>{const r=new SeededRandom('restore');const first=r.next();r.next();const restored=SeededRandom.restore(r.state());for(let i=0;i<100;i++)assert.equal(restored.next(),r.next());assert.notEqual(restored.next(),first);assert.throws(()=>SeededRandom.restore(-1));});
 test('sessão cobra só uma vez, guarda resultado e impede repetição idempotente',()=>{const before=createSession('session');const after=execute(before,{type:'start',mode:'normal'},'purchase','2026-10-24T10:00:00Z');assert.equal(before.balance,100000);assert.equal(after.balance,100000-1800+after.history[0].paid);assert.equal(after.history[0].cost,1800);assert.equal(after.active?.remaining,9);assert.deepEqual(execute(after,{type:'start',mode:'normal'},'purchase','x'),after);assert.throws(()=>execute(after,{type:'start',mode:'base'},'other','x'));assert.throws(()=>setBet(after,40));assert.throws(()=>topUp(after));});
 test('serializar e restaurar sessão a meio do bónus reproduz continuação e saldo',()=>{let a=execute(createSession('bonus'),{type:'start',mode:'superior'},'buy','date');let b=JSON.parse(JSON.stringify(a));for(let i=0;a.active;i++){if(a.pendingRetrigger){a=acknowledgeRetrigger(a,a.pendingRetrigger);b=acknowledgeRetrigger(b,b.pendingRetrigger!);}a=execute(a,{type:'next'},String(i),'date');b=execute(b,{type:'next'},String(i),'date');assert.deepEqual(a,b);}assert.equal(a.active,null);assert.equal(a.history[0].spins.length,10+a.history[0].spins.reduce((n,r)=>n+(r.retrigger?.awarded??0),0));assert.equal(a.balance,100000-4400+a.history[0].paid);assert.equal(a.history[0].complete,true);assert.throws(()=>execute(a,{type:'next'},'extra','date'));});

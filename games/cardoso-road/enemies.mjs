@@ -3,10 +3,12 @@ const names=["Cheeseburger furioso", "Batatas fritas raivosas", "Coxa de frango 
 export const VILLAINS=Object.freeze(names.map((name,index)=>Object.freeze({id:`food-${String(index+1).padStart(2,'0')}`,name,line:["L\u00c1 SE FOI O SHAPE!", "FUI FRITO!", "ISTO TEM \u00d3LEO!"][Math.floor(index/6)],sprite:`assets/villains/food-${String(index+1).padStart(2,'0')}.png`,tier:Math.floor(index/6)+1})));
 export const STAGE_VILLAINS=Object.freeze([0,1,2,6,7,8,12,13,14,15]);
 function hash(value){let h=2166136261;for(const char of String(value))h=Math.imul(h^char.charCodeAt(0),16777619);h=Math.imul(h^(h>>>16),0x85ebca6b);h=Math.imul(h^(h>>>13),0xc2b2ae35);return (h^(h>>>16))>>>0;}
+let cachedId=null,cachedPools=null;
 export function stageVillain(stage,round){
  const index=Math.max(0,Math.min(9,Math.trunc(stage)||0)),tier=index<3?0:index<6?1:2;
  if(!round?.id)return STAGE_VILLAINS[index];
- const pool=Array.from({length:6},(_,i)=>({type:tier*6+i,key:hash(`${round.id}:${tier}:${i}`)})).sort((a,b)=>a.key-b.key||a.type-b.type);
+ if(cachedId!==round.id){cachedId=round.id;cachedPools=Array.from({length:3},(_,tier)=>Array.from({length:6},(_,i)=>({type:tier*6+i,key:hash(`${round.id}:${tier}:${i}`)})).sort((a,b)=>a.key-b.key||a.type-b.type));}
+ const pool=cachedPools[tier];
  return pool[index-(tier===0?0:tier===1?3:6)].type;
 }
 export function defeatVillain(round){return round?.status==='lost'?stageVillain(round.step,round):null;}

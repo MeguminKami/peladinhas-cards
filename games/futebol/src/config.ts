@@ -1,8 +1,9 @@
+import {SLOT_CONFIG_VERSION} from '../../../js/casino-slot-contract.js';
 export type Mode = 'base' | 'normal' | 'superior' | 'legend';
 export const symbols = ['N1','N2','N3','N4','P1','P2','P3','P4','W','S'] as const;
 export type SymbolId = typeof symbols[number];
 export const config = {
-  version: '0.9.4', targetRtpPercent:65,
+  version: SLOT_CONFIG_VERSION, targetRtpPercent:65,
   // Static payout factors in basis points; selected before play, never adaptive.
   payoutScaleBps:{base:27200,normal:117700,superior:30000,legend:30000},
   bets: [20,40,60,80,100,150,200,300,400,500,750,1000],

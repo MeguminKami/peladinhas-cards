@@ -33,7 +33,7 @@ test('one feedback channel cancels recordings, pending voices and cues; music sw
   audio.event('lost');assert.ok(media.at(-1).src.endsWith('perdeu_2.ogg'));assert.equal(media.filter(a=>!a.loop&&!a.paused).length,1);
   settings.effects=false;audio.configure();assert.equal(media.filter(a=>!a.loop&&!a.paused).length,0);assert.equal(music.volume,.6);
   settings.voices=false;settings.effects=true;audio.event('step',2);const victory=media.find(a=>!a.loop&&!a.paused);assert.ok(/(maluco|unlearnthematrix)\.ogg$/.test(victory.src));audio.event('start');assert.equal(victory.paused,true);
-  settings.mode='extreme';audio.configure();assert.ok(music.src.endsWith('/extreme.mp3'));assert.equal(media.filter(a=>a.loop).length,1);
+  settings.mode='extreme';audio.configure();assert.equal(media.filter(a=>a.loop&&!a.paused).length,1);const extreme=media.find(a=>a.loop&&!a.paused);assert.ok(extreme.src.endsWith('/extreme.mp3'));settings.mode='normal';audio.configure();assert.equal(media.find(a=>a.loop&&!a.paused),music);settings.mode='extreme';audio.configure();assert.equal(media.find(a=>a.loop&&!a.paused),extreme,'difficulty changes reuse the prepared track');
   settings.volume=0;audio.configure();assert.equal(media.filter(a=>!a.loop&&!a.paused).length,0);
   document.hidden=true;document.dispatchEvent(new Event('visibilitychange'));assert.equal(music.paused,true);
   audio.destroy();audio.event('start');assert.equal(media.filter(a=>!a.paused).length,0);

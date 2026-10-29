@@ -1,6 +1,8 @@
 # Futebol de Bairro — integração num website
 
-Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Configuração matemática **0.6.0**, RTP desta versão ainda não medido.
+Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Versão **1.0.0**, com a matemática 0.9.4 preservada, incluindo os três bónus. RTP não calibrado.
+
+Motor e carteira partilham a versão em [casino-slot-contract.js](../../../js/casino-slot-contract.js). Sessões anteriores são migradas sem reiniciar saldo, histórico, RNG ou bónus. Recibos pendentes conhecidos de 0.7.0 a 0.9.4 são recuperados com a versão, resultado e identificador originais; versões desconhecidas continuam rejeitadas. Não apagar armazenamento nem repor a sessão para corrigir uma incompatibilidade.
 
 ## Executar e testar
 
@@ -35,7 +37,7 @@ O iframe pode ter a mesma origem do website ou uma origem HTTPS dedicada. A pol�
 
 ## Ligar ao website
 
-Integração Peladinhas Cards: o SDK envia `bet`, `mode`, `bonusHunt`, o snapshot `progress` e a indicação `bonusComplete`; o host acrescenta `streamId`. A confirmação por spin é local e atómica em IndexedDB. Só há pedidos ao servidor à entrada/saída, no fim do bónus ou por atualização manual, sem lotes nem temporizadores. A moeda é Djabucoin (100 unidades = 1 DJC), sem alteração da matemática. [Contrato, build e publicação no website](../../../docs/guides/casino.md).
+Integração Peladinhas Cards: o SDK envia `bet`, `mode`, `bonusHunt`, o snapshot `progress` e a indicação `bonusComplete`; o host acrescenta `streamId`. A confirmação por spin é local e atómica em IndexedDB. A sincronização online ocorre à entrada/saída, após 15 spins normais, no fim do bónus ou por atualização manual; nunca confirma a meio do bónus nem por temporizador. A moeda é Djabucoin (100 unidades = 1 DJC), sem alteração da matemática. [Contrato, build e publicação no website](../../../docs/guides/casino.md).
 
 ```html
 <div id="slot"></div>
@@ -83,7 +85,11 @@ Estas rotas são um contrato de exemplo; o repositório não inclui uma API de c
   "credit": 36,
   "roundId": 12,
   "spin": 1,
-  "configVersion": "0.6.0"
+  "configVersion": "1.0.0",
+  "bet": 20,
+  "mode": "base",
+  "bonusHunt": false,
+  "bonusComplete": false
 }
 ```
 
@@ -93,7 +99,7 @@ E devolve:
 {"balance": 100016}
 ```
 
-Todos os valores são **inteiros**, nunca floats monetários: `20` significa `0,20` créditos. A operação deve verificar se o saldo cobre `debit` **antes** de considerar `credit`, e aplicar atomicamente `saldo - debit + credit`. O spin base debita a aposta; a compra debita 90× ou 220×; cada FS seguinte tem débito zero e crédito próprio. A compra mantém a regra existente: o custo e o primeiro FS pertencem à mesma operação.
+O SDK acrescenta o snapshot completo em `progress`; o host Peladinhas acrescenta `streamId` e retira `progress` e `bonusComplete` antes da validação financeira. Todos os valores monetários são **inteiros**, nunca floats: `20` significa `0,20` créditos. A operação deve verificar se o saldo cobre `debit` **antes** de considerar `credit`, e aplicar atomicamente `saldo - debit + credit`. O spin base debita a aposta (3× no Hunt); as compras debitam 90×, 220× ou 450×; cada FS seguinte tem débito zero e crédito próprio. O custo da compra e o primeiro FS pertencem à mesma operação.
 
 ## Requisito indispensável: idempotência
 

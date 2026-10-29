@@ -1,7 +1,7 @@
 import {createVoicePlayer,voiceForEvent,STEP_CLIPS} from './voices.mjs';
 // Music has its own volume. All game feedback shares one replaceable channel.
 export function createAudio(getSettings,now=()=>performance.now()){
- const track=new Audio();track.loop=true;track.preload='none';
+ let track=new Audio();track.loop=true;track.preload='none';const tracks=new Map([['easy_medium_hard',track]]);
  let ctx,trackName='',unlocked=false,destroyed=false,timer=null,beatAt=0;
  let generation=0,clip=null,cue=null,voicePending=false,lossIndex=0,lastStepAt=-Infinity;
  const recordings=new Map();
@@ -20,7 +20,7 @@ export function createAudio(getSettings,now=()=>performance.now()){
  function start(){
   if(destroyed)return;
   const settings=getSettings(),name=settings.mode==='extreme'?'extreme':'easy_medium_hard';
-  if(trackName!==name){track.pause();track.src=`assets/audio/${name}.mp3`;track.load();trackName=name;clearInterval(timer);timer=null;}
+  if(trackName!==name){track.pause();let next=tracks.get(name);if(!next){next=new Audio();next.loop=true;next.preload='auto';tracks.set(name,next);}track=next;if(!track.src){track.src=`assets/audio/${name}.mp3`;track.load();}trackName=name;clearInterval(timer);timer=null;}
   mix();
   if(unlocked&&settings.music&&track.volume>0&&!document.hidden){
    if(track.paused)void track.play().catch(()=>{});
@@ -68,7 +68,7 @@ export function createAudio(getSettings,now=()=>performance.now()){
  function visibility(){if(document.hidden)stopFeedback();start();}
  function pageHide(){stopFeedback();track.pause();clearInterval(timer);timer=null;}
  function pageShow(e){if(e.persisted)configure();}
- function destroy(){if(destroyed)return;destroyed=true;pageHide();for(const media of recordings.values()){media.removeAttribute('src');media.load();}recordings.clear();track.removeAttribute('src');track.load();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);if(ctx)void ctx.close().catch(()=>{});}
+ function destroy(){if(destroyed)return;destroyed=true;pageHide();for(const media of recordings.values()){media.removeAttribute('src');media.load();}recordings.clear();for(const media of tracks.values()){media.pause();media.removeAttribute('src');media.load();}tracks.clear();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);if(ctx)void ctx.close().catch(()=>{});}
  document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',pageHide);window.addEventListener('pageshow',pageShow);
  return {configure,event,unlock(){if(destroyed)return;unlocked=true;start();},destroy,get beatAt(){return beatAt;}};
 }

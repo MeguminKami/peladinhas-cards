@@ -10,7 +10,7 @@ async function setup(page:Page,pending=false){
 test('retrigger real apresenta +5 FS, contador sob global e clique único',async({page})=>{
  await setup(page);await page.locator('#bonus-shop').click();await page.locator('#buy-normal').click();await page.locator('#confirm-buy').click();await page.locator('#enter-bonus').click({timeout:20000});
  await expect(page.getByRole('heading',{name:'Prolongamento!'})).toBeVisible({timeout:15000});
- await expect(page.locator('.retrigger-award')).toHaveText('+5');await expect(page.locator('#fs')).toHaveText('1 / 15');await expect(page.locator('#fs-total')).toHaveText('RODADOS / TOTAL');
+ await expect(page.locator('.retrigger-award')).toHaveText('+5');await expect(page.locator('#fs')).toHaveText('1 / 15');await expect(page.locator('#fs-total')).toHaveText('SPIN / TOTAL');
  const position=await page.evaluate(()=>{const global=document.querySelector('#global')!.getBoundingClientRect(),fs=document.querySelector('#free-spins-panel')!.getBoundingClientRect();return {globalBottom:global.bottom,fsTop:fs.top};});expect(position.fsTop).toBeGreaterThanOrEqual(position.globalBottom);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('slot-local-v1')!));expect(saved.history[0].spins).toHaveLength(1);expect(saved.pendingRetrigger.awarded).toBe(5);
  await page.screenshot({path:'test-results/retrigger-celebration.png'});

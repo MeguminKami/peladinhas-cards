@@ -23,6 +23,8 @@ mkdirSync('test-results',{recursive:true});
 try{
  const context=await browser.newContext({serviceWorkers:'block',reducedMotion:process.argv.includes('--motion')?'no-preference':'reduce'});
  await context.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());
+ // boot.mjs imports the app after iframe load; the host must wait for wallet-ready.
+ await context.route('**/assets/games/cardoso-road/app.mjs',async route=>{await new Promise(done=>setTimeout(done,750));await route.continue();});
  await context.addInitScript(()=>{Object.defineProperty(crypto,'getRandomValues',{value:a=>{a.fill(window.loseNext?4294967295:0);return a;}});});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(origin+'/wallet-test.html');
@@ -81,6 +83,13 @@ try{
   assert.ok(await frame.locator('#music-toggle').evaluate(el=>el.matches(':focus-visible')));
   await frame.locator('#play').scrollIntoViewIfNeeded();
  }
+ if(process.argv.includes('--startup')){
+  await page.reload();await page.locator('[data-casino-game="cardoso-road"]').click();
+  frame=page.frameLocator('.cardoso-host iframe');await frame.locator('.demo').filter({hasText:'DJABUCOIN'}).waitFor({state:'attached'});await frame.locator('#play:enabled').waitFor();
+  assert.equal(await frame.locator('#balance').innerText(),'100,00');
+  await page.getByRole('button',{name:'Fechar jogo',exact:true}).click();
+  await page.locator('[data-casino-game="cardoso-road"]').waitFor({state:'visible'});
+ }else{
  await frame.locator('#play').click();await page.waitForFunction(()=>document.querySelector('.cardoso-host iframe').contentDocument.querySelector('#balance').textContent==='90,00');
  await frame.locator('#markers').evaluate(markers=>{
   window.cooldownProbe=new Promise(resolve=>{
@@ -135,7 +144,8 @@ try{
  await page.getByRole('button',{name:'Fechar jogo',exact:true}).click();
  await page.locator('[data-casino-game="cardoso-road"]').waitFor({state:'visible'});
  assert.match(await page.locator('.casino-balance strong').innerText(),/91,02/);
+ }
  assert.deepEqual(errors,[]);
- console.log('Cardoso integrado: carteira partilhada, retoma após reload, cashout único, derrota, 4 larguras e zero acessos cloud OK');
+ console.log(process.argv.includes('--startup')?'Cardoso: arranque atrasado, carteira ligada, reabertura, 4 larguras e zero acessos cloud OK':'Cardoso integrado: carteira partilhada, retoma após reload, cashout único, derrota, 4 larguras e zero acessos cloud OK');
  await context.close();
 }finally{await browser.close();await new Promise(done=>server.close(done));}

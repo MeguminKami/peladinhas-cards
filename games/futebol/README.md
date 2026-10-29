@@ -2,7 +2,9 @@
 
 Guia reutilizável para novos projetos: [guia-prompt de desenvolvimento completo de uma slot](docs/GUIA_DESENVOLVIMENTO_SLOT.md), com bloco de input, metodologia, produção de assets, simulação, GUI e integração.
 
-Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Configuração matemática **0.9.4**: [Novos poderes](docs/PODERES_0_9_0.md), ativação por 5 Scatters e compra 450×, com Wilds a 7% por posição livre e sticky a 25%. RTP não calibrado; amostras exploratórias locais não confirmam o alvo de 65%.
+Slot de entretenimento com **créditos fictícios**, motor TypeScript local e interface isolada num iframe. O website controla o saldo; a slot controla símbolos, pagamentos calculados, bónus, animações, seed e sequência RNG. Versão **1.0.0**, com a matemática 0.9.4 preservada: [Novos poderes](docs/PODERES_0_9_0.md), ativação de Lendas por 5 Scatters e compra 450×, com Wilds a 7% por posição livre e sticky a 25%. RTP não calibrado; amostras exploratórias locais não confirmam o alvo de 65%.
+
+O motor e a carteira usam a versão de [casino-slot-contract.js](../../js/casino-slot-contract.js). A migração para 1.0.0 conserva sessões 0.7.1 e 0.9.4, saldo, histórico, RNG e bónus em curso. Recibos pendentes das versões publicadas 0.7.0–0.9.4 mantêm os valores e identificadores originais para recuperação idempotente. Na raiz do website, `npm.cmd run test:casino:football` verifica motor, contrato e integração compilada com a carteira local.
 
 ## Executar e testar
 
@@ -148,7 +150,7 @@ Esta continuidade é por browser/perfil e origem, não por conta em qualquer dis
 
 ## Integração Peladinhas Cards
 
-Neste repositório, a fonte publicada é `games/futebol`; `casino_temp` é apenas uma pasta de receção. O adaptador envia aposta, modalidade, Bonus Hunt, snapshot completo e conclusão do bónus ao host. As jogadas são confirmadas localmente em IndexedDB, com sincronização online à entrada/saída, no fim do bónus ou a pedido. Preservar `web/wallet.ts` e `web/host-sdk.ts` ao importar atualizações. Consultar o [guia do casino](../../docs/guides/casino.md) para testes e publicação.
+Neste repositório, a fonte publicada é `games/futebol`; `casino_temp` é apenas uma pasta de receção. O adaptador envia aposta, modalidade, Bonus Hunt, snapshot completo e conclusão do bónus ao host. As jogadas são confirmadas localmente em IndexedDB, com sincronização online à entrada/saída, após 15 spins normais, no fim do bónus ou a pedido, nunca a meio do bónus. Preservar `web/wallet.ts` e `web/host-sdk.ts` ao importar atualizações. Consultar o [guia do casino](../../docs/guides/casino.md) para testes e publicação.
 
 ## Limite do modelo local
 

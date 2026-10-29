@@ -30,9 +30,10 @@ const music=()=>audio.configure();
 document.body.classList.toggle('integrated',integrated);
 
 function announceReady(){if(window.parent!==window)window.parent.postMessage({type:'cardoso-road:ready',demo:!integrated},location.origin);}
-scene.ready.then(()=>{sceneReady=true;render();if(!integrated)announceReady();});
+scene.ready.then(()=>{sceneReady=true;render();navigator.serviceWorker?.controller?.postMessage({type:'cardoso-road:warm'});if(!integrated)announceReady();});
 window.connectCardosoWallet=async wallet=>{if(!integrated||casinoWallet)throw Error('Ligação inválida.');casinoWallet=wallet;state=validate(await wallet.state());if(state.round)mode=state.round.mode;lockOwner=true;$('#limits').textContent='1 – 100 DJC';document.querySelector('.demo').textContent='DJABUCOIN';document.querySelector('.wallet small').textContent='SALDO DO CASINO';await scene.ready;render();announceReady();};
 window.refreshCardosoBalance=async()=>{if(casinoWallet&&!busy){state=validate(await casinoWallet.state());render();}};
+if(integrated&&window.parent!==window)window.parent.postMessage({type:'cardoso-road:wallet-ready'},location.origin);
 $('#markers').innerHTML=Array.from({length:10},()=>'<i aria-hidden="true"></i>').join('');
 $('#modes').innerHTML=Object.entries(MODES).map(([id,m],i)=>`<button data-mode="${id}" style="--mode-color:${['#cefa70','#89caff','#ffbc70','#ff907b'][i]}" aria-pressed="false"><span class="mode-mark" aria-hidden="true"></span>${m.name}</button>`).join('');
 function bet(){return Math.round(Number($('#bet').value.replace(/\s/g,'').replace(',','.'))*100);}

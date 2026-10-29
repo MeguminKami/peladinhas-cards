@@ -15,6 +15,7 @@ import {
 } from "@firebase/rules-unit-testing";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { readFileSync } from "node:fs";
+import { SLOT_CONFIG_VERSION } from "../js/casino-slot-contract.js";
 const db = getFirestore();
 const request = (uid, data = {}) => ({
   auth: { uid, token: { auth_time: Math.floor(Date.now() / 1000) } },
@@ -32,7 +33,7 @@ const transaction = (values = {}) => ({
   credit: 8,
   roundId: 1,
   spin: 1,
-  configVersion: "0.7.1",
+  configVersion: SLOT_CONFIG_VERSION,
   bet: 20,
   mode: "base",
   bonusHunt: false,

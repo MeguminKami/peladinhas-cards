@@ -8,6 +8,8 @@ No telemóvel, blackjack e roleta usam as mesmas fichas selecionáveis do comput
 
 ## Economia e reinício
 
+Futebol de Bairro usa a versão **1.0.0**, partilhada entre motor e validação da carteira em [casino-slot-contract.js](../../js/casino-slot-contract.js). Mantém a matemática 0.9.4, sem alterar a edição da carteira. Sessões 0.7.1–0.9.4 conhecidas são migradas preservando saldo, histórico, RNG e bónus; recibos pendentes mantêm os seus identificadores, valores e versão original. `npm.cmd run test:casino:football` verifica o motor, todos os modos/apostas e a recuperação no iframe compilado com a carteira IndexedDB. Publicar com `npm.cmd run deploy:pending -- --only "hosting,functions:peladinhas:settleCasinoSlot"`: o hosting atualiza o motor, SDK e carteira local; a Function atualiza a validação dos recibos legados. Não é necessário recalcular saldos nem alterar dados de semanas fechadas.
+
 A edição `official-2026-10-27-reset-200` inicia cada carteira com **200 DJC**. O reinício é aplicado atomicamente no primeiro acesso à carteira, recompensa ou envio administrativo depois da publicação do servidor. Não exige percorrer a base de dados. Carteiras da edição atual conservam o saldo. Sessões e snapshots anteriores ficam isolados pela versão, sem recuperar saldos de teste.
 
 Cada peladinha que passa a `closed` atribui entre **20 e 200 DJC** a cada participante, incluindo suplentes:

@@ -1,5 +1,6 @@
 // Integer coins only. Casino outcomes never award participation coins.
 import { matchPerformance } from "./utils.js";
+import { SLOT_CONFIG_VERSION, SLOT_TRANSACTION_VERSIONS } from "./casino-slot-contract.js";
 export const CASINO_EDITION = "official-2026-10-27-reset-200";
 export const DJABUCOIN = Object.freeze({
   scale: 100,
@@ -9,7 +10,7 @@ export const DJABUCOIN = Object.freeze({
 });
 
 export const SLOT_RULES = Object.freeze({
-  version: "0.9.2",
+  version: SLOT_CONFIG_VERSION,
   bets: [20, 40, 60, 80, 100, 150, 200, 300, 400, 500, 750, 1000],
   cap: 10000,
 });
@@ -36,8 +37,8 @@ export function validateSlotTransaction(input) {
     typeof input.streamId !== "string" ||
     !/^[\w-]{16,80}$/.test(input.id || "") ||
     !/^[\w-]{16,80}$/.test(input.streamId || "") ||
-    // Keep already queued 0.7.0 receipts valid across the sticky update.
-    ![SLOT_RULES.version, "0.7.1", "0.7.0"].includes(input.configVersion) ||
+    // Preserve pending receipts without rewriting their identity or result.
+    !SLOT_TRANSACTION_VERSIONS.includes(input.configVersion) ||
     !SLOT_RULES.bets.includes(input.bet) ||
     !["base", "normal", "superior", "legend"].includes(input.mode) ||
     typeof input.bonusHunt !== "boolean" ||
