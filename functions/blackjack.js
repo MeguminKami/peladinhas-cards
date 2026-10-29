@@ -167,10 +167,10 @@ export function blackjackFunctions() {
     );
   });
 
-  // A single fixed document: empty casino costs one read/minute, never a collection scan.
+  // A single fixed document: empty casino costs one read per sweep, never a collection scan.
   // Connected clients wake deadlines precisely; this is the recovery path when everyone leaves.
   const blackjackSweep = onSchedule(
-    { schedule: "every 1 minutes", region: "europe-west1", maxInstances: 1 },
+    { schedule: "every 5 minutes", region: "europe-west1", maxInstances: 1 },
     async () => {
       const snapshot = await getFirestore().doc(BLACKJACK_PRIVATE).get();
       if (!snapshot.exists) return;

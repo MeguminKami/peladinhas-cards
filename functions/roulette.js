@@ -400,7 +400,7 @@ export function rouletteFunctions() {
   );
 
   const rouletteSweep = onSchedule(
-    { schedule: "every 1 minutes", region: "europe-west1", maxInstances: 1 },
+    { schedule: "every 5 minutes", region: "europe-west1", maxInstances: 1 },
     async () => {
       const db = getFirestore();
       const snapshot = await db.doc(ROULETTE_PRIVATE).get();

@@ -26,7 +26,9 @@ O modelo do início não serve para calcular estatísticas noutras páginas. Ao 
 
 No início, o navegador observa apenas as versões global e pessoal. Num evento em direto, observa a versão global e a desse evento. Pedidos próximos são agrupados; respostas de uma página ou sessão abandonada são descartadas. As notificações também desligam o seu listener quando a página fica escondida. Web Push continua independente da página.
 
-Ao regressar à página ou recuperar a ligação, verifica-se o servidor. Não existe polling de dados do início enquanto nada muda. Relógios locais de contagem decrescente e a rotação do pódio não fazem leituras Firestore.
+Ao regressar à página ou recuperar a ligação, o listener volta a ligar-se e só pede `getHome` se uma versão mudou ou o prazo `validUntil` passou. Não existe polling de dados do início enquanto nada muda.
+
+Nas restantes páginas, `js/app.js` guarda o último modelo completo. Ao navegar, lê as duas versões (`homeSignals/global` e a pessoal) e reutiliza o modelo enquanto não mudarem, até 5 minutos; voltar ao início também reutiliza a resposta de `getHome` nas mesmas condições. As atualizações explícitas depois de guardar (`ctx.refresh`) recarregam sempre, porque os triggers atualizam as versões de forma assíncrona. As missões de avaliação pós-jogo usam uma contagem agregada por jogo (`raterId`, `submitted`, `targetId`) em vez de ler cada avaliação. Relógios locais de contagem decrescente e a rotação do pódio não fazem leituras Firestore.
 
 ## Tempo e recuperação
 

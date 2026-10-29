@@ -116,7 +116,13 @@ test("revisions coalesce bursts; unchanged data and hidden pages cause no refres
   assert.equal(h.timers.size, 0);
   h.show();
   assert.equal(h.subscriptions, 2);
-  await h.tick(0);
+  // Returning re-subscribes only; unchanged versions do not refetch.
+  h.change(0, "c");
+  h.change(1, "b");
+  assert.equal(h.timers.size, 0);
+  assert.equal(calls, 1);
+  h.change(0, "d");
+  await h.tick(800);
   assert.equal(calls, 2);
   stop();
   assert.equal(h.stops, 2);
