@@ -209,7 +209,9 @@ const ctx = {
       }
       // Read the versions before the data: a change during the load leaves
       // them different, so the next check reloads.
-      const versions = typeof DB.homeVersions === "function"
+      // getHome returns its own versions: a first home load needs no check.
+      const fullLoad = !homeOnly || typeof DB.getHome !== "function" || this.homeUnavailable;
+      const versions = typeof DB.homeVersions === "function" && (fullLoad || (!force && this.homeSnapshot))
         ? await DB.homeVersions(owner).catch(() => null) : null;
       if (currentUser?.uid !== owner || authSession !== session) return;
       const week = cardWeek(), cacheKey = versions && `${versions.join(":")}:${owner}:${this.user.role}:${week.weekId}:${week.phase}`;
@@ -220,7 +222,7 @@ const ctx = {
         return;
       }
       const full = this.fullCache;
-      if (!homeOnly && full?.key === cacheKey && fresh(full.time)) {
+      if (fullLoad && full?.key === cacheKey && fresh(full.time)) {
         this.league = full.league;
         this.leagueKind = "full";
         this.homeSnapshot = null;

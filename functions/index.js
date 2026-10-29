@@ -1527,6 +1527,20 @@ async function executeAutomationCycle(key) {
     return { ok: true };
   }));
 }
+// Ratings update cards right away instead of waiting for the next scheduled
+// cycle. Rating writers queue work atomically; only the newest generation of
+// each work document starts a cycle. Superseded or processed work skips, and a
+// busy cycle lease is retried. Old retries leave the work to the schedule.
+const onRatingWork = (path) => policyWritten(path, async (event) => {
+  const before = event.data?.before.data(), after = event.data?.after.data();
+  if (!after?.pending || after.token === before?.token) return;
+  if (Date.now() - Date.parse(event.time) > 15 * 60000) return;
+  const current = (await event.data.after.ref.get()).data();
+  if (!current?.pending || current.token !== after.token) return;
+  await executeAutomationCycle(`work:${path.split("/")[0]}:${event.params.id}:${after.token}`);
+}, { readPolicy: false, retry: true, timeoutSeconds: 540 });
+export const onCommunityWork = onRatingWork("communityWork/{id}");
+export const onFeedbackWork = onRatingWork("feedbackWork/{id}");
 setAutomationRunner(event => {
   const time = Date.parse(event.scheduleTime);
   const key = Number.isFinite(time) ? new Date(time).toISOString() : String(event.scheduleTime);

@@ -4,7 +4,7 @@
 
 ## Momentos de processamento
 
-Missões, percursos, eventos, avaliações derivadas, cartas e lembretes são processados às **08:00, 12:00, 17:00 e 22:00**, em `Europe/Lisbon`, e no encerramento de um jogo. Os horários acompanham o horário de verão. O intervalo noturno pode chegar a dez horas.
+Missões, percursos, eventos, avaliações derivadas, cartas e lembretes são processados às **08:00, 12:00, 17:00 e 22:00**, em `Europe/Lisbon`, e no encerramento de um jogo. Uma avaliação comunitária ou pós-jogo submetida também inicia o ciclo de imediato: `onCommunityWork` e `onFeedbackWork` observam `communityWork/{id}` e `feedbackWork/{id}` e executam o ciclo apenas para a geração (`token`) mais recente ainda pendente. Com o lease do ciclo ocupado, o trigger repete; entregas com mais de 15 minutos ficam para o ciclo agendado. Os horários acompanham o horário de verão. O intervalo noturno pode chegar a dez horas.
 
 O cron é `0 8,12,17,22 * * *`. Os endpoints agendados existentes continuam publicados, mas entram no mesmo ciclo coordenado. Um checkpoint por instante do scheduler permite que apenas uma entrega execute o trabalho. Um fecho de jogo tem uma chave própria. As execuções dispõem de 540 segundos; entregas falhadas podem repetir-se.
 
