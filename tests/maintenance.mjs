@@ -73,6 +73,39 @@ try {
   };
   await navigate("#/admin/maintenance");
   await page.locator("#maintenance-policy").waitFor();
+  // Stored drafts must not disguise the active values on initial load.
+  await page.evaluate(async () => {
+    const {DEFAULT_POLICY} = await import('./js/system-policy.js');
+    window.__testState.systemDraft = {config: {...DEFAULT_POLICY, rewards:{...DEFAULT_POLICY.rewards,dailyBudget:9}}};
+    window.__testState.systemPolicy = {revision:0,timeline:[{version:1,effectiveAt:"2026-10-22T11:00:00Z",config:DEFAULT_POLICY}]};
+  });
+  await navigate("#/admin");
+  await navigate("#/admin/maintenance");
+  await page.locator('[data-cancel]').waitFor();
+  await page.screenshot({path:'test-results/admin-schedule-1440.png'});
+  await page.setViewportSize({width:390,height:1000});
+  await page.locator('[data-cancel]').scrollIntoViewIfNeeded();
+  await page.screenshot({path:'test-results/admin-schedule-390.png'});
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  await page.setViewportSize({width:1440,height:1000});
+  assert.equal(await page.locator('[name="rewards.dailyBudget"]').inputValue(), "0");
+  await page.locator('[data-restore-draft]').click();
+  assert.equal(await page.locator('[name="rewards.dailyBudget"]').inputValue(), "9");
+  await page.locator('[data-cancel]').click();
+  assert.equal(await page.locator('#confirm').count(), 0);
+  await page.locator('[data-cancel-reason]').fill("Corrigir horario semanal");
+  await page.locator('[data-cancel]').click();
+  await page.locator('#confirm').click();
+  await page.getByText("Agendamento cancelado.", {exact:true}).waitFor();
+  assert.equal(await page.locator('[data-cancel]').count(), 0);
+  await page.evaluate(() => { window.__testState.systemPolicy.revision = 0; });
+  await navigate("#/admin");
+  await navigate("#/admin/maintenance");
+  for (const width of [1440, 1000]) {
+    await page.setViewportSize({width,height:1000});
+    assert.equal(await page.locator('.admin-area-nav').evaluate(nav => new Set([...nav.children].map(a => a.offsetTop)).size), 1);
+  }
+  await page.setViewportSize({width:1440,height:1000});
   const field = page.locator('[name="rewards.dailyBudget"]');
   await field.fill("6");
   await page

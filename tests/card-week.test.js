@@ -2,6 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { cardWeek, cardWeekBounds, canReopenWeeklyCard } from "../js/card-week.js";
 import { validCardDesign } from "../js/card-design.js";
+import { setPolicyDocument } from "../js/system-policy.js";
+
+test("a versioned 06h opening applies today and preserves preceding weeks and Lisbon DST", () => {
+  setPolicyDocument({revision:7,timeline:[{version:7,effectiveAt:"2026-10-29T06:00:00Z",patch:{cycle:{openHour:6,openMinute:0}}}]});
+  try {
+    assert.equal(cardWeekBounds("2026-W43").opensAt.toISOString(), "2026-10-22T11:00:00.000Z");
+    assert.equal(cardWeek(new Date("2026-10-29T05:59:59Z")).phase, "closed");
+    const opened=cardWeek(new Date("2026-10-29T06:00:00Z"));
+    assert.equal(opened.phase, "open");
+    assert.equal(opened.weekId, "2026-W44");
+    assert.equal(opened.opensAt.toISOString(), "2026-10-29T06:00:00.000Z");
+    assert.equal(opened.closesAt.toISOString(), "2026-11-04T18:00:00.000Z");
+    assert.equal(cardWeekBounds("2027-W27").opensAt.toISOString(), "2027-07-08T05:00:00.000Z");
+  } finally { setPolicyDocument(null); }
+});
 test("ciclo histórico anterior a 21/10: quarta 12h fecha e quinta 12h abre, em Lisboa", () => {
   const before = cardWeek(new Date("2026-10-14T10:59:59Z"));
   const closed = cardWeek(new Date("2026-10-14T11:00:00Z"));

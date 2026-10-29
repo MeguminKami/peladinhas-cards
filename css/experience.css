@@ -1011,8 +1011,8 @@ p {
 }
 @media (min-width: 801px) {
   .admin-area-nav {
-    flex-wrap: wrap;
-    overflow: visible;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
   .admin-area-nav a {
     flex: 0 1 auto;

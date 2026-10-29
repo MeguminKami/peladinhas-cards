@@ -85,7 +85,7 @@ export const ADMIN_AREAS = [
   {
     id: "paths",
     href: "#/admin/paths",
-    label: "Percursos pessoais",
+    label: "EoTC",
     icon: "path",
     description: "Rever resultados corrigidos em Escolhe o teu caminho!",
   },
@@ -112,7 +112,7 @@ export function mountAdminMenu(user) {
   const selected = ["player", "initial", "ovr", "card-photo"].includes(section)
     ? "players"
     : section;
-  const html = `<nav class="admin-area-nav" aria-label="Menu de administração">${areas.map((a) => `<a href="${a.href}" ${a.id === selected ? 'class="active" aria-current="page"' : ""}>${icon(a.icon)}<span>${esc(a.label)}</span></a>`).join("")}</nav>`;
+  const html = `<nav class="admin-area-nav" aria-label="Menu de administração">${areas.map((a) => `<a href="${a.href}" ${a.id === selected ? 'class="active" aria-current="page"' : ""}>${icon(a.icon)}<span${a.id === "overview" ? ' class="visually-hidden"' : ""}>${esc(a.label)}</span></a>`).join("")}</nav>`;
   const heading = main.querySelector(".page-head");
   if (heading) heading.insertAdjacentHTML("afterend", html);
   else main.insertAdjacentHTML("afterbegin", html);

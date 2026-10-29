@@ -73,6 +73,12 @@ export async function maintenanceFixture(state, name, data) {
     state.systemDraft = null;
     return { revision: version };
   }
+  if (data.action === "cancel-scheduled") {
+    if (data.reason.trim().length < 5) throw Error("Indica um motivo.");
+    if (document.revision !== data.expectedRevision) throw Error("A configuração mudou.");
+    state.systemPolicy = {...document, revision: document.revision + 1, timeline: document.timeline.filter(row => +new Date(row.effectiveAt) <= Date.now())};
+    return {ok:true};
+  }
   if (data.action === "simulate")
     return {
       players: [
