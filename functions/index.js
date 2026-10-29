@@ -6,8 +6,8 @@ import { ratingQuorum, ratingWaiverTimes } from "../js/rating-quorum.js";
 import { casinoFunctions } from './casino.js';
 import { adminCasinoFunctions } from './admin-casino.js';
 import { casinoShopFunctions } from './casino-shop.js';
-import { blackjackFunctions } from './blackjack.js';
-import { rouletteFunctions } from "./roulette.js";
+import { blackjackFunctions, settleIdleBlackjack } from './blackjack.js';
+import { rouletteFunctions, settleIdleRoulette } from "./roulette.js";
 import { gameFlowFunctions, writeFeedbackRevision } from "./game-flow.js";
 import { enqueueFeedbackEvent, drainFeedbackQueue } from "./feedback-queue.js";
 import { homeFunctions, invalidateHome } from "./home-cache.js";
@@ -86,9 +86,11 @@ export const { getCasinoPlayerBalance } = adminCasinoFunctions();
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
 const db = getFirestore();
 export const { communityRatingAction, grantCommunityRatingRetry, listCommunityRatingsForAdmin } = communityRatingFunctions(aggregateCommunity);
-export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession, grantCasinoCoins } = casinoFunctions();
-export const { blackjackAction, blackjackSweep } = blackjackFunctions();
-export const { rouletteAction, rouletteSweep } = rouletteFunctions();
+export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession, grantCasinoCoins } = casinoFunctions({
+  settleTables: () => Promise.all([settleIdleBlackjack(), settleIdleRoulette()]),
+});
+export const { blackjackAction } = blackjackFunctions();
+export const { rouletteAction } = rouletteFunctions();
 const pushPrivateKey = defineSecret("WEB_PUSH_PRIVATE_KEY");
 export const {
   pushDeviceAction,

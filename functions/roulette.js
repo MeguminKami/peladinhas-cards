@@ -1,5 +1,4 @@
 ﻿import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import { onSchedule } from "firebase-functions/v2/scheduler";
 import { HttpsError } from "firebase-functions/v2/https";
 import { randomInt } from "node:crypto";
 import { walletCall } from "./casino.js";
@@ -198,11 +197,11 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       };
     }
 
+    // Any action settles an elapsed round below, so every bettor's wallet must
+    // be loaded whatever the action (a join after an abandoned round, too).
     const willAttemptResolve =
-      (input.action === "spin" && table.phase === "closing") ||
-      (input.action === "tick" &&
-        table.phase === "closing" &&
-        table.deadline <= now);
+      table.phase === "closing" &&
+      (input.action === "spin" || table.deadline <= now);
     const walletIds = new Set();
     if (["join", "balance", "spin"].includes(input.action) && uid)
       walletIds.add(uid);
@@ -390,6 +389,14 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
   });
 }
 
+// No scheduler: an abandoned round settles when anyone next opens the casino
+// or acts on the table. Costs one read, and only when the casino is used.
+export async function settleIdleRoulette(db = getFirestore(), now = Date.now()) {
+  const table = (await db.doc(ROULETTE_PRIVATE).get()).data();
+  if (table?.phase === "closing" && table.deadline <= now)
+    await runRoulette({ action: "tick", id: `settle-${now}`, table: table.id }, null, null, now, db);
+}
+
 export function rouletteFunctions() {
   const rouletteAction = walletCall((request, user) =>
     runRoulette(
@@ -399,23 +406,5 @@ export function rouletteFunctions() {
     ),
   );
 
-  const rouletteSweep = onSchedule(
-    { schedule: "every 5 minutes", region: "europe-west1", maxInstances: 1 },
-    async () => {
-      const db = getFirestore();
-      const snapshot = await db.doc(ROULETTE_PRIVATE).get();
-      if (!snapshot.exists) return;
-      const table = snapshot.data();
-      if (
-        table.phase === "closing" &&
-        table.deadline <= Date.now()
-      )
-        await runRoulette(
-          { action: "tick", id: `sweep-${Date.now()}`, table: table.id },
-          null,
-          null,
-        );
-    },
-  );
-  return { rouletteAction, rouletteSweep };
+  return { rouletteAction };
 }
