@@ -137,6 +137,8 @@ Nesta versão, uma mudança no servidor ou num módulo que ele importa pode marc
 
 O histórico fica em **`.deploy/`** neste computador. Não apagues essa pasta: perderias o registo. Não vai para o Git. Deploys feitos por comandos antigos ou noutra máquina não atualizam este histórico.
 
+Functions que constem do histórico mas já não estejam exportadas no código geram um aviso, sem bloquear a publicação das restantes pendências. Os recibos antigos são preservados. Este fluxo não elimina essas Functions da cloud; essa remoção exige revisão manual separada.
+
 “Plano concluído” confirma o sucesso indicado pelo Firebase. Testar a aplicação nos aparelhos e recalcular dados, quando necessário, são passos separados. Consulta o [guia técnico](docs/guides/deployment.md).
 
 <details>

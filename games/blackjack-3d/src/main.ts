@@ -38,7 +38,7 @@ export function mount(root:HTMLElement,options:MountOptions={}){
   const persistBets=()=>localStorage.setItem(`${key}:bets`,JSON.stringify(bets));
   let presentingHand:string|undefined;
   function render(){
-    const s=store.state,r=presentationRound||s.round||presentedRound;q('[data-balance]').textContent=ready?money(visualBalance??s.balance):'—';q('.chips').innerHTML=chipSelectorHTML(chip);q('.chips').querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=busy||!!s.round||!ready);q('[data-total-label]').textContent=s.round?'EXPOSIÇÃO DA RONDA':'APOSTA TOTAL';q('[data-total]').textContent=money(s.round?.cost||bets.reduce((a,b)=>a+b,0));
+    const s=store.state,r=presentationRound||s.round||presentedRound;q('[data-balance]').textContent=ready?money(visualBalance??s.balance):'—';if(ready)document.documentElement.dataset.casinoBalance=String(visualBalance??s.balance);q('.chips').innerHTML=chipSelectorHTML(chip);q('.chips').querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=busy||!!s.round||!ready);q('[data-total-label]').textContent=s.round?'EXPOSIÇÃO DA RONDA':'APOSTA TOTAL';q('[data-total]').textContent=money(s.round?.cost||bets.reduce((a,b)=>a+b,0));
     q('.dealer-hud').innerHTML=r?`<small>DEALER ${r.dealer.length?(r.reveal?`· ${total(r.dealer).value}`:`· ${total([r.dealer[0]]).value} + ?`):'· a distribuir'}</small><div class="cards">${r.dealer.map((c,i)=>cardHTML(i===1&&!r.reveal?null:c)).join('')}</div>`:'<small>DEALER</small><div class="rules-note">Para em todo o 17</div>';
     q('.seats').innerHTML=Array.from({length:5},(_,i)=>{
       const p=r?.seats.find(p=>p.number===i+1),active=p?.hands.some(h=>h.id===r?.active),occupied=!!p||occupiedSeats[i];

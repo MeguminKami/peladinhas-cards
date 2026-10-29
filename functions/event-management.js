@@ -9,6 +9,7 @@ import { getFirestore, FieldValue, Timestamp, Filter } from "firebase-admin/fire
 import { HttpsError } from "firebase-functions/v2/https";
 import { createHash } from "node:crypto";
 import { coalesceWork } from "./coalesce-work.js";
+import { sameData } from "./equal-data.js";
 import { rewardDocuments } from "./reward-queries.js";
 import { expireRewards } from "./reward-expirations.js";
 import { writeMaintenanceSignals, signalMaintenance } from "./maintenance-inputs.js";
@@ -395,6 +396,17 @@ export function publicManagedEvent(event, id) {
     value.ranking = [];
   return value;
 }
+function deliveredReward(configured, boosts) {
+  return {
+    mode: configured.mode,
+    statDuration: configured.statDuration,
+    cardDuration: configured.cardDuration || "weekly",
+    specialId: configured.specialId || null,
+    ...(configured.criterion ? { criterion: configured.criterion } : {}),
+    ...(configured.cardTheme ? { cardTheme: configured.cardTheme } : {}),
+    boosts,
+  };
+}
 export function grant(
   tx,
   ref,
@@ -422,15 +434,7 @@ export function grant(
     throw new HttpsError("failed-precondition", "O limite de recompensas foi atingido. A entrega não foi consumida.");
   const pending = allocation.reduced && allocation.overflow === "defer";
   const boosts = pending ? Object.fromEntries(ATTRIBUTES.map(([key])=>[key,0])) : allocation.boosts;
-  const reward = {
-    mode: configured.mode,
-    statDuration: configured.statDuration,
-    cardDuration: configured.cardDuration || "weekly",
-    specialId: configured.specialId || null,
-    ...(configured.criterion ? { criterion: configured.criterion } : {}),
-    ...(configured.cardTheme ? { cardTheme: configured.cardTheme } : {}),
-    boosts,
-  };
+  const reward = deliveredReward(configured, boosts);
   const value = {
     eventId: ref.id,
     uid,
@@ -455,7 +459,30 @@ export function grant(
   existing.push({ ...value, id: key });
   return value;
 }
-export function managedEvents(rebuild) {
+function replaceMissionReward(tx, previous, configured, ledger, actorId) {
+  const issuedAt = asDate(previous.deliveredAt || previous.createdAt || previous.startsAt);
+  const allocation = rewardBudget(configured, ledger.filter(row => row.uid === previous.uid), previous.source || "mission", issuedAt);
+  if (allocation.reduced && allocation.overflow === "reject")
+    throw new HttpsError("failed-precondition", "O limite de recompensas impede a substituição. A recompensa anterior foi mantida.");
+  const pending = allocation.reduced && allocation.overflow === "defer";
+  const { id, ...original } = previous;
+  const expiresAt = previous.reward.statDuration === configured.statDuration ? previous.expiresAt
+    : Timestamp.fromDate(rewardExpiry(asDate(previous.startsAt), configured.statDuration));
+  const value = {
+    ...original,
+    configuredReward: configured,
+    reward: deliveredReward(configured, pending ? Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 0])) : allocation.boosts),
+    pending, expiresAt,
+    expirationProcessed: +asDate(expiresAt) <= Date.now(),
+    policyVersion: policyVersion(), deliveryPolicy: policyAt().rewards,
+    updatedAt: FieldValue.serverTimestamp(), updatedBy: actorId,
+  };
+  tx.set(db().doc(`eventRewards/${id}`), value);
+  writeMaintenanceSignals(tx, "eventRewards", id, original, value);
+  ledger.push({ ...value, id });
+  return value;
+}
+export function managedEvents(rebuild, rebuildEdited = rebuild) {
   async function action(request, user) {
     const { action, eventId, ...input } = request.data || {};
     if (
@@ -505,7 +532,7 @@ export function managedEvents(rebuild) {
           action === "create"
             ? db().collection("events").doc()
             : db().doc(`events/${eventId}`);
-      await db().runTransaction(async (tx) => {
+      const affected = await db().runTransaction(async (tx) => {
         const before = action === "update" ? await tx.get(ref) : null;
         const currentMissions = rows(await tx.get(db().collection("events")));
         validatePrerequisiteGraph(
@@ -548,12 +575,50 @@ export function managedEvents(rebuild) {
                 ? "scheduled"
                 : "open"
               : "draft";
+        // Editing an active objective must publish its new counts atomically.
+        // Reads and claims still reuse this snapshot until the next cycle.
+        const now = new Date();
+        const activeObjectiveEdit = action === "update" && config.event.method === "objective" &&
+          ["open", "scheduled"].includes(status);
+        const savedProgress = activeObjectiveEdit
+          ? (await tx.get(ref.collection("private").doc("progress"))).data() : null;
+        const refreshProgress = activeObjectiveEdit &&
+          (savedProgress?.version !== progressVersion(config.event) ||
+            savedProgress?.periodKey !== periodWindow(config.event, now).key);
+        // Read all delivered rewards before writing progress or configuration.
+        // Comparing each delivery also repairs configurations edited before this behavior existed.
+        const delivered = previous ? rows(await rewardDocuments("eventId", [ref.id], tx)) : [];
+        const configurationFor = row => editingMission ? config.positions[0]
+          : config.positions[Number(row.position) - 1] || { mode: "stats", boosts: {}, statDuration: row.reward.statDuration, cardDuration: row.reward.cardDuration || "weekly", specialId: null };
+        const replacing = delivered.filter(row => !row.revokedAt &&
+          !sameData(row.configuredReward || row.reward, configurationFor(row)));
+        const replacingIds = new Set(replacing.map(row => row.id));
+        const ledger = replacing.length ? rows(await rewardDocuments("uid", replacing.map(row => row.uid), tx))
+          .filter(row => !replacingIds.has(row.id)) : [];
+        if (refreshProgress) {
+          const [games, completions] = await Promise.all([
+            objectiveGames(tx, usesRatingObjective(config.event.objective)),
+            rewardDocuments("eventId", config.event.prerequisites?.missionIds || [], tx),
+          ]);
+          tx.set(ref.collection("private").doc("progress"), {
+            version: progressVersion(config.event), periodKey: periodWindow(config.event, now).key,
+            ranking: eventRanking(config.event, [], rows(games), [], now, rows(completions)),
+            evaluatedAt: now,
+          });
+        }
+        const replacements = new Map();
+        for (const row of replacing.sort((a, b) => +asDate(a.createdAt) - +asDate(b.createdAt) || a.id.localeCompare(b.id)))
+          replacements.set(row.uid, replaceMissionReward(tx, row, configurationFor(row), ledger, request.auth.uid));
         tx.set(ref, {
           ...(previous || {}),
           ...config.event,
           ...(previous
             ? {
-                winners: previous.winners || [],
+                winners: (previous.winners || []).map(winner => {
+                  const replacement = replacements.get(winner.uid || winner.uids?.[0]);
+                  return replacement ? { ...winner, reward: replacement.reward,
+                    expiresAt: asDate(replacement.expiresAt).toISOString() } : winner;
+                }),
                 ranking: previous.ranking || [],
               }
             : {}),
@@ -569,10 +634,18 @@ export function managedEvents(rebuild) {
           positions: config.positions,
           participationReward: config.participationReward,
         });
-        audit(tx, ref, request.auth.uid, action, { status, ...(preservingProgress ? {
+        audit(tx, ref, request.auth.uid, action, { status,
+          ...(replacing.length ? { replacedRewards: replacing.map(row => ({
+            id: row.id, uid: row.uid, previousReward: row.reward,
+            configuredReward: configurationFor(row),
+          })) } : {}), ...(preservingProgress ? {
           preservesProgress:true, previousObjective:previous.objective, objective:config.event.objective,
         } : {}) });
+        // Also retry publication when a previous save committed the rewards but
+        // its immediate rebuild failed before responding to the administrator.
+        return [...new Set(delivered.filter(row => !row.revokedAt).map(row => row.uid))];
       });
+      for (const uid of affected) await rebuildEdited(uid);
       return { id: ref.id };
     }
     if (action === "duplicate") {

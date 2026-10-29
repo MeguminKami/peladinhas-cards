@@ -1,3 +1,4 @@
+import { observeCasinoPresentedBalance } from "./casino-presented-balance.js";
 import { mountCasinoStore } from "./casino-store.js";
 import { mountCasinoVault } from "./casino-vault.js";
 import { esc, modal, friendlyError } from "./ui.js";
@@ -41,7 +42,7 @@ export async function casinoPage(ctx) {
     loading = false,
     category = "all",
     slot,
-    mounting = false, gameRun = 0, onlineBalance;
+    mounting = false, gameRun = 0, onlineBalance, presentedBalance;
   const uid = ctx.realUser?.uid || ctx.user.uid;
   const playerId = `${uid}:${CASINO_EDITION}`;
   const localWallet = createCasinoLocalWallet(uid, (value) => {
@@ -112,9 +113,14 @@ export async function casinoPage(ctx) {
   ctx.cleanup(() => toolbarSize.disconnect());
   const playArea = root.querySelector("#casino-play-area");
   const salon = root.querySelector(".casino-salon");
+  ctx.cleanup(observeCasinoPresentedBalance(playArea, balance => {
+    presentedBalance = balance;
+    if (active) drawWallet();
+  }));
   let launchButton;
   function closeGame() {
     const refreshOnline = slot?.onlineTable;
+    presentedBalance = undefined;
     onlineBalance = undefined;
     gameRun++;
     mounting = false;
@@ -209,6 +215,7 @@ export async function casinoPage(ctx) {
     }
     if (mounting) return;
     mounting = true;
+    presentedBalance = wallet?.balance;
     const run = ++gameRun;
     button.disabled = true;
     button.setAttribute("aria-busy", "true");
@@ -315,7 +322,7 @@ export async function casinoPage(ctx) {
     );
   }
   function drawWallet(error = "") {
-    walletRoot.innerHTML = walletContent(wallet, loading, error);
+    walletRoot.innerHTML = walletContent(presentedBalance === undefined ? wallet : { ...wallet, balance: presentedBalance }, loading, error);
     const vaultTrigger = walletRoot.querySelector("[data-wallet-vault]");
     vaultTrigger.onclick = vault.toggle;
     vaultTrigger.setAttribute("aria-expanded", String(vault.expanded()));

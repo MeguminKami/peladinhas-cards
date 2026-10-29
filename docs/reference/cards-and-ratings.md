@@ -58,7 +58,7 @@ flowchart TB
 
 [Ver a fórmula de progressão →](progression.md)
 
-Desde 26/10/2026, novos jogos usam progressão gradual, bónus próprios de golos/assistências e ganhos reduzidos em derrotas. Jogos anteriores mantêm a sua fórmula. Em **Jogadores → (i) Como as tuas estatísticas mudam**, consultar a explicação e o simulador sem alterar a carta.
+Desde 29/10/2026, novos jogos comparam o desempenho com a expectativa de cada atributo: 95 exige nota 4,7. Golos e assistências têm expectativas exponenciais; compostura e jogo de equipa dependem sobretudo da atitude, com ganhos reforçados até 75. Velocidade varia pouco por faltar medição direta. O cálculo e o OVR conservam decimais; a carta arredonda na apresentação. Jogos anteriores mantêm a sua fórmula. Em **Jogadores → (i) Como as tuas estatísticas mudam**, consultar a explicação e o simulador sem alterar a carta.
 
 ---
 
@@ -85,7 +85,7 @@ As ausências não reduzem atributos nem OVR. A contagem de jogos consecutivos s
 
 O feedback de jogo usa a escala de estrelas. Guarda-redes N/A é excluído da média dessa dimensão. Dimensões não avaliadas não inventam uma avaliação. A evolução guarda decimais entre jogos e apresenta atributos arredondados na carta.
 
-A fórmula considera avaliações absolutas e relativas às duas equipas, resultado, margem, golos e assistências, com ganhos/perdas limitados, boost de OVR baixo e desaceleração dos atributos elevados. Ver [a fórmula e simulação reproduzível](progression.md).
+A fórmula atual considera avaliações por dimensão, atitude e contribuições face à expectativa, com ganhos/perdas específicos por atributo e desaceleração no topo. Comparação entre equipas, resultado e margem pertencem às fórmulas históricas. Ver [a fórmula e simulação reproduzível](progression.md).
 
 No início, “A minha carta” apresenta OVR, forma recente, jogos, vitórias, golos e assistências. A forma resume as últimas cinco avaliações agregadas de jogo disponíveis; “—” indica ausência de dados, não uma classificação de zero. Os totais de jogos e contribuições vêm de jogos finalizados.
 

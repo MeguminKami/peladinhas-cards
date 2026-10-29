@@ -32,6 +32,7 @@ O nome da edição, o tier, o preço, os requisitos e as ações pertencem à fi
 
 - Usar os dados oficiais do contexto apresentado. Uma pré-visualização com o mesmo jogador e contexto deve ter os mesmos valores da carta no perfil. Um histórico representa a sua semana, sem receber valores atuais.
 - A aparência não calcula OVR, não concede bónus e não muda atributos. Não preencher atributos em falta com o OVR, valores de demonstração ou o requisito mínimo da edição.
+- Desde a progressão v3, conservar decimais nos cálculos e nos campos exatos guardados; `stats` é a projeção inteira de apresentação. O OVR é ponderado a partir dos valores exatos e arredondado no fim. Ver [progressão](progression.md) para expectativas por atributo e versões históricas.
 - Reutilizar `cardStatsMarkup`, `cardOvrTrend` e `cardPlaystyles` de [card-player-content.js](../../js/card-player-content.js). Não copiar a lógica para um renderer novo.
 - Respeitar os estados existentes: com `hasCard === false`, mostrar «—» no OVR e nos atributos e não apresentar evolução nem playstyles. Com carta existente e atributo ausente, respeitar o fallback comum, atualmente `0`.
 - Comparar evolução apenas com os valores permanentes da semana anterior válida, através de [weekly-comparison.js](../../js/weekly-comparison.js). Não tratar bónus temporários como evolução permanente. Sem comparação válida, não inventar setas.

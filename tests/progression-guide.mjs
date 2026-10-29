@@ -39,7 +39,7 @@ try {
     viewport: { width: 1440, height: 1050 },
     serviceWorkers: "block",
   });
-  await context.clock.install({ time: new Date("2026-10-26T12:00:00Z") });
+  await context.clock.install({ time: new Date("2026-10-30T12:00:00Z") });
   await context.route("**/js/firebase.js", (r) =>
     r.fulfill({
       contentType: "text/javascript",
@@ -81,13 +81,21 @@ try {
         .replace(",", "."),
     );
   const win = await readShooting();
-  await page.getByLabel("Resultado", { exact: true }).selectOption("-1");
-  const loss = await readShooting();
-  assert.ok(win > loss && loss > 0);
-  await page.getByLabel("Resultado", { exact: true }).selectOption("0");
-  assert.equal(await page.getByLabel("Diferença de golos").isDisabled(), true);
+  assert.ok(win > 0);
+  await page.getByLabel("Avaliações por dimensão", { exact: true }).fill("1");
+  assert.ok(await readShooting() < win);
+  await page.getByLabel("Avaliações por dimensão", { exact: true }).fill("0");
+  assert.equal(await readShooting(), 0);
   await page.getByRole("button", { name: "Repor exemplo" }).click();
   assert.equal(await readShooting(), win);
+  const readComposure = async () => Number((await page.locator(".evolution-delta").filter({ has: page.locator("span", { hasText: /^Compostura$/ }) }).locator("b").textContent()).replace("+", "").replace("−", "-").replace(",", "."));
+  await page.getByLabel("Atributos no início", { exact: true }).selectOption("75");
+  await page.getByLabel("Atitude", { exact: true }).fill("4.5");
+  await page.getByLabel("Desempenho geral", { exact: true }).fill("4");
+  assert.equal(await readComposure(), 3);
+  await page.getByLabel("Atitude", { exact: true }).fill("1");
+  assert.ok(await readComposure() < 0);
+  await page.getByRole("button", { name: "Repor exemplo" }).click();
   const range = page.getByLabel("Nota por dimensão", { exact: true });
   await range.focus();
   await range.press("ArrowRight");
@@ -170,7 +178,7 @@ try {
     "Players help link fits at 320px",
   );
   console.log(
-    "Guia: acesso e ligação direta, simulador, perdas, empate, reposição, teclado, movimento reduzido e 3 temas × 4 larguras passaram.",
+    "Guia: acesso e ligação direta, simulador v3, contagens, atitude, perdas, reposição, teclado, movimento reduzido e 3 temas × 4 larguras passaram.",
   );
 } finally {
   await browser.close();

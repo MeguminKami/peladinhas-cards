@@ -653,7 +653,8 @@ async function buildHistory(uid, shared = null, { refreshCollection = true } = {
       inactivity,
       stats,
       eventBoosts: calculation.eventBoosts,
-      calculationVersion: calculation.progression.version === "per-game-growth-v2" ? "base-plus-growth-v2" : "base-plus-growth-v1",
+      calculationVersion: calculation.progression.version.replace("per-game-growth", "base-plus-growth"),
+      exactStats: calculation.exactStats,
       baseStats: calculation.baseStats,
       gameStats: calculation.rawStats,
       primaryPosition: user.data().primaryPosition || null,
@@ -1469,7 +1470,10 @@ export const {
   getEvent,
   listEvents,
   claimMission,
-} = eventFunctions(queuePlayerRefresh);
+} = eventFunctions(queuePlayerRefresh, async uid => {
+  await queuePlayerRefresh(uid);
+  await buildHistory(uid);
+});
 
 export const { getHome, onHomeSource, onHomeFeedback, onHomeVote } = homeFunctions(listEvents, {
   loadEvent: (request, eventId) => getEvent.run({ ...request, data: { eventId } }),

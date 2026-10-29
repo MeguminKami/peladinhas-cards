@@ -115,7 +115,7 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
   }
   function render(){
     if(destroyed)return;const s=store.state,r=activeRound(),showNumber=numberVisible(),isLocked=locked();
-    q('[data-balance]').textContent=ready?money(visualBalance??s.balance):'—';q('[data-total]').textContent=money(s.round?.cost??cost(plan));q('.chips').innerHTML=chipSelectorHTML(chip);q('.chips').querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=isLocked);
+    q('[data-balance]').textContent=ready?money(visualBalance??s.balance):'—';if(ready)document.documentElement.dataset.casinoBalance=String(visualBalance??s.balance);q('[data-total]').textContent=money(s.round?.cost??cost(plan));q('.chips').innerHTML=chipSelectorHTML(chip);q('.chips').querySelectorAll<HTMLButtonElement>('button').forEach(b=>b.disabled=isLocked);
     q('[data-table-title]').textContent=phase==='ready'?(lastShown?'FICHAS PAGAS · FAÇA O SEU JOGO':'FAITES VOS JEUX'):phase==='spinning'?'RIEN NE VA PLUS':phase==='collecting'?'RECOLHA DAS APOSTAS':phase==='paying'?'PAGAMENTO CONFIRMADO':'APOSTAS ENCERRADAS';
     renderBoard();
     q('.controls').innerHTML=store.pending||phase==='blocked'?'<button data-action="retry" class="primary">Recuperar operação</button>':!ready?'<span>A preparar a mesa…</span>':busy?`<span class="phase-text">${phase==='locking'?(options.online?'A fechar as apostas da mesa':'A confirmar as apostas'):phase==='spinning'?spinPhase(progress):phase==='number'?'Número confirmado':phase==='collecting'?'A recolher as fichas perdidas':r?.gross?'A entregar as fichas ganhas':'Recolha concluída'}</span><button data-action="skip" ${phase==='locking'?'disabled':''}>Saltar animação</button>`:

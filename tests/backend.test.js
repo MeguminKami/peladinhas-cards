@@ -1057,6 +1057,40 @@ test("progressão v2: trigger publica novos ganhos e perdas e preserva carta fec
   } finally {t.mock.timers.reset();}
 });
 
+test("progressão v3: trigger persiste decimais, atitude e perdas; recálculo preserva cartas fechadas", async (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: new Date("2026-10-30T12:00:00Z") });
+  try {
+    const uid = "expectation-player", gid = "expectation-game";
+    const stamp = Timestamp.fromDate(new Date("2026-10-29T19:00:00Z"));
+    await db.doc(`users/${uid}`).set({ uid, role: "member", primaryPosition: "ALA", createdAt: stamp });
+    await db.doc(`initialRatings/${uid}`).set({ uid, ratings20: Object.fromEntries(ATTRIBUTES.map(([key]) => [key, 85 * 20 / 99])), createdAt: stamp });
+    const frozen = db.doc(`users/${uid}/cardHistory/2026-W43`);
+    const original = { weekId: "2026-W43", locked: true, ovr: 70, stats: { pace: 70 } };
+    await frozen.set(original);
+    const ref = db.doc(`games/${gid}`), before = await ref.get();
+    await ref.set({ status: "closed", closedAt: stamp, scheduledAt: stamp, teamA: { starters: [uid], bench: [] }, teamB: { starters: Array.from({ length: 4 }, (_, i) => `expectation-voter-${i + 1}`), bench: [] }, score: { teamA: 0, teamB: 5 }, performance: { teamA: { goals: [], assists: [uid, uid] } } });
+    for (let i = 0; i < 5; i++) {
+      const raterId = i === 0 ? uid : `expectation-voter-${i}`;
+      await ref.collection("feedback").doc(`${raterId}_${uid}`).set({ targetId: uid, raterId, submitted: true, createdAt: stamp, submittedAt: stamp, ratings: { overall: 4, attack: 2.875, passing: 4.5, defense: 4, physical: 4, attitude: 4.5, goalkeeping: null } });
+    }
+    await onGame.run({ params: { gid }, data: { before, after: await ref.get() } });
+    const history = db.doc(`users/${uid}/cardHistory/${cardWeek().weekId}`);
+    const row = (await history.get()).data();
+    assert.equal(row.calculationVersion, "base-plus-growth-v3");
+    assert.ok(row.gameStats.shooting > 81.8 && row.gameStats.shooting < 81.9, JSON.stringify({ base: row.baseStats.shooting, exact: row.gameStats.shooting, summary: (await db.doc(`gameSummaries/${gid}`).get()).data()?.players?.[uid] }));
+    assert.ok(row.gameStats.passing > 85);
+    assert.ok(row.gameStats.composure > 85, "Good attitude compensates weak attack in composure");
+    assert.equal(row.stats.shooting, Math.round(row.gameStats.shooting));
+    assert.equal(row.exactStats.shooting, row.gameStats.shooting);
+    assert.equal(row.stats.goalkeeping, 85);
+    await onGame.run({ params: { gid }, data: { before: await ref.get(), after: await ref.get() } });
+    const replay = (await history.get()).data();
+    assert.deepEqual(replay.gameStats, row.gameStats);
+    assert.deepEqual(replay.ovrCalculation, row.ovrCalculation);
+    assert.deepEqual((await frozen.get()).data(), original);
+  } finally { t.mock.timers.reset(); }
+});
+
 test("fotografia semanal: admin, upload validado, perfil independente e semanas fechadas", async (t) => {
   t.mock.timers.enable({
     apis: ["Date"],

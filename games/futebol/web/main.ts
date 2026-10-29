@@ -38,6 +38,7 @@ document.addEventListener('click',event=>{const button=(event.target as HTMLElem
 let session:Session,storageError='';
 try{const stored=localStorage.getItem(KEY);session=stored?restoreSession(JSON.parse(stored)):newBrowserSession();validateSession(session);if(!stored||JSON.parse(stored).configVersion!==session.configVersion)localStorage.setItem(KEY,JSON.stringify(session));}
 catch(error){storageError=error instanceof Error?error.message:String(error);session=newBrowserSession();}
+let visualBalance:number|null=session.active ? session.balance-(session.history[0]?.paid??0) : null;
 let busy=false,reviewPending=false,assetsReady=false,autoTimer:ReturnType<typeof setTimeout>|undefined;
 let autoPlaying=false,autoRemaining=0,autoFsPaused=false;
 let finishAnimation:(()=>void)|undefined,historyPage=0,historyFilter='all',lastFocus:HTMLElement|null=null;
@@ -170,7 +171,7 @@ function render(){
   document.querySelector<HTMLElement>('.machine')!.dataset.mode=visualMode;
   $('state').textContent=storageError?'Sessão bloqueada':busy?'A apresentar':reviewPending?'Resumo':session.active?'Free spins':'Pronto';
   $('global').textContent='Global ×'+(r?.detail?.global??1);
-  $('balance').textContent=money(session.balance);$('spin-pay').textContent=money(r?.paid??0);$('round-pay').textContent=money(row?.paid??0);
+  $('balance').textContent=money(visualBalance??session.balance);if(!externalWallet||assetsReady)document.documentElement.dataset.casinoBalance=String(visualBalance??session.balance);$('spin-pay').textContent=money(r?.paid??0);$('round-pay').textContent=money(row?.paid??0);
   $<HTMLSelectElement>('bet').querySelectorAll('option').forEach(option=>option.textContent=money(Number(option.value)*(prefs.bonusHunt&&visualMode==='base'?config.huntCostMultiplier:1)));
   $<HTMLSelectElement>('bet').value=String(session.bet);$<HTMLSelectElement>('bet').disabled=locked;
   $<HTMLButtonElement>('minus').disabled=locked||session.bet===config.bets[0];$<HTMLButtonElement>('plus').disabled=locked||session.bet===config.bets.at(-1);
@@ -249,7 +250,7 @@ function animateBonusSummary(row:HistoryRound){
   amount.innerHTML='<span class="summary-counter"></span> <small>CRÉDITOS</small>';
   const counter=amount.querySelector<HTMLElement>('.summary-counter')!,started=performance.now(),duration=prefs.reduced?450:3200;
   button.disabled=true;let completed=false,lastText='',previousFrame=0,slowFrames=0,performanceLite=false;
-  const finish=()=>{if(completed)return;completed=true;counter.textContent=money(row.paid);dialog.dataset.phase='ready';button.disabled=false;finishSummaryCount=undefined;lockContinuation();audioCue('final');};finishSummaryCount=finish;
+  const finish=()=>{if(completed)return;completed=true;visualBalance=null;render();counter.textContent=money(row.paid);dialog.dataset.phase='ready';button.disabled=false;finishSummaryCount=undefined;lockContinuation();audioCue('final');};finishSummaryCount=finish;
   const format=new Intl.NumberFormat('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
   function tick(now:number){
     if(completed||!dialog.open||dialog.dataset.kind!=='bonus-summary'||!counter.isConnected)return;
@@ -267,7 +268,7 @@ function animateBonusSummary(row:HistoryRound){
 async function play(command:Command){
   if(!assetsReady||busy||reviewPending||session.pendingRetrigger||$<HTMLDialogElement>('modal').open)return;cancelAuto();selectedPayline=undefined;linesPresented=false;busy=true;render();
   unlockAudio();stopEffects();if(session.active?.remaining===1)audioCue('last');
-  try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
+  try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;visualBalance=session.balance-session.history[0].paid;if(result.mode==='base'&&!session.active)visualBalance=session.balance-result.paid;render();if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
     let controller=new AbortController();const bindController=(grace=0)=>{const current=controller,since=performance.now();finishAnimation=()=>{if(performance.now()-since<grace)return;current.abort();stopEffects();};interruptPresentation=()=>{current.abort();stopEffects();};};bindController();
     if(command.type==='start'&&command.mode!=='base'){
       document.querySelector<HTMLElement>('.machine')!.dataset.presentation='purchase-activation';$('round-note').textContent='Ativação da compra · '+(command.mode==='normal'?3:command.mode==='legend'?5:4)+' bilhetes';
@@ -292,14 +293,14 @@ async function play(command:Command){
     else if(result.retrigger&&session.pendingRetrigger)await presentBonusTransition({kind:'retrigger',mode:transitionMode,reduced:prefs.reduced,signal:controller.signal});
     else if(session.active&&result.mode==='base')await presentBonusTransition({kind:'entry',mode:session.active.mode as 'normal'|'superior'|'legend',reduced:prefs.reduced,signal:controller.signal});
     interruptPresentation=undefined;
-    busy=false;$('board').classList.remove('busy');render();const row=session.history[0];
+    busy=false;const bonusFinal=result.next.done&&(session.history[0].spins.length>1||session.history[0].mode!=='base');if(!session.active&&!bonusFinal)visualBalance=null;$('board').classList.remove('busy');render();const row=session.history[0];
     message(prizeClass(result.paid,row.bet,row.paid===config.cap*row.bet),`Spin ${money(result.paid)} · ${x(result.paid,row.bet)}${session.active?' · '+session.active.remaining+' FS por jogar':row.paid<row.cost?' · retorno inferior ao custo da ronda':''}`);
     if(result.next.done&&(row.spins.length>1||row.mode!=='base'))summary(row);
     else if(result.retrigger&&session.pendingRetrigger)showRetrigger();
     else if(session.active&&result.mode==='base'){
       await showBonusEntry(session.active.mode as 'normal'|'superior'|'legend');scheduleAuto();
     }else scheduleAuto();
-  }catch(error){autoPlaying=false;autoRemaining=0;cancelAuto();interruptPresentation?.();interruptPresentation=undefined;finishAnimation=undefined;busy=false;$('board').classList.remove('busy');render();notify(error instanceof Error?error.message:String(error));}
+  }catch(error){autoPlaying=false;autoRemaining=0;cancelAuto();interruptPresentation?.();interruptPresentation=undefined;finishAnimation=undefined;busy=false;visualBalance=session.active?session.balance-(session.history[0]?.paid??0):null;$('board').classList.remove('busy');render();notify(error instanceof Error?error.message:String(error));}
 }
 function buy(mode:'normal'|'superior'|'legend'){
   if(busy||session.active||reviewPending)return;
@@ -371,7 +372,7 @@ $('minus').onclick=()=>void changeBet(config.bets[config.bets.indexOf(session.be
 $<HTMLSelectElement>('speed').onchange=e=>{prefs.speed=(e.target as HTMLSelectElement).value as Speed;savePrefs();};
 $<HTMLSelectElement>('shop-bet').onchange=e=>void changeBet(Number((e.target as HTMLSelectElement).value));
 $('buy-legend').onclick=()=>buy('legend');$('buy-normal').onclick=()=>buy('normal');$('buy-superior').onclick=()=>buy('superior');$('history').onclick=showHistory;$('settings').onclick=settings;$('rules').onclick=rules;$('close-modal').onclick=closeModal;
-$<HTMLDialogElement>('modal').addEventListener('close',()=>{finishSummaryCount=undefined;if(reviewPending){reviewPending=false;bonusView=null;setAudioScene('base');render();}scheduleAuto();});
+$<HTMLDialogElement>('modal').addEventListener('close',()=>{finishSummaryCount=undefined;if(reviewPending){visualBalance=null;reviewPending=false;bonusView=null;setAudioScene('base');render();}scheduleAuto();});
 $<HTMLDialogElement>('modal').addEventListener('cancel',event=>{if(session.pendingRetrigger||bonusEntryWaiting)event.preventDefault();});
 installSpaceContinuation(()=>{
   unlockAudio();
@@ -397,7 +398,7 @@ async function loadArt(){
   $('loading-screen').hidden=false;$('asset-retry').classList.add('hidden');
   const failed=await preloadArt((loaded,total)=>{$<HTMLProgressElement>('asset-progress').max=total;$<HTMLProgressElement>('asset-progress').value=loaded;$('asset-status').textContent=`A preparar o campo · ${loaded}/${total}`;});
   if(failed.length){$('asset-status').textContent=`Não foi possível carregar ${failed.length} recurso(s).`;$('asset-retry').classList.remove('hidden');document.body.dataset.assets='error';return;}
-  if(externalWallet&&!storageError){try{if(!navigator.locks)throw Error('O browser não suporta bloqueio local.');await navigator.locks.request(KEY,async()=>{const stored=restoreSession(JSON.parse(localStorage.getItem(KEY)!));persist(await prepareWallet(stored));walletCommitted(session);});bonusView=session.active&&!needsBonusEntry()?{...session.active}:null;}catch(error){$('asset-status').textContent=error instanceof Error?error.message:String(error);$('asset-retry').classList.remove('hidden');return;}}
+  if(externalWallet&&!storageError){try{if(!navigator.locks)throw Error('O browser não suporta bloqueio local.');await navigator.locks.request(KEY,async()=>{const stored=restoreSession(JSON.parse(localStorage.getItem(KEY)!));persist(await prepareWallet(stored));walletCommitted(session);});visualBalance=session.active?session.balance-(session.history[0]?.paid??0):null;bonusView=session.active&&!needsBonusEntry()?{...session.active}:null;}catch(error){$('asset-status').textContent=error instanceof Error?error.message:String(error);$('asset-retry').classList.remove('hidden');return;}}
   if(bonusView)setAudioScene(bonusView.mode==='legend'?'legend':bonusView.mode==='superior'?'superior':'normal');assetsReady=true;document.body.dataset.assets='ready';$('loading-screen').hidden=true;render();if(needsBonusEntry())await showBonusEntry(session.active!.mode as 'normal'|'superior'|'legend');if(session.pendingRetrigger)showRetrigger();
 }
 $('asset-retry').onclick=()=>void loadArt();void loadArt();

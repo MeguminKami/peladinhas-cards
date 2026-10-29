@@ -30,6 +30,11 @@ test('unknown, changed and published units remain distinct, including deletions'
   const state = { project: 'demo', units: { hosting: { digest: 'old', files: { 'a.js': '1', 'removed.js': 'x' } } } };
   assert.deepEqual(pendingUnits(current, state)[0].changed, ['a.js', 'removed.js']);
   assert.deepEqual(pendingUnits(current, { units: current.units }), []);
+  const withRemovedFunction = { units: { ...current.units,
+    'functions:peladinhas:removedSweep': { digest: 'old', files: {} },
+  } };
+  assert.deepEqual(pendingUnits(current, withRemovedFunction), []);
+  assert.ok(withRemovedFunction.units['functions:peladinhas:removedSweep']);
   assert.throws(() => pendingUnits(current, { project: 'other', units: {} }), /projeto mudou/);
 });
 

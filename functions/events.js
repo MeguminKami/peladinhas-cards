@@ -60,8 +60,8 @@ async function league() {
   ]);
   return { users: rows(users), games: rows(games) };
 }
-export function eventFunctions(rebuild) {
-  const managed = managedEvents(rebuild);
+export function eventFunctions(rebuild, rebuildEdited = rebuild) {
+  const managed = managedEvents(rebuild, rebuildEdited);
   const getEvent = policyCall("getEvent",async (request) => {
     const user = await actor(request);
     const id = request.data?.eventId;

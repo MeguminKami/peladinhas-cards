@@ -86,6 +86,7 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     presenting = false,
     message = "",
     destroyed = false;
+  let heldBalance: number | null = null;
   let lastRevision = -1,
     abort = new AbortController(),
     offset = 0;
@@ -275,7 +276,8 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
       locked = working || view.pending;
     q("[data-people]").textContent = `${t.players.length}/5`;
     if (onlineOpen && onlineTab === "players") renderOnline();
-    q("[data-balance]").textContent = money(view.balance);
+    q("[data-balance]").textContent = money(heldBalance ?? view.balance);
+    document.documentElement.dataset.casinoBalance = String(heldBalance ?? view.balance);
     q("[data-bet]").textContent = money(
       owned().reduce(
         (sum, p) =>
@@ -433,6 +435,9 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
   }
   async function receive(next: View) {
     if (destroyed) return;
+    if (view && next.table?.round && next.balance > view.balance &&
+        (presenting || lastRound?.phase !== "summary")) heldBalance ??= view.balance;
+    if (heldBalance !== null) heldBalance = Math.min(heldBalance, next.balance);
     view = next;
     offset = next.now - Date.now();
     if (!view.table) return;
@@ -457,6 +462,7 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     if (!round) {
       presenting = false;
       displayed = null;
+      heldBalance = null;
       if (previous) {
         bet = 0;
         drafts.fill(0);
@@ -524,7 +530,6 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
     }
     if (signal.aborted || destroyed) return;
     displayed = round;
-    presenting = false;
     render();
     scene.sync(session(round), Array(5).fill(0), false);
     if (round.phase === "summary" && previous?.phase !== "summary") {
@@ -555,6 +560,10 @@ export function mountMultiplayer(root: HTMLElement, connection: Connection) {
         );
       await scene.chipTable.settle(round, audio.settings.reduced, signal);
     }
+    if (signal.aborted || destroyed) return;
+    presenting = false;
+    if (round.phase === "summary") heldBalance = null;
+    render();
   }
   let queued: View | undefined, receiving = false;
   async function drain() {

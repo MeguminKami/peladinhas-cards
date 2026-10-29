@@ -1,5 +1,78 @@
 # Evolução por jogo
 
+## Expectativas e atitude · jogos encerrados desde 29/10/2026
+
+O motor v3 de [expectation-progression.js](../../js/expectation-progression.js) é partilhado pelo navegador e Functions. [utils.js](../../js/utils.js) escolhe a versão pela data de fecho: v3 desde **29/10/2026 às 00:00 UTC**, v2 desde 26/10 e v1 antes disso. Votos tardios não mudam a versão. Semanas fechadas conservam os snapshots guardados.
+
+### Matemática
+
+Interpolar linearmente entre os pontos, usando sempre o atributo decimal anterior ao jogo:
+
+| Atributo | Nota esperada | Velocidade de subida | Multiplicador de descida |
+| ---: | ---: | ---: | ---: |
+| 0–60 | 3,00 | 3,00 | 1,00 |
+| 75 | 3,60 | 2,50 | 3,00 |
+| 80 | 3,80 | 2,15 | 4,75 |
+| 85 | 4,00 | 1,80 | 6,50 |
+| 90 | 4,30 | 1,00 | 8,00 |
+| 95 | 4,70 | 0,70 | 9,00 |
+| 98 | 4,90 | 0,50 | 9,75 |
+| 99 | 5,00 | 0,00 | 10,00 |
+
+```text
+sinal da avaliação = clamp((nota − nota esperada) / 2, −1, 1)
+golos esperados = 1,5 × 2^((finalização − 80) / 12)
+assistências esperadas = (44 / 76) × 1,5 × 2^((passe − 80) / 12)
+sinal da contribuição = (quantidade − esperada) / (1 + abs(quantidade − esperada))
+saldo FIN/PAS = 0,60 × sinal da avaliação + 0,40 × sinal da contribuição
+saldo dos restantes = sinal da avaliação
+ganho = min(1, saldo positivo / 0,30) × velocidade de subida × fator de ganho
+perda = saldo negativo × multiplicador de descida × fator de perda × 0,80
+variação final = clamp(variação, −limite de perda, limite de ganho) × confiança
+novo atributo = clamp(atributo anterior + variação final, 0, 99)
+```
+
+As expectativas são referências individuais de exigência; não têm de somar os golos da equipa. A razão 44/76 é uma calibração inicial dos cinco jogos analisados, não uma estimativa universal validada. Golos/assistências não alteram diretamente outros atributos. Resultado, margem, comparação com colegas e orçamento global v2 não entram em v3. Os controlos administrativos da fórmula v2 continuam aplicáveis apenas a essa versão.
+
+| Atributo | Avaliação | Fator de ganho | Fator de perda | Limites + / − |
+| --- | --- | ---: | ---: | --- |
+| Velocidade | Físico, muito indireta | 0,12 | 0,05 | 0,20 / 0,20 |
+| Finalização | Ataque + golos | 1,00 | 1,00 | 4,00 / 4,80 |
+| Passe | Passe/coletivo + assistências | 1,00 | 0,85 | 4,00 / 4,00 |
+| Drible | Ataque, indireta | 0,50 | 0,20 | 2,00 / 0,80 |
+| Defesa | Defesa | 1,00 | 0,65 | 4,00 / 2,40 |
+| Físico | Intensidade/físico | 0,80 | 0,45 | 3,00 / 1,60 |
+| Guarda-redes | GR válido | 1,00 | 0,70 | 4,00 / 2,40 |
+| Resistência | Físico, indireta | 0,50 | 0,20 | 2,00 / 0,64 |
+| Visão | Passe, indireta | 0,60 | 0,25 | 2,00 / 0,80 |
+| Posicionamento | Defesa, indireta | 0,60 | 0,25 | 2,00 / 0,80 |
+| Jogo de equipa | 60% atitude + 40% passe/coletivo | Variável | 0,45 | 3,00 / 1,60 |
+| Compostura | 80% atitude + 20% desempenho geral | Variável | 0,35 | 3,00 / 1,20 |
+
+Nos dois atributos de atitude, interpolar o fator de ganho: **1,20 até 75; 1,00 em 80; 0,85 em 85; 0,75 desde 90**. Este reforço não altera perdas. Com 75, as notas compostas 4,4/4,3 dão +3 em compostura/jogo de equipa; com 90 dão +0,125/0.
+
+Confiança por dimensão = `min(1, avaliações reais válidas / 5)`; dispensas não inventam votos. Em notas compostas, ponderar as confianças das fontes presentes. Fonte ausente é omitida e os pesos restantes são normalizados. Sem fontes ou sem votos reais não há evolução. GR N/A fica excluído; contribuição ausente não é inventada como zero, usando-se apenas a avaliação. Ausências não retiram atributos.
+
+### Decimais, exemplos e publicação
+
+O replay conserva decimais em todos os jogos. Quando inclui v3, `gameStats`/`rawStats` guardam valores exatos antes de recompensas e `exactStats` depois delas. O OVR usa atributos exatos, arredondando só no fim. `stats` mantém a projeção inteira de apresentação. Recalcular não soma ganhos duas vezes nem depende das cartas semanais anteriores.
+
+- Defesa 90 com nota 4,6: +0,50 e aproximadamente +0,43 no segundo jogo igual.
+- Defesa 95 com nota 4,7: zero; com 5: +0,35; com 4,5: −0,468.
+- Finalização 85, zero golos e nota 2,875: aproximadamente −3,14, podendo Passe subir no mesmo jogo.
+- Velocidade respeita ±0,20 por jogo, mesmo em exibições extremas.
+
+Publicar hosting e o conjunto conservador dos caminhos existentes de cálculo, coleção e manutenção abaixo. O tracker pode marcar todas as Functions por partilharem dependências; isso não prova que todas recalculam atributos. Não são necessárias regras, índices ou Storage.
+
+```powershell
+npm.cmd run deploy:pending -- --only hosting
+npm.cmd run deploy:pending -- --only "functions:peladinhas:onCommunityRating,functions:peladinhas:onPlayerPosition,functions:peladinhas:onInitialRating,functions:peladinhas:onFeedback,functions:peladinhas:processFeedback,functions:peladinhas:onGame,functions:peladinhas:saveOvrWeights,functions:peladinhas:rebuildHistory,functions:peladinhas:closeCardWeek,functions:peladinhas:openCardWeek,functions:peladinhas:ensureHistory,functions:peladinhas:refreshCardCollection,functions:peladinhas:selectWeeklyCard,functions:peladinhas:rebuildLeague,functions:peladinhas:deleteGame,functions:peladinhas:saveWeeklyCardPhoto,functions:peladinhas:correctRating,functions:peladinhas:eventAction,functions:peladinhas:voteEvent,functions:peladinhas:closeEvents,functions:peladinhas:getEvent,functions:peladinhas:listEvents,functions:peladinhas:claimMission,functions:peladinhas:getPath,functions:peladinhas:pathAction,functions:peladinhas:onPathGame,functions:peladinhas:onPathSummary,functions:peladinhas:settlePaths,functions:peladinhas:gameAction,functions:peladinhas:feedbackAction,functions:peladinhas:ratingWaiverAction,functions:peladinhas:maintenanceRead,functions:peladinhas:maintenanceAction,functions:peladinhas:systemHeartbeat,functions:peladinhas:saveTheme,functions:peladinhas:ensureGameCards,functions:peladinhas:getHome"
+```
+
+Após publicar ambos, **Recalcular liga** atualiza cartas abertas com jogos desde a ativação e os campos exatos. Não transforma jogos anteriores em v3 nem reescreve semanas fechadas. Implementação local não comprova deploy ou recálculo real.
+
+## Referência histórica · fórmulas anteriores
+
 Os valores descritos abaixo são os valores iniciais. As regras configuráveis e a preservação do histórico estão descritas em [Manutenção](maintenance.md).
 
 ## Regras desde 26/10/2026

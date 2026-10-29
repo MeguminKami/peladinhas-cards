@@ -37,6 +37,7 @@ import {
 } from "../js/utils.js";
 import { calculateGameAggregate } from "../js/utils.js";
 import { applyEventRewards } from "../js/event-rules.js";
+import { usesExpectationProgression } from "../js/expectation-progression.js";
 import { rewardDocuments } from "./reward-queries.js";
 import { writeMaintenanceSignals } from "./maintenance-inputs.js";
 import { balanceMatches } from "../js/team-balance.js";
@@ -184,9 +185,10 @@ export function collectionPlayer(context, uid, officialSince = null) {
     ),
   );
   let anchorOvr = null;
+  let exactOverall = false;
   const currentOverall = () =>
     calculateOverall(
-      Object.fromEntries(
+      exactOverall ? stats : Object.fromEntries(
         Object.entries(stats).map(([key, value]) => [key, Math.round(value)]),
       ),
       context.weights,
@@ -228,6 +230,7 @@ export function collectionPlayer(context, uid, officialSince = null) {
         weights: context.weights,
         position: user.primaryPosition,
       });
+      exactOverall ||= usesExpectationProgression(row.date);
       for (const [key, delta] of Object.entries(deltas))
         if (Number.isFinite(delta)) stats[key] += delta;
       row.progressionGain =

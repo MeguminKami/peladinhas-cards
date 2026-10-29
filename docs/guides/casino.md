@@ -31,6 +31,7 @@ O popup **Moedas** consulta o saldo apenas quando é aberto, pela callable admin
 
 ## Sincronização
 
+- O saldo visual do jogo e da barra do casino acompanha a apresentação: o prémio só entra depois da revelação final. Nos bónus das slots, os ganhos ficam retidos visualmente até terminar a contagem do total. A carteira continua a guardar a liquidação antes das animações, preservando a recuperação e a idempotência.
 - Cada jogada é primeiro guardada atomicamente em IndexedDB, com saldo, RNG/progresso e recibo local.
 - A entrada no casino consulta o saldo do utilizador. Entrar em qualquer jogo confirma primeiro os lotes pendentes e obtém o saldo comum atualizado antes de montar o SDK. Se essa consulta falhar, o jogo apresenta erro e permite tentar novamente; não abre com um saldo antigo como alternativa.
 - As slots confirmam os totais após **15 spins normais**, sem confirmar a meio de um bónus. O fim de um bónus confirma o resultado completo, incluindo retriggers.

@@ -34,7 +34,7 @@ flowchart TB
 | Regra essencial               | Resultado                                      |
 | :---------------------------- | :--------------------------------------------- |
 | **Requisitos de desbloqueio** | A missão só aparece após cumprir as condições. |
-| **Editar**                    | Conserva o estado e as entregas existentes.    |
+| **Editar**                    | Conserva conclusões; substitui prémios nas missões. |
 | **Cancelar missão**           | Revoga as entregas dessa missão.               |
 | **Apagar**                    | Apenas após cancelar e remover dependências.   |
 | **Histórico fechado**         | As cartas semanais preservam os snapshots.     |
@@ -76,7 +76,7 @@ Modalidades: Stats, carta ou ambas. A duração da recompensa pode ser semanal, 
 - Recompensas semanais duram sete dias; as mensais duram um mês de calendário a partir do início, ajustando o dia ao último dia do mês quando necessário. Durante a pausa das cartas, o início temporário passa para a próxima abertura. Stats e cartas permanentes não expiram, mas podem ser anuladas pela administração.
 - Atributos respeitam o máximo 99. O registo conserva recompensa configurada e recompensa efetivamente atribuída, mesmo quando um limite reduz os pontos entregues.
 
-Os jogadores podem consultar a pré-visualização dos prémios. O servidor distingue o prémio configurado do efetivamente entregue e aplica os limites globais de [Manutenção](maintenance.md). Efeitos de recompensas já entregues mantêm os montantes e validade registados.
+Os jogadores podem consultar a pré-visualização dos prémios. O servidor distingue o prémio configurado do efetivamente entregue e aplica os limites globais de [Manutenção](maintenance.md). Editar a recompensa de uma missão ou evento substitui também os prémios já entregues, respeitando esses limites e a data de origem da entrega. Guardar aguarda o recálculo das cartas atuais afetadas, sem esperar pelo próximo ciclo. As entregas futuras usam a configuração guardada.
 
 ## Histórico, privacidade e correções
 
@@ -146,11 +146,15 @@ Só contam jogos cuja data de encerramento esteja depois do desbloqueio e dentro
 
 ## Editar missões
 
-Guardar conserva o estado, os jogos/avaliações de origem e todas as entregas existentes. Acrescentar, remover ou reordenar metas não reinicia as contagens das restantes. Subir um alvo mantém a quantidade real: 3 golos continuam a ser 3, mesmo que o alvo passe de 3 para 5 e a percentagem desça. Trocar o tipo/critério recalcula a nova condição pelos dados reais, sem converter golos em vitórias ou conservar avaliações que já não cumprem o critério.
+Guardar conserva o estado, os jogos/avaliações de origem e todas as entregas existentes. Se a configuração de contagem de uma missão ou competição ativa mudar, o servidor recalcula e publica o progresso na mesma transação da edição, sem esperar pelo próximo ciclo. Metas de histórico completo continuam a incluir jogos anteriores ao desafio. Acrescentar, remover ou reordenar metas não reinicia as contagens das restantes. Subir um alvo mantém a quantidade real: 3 golos continuam a ser 3, mesmo que o alvo passe de 3 para 5 e a percentagem desça. Trocar o tipo/critério recalcula a nova condição pelos dados reais, sem converter golos em vitórias ou conservar avaliações que já não cumprem o critério.
 
 Na edição publicada pelo construtor, o início, a frequência, o âmbito e o desbloqueio ficam protegidos no cliente e no servidor. Um prazo ativo pode ser prolongado, mas não encurtado; participantes anteriores são conservados ao atualizar a audiência. Para mudar o contexto de contagem, duplicar o desafio. Isso também impede introduzir uma meta histórica numa missão semanal alterando silenciosamente os períodos existentes.
 
-As recompensas já entregues mantêm os mesmos registos e não são entregues novamente. Editar uma missão encerrada não a reabre. As alterações de metas são auditadas com a configuração anterior. Não há cópia de progresso enviado pelo cliente nem créditos artificiais: uma correção real aos jogos/avaliações pode alterar legitimamente a contagem.
+Guardar uma missão ativa também verifica a versão e o período do progresso publicado. Se estiver desatualizado ou ausente, recalcula-o mesmo quando as metas não mudaram, reparando edições anteriores sem perder os totais históricos. Uma configuração sem alterações e com progresso válido reutiliza o apuramento existente.
+
+As conclusões mantêm os mesmos registos, IDs e períodos; não existe uma nova recolha. Ao alterar a recompensa de uma missão ou evento, o servidor substitui as Stats e a carta nos registos de entrega não anulados, incluindo desafios encerrados, e aguarda a atualização das cartas atuais dos jogadores afetados antes de responder ao guardar. O efeito anterior deixa de contar. A substituição volta a aplicar os limites globais, excluindo o prémio substituído do orçamento; outras recompensas continuam a consumir os seus limites. Entregas anuladas não são reativadas. Guardar novamente também repete a publicação, caso uma tentativa anterior tenha gravado o prémio mas falhado ao recalcular a carta.
+
+As datas de conclusão, criação, início e obtenção da carta são preservadas. Com a mesma duração, a validade não muda; se a duração mudar, o novo prazo conta a partir do início original, sem renovar o prémio na data da edição. Semanas fechadas conservam os snapshots. Guardar novamente a mesma configuração é idempotente; também permite atualizar entregas que ficaram com uma recompensa antiga antes deste comportamento existir. Editar uma missão encerrada não a reabre. As alterações de metas e substituições de recompensas são auditadas com os valores anteriores. Não há cópia de progresso enviado pelo cliente nem créditos artificiais: uma correção real aos jogos/avaliações pode alterar legitimamente a contagem.
 
 ## Apagar missões canceladas
 
@@ -158,7 +162,7 @@ O botão **Apagar missão** está disponível no ADMIN apenas para missões canc
 
 ## Formatos de evento e competições
 
-Eventos e missões admitem prazo indefinido, edição completa em qualquer estado e eliminação depois de cancelados. Guardar alterações preserva o estado e os prémios já entregues.
+Eventos e missões admitem prazo indefinido, edição completa em qualquer estado e eliminação depois de cancelados. Guardar alterações preserva o estado e as conclusões. Editar a recompensa substitui os prémios já entregues, também em eventos encerrados, pela configuração da posição premiada. Retirar uma posição premiada remove os seus efeitos atuais; entregas anuladas e semanas fechadas conservam-se.
 
 O editor distingue **Votação**, **Competição controlada** (ordem dos vencedores escolhida no ADMIN) e **Competição** (os primeiros a atingir uma meta). É possível definir os participantes, posições premiadas, recompensa de cada posição, desempate, visibilidade do progresso e confirmação antes da entrega.
 

@@ -26,7 +26,7 @@ Um evento que termina às 14:00 é apurado às 17:00, salvo se existir entretant
 
 Uma abertura agendada também se materializa no ciclo seguinte. Se início e fim ficarem inteiramente entre dois ciclos, o evento pode abrir e terminar na mesma execução; escolher janelas de participação que incluam pelo menos um ciclo.
 
-Consultar o início, uma missão ou um percurso não provoca apuramentos. O progresso objetivo fica em `events/{id}/private/progress`, exclusivo do servidor, com a versão da configuração e o período avaliado. Uma configuração alterada ou um novo período aguarda o próximo check. Missões únicas fechadas usam o resultado definitivo guardado.
+Consultar o início, uma missão ou um percurso não provoca apuramentos. O progresso objetivo fica em `events/{id}/private/progress`, exclusivo do servidor, com a versão da configuração e o período avaliado. A edição administrativa de uma configuração de contagem ativa recalcula e publica o progresso na própria transação; não cria conclusões nem encerra o desafio. Alterar a recompensa de uma missão substitui as entregas existentes na transação e enfileira a atualização das cartas no ciclo seguinte. Um novo período aguarda o próximo check. Missões únicas fechadas usam o resultado definitivo guardado.
 
 Os votos são guardados imediatamente; a classificação pública em direto atualiza no ciclo seguinte. As filas de notificações registam alterações sem consultar toda a liga em cada trigger. Os lembretes da manhã ficam elegíveis às 08:00, respeitando as horas de silêncio.
 

@@ -39,7 +39,8 @@ export function calculatePlayerCard({
     ),
     { weights, position },
   );
-  const applied = applyEventRewards(progression.stats, rewards, uid, date);
+  const rawStats = progression.version === "per-game-growth-v3" ? progression.exactStats : progression.stats;
+  const applied = applyEventRewards(rawStats, rewards, uid, date);
   const inactivity = calculateInactivity(uid, eligibleGames, createdAt, date);
   const overall = calculateOverallDetails(
     applied.stats,
@@ -48,11 +49,13 @@ export function calculatePlayerCard({
     inactivity,
   );
   return {
-    stats: applied.stats,
+    // Presentation remains integer-based; calculations and persisted gameStats retain decimals.
+    stats: Object.fromEntries(Object.entries(applied.stats).map(([key, value]) => [key, Math.round(value)])),
+    exactStats: applied.stats,
     baseStats: Object.fromEntries(
       progression.rows.map((row) => [row.key, row.baseline]),
     ),
-    rawStats: progression.stats,
+    rawStats,
     progression,
     eventBoosts: applied.boosts,
     rewardSpecials: applied.specials,

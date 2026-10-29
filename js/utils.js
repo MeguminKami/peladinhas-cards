@@ -1,5 +1,6 @@
 import { policyAt } from "./system-policy.js";
 import { FAIR_PROGRESSION_FROM, usesFairProgression, calculateFairGameDeltas } from "./game-progression.js";
+import { usesExpectationProgression, calculateExpectationGameDeltas } from "./expectation-progression.js";
 import { cardWeek } from "./card-week.js";
 import { performanceWeek } from "./performance-week.js";
 import {
@@ -287,7 +288,7 @@ export function calculateGameAggregate(feedback) {
       f.raterId === f.targetId &&
       f.ratings?.goalkeeping === null,
   );
-  return Object.fromEntries(
+  const ratings = Object.fromEntries(
     FEEDBACK.map(([k]) => {
       if (k === "goalkeeping" && noGoalkeeping) return [k, null];
       const a = feedback
@@ -297,6 +298,14 @@ export function calculateGameAggregate(feedback) {
       return [k, a.length ? average(a) : null];
     }),
   );
+  return {
+    ...ratings,
+    count: feedback.filter((vote) => vote.submitted).length,
+    goalkeepingEligible: !noGoalkeeping,
+    ratingCounts: Object.fromEntries(FEEDBACK.map(([key]) => [key,
+      key === "goalkeeping" && noGoalkeeping ? 0 : feedback.filter((vote) => vote.submitted && Number.isFinite(vote.ratings?.[key])).length,
+    ])),
+  };
 }
 const ATTRIBUTE_FEEDBACK = Object.freeze({
   pace: "physical",
@@ -313,6 +322,9 @@ const ATTRIBUTE_FEEDBACK = Object.freeze({
   composure: "attack",
 });
 export function calculateGameDeltas(stats, aggregate, options = {}) {
+  if (usesExpectationProgression(aggregate.date)) {
+    return calculateExpectationGameDeltas(stats, aggregate);
+  }
   if (usesFairProgression(aggregate.date)) {
     const normalized = normalizeOvrWeights(options.weights);
     return calculateFairGameDeltas(stats, aggregate, {
@@ -427,8 +439,9 @@ export function calculatePlayerStatsDetails(initial, aggregates, options = {}) {
     row.value = Math.round(row.exact);
   }
   return {
-    version: games.some(game => usesFairProgression(game.date)) ? "per-game-growth-v2" : "per-game-growth-v1",
+    version: games.some(game => usesExpectationProgression(game.date)) ? "per-game-growth-v3" : games.some(game => usesFairProgression(game.date)) ? "per-game-growth-v2" : "per-game-growth-v1",
     rows,
+    exactStats: { ...stats },
     stats: Object.fromEntries(rows.map((row) => [row.key, row.value])),
   };
 }

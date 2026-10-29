@@ -489,7 +489,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
         .querySelector(".section-head")
         .insertAdjacentHTML(
           "afterend",
-          '<p class="muted">As novas condições atualizam o progresso pendente. As recompensas entregues e o estado do desafio mantêm-se.</p>',
+          '<p class="muted">As novas condições atualizam o progresso pendente. O estado e as conclusões mantêm-se. Nas missões, alterar a recompensa substitui também os prémios já entregues.</p>',
         );
     }
 
@@ -818,7 +818,7 @@ export async function mountEventAdmin(ctx, root, initialArea = "event") {
       },changed:()=>{update();refreshRating();},
     });
     if(preserveProgress){
-      objectiveGroup.insertAdjacentHTML("beforeend",'<p class="event-progress-preserved">As contagens vêm dos jogos guardados. Alterar o alvo mantém o valor acumulado; trocar o tipo usa os dados reais da nova meta. Recompensas já entregues mantêm-se.</p>');
+      objectiveGroup.insertAdjacentHTML("beforeend",'<p class="event-progress-preserved">As contagens vêm dos jogos guardados. Alterar o alvo mantém o valor acumulado; trocar o tipo usa os dados reais da nova meta. As conclusões mantêm-se; nas missões, os prémios entregues acompanham a recompensa configurada.</p>');
       form.elements.startsAt.disabled=true;
     }
     const votingGroup = groupFields(

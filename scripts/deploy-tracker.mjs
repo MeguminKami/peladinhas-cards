@@ -143,7 +143,7 @@ function main() {
   if (state.version !== 1 || !state.units) throw Error('Registo incompatível.');
   let pending = pendingUnits(current, state);
   const removed = Object.keys(state.units).filter(key => !current.units[key]);
-  if (removed.length) throw Error(`Alvos removidos exigem revisão manual; nada será apagado: ${removed.join(', ')}`);
+  if (removed.length) console.warn(`Aviso: alvos do histórico já não existem no código e ficam fora deste deploy; os recibos são preservados. A remoção na cloud exige revisão manual: ${removed.join(', ')}`);
   if (only) {
     for (const target of only) if (target !== 'functions' && !current.units[target]) throw Error(`Alvo desconhecido: ${target}`);
     pending = pending.filter(unit => only.includes(unit.only) || (only.includes('functions') && unit.only.startsWith('functions:')));

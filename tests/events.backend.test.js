@@ -14,6 +14,7 @@ import {
 } from "../functions/index.js";
 import { ATTRIBUTES } from "../js/utils.js";
 import { checkObjectiveProgress } from "../functions/event-management.js";
+import { applyEventRewards } from "../js/event-rules.js";
 // These objective regression scenarios explicitly model a permitted check
 // before reading/claiming. automation-cycle.backend.test.js verifies that real
 // page reads and claims never trigger that check themselves.
@@ -121,6 +122,158 @@ test("goal builder edits preserve counts, window, participants and delivered rew
     await assert.rejects(action("update",{...update,...changed}));
   await action("update",{...update,audience:{mode:"selected",memberIds:[owner]}});
   assert.ok((await db.doc(`events/${id}`).get()).data().participantIds.includes(uid));
+});
+
+test("editing historical goals publishes preserved counts before any cycle or page check", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="edit-total-admin",uid="edit-total-player";
+  for (const id of [owner,uid]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  await db.doc("games/edit-total-old").set({status:"closed",closedAt:Timestamp.fromDate(new Date("2026-10-01T09:00Z")),
+    teamA:{starters:[uid],bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:3,teamB:0},
+    performance:{teamA:{goals:[uid,uid,uid],assists:[]},teamB:{goals:[],assists:[]}}});
+  const action=(action,data)=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  const config={...payload(),kind:"mission",scope:"individual",method:"objective",winnerCount:1,positions:[prize(5)],
+    audience:{mode:"selected",memberIds:[uid]},objective:{metric:"totalGoals",target:5},cadence:"once",maxRepeats:1,openNow:true};
+  const {id}=await action("create",config);
+  await checkObjectiveProgress(id);
+  const read=()=>rawGetEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal((await read()).progress[0].progress,3);
+  const update={...config,eventId:id,objective:{metric:"all",target:100,goals:[{id:"legacy-primary",metric:"totalGoals",countFrom:"history",target:7}]}};
+  await action("update",update);
+  let detail=await read();
+  assert.equal(detail.progress[0].ratingState.goals[0].progress,3);
+  assert.equal(detail.progress[0].eligible,false);
+  await action("update",{...update,objective:{...update.objective,goals:[{...update.objective.goals[0],target:3}]}});
+  detail=await read();
+  assert.equal(detail.progress[0].ratingState.goals[0].progress,3);
+  assert.equal(detail.progress[0].eligible,true);
+  await rawClaimMission.run({auth:{uid},data:{eventId:id}});
+  assert.equal((await db.collection("eventRewards").where("eventId","==",id).get()).size,1);
+});
+
+test("saving unchanged historical assists repairs an outdated published snapshot", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="repair-assists-admin",uid="repair-assists-player";
+  for (const id of [owner,uid]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false});
+  await db.doc("games/repair-assists-old").set({status:"closed",closedAt:Timestamp.fromDate(new Date("2026-10-01T09:00Z")),
+    teamA:{starters:[uid],bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:3,teamB:0},
+    performance:{teamA:{goals:[owner,owner,owner],assists:[uid,uid,uid]},teamB:{goals:[],assists:[]}}});
+  const config={...payload(),kind:"mission",scope:"individual",method:"objective",winnerCount:1,positions:[prize(5)],
+    audience:{mode:"selected",memberIds:[uid]},objective:{metric:"all",target:100,
+      goals:[{id:"assists",metric:"totalAssists",countFrom:"history",target:14}]},cadence:"once",maxRepeats:1,openNow:true};
+  const action=(action,data)=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  const {id}=await action("create",config);
+  await checkObjectiveProgress(id);
+  const progressRef=db.doc(`events/${id}/private/progress`);
+  await progressRef.update({version:"configuration-before-edit"});
+  assert.deepEqual((await rawGetEvent.run({auth:{uid},data:{eventId:id}})).progress,[]);
+  await action("update",{...config,eventId:id});
+  const detail=await rawGetEvent.run({auth:{uid},data:{eventId:id}});
+  assert.equal(detail.progress[0].ratingState.goals[0].progress,3);
+  assert.equal(detail.participantProgress[0].goals[0].progress,3);
+  // A snapshot without a version, or missing entirely, must also be repaired.
+  await progressRef.delete();
+  await action("update",{...config,eventId:id});
+  assert.equal((await rawGetEvent.run({auth:{uid},data:{eventId:id}})).progress[0].ratingState.goals[0].progress,3);
+});
+
+test("mission reward edits replace delivered effects, preserve completion and validity, and respect other awards", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-23T12:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="replace-admin",members=["replace-a","replace-b"];
+  for (const uid of [owner,...members]) await db.doc(`users/${uid}`).set({uid,role:uid===owner?"admin":"member",disabled:false});
+  for (const uid of members) await db.doc(`initialRatings/${uid}`).set({completed:true,ratings20:Object.fromEntries(ATTRIBUTES.map(([key])=>[key,15]))});
+  await db.doc("games/replace-old").set({status:"closed",closedAt:Timestamp.fromDate(new Date("2026-10-01T09:00Z")),
+    teamA:{starters:members,bench:[]},teamB:{starters:[owner],bench:[]},score:{teamA:1,teamB:0}});
+  const action=(action,data)=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  const configured={mode:"both",statDuration:"permanent",cardDuration:"weekly",boosts:{passing:6},specialId:"mvp"};
+  const config={...payload(),kind:"mission",scope:"individual",method:"objective",winnerCount:1,positions:[configured],
+    audience:{mode:"selected",memberIds:members},objective:{metric:"totalGames",target:1},cadence:"once",maxRepeats:1,openNow:true,indefinite:true,endsAt:null};
+  const {id}=await action("create",config);
+  for (const uid of members) {
+    await db.doc(`eventRewards/replace-other-${uid}`).set({uid,eventId:"other-mission",source:"mission",schemaVersion:2,policyVersion:1,
+      createdAt:Timestamp.fromDate(new Date()),startsAt:Timestamp.fromDate(new Date()),expiresAt:Timestamp.fromDate(new Date("2026-10-30")),
+      reward:{mode:"stats",statDuration:"permanent",boosts:{passing:3}}});
+    await claimMission.run({auth:{uid},data:{eventId:id}});
+    // The emulator's server timestamp does not follow Node's historical clock.
+    await db.doc(`eventRewards/${id}_mission_${uid}_once`).update({createdAt:Timestamp.fromDate(new Date())});
+  }
+  const deliveries=()=>db.collection("eventRewards").where("eventId","==",id).get();
+  const before=await deliveries();
+  const revoked={...before.docs[0].data(),revokedAt:Timestamp.fromDate(new Date())};
+  await db.doc("eventRewards/replace-revoked").set(revoked);
+  const update={...config,eventId:id,positions:[{...configured,boosts:{passing:8},specialId:"sniper"}]};
+  t.mock.timers.setTime(+new Date("2026-10-24T12:00Z"));
+  await action("update",update);
+  for (const doc of before.docs) {
+    const current=(await doc.ref.get()).data(),original=doc.data();
+    assert.equal(current.reward.boosts.passing,7,"replaces the old six points; the other three still spend the limit");
+    assert.equal(current.reward.specialId,"sniper");
+    for (const field of ["createdAt","completedAt","periodKey","startsAt","cardStartsAt","expiresAt","weekId"])
+      assert.deepEqual(current[field],original[field],field);
+    const ledger=(await db.collection("eventRewards").where("uid","==",current.uid).get()).docs.map(doc=>doc.data());
+    const effects=applyEventRewards({},ledger,current.uid);
+    assert.equal(effects.boosts.passing,10);
+    assert.ok(effects.specials.some(card=>card.id==="sniper"));
+    assert.ok(!effects.specials.some(card=>card.id==="mvp"));
+    assert.equal((await rawClaimMission.run({auth:{uid:current.uid},data:{eventId:id}})).reward.specialId,"sniper");
+    assert.equal((await db.doc(`cardRefreshWork/${current.uid}`).get()).data().pending,true);
+    assert.equal((await db.doc(`weeklyCards/${current.uid}`).get()).data().eventBoosts.passing,10,"saving publishes mission effects before returning");
+  }
+  assert.deepEqual((await db.doc("eventRewards/replace-revoked").get()).data(),revoked);
+  const saved=(await before.docs[0].ref.get()).data();
+  await action("update",update);
+  assert.deepEqual((await before.docs[0].ref.get()).data(),saved,"repeated save is idempotent");
+  assert.equal((await deliveries()).size,3,"same delivery IDs; no duplicate completions");
+  // Saving also repairs an older configuration whose delivered rewards did not follow it.
+  await db.doc(`events/${id}/private/rewards`).update({positions:[configured]});
+  await action("update",{...config,eventId:id});
+  assert.equal((await before.docs[0].ref.get()).data().reward.specialId,"mvp");
+  // Changing duration uses the original start, rather than renewing a temporary award today.
+  t.mock.timers.setTime(+new Date("2026-11-05T12:00Z"));
+  await db.doc(`events/${id}`).update({status:"closed",ranking:[],winners:[{uid:members[0],uids:[members[0]],reward:configured}]});
+  await action("update",{...update,positions:[{...configured,statDuration:"weekly",boosts:{shooting:4},specialId:"sniper"}]});
+  const current=(await before.docs[0].ref.get()).data();
+  assert.equal(current.expiresAt.toDate().toISOString(),"2026-10-30T12:00:00.000Z");
+  assert.equal(current.expirationProcessed,true);
+  const ledger=(await db.collection("eventRewards").where("uid","==",current.uid).get()).docs.map(doc=>doc.data());
+  assert.equal(applyEventRewards({},ledger,current.uid).boosts.passing,3);
+  assert.equal(applyEventRewards({},ledger,current.uid).boosts.shooting,0);
+  const event=(await db.doc(`events/${id}`).get()).data();
+  assert.equal(event.status,"closed");
+  assert.equal(event.winners[0].reward.specialId,"sniper");
+});
+
+test("saving an event replaces delivered prizes and publishes the player's card immediately", async (t) => {
+  if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.GCLOUD_PROJECT?.startsWith("demo-")) throw Error("Emulador demo obrigatório.");
+  t.mock.timers.enable({apis:["Date"],now:new Date("2026-10-29T13:00:00Z")});
+  t.after(()=>t.mock.timers.reset());
+  const owner="instant-reward-admin",uid="instant-reward-player";
+  for (const id of [owner,uid]) await db.doc(`users/${id}`).set({uid:id,role:id===owner?"admin":"member",disabled:false,primaryPosition:"AV"});
+  await db.doc(`initialRatings/${uid}`).set({completed:true,ratings20:Object.fromEntries(ATTRIBUTES.map(([key])=>[key,15]))});
+  const original={mode:"both",statDuration:"monthly",cardDuration:"permanent",boosts:{shooting:10},specialId:"sniper"};
+  const config={...payload(),kind:"event",method:"admin",winnerCount:1,votesPerUser:1,endsAt:"2026-11-05T18:00:00Z",positions:[original],audience:{mode:"selected",memberIds:[uid]},openNow:true};
+  const action=(action,data)=>eventAction.run({auth:{uid:owner},data:{action,...data}});
+  const {id}=await action("create",config);
+  const issued=Timestamp.fromDate(new Date("2026-10-29T12:00Z"));
+  const ref=db.doc(`eventRewards/${id}_position-1_${uid}`);
+  await ref.set({uid,eventId:id,position:1,source:"event",schemaVersion:2,reward:original,configuredReward:original,createdAt:issued,startsAt:issued,cardStartsAt:issued,expiresAt:Timestamp.fromDate(new Date("2026-11-29T12:00Z"))});
+  await db.doc(`events/${id}`).update({status:"closed",winners:[{uid,uids:[uid],position:1,reward:original}]});
+  await action("update",{...config,eventId:id,positions:[{...original,mode:"card",boosts:{}}]});
+  const delivery=(await ref.get()).data(),card=(await db.doc(`weeklyCards/${uid}`).get()).data();
+  assert.equal(delivery.reward.boosts.shooting || 0,0);
+  assert.equal(delivery.reward.specialId,"sniper");
+  assert.deepEqual(delivery.startsAt,issued);
+  assert.equal(card.eventBoosts.shooting,0);
+  assert.equal(card.stats.shooting,card.gameStats.shooting);
+  assert.equal((await db.doc(`events/${id}`).get()).data().winners[0].reward.boosts.shooting || 0,0);
+  await action("update",{...config,eventId:id,positions:[{...original,boosts:{shooting:2}}]});
+  assert.equal((await db.doc(`weeklyCards/${uid}`).get()).data().eventBoosts.shooting,2);
 });
 
 test("historical totals: old matches, authoritative claims, single completion and opening-time ranking", async (t) => {
@@ -765,7 +918,7 @@ test("ADMIN edits published and ended missions without resetting status or award
   assert.deepEqual(updated.createdAt, before.createdAt);
   assert.deepEqual(updated.winners, before.winners);
   const existing = await claim();
-  assert.equal(existing.reward.specialId, "mvp");
+  assert.equal(existing.reward.specialId, "sniper");
   assert.equal(
     (await db.collection("eventRewards").where("eventId", "==", id).get()).size,
     awards.size,
@@ -785,7 +938,7 @@ test("ADMIN edits published and ended missions without resetting status or award
     openNow: true,
   });
   assert.equal((await db.doc(`events/${id}`).get()).data().status, "closed");
-  assert.equal((await claim()).reward.specialId, "mvp");
+  assert.equal((await claim()).reward.specialId, "sniper");
   assert.equal((await db.collection("eventRewards").where("eventId", "==", id).get()).size, awards.size);
   const cancelled = await call("create", {
     ...mission,
