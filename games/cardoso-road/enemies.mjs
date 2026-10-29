@@ -1,6 +1,6 @@
 // Presentation only. Never used to decide survival, odds or payments.
 const names=["Cheeseburger furioso", "Batatas fritas raivosas", "Coxa de frango brutal", "Donut vidrado", "Pizza de pepperoni", "Bolo de chocolate", "Burger de frango frito", "Caranguejo de pizza e batatas", "Serpente de donut e bacon", "Cachorro de queijo", "Golem de bolo e \u00f3leo", "Monstro de frango e waffle", "Hidra de cheeseburgers", "Drag\u00e3o de pizza e frango", "Kraken de donut, bacon e \u00f3leo", "Golem de batatas e queijo", "Ogre de bolo e burger", "Quimera suprema da fritura"];
-export const VILLAINS=Object.freeze(names.map((name,index)=>Object.freeze({id:`food-${String(index+1).padStart(2,'0')}`,name,line:["L\u00c1 SE FOI O SHAPE!", "FUI FRITO!", "ISTO TEM \u00d3LEO!"][Math.floor(index/6)],sprite:`assets/villains/food-${String(index+1).padStart(2,'0')}.png`,tier:Math.floor(index/6)+1})));
+export const VILLAINS=Object.freeze(names.map((name,index)=>Object.freeze({id:`food-${String(index+1).padStart(2,'0')}`,name,line:["L\u00c1 SE FOI O SHAPE!", "FUI FRITO!", "ISTO TEM \u00d3LEO!"][Math.floor(index/6)],sprite:`assets/optimized/food-${String(index+1).padStart(2,'0')}.webp`,tier:Math.floor(index/6)+1})));
 export const STAGE_VILLAINS=Object.freeze([0,1,2,6,7,8,12,13,14,15]);
 function hash(value){let h=2166136261;for(const char of String(value))h=Math.imul(h^char.charCodeAt(0),16777619);h=Math.imul(h^(h>>>16),0x85ebca6b);h=Math.imul(h^(h>>>13),0xc2b2ae35);return (h^(h>>>16))>>>0;}
 let cachedId=null,cachedPools=null;

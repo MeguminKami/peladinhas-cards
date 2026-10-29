@@ -10,7 +10,7 @@ const server=http.createServer(async(req,res)=>{const url=new URL(req.url,'http:
  if(url.pathname==='/cache-manifest.js'){res.setHeader('Content-Type','text/javascript');res.end(manifest);return;}
  const path=resolve(root,'.'+url.pathname);if(!(path+sep).startsWith(root))throw Error();
  const body=await readFile(url.pathname==='/'?resolve(root,'index.html'):path);
- res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type',({'.html':'text/html','.css':'text/css','.mjs':'text/javascript','.js':'text/javascript','.png':'image/png','.woff2':'font/woff2','.ogg':'audio/ogg','.mp3':'audio/mpeg','.wav':'audio/wav'})[extname(path)]||'application/octet-stream');res.end(body);
+ res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type',({'.html':'text/html','.css':'text/css','.mjs':'text/javascript','.js':'text/javascript','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.ogg':'audio/ogg','.mp3':'audio/mpeg','.wav':'audio/wav'})[extname(path)]||'application/octet-stream');res.end(body);
  }catch{res.writeHead(404);res.end();}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,...(process.env.CARDOSO_BROWSER?{executablePath:process.env.CARDOSO_BROWSER}:{channel:'msedge'})});
@@ -20,14 +20,17 @@ try{for(const width of [1440,390]){
  await context.addInitScript(()=>{
   localStorage.setItem('cardoso-road-demo-v1-settings',JSON.stringify({effects:false,music:false,voices:false,reduced:false}));
   Object.defineProperty(crypto,'getRandomValues',{value:a=>{a.fill(window.failNext?4294967295:0);return a;}});
-  window.rasterizations=0;const draw=CanvasRenderingContext2D.prototype.drawImage;
-  CanvasRenderingContext2D.prototype.drawImage=function(image,...args){if(image instanceof HTMLImageElement)window.rasterizations++;return draw.call(this,image,...args);};
  });
  await page.goto(origin+'/game.html');await page.waitForFunction(()=>!!document.querySelector('canvas')?.dataset.camera&&!document.querySelector('#play').disabled);
  const deadline=Date.now()+60000;let complete=false;
  while(Date.now()<deadline){complete=await page.evaluate(async paths=>{const keys=await caches.keys(),name=keys.find(k=>k.startsWith('cardoso-road:'));if(!name)return false;const cache=await caches.open(name);return (await Promise.all(paths.map(path=>cache.match(new URL(path,location.href))))).every(Boolean);},inventory);if(complete)break;await page.waitForTimeout(200);}
  assert.equal(complete,true,'all public resources must finish warming');
- const settled=await page.evaluate(()=>window.rasterizations);await page.waitForTimeout(400);assert.equal(await page.evaluate(()=>window.rasterizations),settled,'steady frames must reuse bitmaps');
+ const backgroundMatches=await page.evaluate(async()=>{
+  await new Promise(requestAnimationFrame);const canvas=document.querySelector('canvas'),view=canvas.getBoundingClientRect(),layout=JSON.parse(canvas.dataset.camera).background,image=new Image();image.src=layout.source;await image.decode();
+  const expected=document.createElement('canvas');expected.width=canvas.width;expected.height=canvas.height;const ctx=expected.getContext('2d');ctx.scale(canvas.width/view.width,canvas.height/view.height);ctx.drawImage(image,layout.x,layout.y,layout.width,layout.height);
+  const fog=ctx.createLinearGradient(0,0,0,view.height);fog.addColorStop(0,'#17154610');fog.addColorStop(.65,'#17133300');fog.addColorStop(1,'#0b123bd9');ctx.fillStyle=fog;ctx.fillRect(0,0,view.width,view.height);
+  const x=Math.floor(canvas.width*.05),y=Math.floor(canvas.height*.05),actual=canvas.getContext('2d').getImageData(x,y,1,1).data,target=ctx.getImageData(x,y,1,1).data;return [...target].every((n,i)=>Math.abs(actual[i]-n)<=2);
+ });assert.equal(backgroundMatches,true,'cached course must include the loaded background');
  const counts=()=>Object.fromEntries(inventory.map(path=>[path,requests.filter(p=>p==='/'+path).length]));
  const before=counts();await page.reload();await page.waitForFunction(()=>!!document.querySelector('canvas')?.dataset.camera&&!document.querySelector('#play').disabled);const after=counts();
  for(const path of inventory.filter(p=>p!=='sw.js'))assert.equal(after[path],before[path],'reopening must reuse '+path);

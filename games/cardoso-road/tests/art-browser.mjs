@@ -21,7 +21,7 @@ try{
    if(width<=620)await page.locator('#training-open').click();
    await page.locator(`[data-mode=${mode}]`).click();
    if(width<=620)await page.locator('#training-close').click();
-   await page.waitForFunction(mode=>{const b=JSON.parse(document.querySelector('canvas').dataset.camera||'{}').background;return b?.source.endsWith(`/gym-${mode}-v2.png`)&&b.naturalWidth>0;},mode);
+   await page.waitForFunction(mode=>{const b=JSON.parse(document.querySelector('canvas').dataset.camera||'{}').background;return b?.source.endsWith(`/gym-${mode}-v2.webp`)&&b.naturalWidth>0;},mode);
    const b=await page.locator('canvas').evaluate(el=>JSON.parse(el.dataset.camera).background);
    assert.equal(b.naturalWidth/b.naturalHeight,3);
    assert.ok(Math.abs(b.width/b.naturalWidth-b.height/b.naturalHeight)<1e-12,'single scale preserves image proportions');
