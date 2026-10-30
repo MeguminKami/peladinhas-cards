@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <path fill="#f00" d="M0 0h600v400H0z"/>
+  <path fill="#060" d="M0 0h240v400H0z"/>
+  <g fill="none" stroke="#ffdf00" stroke-width="7">
+    <circle cx="240" cy="200" r="66"/>
+    <ellipse cx="240" cy="200" rx="30" ry="66"/>
+    <ellipse cx="240" cy="200" rx="66" ry="23"/>
+    <path d="m185 164 110 72m-110 0 110-72M174 200h132"/>
+  </g>
+  <path fill="#fff" stroke="#111" stroke-width="2" d="M197 148h86v64a43 43 0 0 1-86 0z"/>
+  <path fill="#f00" d="M201 152h78v60a39 39 0 0 1-78 0z"/>
+  <path fill="#fff" d="M214 166h52v46a26 26 0 0 1-52 0z"/>
+  <g fill="#ffdf00" stroke="#805600" stroke-width=".8">
+    <path id="castle" d="M204 155h4v3h3v-3h4v12h-11z"/>
+    <use href="#castle" x="30"/><use href="#castle" x="60"/>
+    <use href="#castle" y="35"/><use href="#castle" x="60" y="35"/>
+    <use href="#castle" x="12" y="69"/><use href="#castle" x="48" y="69"/>
+  </g>
+  <g fill="#039">
+    <path id="shield" d="M234 176h12v12a6 6 0 0 1-12 0z"/>
+    <use href="#shield" x="-15" y="20"/><use href="#shield" x="15" y="20"/>
+    <use href="#shield" y="20"/><use href="#shield" y="40"/>
+  </g>
+  <g fill="#fff">
+    <g id="dots"><circle cx="237" cy="180" r="1"/><circle cx="243" cy="180" r="1"/><circle cx="240" cy="184" r="1"/><circle cx="237" cy="188" r="1"/><circle cx="243" cy="188" r="1"/></g>
+    <use href="#dots" x="-15" y="20"/><use href="#dots" x="15" y="20"/>
+    <use href="#dots" y="20"/><use href="#dots" y="40"/>
+  </g>
+</svg>

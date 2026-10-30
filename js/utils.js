@@ -796,7 +796,9 @@ export const formatDateTime = (v) =>
     hourCycle: "h23",
   }) || "—";
 export const flag = (c) =>
-  /^[A-Z]{2}$/.test(c || "")
+  c === "PT"
+    ? '<img src="./assets/flags/pt.svg" alt="Portugal" width="30" height="20" style="display:inline-block;width:1.5em;height:1em;max-width:none;vertical-align:-.1em;object-fit:contain">'
+    : /^[A-Z]{2}$/.test(c || "")
     ? String.fromCodePoint(...c.split("").map((x) => 127397 + x.charCodeAt(0)))
     : "";
 // Manter o domínio técnico antigo para preservar o acesso das contas existentes.
