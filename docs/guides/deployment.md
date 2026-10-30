@@ -99,3 +99,7 @@ As alterações de composição em `js/paths.js`, entrada em `js/missions.js`, n
 O catálogo v4 altera módulos partilhados e exige também as oito Functions consumidoras identificadas no [relatório v4](../reports/path-variety-2026-10-19.md#publicação-seletiva). Publicar só o frontend não substitui esse passo se o catálogo ainda estiver por publicar. Para esta v4, não houve alteração de regras/índices nem é necessário recalcular dados existentes ou semanas fechadas. O [relatório da interface](../reports/path-interface-2026-10-19.md) não afirma execução de deploy.
 
 O wrapper `deploy:frontend` executa os testes explicitamente listados em `scripts/deploy.mjs`; não equivale a toda a suite `npm.cmd test`, aos testes dirigidos v4 ou à validação visual. Executar os cenários afetados antes da publicação.
+
+## Assets do pacote público
+
+Cardoso Road publica apenas a lista do manifesto de recursos e a licença da fonte; o destino é recriado para eliminar ficheiros antigos. Futebol usa WebP com transparência e dimensões preservadas, reutilizando os WebP de marketing existentes. As imagens PNG sem consumidores da antiga loja foram removidas. A limpeza local não remove versões já guardadas no Hosting nem reduz o tamanho do histórico Git existente.

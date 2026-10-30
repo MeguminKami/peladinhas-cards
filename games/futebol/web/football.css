@@ -1,6 +1,6 @@
 :root{--surface:#142b48;--border:#3a5876;--muted:#a9bed2;--accent:#f2cf7c;--ink:#18253c;background:#081529;color:#edf5ff}
 .machine{isolation:isolate;background:#081529;--rim:#ba9756;--glow:#5d97da;--celebration:#f5cd6f}
-.machine:before{content:'';position:absolute;inset:0;z-index:-3;background:linear-gradient(180deg,#040d1c55 0%,#05132222 40%,#04101dc9 100%),url('/assets/football/backgrounds/neighborhood-night-v1.png') center 53%/cover no-repeat;transition:filter 1s}
+.machine:before{content:'';position:absolute;inset:0;z-index:-3;background:linear-gradient(180deg,#040d1c55 0%,#05132222 40%,#04101dc9 100%),url('/assets/football/backgrounds/neighborhood-night-v1.webp') center 53%/cover no-repeat;transition:filter 1s}
 .stadium-atmosphere{position:absolute;inset:0;pointer-events:none;z-index:-2;background:radial-gradient(ellipse at 4% 0%,#b1dbff25,transparent 40%),radial-gradient(ellipse at 96% 0%,#b1dbff25,transparent 40%);transition:background 1s}
 .machine[data-mode=normal]{--rim:#69aeea;--glow:#65b9ff}.machine[data-mode=normal]:before{filter:saturate(1.16) brightness(1.12)}
 .machine[data-mode=normal] .stadium-atmosphere{background:radial-gradient(ellipse at 10% 0%,#2b8ef454,transparent 55%),radial-gradient(ellipse at 90% 0%,#3e98ee44,transparent 50%)}

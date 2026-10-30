@@ -1,0 +1,11 @@
+{
+  "name": "princesa-sofia-engine",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.js",
+    "test": "node --test tests/*.test.js",
+    "test:ui": "node tests/prototype.browser.js",
+    "simulate": "node scripts/simulate.js"
+  }
+}

@@ -13,6 +13,8 @@ games/futebol/dist/
 games/blackjack-3d/dist/
 games/roleta-europeia-3d/dist/
 assets/games/
+artifacts/
+games/cardoso-road/reports/*.png
 
 # Local deployment receipts and lock
 .deploy/

@@ -1,0 +1,309 @@
+{
+  "purpose": "local-simulation-not-rtp-certification",
+  "config": {
+    "version": "sofia-growth-4-hunt-2",
+    "calibrated": false,
+    "columns": 6,
+    "rows": 5,
+    "tierMinimums": [
+      5,
+      6,
+      8,
+      11,
+      15,
+      18
+    ],
+    "weights": [
+      180000,
+      160000,
+      140000,
+      120000,
+      100000,
+      90000,
+      70000,
+      60000,
+      50000,
+      30000
+    ],
+    "pay100": [
+      [
+        15,
+        45,
+        150,
+        600,
+        2400,
+        9600
+      ],
+      [
+        18,
+        54,
+        180,
+        720,
+        2880,
+        12000
+      ],
+      [
+        23,
+        66,
+        240,
+        960,
+        3840,
+        14400
+      ],
+      [
+        30,
+        90,
+        300,
+        1200,
+        4800,
+        19200
+      ],
+      [
+        38,
+        120,
+        390,
+        1560,
+        6240,
+        24000
+      ],
+      [
+        60,
+        180,
+        600,
+        2400,
+        9600,
+        38400
+      ],
+      [
+        90,
+        270,
+        900,
+        3600,
+        14400,
+        57600
+      ],
+      [
+        120,
+        360,
+        1200,
+        4800,
+        19200,
+        76800
+      ],
+      [
+        150,
+        450,
+        1500,
+        6000,
+        24000,
+        96000
+      ],
+      [
+        225,
+        750,
+        2400,
+        9600,
+        38400,
+        144000
+      ]
+    ],
+    "xpPerCell100": [
+      100,
+      102,
+      104,
+      106,
+      108,
+      110,
+      112,
+      114,
+      116,
+      118
+    ],
+    "xpThreshold100": {
+      "base": 3900,
+      "common": 1880,
+      "super": 1710,
+      "secret": 1650
+    },
+    "scatterPPM": {
+      "base": [
+        30100,
+        20100,
+        6550,
+        1500,
+        400
+      ],
+      "common": [
+        30000,
+        12000,
+        3000
+      ],
+      "super": [
+        30000,
+        12000,
+        3000
+      ],
+      "secret": [
+        30000,
+        12000,
+        3000
+      ]
+    },
+    "pairPPM": 200000,
+    "baseWildWeights": [
+      500000,
+      350000,
+      150000
+    ],
+    "bonusSpins": 12,
+    "buyPrices": {
+      "common": 80,
+      "super": 225,
+      "secret": 316
+    },
+    "bonusHunt": {
+      "spinCostMultiplier": 4,
+      "bonusFrequencyTargetMultiplier": 3,
+      "scatterMultiplier": 1.53
+    },
+    "maxWin100": 1250000
+  },
+  "reports": [
+    {
+      "configVersion": "sofia-growth-4-hunt-2",
+      "configHash": "9cc412d83a2b02ae8fc71b67297ef3d12538e402528c1a9fc85acb1105e2efaf",
+      "calibrated": false,
+      "mode": "hunt",
+      "count": 1000000,
+      "seed": 20270121,
+      "rng": "mulberry32",
+      "betUnits": 100,
+      "totalCostBaseBets": 4000000,
+      "totalReturnBaseBets": 2108231.3799956655,
+      "rtp": 0.5270578450000035,
+      "settledCreditRtp": 0.527057845,
+      "sampleVariance": 1396.3031986678286,
+      "standardError": 0.03736714062739921,
+      "confidence95Approx": [
+        0.4538182493703011,
+        0.6002974406297059
+      ],
+      "confidenceJoint95Approx": [
+        0.4336399934315055,
+        0.6204756965685015
+      ],
+      "precisionGatePassed": false,
+      "nonzeroReturnFrequency": 0.317344,
+      "profitFrequency": 0.014686,
+      "meanReturnBaseBets": 2.1082313799956656,
+      "maxWinCount": 143,
+      "quantilesBaseBets": {
+        "median": 0,
+        "p90": 0.69,
+        "p95": 1.5,
+        "p99": 5.37,
+        "p999": 13.32
+      },
+      "spins": 1442319,
+      "cascades": 525970,
+      "magicActivations": 42708,
+      "retriggers": 44335,
+      "addedSpins": 91434,
+      "maxMagicLevel": 30,
+      "maxBonusDuration": 36,
+      "naturalBonuses": {
+        "common": 28799,
+        "super": 462,
+        "secret": 2
+      },
+      "contributionsRtp": {
+        "base": 0.0518691475,
+        "common": 0.4463931625,
+        "super": 0.0287914275,
+        "secret": 0.0000041075
+      },
+      "batches": [
+        {
+          "count": 50000,
+          "rtp": 0.7053493999999498
+        },
+        {
+          "count": 50000,
+          "rtp": 0.7053404499999285
+        },
+        {
+          "count": 50000,
+          "rtp": 0.4542564500000153
+        },
+        {
+          "count": 50000,
+          "rtp": 0.8285779499999683
+        },
+        {
+          "count": 50000,
+          "rtp": 0.3299204000000233
+        },
+        {
+          "count": 50000,
+          "rtp": 0.7052155499999414
+        },
+        {
+          "count": 50000,
+          "rtp": 0.45565214999993703
+        },
+        {
+          "count": 50000,
+          "rtp": 0.3905968999999365
+        },
+        {
+          "count": 50000,
+          "rtp": 0.4542551999999564
+        },
+        {
+          "count": 50000,
+          "rtp": 0.39309285000002014
+        },
+        {
+          "count": 50000,
+          "rtp": 0.5812512999999123
+        },
+        {
+          "count": 50000,
+          "rtp": 0.5792728999999214
+        },
+        {
+          "count": 50000,
+          "rtp": 0.5198888000000059
+        },
+        {
+          "count": 50000,
+          "rtp": 0.45539844999998946
+        },
+        {
+          "count": 50000,
+          "rtp": 0.394566600000014
+        },
+        {
+          "count": 50000,
+          "rtp": 0.8292367999999618
+        },
+        {
+          "count": 50000,
+          "rtp": 0.58072014999988
+        },
+        {
+          "count": 50000,
+          "rtp": 0.3947171000000049
+        },
+        {
+          "count": 50000,
+          "rtp": 0.39178990000001823
+        },
+        {
+          "count": 50000,
+          "rtp": 0.3920575999999897
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ As alterações probabilísticas não incluem nova medição de RTP. Não é nec
 
 ## Arte do repouso
 
-Asset: [cardoso-relax-v1.png](../../games/cardoso-road/assets/cardoso-relax-v1.png). PNG transparente gerado com ImageGen a partir da referência local `cardoso-poses-realistic.png`.
+Asset: `cardoso-relax-v1.png` (ficheiro histórico removido). PNG transparente gerado com ImageGen a partir da referência local `cardoso-poses-realistic.png`.
 
 Direção/prompt: personagem Cardoso musculado, pele bronzeada, cabelo escuro encaracolado e barba curta, óculos de sol pretos; camisola sem mangas e calções pretos com detalhes verde-lima, luvas e ténis a condizer. Reclinado descontraído numa espreguiçadeira de estrutura escura e acabamento verde-lima, cabeça à esquerda, pés à direita, shaker de proteína na mão. Ilustração realista estilizada coerente com o jogo. Corpo e cadeira completos, fundo transparente, sem texto, logótipos ou interface.
 

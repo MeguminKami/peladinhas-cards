@@ -15,6 +15,7 @@
         ".git",
         ".deploy",
         "tests",
+        "artifacts",
         "scripts",
         "css",
         "assets",

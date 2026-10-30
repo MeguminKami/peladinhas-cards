@@ -1,21 +1,21 @@
 import type {Mode,SymbolId} from '../src/config.ts';
 
 const root=new URL('./assets/football/',typeof document === 'undefined' ? import.meta.url : document.baseURI).href;
-export const background=root+'backgrounds/neighborhood-night-v1.png';
+export const background=root+'backgrounds/neighborhood-night-v1.webp';
 export const symbolArt:Record<SymbolId,{name:string;src:string}>={
-  N1:{name:'Cone de treino',src:root+'symbols/n1-cone.png'},
-  N2:{name:'Apito',src:root+'symbols/n2-whistle.png'},
-  N3:{name:'Garrafa desportiva',src:root+'symbols/n3-bottle.png'},
-  N4:{name:'Meião',src:root+'symbols/n4-sock.png'},
-  P1:{name:'Talento de Bronze',src:root+'symbols/p1-personal-v2.png'},
-  P2:{name:'Velocidade de Prata',src:root+'symbols/p2-personal-v3.png'},
-  P3:{name:'Maestro de Ouro',src:root+'symbols/p3-personal-v2.png'},
-  P4:{name:'Rainha da Final · In Form',src:root+'symbols/p4-personal-v3.png'},
-  W:{name:'Craque Wild',src:root+'symbols/w-personal-v3.png'},
-  S:{name:'Bilhete Scatter',src:root+'symbols/s-ticket.png'},
+  N1:{name:'Cone de treino',src:root+'symbols/n1-cone.webp'},
+  N2:{name:'Apito',src:root+'symbols/n2-whistle.webp'},
+  N3:{name:'Garrafa desportiva',src:root+'symbols/n3-bottle.webp'},
+  N4:{name:'Meião',src:root+'symbols/n4-sock.webp'},
+  P1:{name:'Talento de Bronze',src:root+'symbols/p1-personal-v2.webp'},
+  P2:{name:'Velocidade de Prata',src:root+'symbols/p2-personal-v3.webp'},
+  P3:{name:'Maestro de Ouro',src:root+'symbols/p3-personal-v2.webp'},
+  P4:{name:'Rainha da Final · In Form',src:root+'symbols/p4-personal-v3.webp'},
+  W:{name:'Craque Wild',src:root+'symbols/w-personal-v3.webp'},
+  S:{name:'Bilhete Scatter',src:root+'symbols/s-ticket.webp'},
 };
 export const modeTitles:Record<Mode,string>={base:'Torneio Noturno',normal:'Final do Bairro',superior:'Noite de Glória',legend:'Lendas do Bairro'};
-export const bonusArt={normal:symbolArt.S.src,superior:root+'symbols/bonus-four-scatter-v1.png',legend:root+'symbols/bonus-five-scatter-v2.png'};
+export const bonusArt={normal:symbolArt.S.src,superior:root+'symbols/bonus-four-scatter-v1.webp',legend:root+'symbols/bonus-five-scatter-v2.webp'};
 export const powerTitles:Record<string,string>={P1:'Passe Curto',P2:'Arranque Explosivo',P3:'Passes de Maestro',P4:'Glória do Bairro'};
 // An authored display before the first wager, never evaluated or paid.
 export const previewBoard:SymbolId[]=['N1','P1','N2','P2','N3','P3','N4','P4','N1','W','N2','P1','N3','P2','P3','N4','S','P4','P1','N2','W','N3','P2','N4'];

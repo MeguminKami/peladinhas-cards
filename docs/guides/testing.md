@@ -153,3 +153,7 @@ Na composição, confirmar **A tua missão · No próximo jogo**, tema da rarida
 Dispensas de votos: `npm.cmd run test:rating-waivers` cobre mínimos sem alterar médias e a gestão no modal. `tests/rating-waiver.backend.test.js` exige emulador demo local. [Referência](../reports/rating-waivers-2026-10-22.md).
 
 Carta Sucata: `npm.cmd run test:scrap-card` verifica as fronteiras, compatibilidade, desenho nos quatro temas e larguras móveis. `tests/scrap-card.backend.test.js` exige emulador demo local. [Regras e publicação](../reports/scrap-card-2026-10-22.md).
+
+## Manter o repositório leve
+
+Preservar testes de regras, cálculos, permissões, carteiras, persistência, integração e os fluxos de browser recorrentes. Os antigos wrappers de criação de metas foram substituídos por `npm.cmd run test:event-goals`; as verificações isoladas de simplificação administrativa e fichas mobile foram retiradas. Capturas em `artifacts/`, `test-results/` e `games/cardoso-road/reports/*.png` são geradas localmente e não devem ser versionadas. Os JSON de recursos e os prompts de arte continuam disponíveis.

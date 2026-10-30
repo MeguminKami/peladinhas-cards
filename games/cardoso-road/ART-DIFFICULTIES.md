@@ -4,10 +4,10 @@
 
 Os recursos ativos são agora quatro panoramas PNG **2172 × 724 (3:1)** gerados pela ferramenta integrada image_gen. O pedido definiu uma composição panorâmica 3:1; estas são as dimensões reais devolvidas pela ferramenta.
 
-- [Fácil](./assets/gym-easy-v2.png): cave barata e degradada, ferrugem, pintura descascada, bancos remendados.
-- [Normal](./assets/gym-normal-v2.png): ginásio de bairro convencional, equipamento funcional, branco/cinzento/azul.
-- [Difícil](./assets/gym-hard-v2.png): sala de powerlifting séria, betão, ferro pesado, correntes e luz vermelha controlada.
-- [Extremo](./assets/gym-extreme-v2.png): fábrica infernal de fritura, óleo incandescente, máquinas colossais e energia roxa/lima.
+- `Fácil` (ficheiro histórico removido): cave barata e degradada, ferrugem, pintura descascada, bancos remendados.
+- `Normal` (ficheiro histórico removido): ginásio de bairro convencional, equipamento funcional, branco/cinzento/azul.
+- `Difícil` (ficheiro histórico removido): sala de powerlifting séria, betão, ferro pesado, correntes e luz vermelha controlada.
+- `Extremo` (ficheiro histórico removido): fábrica infernal de fritura, óleo incandescente, máquinas colossais e energia roxa/lima.
 
 Prompt comum: «ONE ultra-wide 3:1 panoramic background for side scrolling arcade game. Premium detailed stylized 3D commercial game render. Side-on architectural elevation, straight horizon, slight floor view, no fisheye. All wall and equipment detail upper 55%; lower 45% continuous empty dark rubber gameplay floor. No people, characters, letters, logos or UI.» As quatro variantes acrescentam os ambientes descritos acima; fácil e normal excluem luxo e fantasia, difícil exclui esculturas de comida, extremo introduz fritadeiras gigantes e canais de óleo atrás do piso jogável.
 
@@ -19,10 +19,10 @@ Gerados em 26/10/2026 com a ferramenta integrada `image_gen`, em quatro pedidos 
 
 | Dificuldade | Recurso | Direção visual |
 | --- | --- | --- |
-| Fácil | [gym-easy.png](./assets/gym-easy.png) | Ginásio luminoso, luz natural, verde lima e turquesa |
-| Normal | [gym-normal.png](./assets/gym-normal.png) | Ginásio extravagante, roxo/ciano e pôr do sol |
-| Difícil | [gym-hard.png](./assets/gym-hard.png) | Pesos pesados e fritadeiras, luz laranja e vermelha |
-| Extremo | [gym-extreme.png](./assets/gym-extreme.png) | Ginásio infernal de fritadeiras, rave roxa, verde ácido e fogo |
+| Fácil | `gym-easy.png` (ficheiro histórico removido) | Ginásio luminoso, luz natural, verde lima e turquesa |
+| Normal | `gym-normal.png` (ficheiro histórico removido) | Ginásio extravagante, roxo/ciano e pôr do sol |
+| Difícil | `gym-hard.png` (ficheiro histórico removido) | Pesos pesados e fritadeiras, luz laranja e vermelha |
+| Extremo | `gym-extreme.png` (ficheiro histórico removido) | Ginásio infernal de fritadeiras, rave roxa, verde ácido e fogo |
 
 ## Prompts de produção
 

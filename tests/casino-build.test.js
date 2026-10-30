@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { resourceFiles } from '../games/cardoso-road/tools/cache-manifest.mjs';
 
 test('Hosting publishes the independent embed and SDK without sources/demo, loading game assets on demand',()=>{
   const root='.firebase/site/';
@@ -17,4 +18,21 @@ test('Hosting publishes the independent embed and SDK without sources/demo, load
   const config=JSON.parse(readFileSync('firebase.json','utf8'));
   assert.ok(config.hosting.redirects.some(row=>row.source==='/casino'&&row.destination==='/#/casino'));
   assert.ok(config.functions[0].ignore.includes('games'));
+});
+
+test('published artwork stays within budget and Cardoso contains only its runtime inventory and font license',()=>{
+  const root='.firebase/site/';
+  const inventory=directory=>readdirSync(directory,{withFileTypes:true}).flatMap(entry=>
+    entry.isDirectory()?inventory(directory+entry.name+'/').map(path=>entry.name+'/'+path):[entry.name]);
+  const cardoso=root+'assets/games/cardoso-road/';
+  assert.deepEqual(inventory(cardoso).sort(),[...resourceFiles,'cache-manifest.js','assets/Manrope-OFL.txt'].sort());
+  const bytes=directory=>inventory(directory).reduce((sum,path)=>sum+statSync(directory+path).size,0);
+  assert.ok(bytes(cardoso)<8*1024*1024,'Cardoso runtime exceeded 8 MiB');
+  const football=root+'assets/games/futebol/assets/football/';
+  assert.ok(bytes(football)<6*1024*1024,'Football artwork exceeded 6 MiB');
+  assert.ok(!inventory(football).some(path=>path.endsWith('.png')));
+  const theme=readFileSync('games/futebol/web/theme.ts','utf8');
+  for(const match of theme.matchAll(/root\+'([^']+)'/g))
+    assert.ok(existsSync(football+match[1]),`missing football artwork ${match[1]}`);
+  assert.ok(!inventory(root+'assets/casino/').some(path=>path.startsWith('shop/symbols/')));
 });
