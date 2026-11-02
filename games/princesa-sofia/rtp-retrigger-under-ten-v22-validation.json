@@ -1,0 +1,992 @@
+{
+  "purpose": "local-calibration-not-certification",
+  "date": "2026-10-31",
+  "targetBonusRetriggerFrequency": 0.1,
+  "observedTargetPassed": true,
+  "config": {
+    "version": "sofia-retrigger-under-ten-v22",
+    "calibrated": false,
+    "columns": 6,
+    "rows": 5,
+    "tierMinimums": [
+      5,
+      6,
+      8,
+      11,
+      14,
+      18
+    ],
+    "weights": [
+      155000,
+      137000,
+      121000,
+      119000,
+      103000,
+      95000,
+      85000,
+      80000,
+      65000,
+      40000
+    ],
+    "pay100": [
+      [
+        10,
+        20,
+        50,
+        100,
+        200,
+        500
+      ],
+      [
+        10,
+        20,
+        50,
+        100,
+        200,
+        500
+      ],
+      [
+        10,
+        20,
+        50,
+        100,
+        200,
+        1000
+      ],
+      [
+        20,
+        40,
+        70,
+        150,
+        300,
+        1000
+      ],
+      [
+        20,
+        40,
+        70,
+        150,
+        300,
+        1000
+      ],
+      [
+        50,
+        80,
+        150,
+        300,
+        1000,
+        5000
+      ],
+      [
+        50,
+        80,
+        150,
+        300,
+        1000,
+        5000
+      ],
+      [
+        80,
+        120,
+        250,
+        500,
+        1500,
+        7500
+      ],
+      [
+        80,
+        120,
+        250,
+        500,
+        1500,
+        10000
+      ],
+      [
+        100,
+        150,
+        500,
+        1000,
+        2500,
+        15000
+      ]
+    ],
+    "xpPerCluster100": {
+      "normal": [
+        300,
+        500,
+        700,
+        900,
+        1100,
+        1300
+      ],
+      "premium": [
+        500,
+        700,
+        900,
+        1100,
+        1300,
+        1500
+      ]
+    },
+    "xpThreshold100": {
+      "base": 4000,
+      "common": 2500,
+      "super": 2000,
+      "secret": 1700
+    },
+    "scatterPPM": {
+      "base": [
+        30100,
+        20100,
+        17800,
+        1500,
+        400
+      ],
+      "common": [
+        18000,
+        1800,
+        23000
+      ],
+      "super": [
+        18000,
+        1800,
+        21000
+      ],
+      "secret": [
+        18000,
+        1500,
+        18000
+      ]
+    },
+    "pairPPM": 620000,
+    "premiumPairPPM": 610000,
+    "repeatPairPPM": 440000,
+    "maxWilds": 10,
+    "magic": {
+      "common": {
+        "startWilds": 2,
+        "wildCap": 10,
+        "startMultiplier": 1,
+        "rewardRolls": 1,
+        "wildGainWeights": [
+          1000000,
+          0,
+          0
+        ],
+        "multiplierGainWeights": [
+          1000000,
+          0,
+          0,
+          0
+        ]
+      },
+      "super": {
+        "startWilds": 2,
+        "wildCap": 10,
+        "startMultiplier": 2,
+        "rewardRolls": 1,
+        "wildGainWeights": [
+          1000000,
+          0,
+          0
+        ],
+        "multiplierGainWeights": [
+          0,
+          1000000,
+          0,
+          0
+        ]
+      },
+      "secret": {
+        "startWilds": 2,
+        "wildCap": 10,
+        "startMultiplier": 2,
+        "rewardRolls": 1,
+        "wildGainWeights": [
+          0,
+          1000000,
+          0
+        ],
+        "multiplierGainWeights": [
+          0,
+          0,
+          1000000,
+          0
+        ]
+      }
+    },
+    "baseWildWeights": [
+      500000,
+      350000,
+      150000
+    ],
+    "bonusSpins": 12,
+    "buyPrices": {
+      "common": 29,
+      "super": 103,
+      "secret": 754
+    },
+    "bonusHunt": {
+      "spinCostMultiplier": 4,
+      "scatterMultiplier": 2.415
+    },
+    "maxWin100": 1000000
+  },
+  "reports": [
+    {
+      "configVersion": "sofia-retrigger-under-ten-v22",
+      "configHash": "9ccfbb67bb28d3c3481e5e42e78d7b2235a9e9fd7675e9393e4a00a738dfdac4",
+      "calibrated": false,
+      "mode": "base",
+      "count": 100000,
+      "seed": 20261031,
+      "rng": "mulberry32",
+      "betUnits": 100,
+      "totalCostBaseBets": 100000,
+      "totalReturnBaseBets": 86150.89999998893,
+      "rtp": 0.8615089999999971,
+      "settledCreditRtp": 0.861509,
+      "sampleVariance": 23.353802880947924,
+      "standardError": 0.015281951079933454,
+      "confidence95Approx": [
+        0.8315563758833275,
+        0.8914616241166666
+      ],
+      "confidenceJoint95Approx": [
+        0.8233041223001635,
+        0.8997138776998307
+      ],
+      "precisionGatePassed": false,
+      "nonzeroReturnFrequency": 0.71349,
+      "profitFrequency": 0.20614,
+      "meanReturnBaseBets": 0.8615089999998894,
+      "maxWinCount": 0,
+      "quantilesBaseBets": {
+        "median": 0.4,
+        "p90": 1.6,
+        "p95": 2.3,
+        "p99": 8.3,
+        "p999": 44.7
+      },
+      "hitSpins": 82433,
+      "hitSpinFrequency": 0.71193042456904,
+      "baseHitSpinFrequency": 0.71089,
+      "spins": 115788,
+      "cascades": 128839,
+      "magicActivations": 3607,
+      "retriggers": 129,
+      "retriggersByScatters": {
+        "2": 116,
+        "3": 13
+      },
+      "addedSpins": 284,
+      "maxMagicLevel": 8,
+      "maxBonusDuration": 16,
+      "bonusReachedWildCapFrequency": null,
+      "naturalBonuses": {
+        "common": 1283,
+        "super": 9,
+        "secret": 0
+      },
+      "contributionsRtp": {
+        "base": 0.594323,
+        "common": 0.25651,
+        "super": 0.010676,
+        "secret": 0
+      },
+      "bonusRoundsCount": 1292,
+      "bonusRoundsWithRetrigger": 123,
+      "bonusRetriggerFrequency": 0.09520123839009288,
+      "batches": [
+        {
+          "count": 5000,
+          "rtp": 0.9012199999999957
+        },
+        {
+          "count": 5000,
+          "rtp": 0.9261399999999922
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8153399999999896
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7797199999999906
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8131199999999912
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7831199999999914
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7919399999999929
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8030199999999916
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8856199999999903
+        },
+        {
+          "count": 5000,
+          "rtp": 0.9567599999999916
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8126799999999903
+        },
+        {
+          "count": 5000,
+          "rtp": 0.9483199999999921
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8433199999999937
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7833999999999928
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8958999999999909
+        },
+        {
+          "count": 5000,
+          "rtp": 1.004939999999992
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8358199999999926
+        },
+        {
+          "count": 5000,
+          "rtp": 0.9624599999999919
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8034199999999897
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8839199999999908
+        }
+      ],
+      "bonusRetriggerConfidence95Wilson": [
+        0.08037626851358937,
+        0.11242630859151359
+      ]
+    },
+    {
+      "configVersion": "sofia-retrigger-under-ten-v22",
+      "configHash": "9ccfbb67bb28d3c3481e5e42e78d7b2235a9e9fd7675e9393e4a00a738dfdac4",
+      "calibrated": false,
+      "mode": "hunt",
+      "count": 100000,
+      "seed": 21261034,
+      "rng": "mulberry32",
+      "betUnits": 100,
+      "totalCostBaseBets": 400000,
+      "totalReturnBaseBets": 286464.00000004965,
+      "rtp": 0.716159999999999,
+      "settledCreditRtp": 0.71616,
+      "sampleVariance": 13.458050672406918,
+      "standardError": 0.01160088387684616,
+      "confidence95Approx": [
+        0.6934222676013806,
+        0.7388977323986174
+      ],
+      "confidenceJoint95Approx": [
+        0.6871577903078836,
+        0.7451622096921144
+      ],
+      "precisionGatePassed": false,
+      "nonzeroReturnFrequency": 0.71509,
+      "profitFrequency": 0.11044,
+      "meanReturnBaseBets": 2.8646400000004966,
+      "maxWinCount": 0,
+      "quantilesBaseBets": {
+        "median": 0.4,
+        "p90": 6,
+        "p95": 14.8,
+        "p99": 44.7,
+        "p999": 143.5
+      },
+      "hitSpins": 166319,
+      "hitSpinFrequency": 0.70486099338871,
+      "baseHitSpinFrequency": 0.69084,
+      "spins": 235960,
+      "cascades": 274175,
+      "magicActivations": 30456,
+      "retriggers": 1013,
+      "retriggersByScatters": {
+        "2": 856,
+        "3": 157
+      },
+      "addedSpins": 2340,
+      "maxMagicLevel": 9,
+      "maxBonusDuration": 22,
+      "bonusReachedWildCapFrequency": null,
+      "naturalBonuses": {
+        "common": 10868,
+        "super": 267,
+        "secret": 0
+      },
+      "contributionsRtp": {
+        "base": 0.1376435,
+        "common": 0.53018475,
+        "super": 0.04833175,
+        "secret": 0
+      },
+      "bonusRoundsCount": 11135,
+      "bonusRoundsWithRetrigger": 954,
+      "bonusRetriggerFrequency": 0.0856757970363718,
+      "batches": [
+        {
+          "count": 5000,
+          "rtp": 0.7090750000000066
+        },
+        {
+          "count": 5000,
+          "rtp": 0.8122150000000086
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7396800000000072
+        },
+        {
+          "count": 5000,
+          "rtp": 0.6755400000000065
+        },
+        {
+          "count": 5000,
+          "rtp": 0.735160000000007
+        },
+        {
+          "count": 5000,
+          "rtp": 0.6714600000000038
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7572300000000065
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7306050000000067
+        },
+        {
+          "count": 5000,
+          "rtp": 0.6997250000000041
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7342600000000057
+        },
+        {
+          "count": 5000,
+          "rtp": 0.704100000000005
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7006700000000072
+        },
+        {
+          "count": 5000,
+          "rtp": 0.6855250000000058
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7199600000000075
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7205600000000069
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7101350000000066
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7387750000000074
+        },
+        {
+          "count": 5000,
+          "rtp": 0.6750200000000052
+        },
+        {
+          "count": 5000,
+          "rtp": 0.7329000000000048
+        },
+        {
+          "count": 5000,
+          "rtp": 0.6706050000000057
+        }
+      ],
+      "bonusRetriggerConfidence95Wilson": [
+        0.08061897845295905,
+        0.09101840258314436
+      ]
+    },
+    {
+      "configVersion": "sofia-retrigger-under-ten-v22",
+      "configHash": "9ccfbb67bb28d3c3481e5e42e78d7b2235a9e9fd7675e9393e4a00a738dfdac4",
+      "calibrated": false,
+      "mode": "common",
+      "count": 10000,
+      "seed": 22261037,
+      "rng": "mulberry32",
+      "betUnits": 100,
+      "totalCostBaseBets": 290000,
+      "totalReturnBaseBets": 196741.1999999998,
+      "rtp": 0.678417931034485,
+      "settledCreditRtp": 0.6784179310344828,
+      "sampleVariance": 0.8619656641354952,
+      "standardError": 0.009284210597220935,
+      "confidence95Approx": [
+        0.6602208782639319,
+        0.6966149838050381
+      ],
+      "confidenceJoint95Approx": [
+        0.6552074045414327,
+        0.7016284575275373
+      ],
+      "precisionGatePassed": false,
+      "nonzeroReturnFrequency": 1,
+      "profitFrequency": 0.1665,
+      "meanReturnBaseBets": 19.67411999999998,
+      "maxWinCount": 0,
+      "quantilesBaseBets": {
+        "median": 12.4,
+        "p90": 39.8,
+        "p95": 56.8,
+        "p99": 118.1,
+        "p999": 267.5
+      },
+      "hitSpins": 87554,
+      "hitSpinFrequency": 0.7170444866671034,
+      "baseHitSpinFrequency": null,
+      "spins": 122104,
+      "cascades": 153996,
+      "magicActivations": 27096,
+      "retriggers": 892,
+      "retriggersByScatters": {
+        "2": 732,
+        "3": 160
+      },
+      "addedSpins": 2104,
+      "maxMagicLevel": 9,
+      "maxBonusDuration": 20,
+      "bonusReachedWildCapFrequency": 0.0001,
+      "naturalBonuses": {
+        "common": 0,
+        "super": 0,
+        "secret": 0
+      },
+      "contributionsRtp": {
+        "base": 0,
+        "common": 0.6784179310344828,
+        "super": 0,
+        "secret": 0
+      },
+      "bonusRoundsCount": 10000,
+      "bonusRoundsWithRetrigger": 842,
+      "bonusRetriggerFrequency": 0.0842,
+      "batches": [
+        {
+          "count": 500,
+          "rtp": 0.6476689655172406
+        },
+        {
+          "count": 500,
+          "rtp": 0.6609793103448272
+        },
+        {
+          "count": 500,
+          "rtp": 0.6600896551724137
+        },
+        {
+          "count": 500,
+          "rtp": 0.7436965517241374
+        },
+        {
+          "count": 500,
+          "rtp": 0.6681241379310343
+        },
+        {
+          "count": 500,
+          "rtp": 0.6405793103448281
+        },
+        {
+          "count": 500,
+          "rtp": 0.6864689655172417
+        },
+        {
+          "count": 500,
+          "rtp": 0.6845448275862073
+        },
+        {
+          "count": 500,
+          "rtp": 0.7144620689655168
+        },
+        {
+          "count": 500,
+          "rtp": 0.7259310344827586
+        },
+        {
+          "count": 500,
+          "rtp": 0.6756689655172412
+        },
+        {
+          "count": 500,
+          "rtp": 0.7193241379310343
+        },
+        {
+          "count": 500,
+          "rtp": 0.6738413793103447
+        },
+        {
+          "count": 500,
+          "rtp": 0.7284827586206901
+        },
+        {
+          "count": 500,
+          "rtp": 0.7584206896551723
+        },
+        {
+          "count": 500,
+          "rtp": 0.6144413793103447
+        },
+        {
+          "count": 500,
+          "rtp": 0.6374620689655169
+        },
+        {
+          "count": 500,
+          "rtp": 0.6590758620689655
+        },
+        {
+          "count": 500,
+          "rtp": 0.6271793103448271
+        },
+        {
+          "count": 500,
+          "rtp": 0.6419172413793104
+        }
+      ],
+      "bonusRetriggerConfidence95Wilson": [
+        0.0789156999712935,
+        0.08980364480521713
+      ]
+    },
+    {
+      "configVersion": "sofia-retrigger-under-ten-v22",
+      "configHash": "9ccfbb67bb28d3c3481e5e42e78d7b2235a9e9fd7675e9393e4a00a738dfdac4",
+      "calibrated": false,
+      "mode": "super",
+      "count": 10000,
+      "seed": 23261040,
+      "rng": "mulberry32",
+      "betUnits": 100,
+      "totalCostBaseBets": 1030000,
+      "totalReturnBaseBets": 678263.5999999979,
+      "rtp": 0.6585083495145634,
+      "settledCreditRtp": 0.658508349514563,
+      "sampleVariance": 1.5263962067005428,
+      "standardError": 0.012354740817599302,
+      "confidence95Approx": [
+        0.6342930575120688,
+        0.682723641517058
+      ],
+      "confidenceJoint95Approx": [
+        0.6276214974705652,
+        0.6893952015585616
+      ],
+      "precisionGatePassed": false,
+      "nonzeroReturnFrequency": 1,
+      "profitFrequency": 0.1705,
+      "meanReturnBaseBets": 67.8263599999998,
+      "maxWinCount": 0,
+      "quantilesBaseBets": {
+        "median": 31.5,
+        "p90": 152.5,
+        "p95": 239,
+        "p99": 562.8,
+        "p999": 1715.5
+      },
+      "hitSpins": 87557,
+      "hitSpinFrequency": 0.7167520751813226,
+      "baseHitSpinFrequency": null,
+      "spins": 122158,
+      "cascades": 161601,
+      "magicActivations": 34796,
+      "retriggers": 932,
+      "retriggersByScatters": {
+        "2": 785,
+        "3": 147
+      },
+      "addedSpins": 2158,
+      "maxMagicLevel": 10,
+      "maxBonusDuration": 20,
+      "bonusReachedWildCapFrequency": 0.0005,
+      "naturalBonuses": {
+        "common": 0,
+        "super": 0,
+        "secret": 0
+      },
+      "contributionsRtp": {
+        "base": 0,
+        "common": 0,
+        "super": 0.658508349514563,
+        "secret": 0
+      },
+      "bonusRoundsCount": 10000,
+      "bonusRoundsWithRetrigger": 878,
+      "bonusRetriggerFrequency": 0.0878,
+      "batches": [
+        {
+          "count": 500,
+          "rtp": 0.8359980582524263
+        },
+        {
+          "count": 500,
+          "rtp": 0.6115941747572813
+        },
+        {
+          "count": 500,
+          "rtp": 0.6510194174757279
+        },
+        {
+          "count": 500,
+          "rtp": 0.5598660194174754
+        },
+        {
+          "count": 500,
+          "rtp": 0.7167339805825239
+        },
+        {
+          "count": 500,
+          "rtp": 0.6680504854368929
+        },
+        {
+          "count": 500,
+          "rtp": 0.7392990291262139
+        },
+        {
+          "count": 500,
+          "rtp": 0.7204834951456313
+        },
+        {
+          "count": 500,
+          "rtp": 0.6149708737864076
+        },
+        {
+          "count": 500,
+          "rtp": 0.6527009708737866
+        },
+        {
+          "count": 500,
+          "rtp": 0.5896291262135921
+        },
+        {
+          "count": 500,
+          "rtp": 0.5627300970873786
+        },
+        {
+          "count": 500,
+          "rtp": 0.7060815533980582
+        },
+        {
+          "count": 500,
+          "rtp": 0.5900038834951453
+        },
+        {
+          "count": 500,
+          "rtp": 0.6729844660194181
+        },
+        {
+          "count": 500,
+          "rtp": 0.6154213592233002
+        },
+        {
+          "count": 500,
+          "rtp": 0.6866155339805816
+        },
+        {
+          "count": 500,
+          "rtp": 0.7343902912621365
+        },
+        {
+          "count": 500,
+          "rtp": 0.7001106796116505
+        },
+        {
+          "count": 500,
+          "rtp": 0.541483495145631
+        }
+      ],
+      "bonusRetriggerConfidence95Wilson": [
+        0.08241022176558578,
+        0.09350635812108495
+      ]
+    },
+    {
+      "configVersion": "sofia-retrigger-under-ten-v22",
+      "configHash": "9ccfbb67bb28d3c3481e5e42e78d7b2235a9e9fd7675e9393e4a00a738dfdac4",
+      "calibrated": false,
+      "mode": "secret",
+      "count": 10000,
+      "seed": 24261043,
+      "rng": "mulberry32",
+      "betUnits": 100,
+      "totalCostBaseBets": 7540000,
+      "totalReturnBaseBets": 7077190.4000000125,
+      "rtp": 0.9386194164456231,
+      "settledCreditRtp": 0.9386194164456233,
+      "sampleVariance": 2.1977330167275095,
+      "standardError": 0.01482475300545513,
+      "confidence95Approx": [
+        0.909562900554931,
+        0.9676759323363151
+      ],
+      "confidenceJoint95Approx": [
+        0.9015575339319852,
+        0.9756812989592609
+      ],
+      "precisionGatePassed": false,
+      "nonzeroReturnFrequency": 1,
+      "profitFrequency": 0.282,
+      "meanReturnBaseBets": 707.7190400000012,
+      "maxWinCount": 12,
+      "quantilesBaseBets": {
+        "median": 255.7,
+        "p90": 1943.5,
+        "p95": 2892.4,
+        "p99": 5369.6,
+        "p999": 10000
+      },
+      "hitSpins": 87261,
+      "hitSpinFrequency": 0.7145103048465942,
+      "baseHitSpinFrequency": null,
+      "spins": 122127,
+      "cascades": 177100,
+      "magicActivations": 42604,
+      "retriggers": 931,
+      "retriggersByScatters": {
+        "2": 787,
+        "3": 144
+      },
+      "addedSpins": 2150,
+      "maxMagicLevel": 12,
+      "maxBonusDuration": 20,
+      "bonusReachedWildCapFrequency": 0.3978,
+      "naturalBonuses": {
+        "common": 0,
+        "super": 0,
+        "secret": 0
+      },
+      "contributionsRtp": {
+        "base": 0,
+        "common": 0,
+        "super": 0,
+        "secret": 0.9386194164456234
+      },
+      "bonusRoundsCount": 10000,
+      "bonusRoundsWithRetrigger": 878,
+      "bonusRetriggerFrequency": 0.0878,
+      "batches": [
+        {
+          "count": 500,
+          "rtp": 1.081428116710875
+        },
+        {
+          "count": 500,
+          "rtp": 0.9049793103448268
+        },
+        {
+          "count": 500,
+          "rtp": 0.8603074270557028
+        },
+        {
+          "count": 500,
+          "rtp": 0.9868679045092843
+        },
+        {
+          "count": 500,
+          "rtp": 1.003576657824934
+        },
+        {
+          "count": 500,
+          "rtp": 0.945916976127321
+        },
+        {
+          "count": 500,
+          "rtp": 0.8966055702917777
+        },
+        {
+          "count": 500,
+          "rtp": 0.9560071618037144
+        },
+        {
+          "count": 500,
+          "rtp": 0.8859440318302391
+        },
+        {
+          "count": 500,
+          "rtp": 1.0000424403183015
+        },
+        {
+          "count": 500,
+          "rtp": 0.891950132625995
+        },
+        {
+          "count": 500,
+          "rtp": 0.8725591511936336
+        },
+        {
+          "count": 500,
+          "rtp": 1.0178413793103434
+        },
+        {
+          "count": 500,
+          "rtp": 1.0109862068965507
+        },
+        {
+          "count": 500,
+          "rtp": 0.9209119363395224
+        },
+        {
+          "count": 500,
+          "rtp": 0.8447026525198944
+        },
+        {
+          "count": 500,
+          "rtp": 0.9819214854111402
+        },
+        {
+          "count": 500,
+          "rtp": 0.8810246684350134
+        },
+        {
+          "count": 500,
+          "rtp": 0.9598347480106095
+        },
+        {
+          "count": 500,
+          "rtp": 0.8689803713527853
+        }
+      ],
+      "bonusRetriggerConfidence95Wilson": [
+        0.08241022176558578,
+        0.09350635812108495
+      ]
+    }
+  ]
+}

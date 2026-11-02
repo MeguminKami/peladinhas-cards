@@ -28,6 +28,13 @@ window.__notifyRoulette = () => {
   for (const callback of window.__rouletteChatSubscribers || []) callback(messages);
 };
 import { cardWeek } from "../../js/card-week.js";
+import { normalizeClubQuery, nextClubSelection, clubLogo } from "../../js/football-clubs.js";
+const fixtureClubs = [
+  { id: "af-211", name: "Benfica", country: "Portugal" },
+  { id: "af-228", name: "Sporting CP", country: "Portugal" },
+  { id: "af-212", name: "FC Porto", country: "Portugal" },
+  { id: "af-541", name: "Real Madrid", country: "Spain" },
+].map(club => ({ ...club, logo: clubLogo(club.id) }));
 const now = {
   seconds: Math.floor(Date.now() / 1000),
   toDate: () => new Date(),
@@ -197,6 +204,20 @@ export const syncNotifications = async (uid, missions) => {
   return state.notifications;
 };
 export const callAdmin = async (name, data) => {
+  if (name === "searchFootballClubs") {
+    (window.__clubSearches ||= []).push(data.query);
+    if (window.__clubSearchError) throw Error(window.__clubSearchError);
+    if (window.__clubSearchDelay) await new Promise(resolve => setTimeout(resolve, window.__clubSearchDelay));
+    return { data: { clubs: fixtureClubs.filter(club => normalizeClubQuery(club.name).includes(normalizeClubQuery(data.query))) } };
+  }
+  if (name === "selectFootballClub") {
+    const player = state.users.find(user => user.uid === (window.__clubActor || "pedro"));
+    const club = fixtureClubs.find(club => club.id === data.clubId);
+    if (!club || !player) throw Error("Clube inválido.");
+    const next = nextClubSelection(player.favoriteClub, player.clubSelection, club.id);
+    if (next) Object.assign(player, { favoriteClub: club, clubSelection: next });
+    return { data: { club } };
+  }
   if (name === "listCommunityRatingsForAdmin") return { data: { rows: state.communityRatings } };
   if (name === "grantCommunityRatingRetry") {
     if (window.__communityGrantError) throw Error("Não foi possível autorizar. Tenta novamente.");

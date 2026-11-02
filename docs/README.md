@@ -12,6 +12,8 @@
 
 [Deploy: ver pendências, publicar e retomar](../DEPLOY.md)
 
+[Clube favorito: pesquisa, emblemas, custos e configuração](guides/football-clubs.md).
+
 
 [Novos critérios das cartas e mínimo de sete avaliações — 21/10/2026](reports/card-criteria-2026-10-21.md).
 

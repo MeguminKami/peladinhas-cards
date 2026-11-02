@@ -1,0 +1,301 @@
+{
+  "purpose": "pooled-local-calibration-not-certification",
+  "date": "2026-10-31",
+  "sources": [
+    "rtp-entry-clusters-balanced-hunt-v33-large.json",
+    "rtp-entry-clusters-balanced-hunt-v33-large-independent.json"
+  ],
+  "config": {
+    "version": "sofia-entry-clusters-balanced-hunt-v33",
+    "calibrated": false,
+    "columns": 6,
+    "rows": 5,
+    "tierMinimums": [
+      5,
+      6,
+      8,
+      11,
+      14,
+      18
+    ],
+    "weights": [
+      155000,
+      137000,
+      121000,
+      119000,
+      103000,
+      95000,
+      85000,
+      80000,
+      65000,
+      40000
+    ],
+    "pay100": [
+      [
+        10,
+        20,
+        50,
+        100,
+        200,
+        500
+      ],
+      [
+        10,
+        20,
+        50,
+        100,
+        200,
+        500
+      ],
+      [
+        10,
+        20,
+        50,
+        100,
+        200,
+        1000
+      ],
+      [
+        20,
+        40,
+        70,
+        150,
+        300,
+        1000
+      ],
+      [
+        20,
+        40,
+        70,
+        150,
+        300,
+        1000
+      ],
+      [
+        50,
+        80,
+        150,
+        300,
+        1000,
+        5000
+      ],
+      [
+        50,
+        80,
+        150,
+        300,
+        1000,
+        5000
+      ],
+      [
+        80,
+        120,
+        250,
+        500,
+        1500,
+        7500
+      ],
+      [
+        80,
+        120,
+        250,
+        500,
+        1500,
+        10000
+      ],
+      [
+        100,
+        150,
+        500,
+        1000,
+        2500,
+        15000
+      ]
+    ],
+    "xpPerCluster100": {
+      "normal": [
+        300,
+        500,
+        700,
+        900,
+        1100,
+        1300
+      ],
+      "premium": [
+        500,
+        700,
+        900,
+        1100,
+        1300,
+        1500
+      ]
+    },
+    "xpThreshold100": {
+      "base": 4000,
+      "common": 1800,
+      "super": 1700,
+      "secret": 1800
+    },
+    "scatterPPM": {
+      "base": [
+        30100,
+        20100,
+        6100,
+        1500,
+        400
+      ],
+      "common": [
+        18000,
+        1800,
+        23000
+      ],
+      "super": [
+        18000,
+        1800,
+        21000
+      ],
+      "secret": [
+        18000,
+        1270,
+        18000
+      ]
+    },
+    "pairPPM": 700000,
+    "premiumPairPPM": 450000,
+    "repeatPairPPM": 450000,
+    "extraCopyPPM": {
+      "normal": [
+        180000,
+        50000,
+        10000
+      ],
+      "premium": [
+        100000,
+        40000,
+        10000
+      ]
+    },
+    "baseCopyScalePPM": 800000,
+    "maxWilds": 10,
+    "magic": {
+      "common": {
+        "startWilds": 2,
+        "wildCap": 10,
+        "startMultiplier": 1,
+        "rewardRolls": 1,
+        "wildGainWeights": [
+          1000000,
+          0,
+          0
+        ],
+        "multiplierGainWeights": [
+          1000000,
+          0,
+          0,
+          0
+        ]
+      },
+      "super": {
+        "startWilds": 2,
+        "wildCap": 10,
+        "startMultiplier": 2,
+        "rewardRolls": 1,
+        "wildGainWeights": [
+          1000000,
+          0,
+          0
+        ],
+        "multiplierGainWeights": [
+          0,
+          1000000,
+          0,
+          0
+        ]
+      },
+      "secret": {
+        "startWilds": 2,
+        "wildCap": 10,
+        "startMultiplier": 2,
+        "rewardRolls": 1,
+        "wildGainWeights": [
+          0,
+          1000000,
+          0
+        ],
+        "multiplierGainWeights": [
+          0,
+          1000000,
+          0,
+          0
+        ],
+        "multiplierGainCycle": [
+          2,
+          3
+        ]
+      }
+    },
+    "baseWildWeights": [
+      500000,
+      350000,
+      150000
+    ],
+    "bonusSpins": 12,
+    "buyPrices": {
+      "common": 95,
+      "super": 237,
+      "secret": 754
+    },
+    "bonusHunt": {
+      "spinCostMultiplier": 4,
+      "scatterMultiplier": 2.09
+    },
+    "maxWin100": 1000000
+  },
+  "reports": [
+    {
+      "mode": "base",
+      "count": 2000000,
+      "rtp": 0.9746937500000322,
+      "variance": 271.8484049529042,
+      "standardError": 0.011658653544747443,
+      "confidence95Approx": [
+        0.9518427890523272,
+        0.9975447109477372
+      ],
+      "naturalBonuses": {
+        "common": 11165,
+        "super": 119,
+        "secret": 1
+      },
+      "bonusFrequency": 0.0056425,
+      "meanEntriesPerBonus": 177.22640673460344,
+      "bonusRoundsWithRetrigger": 1165,
+      "bonusRetriggerFrequency": 0.10323438192290652
+    },
+    {
+      "mode": "hunt",
+      "count": 2000000,
+      "rtp": 0.9837513124999856,
+      "variance": 109.98082392400133,
+      "standardError": 0.007415552033530657,
+      "confidence95Approx": [
+        0.9692168305142655,
+        0.9982857944857056
+      ],
+      "naturalBonuses": {
+        "common": 72553,
+        "super": 1537,
+        "secret": 9
+      },
+      "bonusFrequency": 0.0370495,
+      "meanEntriesPerBonus": 26.990917556242323,
+      "bonusRoundsWithRetrigger": 7309,
+      "bonusRetriggerFrequency": 0.09863830820928758
+    }
+  ],
+  "huntMinusBaseRtp": 0.009057562499953375,
+  "huntMinusBaseConfidence95Approx": [
+    -0.018024121030188547,
+    0.0361392460300953
+  ]
+}

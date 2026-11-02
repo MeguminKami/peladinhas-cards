@@ -1,4 +1,4 @@
-import { users, saveProfile } from "./db.js";
+import { users, saveProfile, callAdmin } from "./db.js";
 export let currentUser = window.__guest ? null : { uid: "pedro" };
 let changed;
 export function startAuth(onChange) {
@@ -25,8 +25,9 @@ export async function logout() {
 }
 export async function register(username, password, details) {
   const uid = "new-user";
+  const { favoriteClubId, ...profile } = details;
   (await users()).push({
-    ...details,
+    ...profile,
     uid,
     username,
     role: "member",
@@ -34,6 +35,8 @@ export async function register(username, password, details) {
     disabled: false,
   });
   currentUser = { uid };
+  window.__clubActor = uid;
+  if (favoriteClubId) await callAdmin("selectFootballClub", { clubId: favoriteClubId });
   await changed(currentUser);
   return currentUser;
 }

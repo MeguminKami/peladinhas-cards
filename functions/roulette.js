@@ -5,6 +5,7 @@ import { walletCall } from "./casino.js";
 import {
   CASINO_EDITION,
   currentCasinoWallet,
+  newCasinoWallet,
 } from "../js/casino-economy.js";
 import {
   ROULETTE,
@@ -147,6 +148,17 @@ function walletFor(wallets, uid, snapshot) {
   return wallets[uid];
 }
 
+// Bettors being paid by a round resolution never block the table: a missing
+// or stale wallet migrates exactly like opening the casino does.
+function payoutWalletFor(wallets, uid, snapshot) {
+  const current = currentCasinoWallet(
+    snapshot?.exists ? snapshot.data() : null,
+  );
+  wallets[uid] ||=
+    Number.isSafeInteger(current.balance) ? current : newCasinoWallet();
+  return wallets[uid];
+}
+
 export async function runRoulette(input, uid, name, now = Date.now(), db = getFirestore(), forcedNumber) {
   validateAction(input);
   const privateRef = db.doc(ROULETTE_PRIVATE);
@@ -162,9 +174,12 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
     const snapshots = await tx.getAll(...reads);
     const original = snapshots[0].data();
     const chatSnapshot = chatRef ? snapshots[1] : null;
-    let table = original ? structuredClone(original) : newRouletteTable(now);
-    if (table.edition !== CASINO_EDITION)
-      throw new HttpsError("failed-precondition", "A edição da mesa mudou.");
+    // An edition change resets the wallets too, so the old table's bets no
+    // longer have money behind them: start fresh instead of blocking the room.
+    let table =
+      original && original.edition === CASINO_EDITION
+        ? structuredClone(original)
+        : newRouletteTable(now);
     if (input.action !== "join" && input.table !== table.id)
       throw new HttpsError("failed-precondition", "A sala terminou. Volta ao casino.");
 
@@ -215,8 +230,14 @@ export async function runRoulette(input, uid, name, now = Date.now(), db = getFi
       : [];
     const wallets = {};
     const walletChanged = new Set();
-    for (let i = 0; i < walletRefs.length; i++)
-      walletFor(wallets, [...walletIds][i], walletSnapshots[i]);
+    const strictActor = ["join", "balance", "spin"].includes(input.action)
+      ? uid
+      : null;
+    for (let i = 0; i < walletRefs.length; i++) {
+      const id = [...walletIds][i];
+      if (id === strictActor) walletFor(wallets, id, walletSnapshots[i]);
+      else payoutWalletFor(wallets, id, walletSnapshots[i]);
+    }
 
     let changed = !original;
     let publicChanged = !original;

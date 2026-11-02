@@ -31,17 +31,31 @@ try {
   });
   await page.goto(`${origin}/game.html`);
   await page.waitForSelector('#board .cell:nth-child(30)');
+  await page.waitForFunction(() => !document.querySelector('#spin').disabled);
   assert.equal(await page.locator('#board .cell').count(), 30);
+  assert.equal(await page.locator('.xp-panel').isVisible(), false);
 
   await page.goto(origin);
   const widget = page.frameLocator('iframe');
   await widget.locator('#board .cell:nth-child(30)').waitFor();
+  await widget.locator('#spin:not(:disabled)').waitFor();
+  assert.ok(await page.locator('iframe').evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight+1),'Widget must fit the visible parent viewport');
+  const beforeHover=await widget.locator('.shell').boundingBox();
+  await widget.locator('#buy-button').hover();
+  await page.waitForTimeout(500);
+  const afterHover=await widget.locator('.shell').boundingBox();
+  assert.ok(Math.abs(beforeHover.width-afterHover.width)<1&&Math.abs(beforeHover.height-afterHover.height)<1,'Bonus hover cannot resize the game');
   assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(255, 255, 255)');
   const balanceBeforeExpand = await widget.locator('#balance').innerText();
+  const widgetBoard = await widget.locator('#board').boundingBox();
   await widget.locator('#expand-button').click();
   await page.waitForFunction(() => Boolean(document.fullscreenElement));
   await widget.locator('#expand-button[aria-pressed="true"]').waitFor();
   assert.equal(await widget.locator('#balance').innerText(), balanceBeforeExpand);
+  const expandedBoard = await widget.locator('#board').boundingBox();
+  assert.ok(expandedBoard.width > widgetBoard.width * 1.05, 'Fullscreen must enlarge the board and composition');
+  const expandedCell = await widget.locator('.cell').first().boundingBox();
+  assert.ok(Math.abs(expandedCell.width / expandedCell.height - 1.18) < .02, 'Fullscreen must preserve symbol geometry');
   await page.screenshot({path:join(tmpdir(),'sofia-fullscreen.png')});
   for (const viewport of [{width:844,height:390},{width:390,height:844},{width:1400,height:1100}]) {
     await page.setViewportSize(viewport);
@@ -63,6 +77,7 @@ try {
   await page.screenshot({path:join(tmpdir(),'sofia-widget-mobile.png')});
   await page.goto(`${origin}/game.html`);
   await page.setViewportSize({width:1400,height:1100});
+  await page.waitForFunction(() => !document.querySelector('#spin').disabled);
 
   const dimensions = [];
   const widths = [1600,1400,1100,1024,901,900,800,768,761,760,600,390,360,320,390,768,900,901,1024,1100,1400,1600];
@@ -87,20 +102,23 @@ try {
       if ((i === 3 && j === 5)) continue;
       assert.ok(Math.min(a.right,b.right)-Math.max(a.x,b.x)<1 || Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)<1,`Buttons overlap at ${width}`);
     }
-    const centers = [...geometry.left, ...geometry.right].map(r => (r.y + r.bottom) / 2);
-    assert.ok(Math.max(...centers) - Math.min(...centers) < 2, `Controls must stay aligned at ${width}`);
+    const portrait = await page.locator('.shell').getAttribute('data-layout') === 'portrait';
+    for (const row of portrait ? [geometry.left, geometry.right] : [[...geometry.left, ...geometry.right]]) {
+      const centers = row.map(r => (r.y + r.bottom) / 2);
+      assert.ok(Math.max(...centers) - Math.min(...centers) < 2, `Control row must stay aligned at ${width}`);
+    }
     const bonus = await page.locator('#buy-button').boundingBox();
     assert.ok(bonus.y >= geometry.wilds.bottom, `Bonus must sit below wilds at ${width}`);
     assert.ok(bonus.y + bonus.height <= geometry.menu.y, `Bonus must stay above the controls at ${width}`);
     assert.ok(Math.abs(bonus.y + bonus.height - geometry.board.bottom) < 2, `Bonus must sit at the bottom of the sidebar at ${width}`);
-    const amounts = await page.locator('#balance, #win').evaluateAll(els => els.map(el => ({height:el.getBoundingClientRect().height, lineHeight:parseFloat(getComputedStyle(el).fontSize), nowrap:getComputedStyle(el).whiteSpace})));
+    const amounts = await page.locator('#balance, #win').evaluateAll(els => els.map(el => ({height:el.offsetHeight, lineHeight:parseFloat(getComputedStyle(el).fontSize), nowrap:getComputedStyle(el).whiteSpace})));
     assert.ok(amounts.every(r => r.nowrap === 'nowrap' && r.height < r.lineHeight * 2), `Amounts must stay on one line at ${width}`);
     assert.ok(Math.abs(geometry.left[2].y - geometry.left[3].y) < 1, `Balance and win must align at ${width}`);
     assert.ok(await page.evaluate(() => document.body.scrollHeight <= innerHeight + 1 && document.documentElement.scrollWidth <= innerWidth + 1 && document.querySelector('.control-deck').scrollWidth <= document.querySelector('.control-deck').clientWidth + 1), `Slot must fit without scrolling at ${width}`);
     const boardWidth = geometry.board.right-geometry.board.x;
-    if(previous && width<previous.width) assert.ok(boardWidth<=previous.boardWidth+1,`Board grows when viewport shrinks at ${width}`);
-    if(previous && width>previous.width) assert.ok(boardWidth>=previous.boardWidth-1,`Board shrinks when viewport grows at ${width}`);
-    previous={width,boardWidth};
+    if(previous?.portrait === portrait && width<previous.width) assert.ok(boardWidth<=previous.boardWidth+1,`Board grows when viewport shrinks at ${width}`);
+    if(previous?.portrait === portrait && width>previous.width) assert.ok(boardWidth>=previous.boardWidth-1,`Board shrinks when viewport grows at ${width}`);
+    previous={width,boardWidth,portrait};
     assert.ok(geometry.xp.bottom <= geometry.board.y + 1, 'XP must stay above the slot');
     assert.ok(geometry.wilds.right <= geometry.board.x, 'Wild indicators must stay left of the slot');
     assert.ok(geometry.menu.y >= geometry.board.bottom, 'Menu must stay below the slot');
@@ -109,7 +127,7 @@ try {
       assert.ok(geometry.board.right - geometry.board.x >= 690, 'Desktop board should be wider');
       assert.ok(geometry.left.every((r,i,xs) => !i || r.x >= xs[i-1].right), 'Info/sound/balance/win order');
       assert.ok(geometry.right.every((r,i,xs) => !i || r.x >= xs[i-1].right), 'Bet/spin/speed order');
-      assert.ok(geometry.auto.y < geometry.spin.bottom && geometry.auto.bottom <= geometry.spin.bottom + 24 && Math.abs(geometry.auto.x - geometry.spin.x) < 1, 'Autoplay must fit around the lower spin edge');
+      assert.ok(geometry.auto.y < geometry.spin.bottom && geometry.auto.bottom <= geometry.spin.bottom + (geometry.spin.bottom - geometry.spin.y) * .31 && Math.abs(geometry.auto.x - geometry.spin.x) < 1, 'Autoplay must fit around the lower spin edge at the current scale');
     }
     dimensions.push({ viewport: width, cell: geometry.cells[0].w, boardRows: 5, boardColumns: 6 });
     if (width === 1400 || width === 390) await page.screenshot({ path: join(tmpdir(), `sofia-prototype-${width}.png`), fullPage: true });
@@ -148,6 +166,7 @@ try {
   await page.getByRole('button', { name: 'Regras', exact: true }).click();
   await page.waitForSelector('#rules-dialog[open]');
   assert.equal(await page.locator('#rules-content tbody tr').count(), 10);
+  await page.locator('[data-rule=pay]').click();
   for (const mode of ['common','super','secret','base']) {
     await page.locator('#payout-mode').selectOption(mode);
     const table=DEFAULT_CONFIG.bonusPay100?.[mode] ?? DEFAULT_CONFIG.pay100;
@@ -194,10 +213,10 @@ try {
   assert.match(await page.locator('#hunt-price').innerText(), /8,00/);
   await page.locator('#buy-bet-minus').click();
   await page.locator('#hunt-button').click();
-  await page.locator('#bet').selectOption('5000', { force: true });
+  await page.locator('#bet').selectOption('2000', { force: true });
   await page.locator('#buy-button').click();
   assert.equal(await page.locator('[data-buy=secret]').isDisabled(), true);
-  assert.equal(await page.locator('[data-buy=super]').isDisabled(), true);
+  assert.equal(await page.locator('[data-buy=super]').isDisabled(), false);
   assert.equal(await page.locator('[data-buy=common]').isDisabled(), false);
   await page.keyboard.press('Escape');
   await page.locator('#bet').selectOption('20', { force: true });
@@ -205,7 +224,12 @@ try {
   async function settle() {
     for (let i = 0; i < 1200; i++) {
       if (await page.locator('#notice-dialog').getAttribute('open') !== null) await page.locator('#notice-dialog [data-close]').click();
-      if (await page.locator('#spin-label').innerText() === 'Rodar') return;
+      if (await page.locator('#spin-label').innerText() === 'Rodar') {
+        await page.evaluate(async()=>{const {finishCounts}=await import('./ui/presentation.js');finishCounts();});
+        return;
+      }
+      // Exercise the explicit skip action when settling full bonus fixtures.
+      if (await page.locator('#spin-label').innerText() === 'Acelerar') await page.locator('#spin').click();
       await new Promise(resolve => setTimeout(resolve, 20));
     }
     throw Error('Presentation did not finish');
@@ -213,10 +237,11 @@ try {
 
   await page.locator('#buy-button').click();
   assert.equal(await page.locator('[data-buy]').count(), 3);
-  assert.match(await page.locator('[data-mode=common] > strong').innerText(), /16,00/);
+  assert.equal(await page.locator('[data-mode=common] > strong').innerText(), new Intl.NumberFormat('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2}).format(DEFAULT_CONFIG.buyPrices.common * .2) + ' DJC');
   await page.locator('[data-buy=common]').click();
   assert.equal(await page.locator('#bet').isDisabled(), true);
   assert.equal(await page.locator('#hunt-button').isDisabled(), true);
+  await page.locator('#notice-dialog[open] [data-close]').click();
   await setSpeed('ultra');
   assert.equal(await page.locator('#speed-label').innerText(), 'Ultra');
   await settle();
@@ -243,9 +268,27 @@ try {
   await page.locator('#rules-button').click();
   await page.locator('[data-demo=super]').click();
   await page.waitForSelector('#notice-dialog[open]');
-  assert.match(await page.locator('#notice-title').innerText(), /Super/);
+  assert.equal(await page.locator('#notice-title').innerText(), 'Baile ao Luar');
   await page.locator('#notice-dialog [data-close]').click();
   await settle();
+  assert.equal(await page.locator('#balance').innerText(), balanceBeforeDemo);
+
+  // Secret presents its guaranteed +4 multiplier upgrade.
+  await page.evaluate(() => {
+    globalThis.secretDrawsSeen = false;
+    const toast = document.getElementById('magic-upgrade');
+    globalThis.secretDrawObserver = new MutationObserver(() => {
+      if (document.body.dataset.mode === 'secret' && toast.textContent.includes('Multiplicador dos WILDs:') && /(?:6|10|14|18)\u00d7/.test(toast.textContent)) globalThis.secretDrawsSeen = true;
+    });
+    globalThis.secretDrawObserver.observe(toast, {childList:true,characterData:true,subtree:true});
+  });
+  await page.locator('#rules-button').click();
+  await page.locator('[data-demo=secret]').click();
+  await page.waitForSelector('#notice-dialog[open]');
+  await page.locator('#notice-dialog [data-close]').click();
+  await settle();
+  assert.equal(await page.evaluate(() => globalThis.secretDrawsSeen), true);
+  await page.evaluate(() => globalThis.secretDrawObserver.disconnect());
   assert.equal(await page.locator('#balance').innerText(), balanceBeforeDemo);
 
   // Start ten paid spins, stop the queue during the first one and let it settle.

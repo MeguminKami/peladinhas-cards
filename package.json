@@ -33,7 +33,7 @@
     "docs:images": "node scripts/capture-doc-images.mjs",
     "export:repo": "node scripts/export-repository.mjs",
     "preexport:repo": "npm run test:docs",
-    "test": "node --test tests/scrap-card.test.js tests/performance-week.test.js tests/rating-quorum.test.js tests/logic.test.js tests/card-achievements.test.js tests/progression.test.js tests/game-progression.test.js tests/community-rating-policy.test.js tests/events.test.js tests/youtube.test.js tests/team-balance.test.js tests/card-week.test.js tests/match-time.test.js tests/push-config.test.js tests/activity-categories.test.js tests/system-policy.test.js tests/maintenance-pages.test.js tests/paths.test.js tests/path-window.test.js tests/path-variety.test.js tests/statistics.test.js tests/casino.test.js tests/casino-session.test.js",
+    "test": "node --test tests/scrap-card.test.js tests/performance-week.test.js tests/rating-quorum.test.js tests/logic.test.js tests/card-achievements.test.js tests/progression.test.js tests/game-progression.test.js tests/community-rating-policy.test.js tests/events.test.js tests/youtube.test.js tests/team-balance.test.js tests/card-week.test.js tests/match-time.test.js tests/push-config.test.js tests/activity-categories.test.js tests/system-policy.test.js tests/maintenance-pages.test.js tests/paths.test.js tests/path-window.test.js tests/path-variety.test.js tests/statistics.test.js tests/casino.test.js tests/casino-session.test.js tests/football-clubs.test.js",
     "test:rules": "node scripts/emulator-cli.mjs emulators:exec --project demo-peladinhas-rules --only firestore \"node --test tests/firestore.rules.test.js\"",
     "test:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.backend.json --project demo-peladinhas-backend --only firestore \"node --import ./tests/isolate-backend-project.mjs --test --test-concurrency=1 tests/automation-cycle.backend.test.js tests/feedback-queue.backend.test.js tests/backend.test.js tests/community-review.backend.test.js tests/maintenance-calendar.backend.test.js tests/card-collection.backend.test.js tests/events.backend.test.js tests/push.backend.test.js tests/game-workspace.backend.test.js tests/game-rating-admin.backend.test.js tests/paths.backend.test.js tests/path-corrections.backend.test.js tests/path-early-settlement.backend.test.js tests/path-variety.backend.test.js tests/game-flow.backend.test.js tests/admin-messages.backend.test.js tests/home-cache.backend.test.js\"",
     "test:push": "node tests/push-worker.mjs && node tests/push-ui.mjs",
@@ -107,7 +107,9 @@
     "deploy:plan": "node scripts/deploy-tracker.mjs plan",
     "deploy:pending": "node scripts/deploy-tracker.mjs pending",
     "deploy:resume": "node scripts/deploy-tracker.mjs resume",
-    "test:deploy-tracker": "node --test tests/deploy-tracker.test.js"
+    "test:deploy-tracker": "node --test tests/deploy-tracker.test.js",
+    "test:clubs": "node --test tests/football-clubs.test.js && node tests/football-clubs.mjs",
+    "test:clubs:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.backend.json --project demo-peladinhas-clubs --only firestore \"node --test tests/football-clubs.backend.test.js\""
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

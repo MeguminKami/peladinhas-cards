@@ -1843,6 +1843,8 @@ p {
 .dashboard-greeting .eyebrow { margin-bottom: 10px; }
 .dashboard-greeting h1 { margin: 0; overflow-wrap: anywhere; }
 .dashboard-card-action { display: flex; align-items: center; gap: 16px; flex: 0 1 310px; min-height: 52px; padding: 12px 0 12px 20px; border: 0; border-left: 1px solid var(--border-strong); border-radius: 0; background: transparent; color: var(--text-primary); text-align: left; font: inherit; font-size: .92rem; font-weight: 650; cursor: pointer; }
+.dashboard-profile-actions { display: flex; align-items: center; gap: 16px; }
+.dashboard-profile-actions .dashboard-card-action { flex: 1 1 220px; text-decoration: none; }
 .dashboard-card-action span { max-width: 220px; }
 .dashboard-card-action svg { flex-shrink: 0; width: 36px; height: 36px; padding: 9px; border-radius: 50%; background: var(--accent); color: var(--on-accent, #08110a); transition: transform 180ms ease; }
 .dashboard-card-action:hover svg { transform: translateX(4px); }
@@ -1868,6 +1870,8 @@ p {
 @media (max-width: 800px) {
   .dashboard-greeting:has(.dashboard-card-action) { align-items: flex-start; flex-direction: column; gap: 16px; }
   .dashboard-card-action { flex: auto; width: 100%; justify-content: space-between; border-left: 0; padding: 4px 0; }
+  .dashboard-profile-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 12px; }
+  .dashboard-profile-actions .dashboard-card-action { flex: auto; }
   .dashboard-card-action span { max-width: none; }
 }
 @media (max-width: 480px) {

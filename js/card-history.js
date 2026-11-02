@@ -30,6 +30,7 @@ export function historyForDisplay(player, history, cycle = cardWeek()) {
         displayName: player.displayName || player.username,
         photoURL: player.photoURL || "",
         countryCode: player.countryCode,
+        favoriteClub: player.favoriteClub || null,
       },
     };
   });

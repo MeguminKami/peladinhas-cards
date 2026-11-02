@@ -21,6 +21,19 @@ test('hunt applies the calibrated scatter boost to all five probabilities, keepi
   }
 });
 
+test('hunt applies the configured multiplier to each conditional scatter chance, with the correct boundary', () => {
+  for (let count = 0; count < 5; count++) {
+    const chance = Math.min(1000000, Math.round(DEFAULT_CONFIG.scatterPPM.base[count] * DEFAULT_CONFIG.bonusHunt.scatterMultiplier));
+    for (const [offset, expected] of [[-.5, true], [.5, false]]) {
+      const board = quiet();
+      for (let p = 0; p < count; p++) board[29 - p] = 'S';
+      board[0] = null;
+      fillBoard(board, 'base', {next: () => (chance + offset) / 1000000}, DEFAULT_CONFIG, DEFAULT_CONFIG.bonusHunt.scatterMultiplier);
+      assert.equal(board[0] === 'S', expected, `Scatter ${count + 1}, offset ${offset}`);
+    }
+  }
+});
+
 test('hunt charges four times once, uses normal rules and gives a bonus no boosted retriggers', () => {
   const engine = createEngine();
   const start = engine.start({ mode: 'hunt', betUnits: 123 });
@@ -46,17 +59,17 @@ test('hunt boosts refills too, without changing symbol payouts or XP', () => {
   // First two replacements become scatters only with the hunt boost;
   // the remaining cells use varied premiums to terminate the cascade.
   let fallbackIndex = 0;
-  const refill = [.04, .025, .99, .90, .99, .94, .99, .90];
+  const refill = [.04, .025, .99, .85, .99, .99, .93, .99, .99, .85, .99];
   const fixtureEngine = createEngine({ rng: { next: () => refill[fallbackIndex++] ?? .99 } });
   const board = quiet(); for (let p = 0; p < 5; p++) board[p] = 'N1';
   const result = fixtureEngine.step(fixtureEngine.start({ mode: 'hunt' }), { initialBoard: board });
   const hit = result.events.find(e => e.type === 'hits').hits.find(h => h.symbol === 'N1');
   assert.equal(hit.rawPay100, String(DEFAULT_CONFIG.pay100[0][0]));
-  assert.equal(hit.xp100, 500);
+  assert.equal(hit.xp100, 300);
   const generated = result.events.find(e => e.type === 'refill').generated;
   assert.equal(generated[0].symbol, 'S');
   assert.equal(generated[1].symbol, 'S');
-  assert.equal(fixtureEngine.config.xpThreshold100.base, 3900);
+  assert.equal(fixtureEngine.config.xpThreshold100.base, 4000);
 });
 
 test('hunt keeps MAX WIN relative to the base bet, not the fourfold spin cost', () => {
@@ -64,7 +77,7 @@ test('hunt keeps MAX WIN relative to the base bet, not the fourfold spin cost', 
   const trigger = quiet(); trigger[0] = trigger[1] = trigger[2] = trigger[3] = 'S';
   const first = engine.step(engine.start({ mode: 'hunt', betUnits: 123 }), { initialBoard: trigger });
   assert.equal(first.state.mode, 'super');
-  const outcome = engine.step(first.state, { initialBoard: Array.from({ length: 30 }, () => ({ symbol: 'W', multiplier: 100 })) });
+  const outcome = engine.step(first.state, { initialBoard: Array.from({ length: 30 }, () => ({ symbol: 'W', multiplier: 1000000 })) });
   assert.equal(outcome.state.paid100, 1000000);
   const end = outcome.events.at(-1);
   assert.equal(end.costUnits, 492);

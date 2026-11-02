@@ -2,7 +2,7 @@ import { createEngine, entryCostMultiplier } from '../src/index.js';
 
 export const AUTO_SPIN_COUNTS = Object.freeze([10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500]);
 export const BET_UNITS = Object.freeze([20, 40, 60, 80, 100, 150, 200, 300, 400, 500, 1000, 2000, 5000]);
-export const SPEEDS = Object.freeze({ normal: 1, fast: .32, ultra: .035 });
+export const SPEEDS = Object.freeze({ normal: 1, fast: .32, ultra: .16 });
 
 export function autoCount(index) {
   if (!Number.isInteger(index) || index < 0 || index >= AUTO_SPIN_COUNTS.length) throw new RangeError('Invalid autoplay selection');

@@ -1,16 +1,17 @@
-const frame = document.querySelector('iframe');
-let observer;
+﻿const frame = document.querySelector('iframe');
+let scheduled = 0;
 function fitWidget() {
-  observer?.disconnect();
-  const shell = frame.contentDocument?.querySelector('.shell');
-  if (!shell) return;
-  observer = new ResizeObserver(() => {
-    if (!frame.contentDocument.fullscreenElement) {
-      frame.style.height = `${Math.ceil(shell.getBoundingClientRect().height)}px`;
-    }
-  });
-  observer.observe(shell);
-  observer.observe(frame.contentDocument.body);
+  scheduled = 0;
+  if (frame.contentDocument?.fullscreenElement) return;
+  const viewport = window.visualViewport;
+  const visibleBottom = (viewport?.offsetTop ?? 0) + (viewport?.height ?? innerHeight);
+  const top = frame.getBoundingClientRect().top;
+  const height = Math.max(1, Math.floor(visibleBottom - Math.max(0, top) - 16));
+  if (Math.abs(frame.clientHeight-height)>1) frame.style.height = `${height}px`;
 }
-frame.addEventListener('load', fitWidget);
-if (frame.contentDocument?.readyState === 'complete') fitWidget();
+function schedule() { if (!scheduled) scheduled=requestAnimationFrame(fitWidget); }
+frame.addEventListener('load',()=>{frame.contentDocument?.addEventListener('fullscreenchange',schedule);schedule();});
+addEventListener('resize',schedule);
+window.visualViewport?.addEventListener('resize',schedule);
+window.visualViewport?.addEventListener('scroll',schedule);
+schedule();

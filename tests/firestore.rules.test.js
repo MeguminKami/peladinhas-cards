@@ -20,6 +20,23 @@ import {
   Timestamp,
 } from "firebase/firestore";
 let env;
+
+test("favorite clubs are server-only at signup and for members and admins", async () => {
+  for (const uid of ["joao", "boss"]) {
+    await assertFails(updateDoc(doc(signed(uid), `users/${uid}`), {
+      favoriteClub: { id: "af-1", name: "Forged", logo: "https://evil.invalid" }, updatedAt: serverTimestamp(),
+    }));
+    await assertSucceeds(updateDoc(doc(signed(uid), `users/${uid}`), { displayName: "Nome válido", updatedAt: serverTimestamp() }));
+    for (const path of ["footballClubData/main/clubs/af-1", "footballClubData/main/selections/joao", "footballClubData/main/budgets/global", "footballClubData/main/searches/private"]) {
+      await assertFails(getDoc(doc(signed(uid), path)));
+      await assertFails(setDoc(doc(signed(uid), path), { count: 0 }));
+    }
+  }
+  const fresh = user("newclub");
+  await assertFails(setDoc(doc(signed("newclub"), "users/newclub"), {
+    ...fresh, favoriteClub: { id: "af-1" }, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+});
 test("home revisions expose only global and own tokens; materialized caches stay server-only", async () => {
   await env.withSecurityRulesDisabled(async c => {
     for (const id of ["global", "joao", "pedro"]) await setDoc(doc(c.firestore(), `homeSignals/${id}`), { version: "v1" });

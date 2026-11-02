@@ -1,5 +1,7 @@
 # Matemática da Princesa Sofia
 
+> Estado atual: `sofia-premium-clusters-fixed-magic-v15`. Consultar a [configuracao atual e os cinco RTPs observados](README.md#configuração-atual-premium-e-clusters-maiores). As medicoes anteriores neste documento sao historicas. A amostra atual foi usada para calibracao e nao certifica o RTP real.
+
 ## Âmbito e estado
 
 Formulação de desenvolvimento de 30 de outubro de 2026, baseada nas [regras da etapa 1](01-logica-mecanicas-rtp.md). O utilizador autorizou simulação e ajuste para RTP entre 98% e 100%, compras do comum entre 80× e 100×, super entre 200× e 240× e secret a partir de 300×. Interpretação de trabalho: 100 000 compras **de cada tipo**, além de 1 000 000 de jogadas base com todos os bónus que originem.

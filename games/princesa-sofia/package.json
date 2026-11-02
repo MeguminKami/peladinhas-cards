@@ -6,6 +6,10 @@
     "dev": "node scripts/serve.js",
     "test": "node --test tests/*.test.js",
     "test:ui": "node tests/prototype.browser.js",
-    "simulate": "node scripts/simulate.js"
+    "simulate": "node scripts/simulate.js",
+    "validate:copies": "node scripts/validate-copies.js",
+    "calibrate:xp": "node scripts/calibrate-xp.js",
+    "validate:xp": "node scripts/validate-xp.js",
+    "validate:entries": "node scripts/validate-entry-balance.js"
   }
 }

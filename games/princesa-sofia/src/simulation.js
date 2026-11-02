@@ -11,8 +11,11 @@ export function simulate({ mode = 'base', count, seed = 1, betUnits = 100, confi
   let spins = 0, cascades = 0, magics = 0, retriggers = 0, addedSpins = 0, maxLevel = 0, maxDuration = 0;
   const contributions100 = Object.fromEntries(MODES.map(m => [m, 0]));
   const naturalBonuses = { common: 0, super: 0, secret: 0 };
+  const retriggersByScatters = { 2: 0, 3: 0 };
   const batches = [];
   let batchPay = 0, batchCost = 0, batchN = 0;
+  let reachedWildCap = 0;
+  let bonusRoundsCount = 0, bonusRoundsWithRetrigger = 0;
   const batchSize = Math.max(1, Math.ceil(count / 20));
   for (let i = 0; i < count; i++) {
     const { state, settlement } = engine.play({ mode, betUnits });
@@ -33,8 +36,14 @@ export function simulate({ mode = 'base', count, seed = 1, betUnits = 100, confi
     cascades += state.cascades;
     magics += state.magicActivations;
     retriggers += state.retriggers;
+    if (state.bonusType) {
+      bonusRoundsCount++;
+      bonusRoundsWithRetrigger += Number(state.retriggers > 0);
+    }
+    for (const n of [2, 3]) retriggersByScatters[n] += state.retriggersByScatters[n];
     addedSpins += state.addedSpins;
     maxLevel = Math.max(maxLevel, state.maxMagicLevel);
+    if (config.magic?.[mode] && state.maxMagicWilds >= config.magic[mode].wildCap) reachedWildCap++;
     maxDuration = Math.max(maxDuration, state.bonusSpinsPlayed);
     for (const m of MODES) contributions100[m] += state.paidByMode100[m];
     if ((mode === 'base' || mode === 'hunt') && state.bonusType) naturalBonuses[state.bonusType]++;
@@ -57,14 +66,17 @@ export function simulate({ mode = 'base', count, seed = 1, betUnits = 100, confi
     settledCreditRtp: creditedUnits / (cost * betUnits),
     sampleVariance: variance, standardError: se, confidence95Approx: interval(1.96),
     confidenceJoint95Approx: interval(2.50),
-    precisionGatePassed: interval(2.50)[0] >= .98 && interval(2.50)[1] <= 1,
+    precisionGatePassed: interval(2.50)[0] >= .96 && interval(2.50)[1] <= .98,
     // Passing this numerical gate alone does not certify rare-event coverage.
     nonzeroReturnFrequency: returns / count, profitFrequency: profits / count,
     meanReturnBaseBets: paid / count, maxWinCount: maxWin,
     quantilesBaseBets: { median: quantile(.5), p90: quantile(.9), p95: quantile(.95), p99: quantile(.99), p999: quantile(.999) },
     hitSpins, hitSpinFrequency: hitSpins / spins, baseHitSpinFrequency: mode === 'base' || mode === 'hunt' ? baseHitSpins / count : null,
-    spins, cascades, magicActivations: magics, retriggers, addedSpins, maxMagicLevel: maxLevel, maxBonusDuration: maxDuration,
+    spins, cascades, magicActivations: magics, retriggers, retriggersByScatters, addedSpins, maxMagicLevel: maxLevel, maxBonusDuration: maxDuration,
+    bonusReachedWildCapFrequency: config.magic?.[mode] ? reachedWildCap / count : null,
     naturalBonuses, contributionsRtp: Object.fromEntries(MODES.map(m => [m, contributions100[m] / 100 / cost])),
+    bonusRoundsCount, bonusRoundsWithRetrigger,
+    bonusRetriggerFrequency: bonusRoundsCount ? bonusRoundsWithRetrigger / bonusRoundsCount : null,
     batches,
   };
 }

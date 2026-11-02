@@ -1,3 +1,4 @@
+import { toast } from "./ui.js";
 import { auth, db } from "./firebase.js";
 import { detachPushForLogout } from "./push.js";
 import {
@@ -45,7 +46,7 @@ export async function register(username, password, details) {
     );
     created = c.user;
     await setDoc(doc(db, "users", c.user.uid), {
-      ...details,
+      ...Object.fromEntries(Object.entries(details).filter(([key]) => key !== "favoriteClubId")),
       uid: c.user.uid,
       username: u,
       role: "member",
@@ -54,6 +55,13 @@ export async function register(username, password, details) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    if (details.favoriteClubId) {
+      try {
+        await httpsCallable(getFunctions(undefined, "europe-west1"), "selectFootballClub")({ clubId: details.favoriteClubId });
+      } catch {
+        toast("Conta criada. N?o foi poss?vel guardar o clube; escolhe-o no perfil.", "error");
+      }
+    }
     return c.user;
   } catch (error) {
     if (created) {

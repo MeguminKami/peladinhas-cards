@@ -16,6 +16,7 @@ import { communityRatingFunctions, requiredCommunityReview, writeCommunityNotice
 import { markCardMvps } from "./card-unlock-rules.js";
 import { nextHomeBoundary } from "../js/data-boundary.js";
 import { passwordRecoveryFunctions } from "./password-recovery.js";
+import { footballClubFunctions } from "./football-clubs.js";
 import { maintenanceFunctions } from "./maintenance.js";
 import { pathFunctions } from "./paths.js";
 import { policyAt, budgetWindow, isQuietHour } from "../js/system-policy.js";
@@ -84,6 +85,10 @@ setGlobalOptions({ region: "europe-west1", maxInstances: 3 });
 export const { getCasinoShop, buyCasinoCard } = casinoShopFunctions();
 export const { getCasinoPlayerBalance } = adminCasinoFunctions();
 export const { passwordRecoveryAction, completePasswordRecovery } = passwordRecoveryFunctions();
+const footballApiKey = defineSecret("FOOTBALL_API_KEY");
+export const { searchFootballClubs, selectFootballClub } = footballClubFunctions({
+  secret: footballApiKey, apiKey: () => footballApiKey.value(),
+});
 const db = getFirestore();
 export const { communityRatingAction, grantCommunityRatingRetry, listCommunityRatingsForAdmin } = communityRatingFunctions(aggregateCommunity);
 export const { getCasinoWallet, settleCasinoSlot, onCasinoGame, casinoSession, grantCasinoCoins } = casinoFunctions({
@@ -677,6 +682,7 @@ async function buildHistory(uid, shared = null, { refreshCollection = true } = {
           user.data().displayName || user.data().username || "Jogador",
         photoURL: user.data().photoURL || "",
         countryCode: user.data().countryCode || "PT",
+        favoriteClub: user.data().favoriteClub || null,
       },
       updatedAt: FieldValue.serverTimestamp(),
     });

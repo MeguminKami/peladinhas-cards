@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const portIndex = process.argv.indexOf('--port');
 const port = portIndex < 0 ? 4175 : Number(process.argv[portIndex + 1]);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Invalid local port');
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.opus': 'audio/ogg' };
 createServer(async (req, res) => {
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
@@ -16,7 +16,7 @@ createServer(async (req, res) => {
     const local = relative(root, target);
     if (local.startsWith(`..${sep}`) || local === '..' || !types[extname(target)]) { res.writeHead(404).end(); return; }
     const content = await readFile(target);
-    res.writeHead(200, { 'Content-Type': `${types[extname(target)]}; charset=utf-8`, 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'self'; connect-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'self'" });
+    res.writeHead(200, { 'Content-Type': `${types[extname(target)]}; charset=utf-8`, 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'self'; connect-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; media-src 'self'; base-uri 'none'; frame-ancestors 'self'" });
     res.end(req.method === 'HEAD' ? undefined : content);
   } catch { res.writeHead(404).end(); }
 }).listen(port, '127.0.0.1', () => console.log(`Prototype: http://127.0.0.1:${port}`));

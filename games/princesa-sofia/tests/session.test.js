@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TestSession, autoCount, AUTO_SPIN_COUNTS } from '../ui/session.js';
-import { createEngine } from '../src/index.js';
+import { createEngine, DEFAULT_CONFIG } from '../src/index.js';
 import { demoScenario } from '../ui/fixtures.js';
 
 const quiet = () => Array.from({ length: 30 }, (_, p) => (Math.floor(p / 6) + p % 6) % 2 ? 'P3' : 'P2');
@@ -43,7 +43,7 @@ test('MAX WIN fixture settles the engine result once and demo sessions are isola
   demo.start('super', 100);
   const outcome = demo.advance({ initialBoard: demoScenario('max').board });
   assert.equal(outcome.state.maxWin, true);
-  assert.equal(demo.balanceUnits, 1000000 - 22500 + 1000000);
+  assert.equal(demo.balanceUnits, 1000000 - DEFAULT_CONFIG.buyPrices.super * 100 + 1000000);
   assert.equal(regular.balanceUnits, 1000000);
   assert.throws(() => demo.advance());
 });

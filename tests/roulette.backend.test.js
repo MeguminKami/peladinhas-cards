@@ -8,7 +8,7 @@ import {
   runRoulette,
   settleIdleRoulette,
 } from "../functions/roulette.js";
-import { ROULETTE_PRIVATE, ROULETTE_PUBLIC } from "../functions/roulette-table.js";
+import { ROULETTE_PRIVATE, ROULETTE_PUBLIC, newRouletteTable } from "../functions/roulette-table.js";
 
 const db = getFirestore();
 
@@ -69,14 +69,12 @@ test("players share one number and receive their own atomic returns", async () =
   const first = `roulette-first-${randomUUID()}`,
     second = `roulette-second-${randomUUID()}`;
   await Promise.all([player(first), player(second)]);
-  const [a, b] = await Promise.all([
-    request(first, "join"),
-    request(second, "join"),
-  ]);
+  const a = await request(first, "join");
+  const b = await request(second, "join");
   assert.equal(a.table.id, b.table.id);
   assert.notEqual(
-    a.table.players.find((player) => player.uid === first).color,
-    a.table.players.find((player) => player.uid === second).color,
+    b.table.players.find((player) => player.uid === first).color,
+    b.table.players.find((player) => player.uid === second).color,
   );
   const table = a.table.id;
   const plan = { "straight:0": 20 };
@@ -217,4 +215,68 @@ test("opening the casino settles an abandoned round once", async () => {
   assert.ok([19980, 20700].includes(settled));
   await settleIdleRoulette(db, later + 1000);
   assert.equal((await db.doc(`casinoWallets/${bettor}`).get()).data().balance, settled);
+});
+
+test("a table from a previous edition is replaced instead of blocking the room", async () => {
+  await clearRoom();
+  const stale = { ...newRouletteTable(Date.now()), edition: "edicao-antiga" };
+  await db.doc(ROULETTE_PRIVATE).set(stale);
+  const uid = `roulette-edition-${randomUUID()}`;
+  await player(uid);
+  const joined = await request(uid, "join");
+  assert.notEqual(joined.table.id, stale.id);
+  assert.equal(joined.table.phase, "betting");
+  assert.equal(joined.balance, 20000);
+  await assert.rejects(
+    request(uid, "tick", stale.id),
+    /A sala terminou/,
+  );
+  await clearRoom();
+});
+
+test("a missing or stale bettor wallet never blocks the round or the room", async () => {
+  await clearRoom();
+  const missing = `roulette-missing-${randomUUID()}`,
+    stale = `roulette-stale-${randomUUID()}`,
+    idle = `roulette-idler-${randomUUID()}`;
+  await Promise.all([player(missing), player(stale), player(idle)]);
+  const joined = await request(missing, "join");
+  await request(stale, "join");
+  await request(idle, "join");
+  const startedAt = Date.now();
+  const plan = { "straight:0": 20 };
+  const bet = (uid, at) =>
+    runRoulette({ action: "spin", id: randomUUID(), table: joined.table.id, plan }, uid, uid, at, db, 0);
+  await bet(missing, startedAt + 1);
+  const closing = await bet(stale, startedAt + 2);
+  // The idle player keeps the round open while both bettors' wallets break:
+  // one deleted, one from a previous edition.
+  assert.equal(closing.table.phase, "closing");
+  const staleWallet = { ...newCasinoWallet(), edition: "edicao-antiga", balance: 19980 };
+  await Promise.all([
+    db.doc(`casinoWallets/${missing}`).delete(),
+    db.doc(`casinoWallets/${stale}`).set(staleWallet),
+  ]);
+  const later = startedAt + 31000;
+  const resolved = await runRoulette(
+    { action: "tick", id: randomUUID(), table: joined.table.id },
+    idle,
+    idle,
+    later,
+    db,
+    0,
+  );
+  assert.equal(resolved.table.phase, "betting");
+  assert.equal(resolved.table.result.players.length, 2);
+  // Both bettors are paid into migrated wallets, like opening the casino.
+  assert.equal((await db.doc(`casinoWallets/${missing}`).get()).data().balance, 20720);
+  assert.equal((await db.doc(`casinoWallets/${stale}`).get()).data().balance, 20720);
+  // The room accepts new players and the bettors can play again.
+  const newcomer = `roulette-after-${randomUUID()}`;
+  await player(newcomer);
+  const rejoined = await runRoulette({ action: "join", id: randomUUID() }, newcomer, newcomer, later + 1, db);
+  assert.equal(rejoined.table.phase, "betting");
+  const again = await bet(missing, later + 2);
+  assert.equal(again.table.roundId, resolved.table.result.id + 1);
+  await clearRoom();
 });

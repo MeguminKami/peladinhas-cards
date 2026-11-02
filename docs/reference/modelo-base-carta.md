@@ -10,6 +10,7 @@ Uma carta deve representar o jogador e a semana/contexto corretos, com:
 - Fotografia do jogador ou avatar padrão.
 - OVR e respetivo rótulo.
 - Posição principal e bandeira do país, quando definidos nos dados.
+- Clube favorito, quando escolhido: emblema por baixo da bandeira, através de `clubBadge` de [club-badge.js](../../js/club-badge.js). Reutilizar o mesmo snapshot nas cartas e previews; não consultar a API para renderizar. Ver [seleção de clubes](../guides/football-clubs.md).
 - Oito atributos, na ordem e com as abreviaturas oficiais da tabela abaixo.
 - Indicadores de evolução e playstyles quando o jogador cumpre as regras existentes.
 

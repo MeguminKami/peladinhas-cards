@@ -32,7 +32,7 @@ export function validateBoard(board, mode, { allowEmpty = false } = {}) {
 
 export function tierForSize(size) {
   if (!Number.isInteger(size) || size < 0 || size > 30) throw new RangeError('Invalid group size');
-  return size < 5 ? -1 : size === 5 ? 0 : size < 8 ? 1 : size < 11 ? 2 : size < 15 ? 3 : size < 18 ? 4 : 5;
+  return size < 5 ? -1 : size === 5 ? 0 : size < 8 ? 1 : size < 11 ? 2 : size < 14 ? 3 : size < 18 ? 4 : 5;
 }
 
 export function compactBoard(board) {
@@ -64,23 +64,19 @@ export function fillBoard(board, mode, rng, config = DEFAULT_CONFIG, scatterMult
       const i = weightedIndex(rng, config.weights);
       board[p] = SYMBOLS[i];
       generated.push({ position: p, symbol: board[p], source: 'draw' });
-      if (i < 5 && randomIndex(rng, PPM) < config.pairPPM) {
-        const free = NEIGHBORS[p].filter(n => board[n] === null);
-        if (free.length) {
-          const neighbor = free[randomIndex(rng, free.length)];
-          board[neighbor] = board[p];
-          generated.push({ position: neighbor, symbol: board[p], source: 'pair', parent: p });
-          // One additional copy only; a third symbol never starts another chain.
-          if (randomIndex(rng, PPM) < config.repeatPairPPM) {
-            const extra = NEIGHBORS[neighbor].filter(n => board[n] === null);
-            if (extra.length) {
-              const target = extra[randomIndex(rng, extra.length)];
-              board[target] = board[p];
-              generated.push({ position: target, symbol: board[p], source: 'repeat-pair', parent: neighbor });
-            }
-          }
-
-        }
+      const chances = [i < 5 ? config.pairPPM : config.premiumPairPPM, config.repeatPairPPM,
+        ...config.extraCopyPPM[i < 5 ? 'normal' : 'premium']];
+      let parent = p;
+      // One bounded chain per original draw: at most five additional copies.
+      for (let copy = 0; copy < chances.length; copy++) {
+        const copyChance = mode === 'base' ? Math.round(chances[copy] * config.baseCopyScalePPM / PPM) : chances[copy];
+        if (randomIndex(rng, PPM) >= copyChance) break;
+        const free = NEIGHBORS[parent].filter(n => board[n] === null);
+        if (!free.length) break;
+        const target = free[randomIndex(rng, free.length)];
+        board[target] = board[p];
+        generated.push({ position: target, symbol: board[p], source: copy === 0 ? 'pair' : 'repeat-pair', parent });
+        parent = target;
       }
     }
   }
@@ -89,6 +85,9 @@ export function fillBoard(board, mode, rng, config = DEFAULT_CONFIG, scatterMult
 
 function groupResult(board, mode, config, i, positions, special = false) {
   const size = positions.length, tier = tierForSize(size);
+  const regularSize = positions.filter(p => SYMBOLS.includes(board[p])).length;
+  // XP keeps its fixed 11?14 / 15?17 bands independently of payments.
+  const xpTier = regularSize === 14 ? 3 : tierForSize(regularSize);
   let multiplier = 1n;
   if (hasMultipliers(mode)) {
     const sum = positions.reduce((n, p) => n + (symbolOf(board[p]) === WILD ? BigInt(board[p].multiplier) : 0n), 0n);
@@ -96,11 +95,11 @@ function groupResult(board, mode, config, i, positions, special = false) {
   }
   // The actual amount credited is capped by the round, not by this descriptor.
   // Decimal strings keep uncapped values exact and events JSON-serializable.
-  const rawPay100 = BigInt((config.bonusPay100?.[mode] ?? config.pay100)[i][tier]) * multiplier;
+  const rawPay100 = BigInt(config.pay100[i][tier]) * multiplier;
   return {
     symbol: SYMBOLS[i], positions, size, tier, special,
     multiplier: multiplier.toString(), rawPay100: rawPay100.toString(),
-    xp100: positions.filter(p => SYMBOLS.includes(board[p])).length * config.xpPerCell100[i],
+    xp100: xpTier < 0 ? 0 : config.xpPerCluster100[i < 5 ? 'normal' : 'premium'][xpTier],
   };
 }
 
@@ -131,30 +130,35 @@ export function evaluateBoard(board, mode, config = DEFAULT_CONFIG) {
   return hits;
 }
 
-export function magicParameters(mode, level, rng, config = DEFAULT_CONFIG) {
+export function magicParameters(mode, level, rng, config = DEFAULT_CONFIG, previous) {
   checkMode(mode);
   if (!Number.isSafeInteger(level) || level < 1 || level >= Number.MAX_SAFE_INTEGER) throw new RangeError('Invalid magic level');
   if (mode === 'base') return { requested: weightedIndex(rng, config.baseWildWeights) + 1, multiplier: 0 };
-  const commonCapLevel = 2 * (config.maxWilds - 2);
-  const superCapLevel = 2 * (config.maxWilds - 2) + 1;
-  const requested = Math.min(config.maxWilds, mode === 'common' ? 2 + Math.floor(level / 2) : mode === 'super' ? 2 + Math.floor((level - 1) / 2) : level + 1);
-  const multiplier = mode === 'common'
-    ? 1 + Math.floor((Math.min(level, commonCapLevel) - 1) / 2) + Math.max(0, level - commonCapLevel)
-    : mode === 'super'
-      ? 2 + 2 * Math.floor(Math.min(level, superCapLevel) / 2) + 2 * Math.max(0, level - superCapLevel)
-      : 2 * level;
+  const rule = config.magic[mode];
+  if (level === 1) return { requested: rule.startWilds, multiplier: rule.startMultiplier };
+  if (!previous || !Number.isSafeInteger(previous.requested) || previous.requested < 1 || previous.requested > rule.wildCap || !Number.isSafeInteger(previous.multiplier) || previous.multiplier < 1) throw new TypeError('Magic requires its previous progression');
+  const draw = weights => {
+    const guaranteed = weights.findIndex(w => w === PPM);
+    return guaranteed >= 0 ? guaranteed + 1 : weightedIndex(rng, weights) + 1;
+  };
+  const wildDraws = previous.requested < rule.wildCap ? Array.from({length:rule.rewardRolls},()=>draw(rule.wildGainWeights)) : [];
+  const multiplierDraws = Array.from({length:rule.rewardRolls},()=>rule.multiplierGainCycle
+    ? rule.multiplierGainCycle[(level - 2) % rule.multiplierGainCycle.length]
+    : draw(rule.multiplierGainWeights));
+  const wildGain = Math.min(rule.wildCap - previous.requested, Math.max(0,...wildDraws));
+  const multiplierGain = Math.max(...multiplierDraws);
+  const requested = previous.requested + wildGain;
+  const multiplier = previous.multiplier + multiplierGain;
   if (!Number.isSafeInteger(multiplier)) throw new RangeError('Magic multiplier exceeds safe range');
-  return { requested, multiplier };
+  return { requested, multiplier, reward: {wildDraws, multiplierDraws, wildGain, multiplierGain} };
 }
 
-export function applyMagic(board, mode, level, rng, config = DEFAULT_CONFIG) {
-  const parameters = magicParameters(mode, level, rng, config);
-  if (mode !== 'base') for (let p = 0; p < board.length; p++) {
-    if (symbolOf(board[p]) === WILD) board[p] = wild(Math.max(board[p].multiplier, parameters.multiplier));
-  }
+export function applyMagic(board, mode, level, rng, config = DEFAULT_CONFIG, previous) {
+  const parameters = magicParameters(mode, level, rng, config, previous);
+  // Surviving wilds retain their original multipliers; progression applies only to new wilds.
   const eligible = board.flatMap((c, p) => SYMBOLS.includes(c) ? [p] : []);
   const positions = [];
-  const available = Math.max(0, config.maxWilds - board.filter(c => symbolOf(c) === WILD).length);
+  const available = Math.max(0, Math.min(config.maxWilds, config.magic?.[mode]?.wildCap ?? config.maxWilds) - board.filter(c => symbolOf(c) === WILD).length);
   for (let j = 0; j < Math.min(parameters.requested, available) && eligible.length; j++) {
     const index = randomIndex(rng, eligible.length);
     const [p] = eligible.splice(index, 1);
@@ -186,10 +190,10 @@ export function createEngine({ config = DEFAULT_CONFIG, seed = 1, rng = createRa
       configVersion: rules.version, entryMode: mode, mode: mode === 'hunt' ? 'base' : mode, betUnits, costUnits: betUnits * price,
       complete: false, maxWin: false, paid100: 0,
       paidByMode100: { base: 0, common: 0, super: 0, secret: 0 },
-      xp100: 0, magicLevel: 0, remainingSpins: mode === 'base' || mode === 'hunt' ? 1 : rules.bonusSpins,
-      spins: 0, hitSpins: 0, baseHitSpins: 0, bonusSpinsPlayed: 0, cascades: 0, magicActivations: 0, retriggers: 0, addedSpins: 0,
+      xp100: 0, magicLevel: 0, magicProgress: { requested: 0, multiplier: 1 }, remainingSpins: mode === 'base' || mode === 'hunt' ? 1 : rules.bonusSpins,
+      spins: 0, hitSpins: 0, baseHitSpins: 0, bonusSpinsPlayed: 0, cascades: 0, magicActivations: 0, retriggers: 0, retriggersByScatters: { 2: 0, 3: 0 }, addedSpins: 0,
       bonusType: mode === 'base' || mode === 'hunt' ? null : mode,
-      maxMagicLevel: 0,
+      maxMagicLevel: 0, maxMagicWilds: 0,
     });
     current.add(state);
     return state;
@@ -213,7 +217,7 @@ export function createEngine({ config = DEFAULT_CONFIG, seed = 1, rng = createRa
     next.remainingSpins--;
     next.spins++;
     if (mode !== 'base') next.bonusSpinsPlayed++;
-    emit('spin-start', { spin: next.spins, mode, scatterMultiplier, board, generated, xp100: next.xp100, magicLevel: next.magicLevel, remainingSpins: next.remainingSpins });
+    emit('spin-start', { spin: next.spins, mode, scatterMultiplier, board, generated, xp100: next.xp100, magicLevel: next.magicLevel, magicProgress: next.magicProgress, remainingSpins: next.remainingSpins });
 
     let cascade = 0;
     while (true) {
@@ -249,7 +253,9 @@ export function createEngine({ config = DEFAULT_CONFIG, seed = 1, rng = createRa
         next.magicLevel++;
         next.maxMagicLevel = Math.max(next.maxMagicLevel, next.magicLevel);
         next.magicActivations++;
-        const magic = applyMagic(board, mode, next.magicLevel, rng, rules);
+        const magic = applyMagic(board, mode, next.magicLevel, rng, rules, next.magicProgress);
+        next.maxMagicWilds = Math.max(next.maxMagicWilds, magic.requested);
+        next.magicProgress = { requested: magic.requested, multiplier: magic.multiplier };
         emit('magic', { ...magic, level: next.magicLevel, xp100: 0, discarded100, board, remainingSpins: next.remainingSpins });
       }
     }
@@ -260,6 +266,7 @@ export function createEngine({ config = DEFAULT_CONFIG, seed = 1, rng = createRa
       if (mode === 'base') {
         const bonus = bonusForScatters(scatters);
         next.xp100 = next.magicLevel = 0;
+        next.magicProgress = { requested: 0, multiplier: 1 };
         if (bonus) {
           next.mode = next.bonusType = bonus;
           next.remainingSpins = rules.bonusSpins;
@@ -269,6 +276,7 @@ export function createEngine({ config = DEFAULT_CONFIG, seed = 1, rng = createRa
         const added = extraSpinsForScatters(scatters);
         if (added) {
           next.retriggers++;
+          next.retriggersByScatters[scatters]++;
           next.addedSpins += added;
           next.remainingSpins += added;
           emit('retrigger', { scatters, added, remainingSpins: next.remainingSpins });

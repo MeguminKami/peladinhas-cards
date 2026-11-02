@@ -160,10 +160,21 @@ export function connectRoulette(uid, onBalance, onExit) {
   function schedule() {
     clearTimeout(deadline);
     if (stopped || state?.phase !== "closing" || !state.deadline) return;
+    let attempts = 0;
+    const attempt = () =>
+      void request("tick").catch((error) => {
+        if (stopped) return;
+        // A transient failure used to wait for the next heartbeat (~30s)
+        // before anyone tried to settle the round again.
+        if (transient(error) && attempts < 3) {
+          attempts++;
+          deadline = setTimeout(attempt, 2000);
+          return;
+        }
+        if (!transient(error)) onExit(`A ronda não foi atualizada: ${error.message}`);
+      });
     deadline = setTimeout(
-      () => void request("tick").catch((error) => {
-        if (!stopped && !transient(error)) onExit(`A ronda não foi atualizada: ${error.message}`);
-      }),
+      attempt,
       Math.max(100, state.deadline - Date.now() - offset + 100),
     );
   }

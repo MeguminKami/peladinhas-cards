@@ -1,3 +1,5 @@
+import { clubPicker, bindClubPicker } from "./club-picker.js";
+import { clubBadge } from "./club-badge.js";
 import { cardSelectionEntry, openCardSelection } from "./card-selection-entry.js";
 import { matchRatingSeries, matchAverageSummary, matchComponentAverages } from "./match-rating-summary.js";
 import { weeklyComparison } from "./weekly-comparison.js";
@@ -19,7 +21,7 @@ import { esc, empty, linkButton, pageHead, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
 import * as DB from "./db.js";
 import { communityReviewBanner } from "./community-review.js";
-export function profileFields(p = {}) {
+export function profileFields(p = {}, options = {}) {
   return `<div class="form-grid"><label>Nome de jogador<input name="displayName" required maxlength="30" value="${esc(p.displayName || "")}"></label><label>País<select name="countryCode" required>${COUNTRIES.map(([c, n]) => `<option value="${c}" ${p.countryCode === c ? "selected" : ""}>${n}</option>`).join("")}</select></label><label>Data de nascimento<input name="birthDate" type="date" required max="${new Date().toISOString().slice(0, 10)}" value="${esc(p.birthDate || "")}"></label><label>Altura (cm)<input name="heightCm" type="number" required min="120" max="230" value="${p.heightCm || ""}"></label><label>Peso (kg) <span class="muted">opcional</span><input name="weightKg" type="number" min="30" max="250" step=".1" value="${p.weightKg || ""}"></label><label>Pé preferido<select name="preferredFoot" required><option value="">Escolher</option>${[
     ["right", "Direito"],
     ["left", "Esquerdo"],
@@ -31,7 +33,7 @@ export function profileFields(p = {}) {
     )
     .join(
       "",
-    )}</select></label><label>Posição preferida<select name="primaryPosition">${["GR", "DEF", "ALA", "MED", "AV"].map((v) => `<option ${p.primaryPosition === v ? "selected" : ""}>${v}</option>`).join("")}</select></label><label>Número favorito<input name="shirtNumber" type="number" min="0" max="99" value="${p.shirtNumber ?? ""}"></label><label>Cidade <span class="muted">opcional</span><input name="city" maxlength="60" value="${esc(p.city || "")}"></label><label>Estilo de jogador <span class="muted">opcional</span><input name="playerStyle" maxlength="80" value="${esc(p.playerStyle || "")}"></label><fieldset class="field-wide"><legend>Posições secundárias</legend>${["GR", "DEF", "ALA", "MED", "AV"].map((v) => `<label class="check-label"><input type="checkbox" name="secondaryPositions" value="${v}" ${p.secondaryPositions?.includes(v) ? "checked" : ""}> ${v}</label>`).join("")}</fieldset></div>`;
+    )}</select></label><label>Posição preferida<select name="primaryPosition">${["GR", "DEF", "ALA", "MED", "AV"].map((v) => `<option ${p.primaryPosition === v ? "selected" : ""}>${v}</option>`).join("")}</select></label><label>Número favorito<input name="shirtNumber" type="number" min="0" max="99" value="${p.shirtNumber ?? ""}"></label><label>Cidade <span class="muted">opcional</span><input name="city" maxlength="60" value="${esc(p.city || "")}"></label><label>Estilo de jogador <span class="muted">opcional</span><input name="playerStyle" maxlength="80" value="${esc(p.playerStyle || "")}"></label>${clubPicker(p.favoriteClub, options)}<fieldset class="field-wide"><legend>Posições secundárias</legend>${["GR", "DEF", "ALA", "MED", "AV"].map((v) => `<label class="check-label"><input type="checkbox" name="secondaryPositions" value="${v}" ${p.secondaryPositions?.includes(v) ? "checked" : ""}> ${v}</label>`).join("")}</fieldset></div>`;
 }
 export function readProfile(form) {
   const f = new FormData(form),
@@ -85,10 +87,11 @@ export function bindPhoto(form) {
 }
 export async function editProfile(ctx, p = ctx.user) {
   ctx.render(
-    `${pageHead("Perfil", "Editar perfil", "Atualiza a tua fotografia e os dados do perfil.")}<form id="profile-form" class="panel"><div class="profile-form-head">${photoField(p)}<p class="muted">@${esc(p.username)} · username permanente</p></div>${profileFields(p)}<div class="actions"><button class="btn btn-primary">${icon("check")}Guardar perfil</button>${linkButton("#/profile", "Cancelar", "secondary")}</div></form>`,
+    `${pageHead("Perfil", "Editar perfil", "Atualiza a tua fotografia e os dados do perfil.")}<form id="profile-form" class="panel"><div class="profile-form-head">${photoField(p)}<p class="muted">@${esc(p.username)} · username permanente</p></div>${profileFields(p, { disabled: p.uid !== ctx.user.uid })}<div class="actions"><button class="btn btn-primary">${icon("check")}Guardar perfil</button>${linkButton("#/profile", "Cancelar", "secondary")}</div></form>`,
   );
   const form = document.querySelector("#profile-form");
   ctx.cleanup(bindPhoto(form));
+  ctx.cleanup(bindClubPicker(form));
   form.onsubmit = async (e) => {
     e.preventDefault();
     try {
@@ -96,6 +99,9 @@ export async function editProfile(ctx, p = ctx.user) {
         const data = readProfile(form),
           file = form.avatar.files[0];
         if (file) data.photoURL = await DB.uploadAvatar(p.uid, file);
+        const clubId = form.elements.favoriteClubId?.value;
+        if (p.uid === ctx.user.uid && clubId && clubId !== p.favoriteClub?.id)
+          await DB.callAdmin("selectFootballClub", { clubId });
         await DB.saveProfile(p.uid, data);
         toast("Perfil guardado.");
         await ctx.refresh();
@@ -193,7 +199,7 @@ export async function playerPage(ctx, uid) {
         })).sort((a, b) => b.delta - a.delta)[0]
       : null;
   ctx.render(
-    `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${own ? linkButton("#/missions/path", "Escolhe o teu caminho!", "secondary", "path") : ""}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}${reviewNotices}${canChooseCard ? cardSelectionEntry(p, { profile: true }) : ""}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}${weeklyEvolution(p)}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? `Semana fechada · Reabre ${new Intl.DateTimeFormat("pt-PT",{timeZone:"Europe/Lisbon",weekday:"long",hour:"2-digit",minute:"2-digit"}).format(cardWeek().nextOpensAt)}` : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
+    `${pageHead(own ? "A minha carta" : "Perfil do jogador", p.displayName || p.username, `@${p.username} · ${p.country || ""}`, own || ctx.user.role === "admin" ? linkButton(own ? "#/profile/edit" : `#/admin/player/${p.uid}/edit`, "Editar perfil", "secondary", "edit") : "")}${ratingAction || ctx.user.role === "admin" ? `<div class="actions profile-actions">${ratingAction}${own ? linkButton("#/missions/path", "Escolhe o teu caminho!", "secondary", "path") : ""}${ctx.user.role === "admin" ? linkButton(`#/admin/ovr/${p.uid}`, "Cálculo OVR", "secondary", "lab") + linkButton(`#/admin/card-photo/${p.uid}`, "Editar foto de carta", "secondary", "camera") : ""}</div>` : ""}${reviewNotices}${canChooseCard ? cardSelectionEntry(p, { profile: true }) : ""}<div class="player-hero"><div class="card-stage">${card(p, { size: "lg" })}${weeklyEvolution(p)}<span class="pill ${p.official ? "success" : "warning"}">${p.cardLocked ? `Semana fechada · Reabre ${new Intl.DateTimeFormat("pt-PT",{timeZone:"Europe/Lisbon",weekday:"long",hour:"2-digit",minute:"2-digit"}).format(cardWeek().nextOpensAt)}` : p.hasCard ? (p.official ? "Carta oficial" : "Carta provisória") : "À espera de autoavaliação"}</span></div><div><p class="eyebrow">Dentro de campo</p><h2>${flag(p.countryCode)} ${esc(p.country || "")}</h2>${clubBadge(p.favoriteClub, { name: true })}${p.inactivity?.penalty ? `<p class="pill warning">${p.inactivity.missed} jogos sem participar · −${p.inactivity.penalty} OVR</p>` : ""}<div class="player-facts">${[
       ["Idade", `${age(p.birthDate)} anos`],
       ["Altura", p.heightCm ? `${p.heightCm} cm` : "—"],
       ["Peso", p.weightKg ? `${p.weightKg} kg` : "—"],
@@ -314,6 +320,7 @@ export function historicalPlayer(player, snapshot, previous) {
   return {
     ...player,
     ...snapshot.appearance,
+    favoriteClub: snapshot.appearance?.favoriteClub || null,
     stats: snapshot.stats || {},
     selectedCardId: snapshot.selectedCardId || null,
     ...weeklyComparison(snapshot, previous, { uid: player.uid }),

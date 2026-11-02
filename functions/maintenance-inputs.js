@@ -46,6 +46,7 @@ export const maintenanceInputs = {
 function calculationInput(collection, value) {
   if (!value) return value;
   const ignored = new Set(["updatedAt", "checkedAt", "evaluatedAt"]);
+  if (collection === "users") ignored.add("favoriteClub");
   if (collection === "games")
     for (const key of [
       "playerCards",

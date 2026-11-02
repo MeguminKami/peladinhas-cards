@@ -8,6 +8,12 @@ test('simulations are reproducible and include complete bonuses in the correct d
     const result = simulate({ mode, count: 20, seed: 4321 });
     assert.deepEqual(result, simulate({ mode, count: 20, seed: 4321 }));
     assert.equal(result.count, 20);
+    assert.equal(result.retriggers, result.retriggersByScatters[2] + result.retriggersByScatters[3]);
+    assert.equal(result.bonusRoundsCount, mode === 'base' ? Object.values(result.naturalBonuses).reduce((a, b) => a + b, 0) : result.count);
+    assert.ok(result.bonusRoundsWithRetrigger <= result.bonusRoundsCount);
+    assert.ok(result.bonusRoundsWithRetrigger <= result.retriggers);
+    assert.equal(result.bonusRetriggerFrequency, result.bonusRoundsCount ? result.bonusRoundsWithRetrigger / result.bonusRoundsCount : null);
+    assert.equal(result.addedSpins, 2 * result.retriggersByScatters[2] + 4 * result.retriggersByScatters[3]);
     assert.equal(result.totalCostBaseBets, 20 * (mode === 'base' ? 1 : DEFAULT_CONFIG.buyPrices[mode]));
     assert.ok(Math.abs(result.rtp - result.totalReturnBaseBets / result.totalCostBaseBets) < 1e-12);
     assert.ok(Math.abs(result.settledCreditRtp - result.rtp) < 1e-12);

@@ -159,6 +159,8 @@ a.football-card:hover {
 .card-rating > span:last-child {
   font-size: calc(var(--card-width) * 0.065);
 }
+.card-country-symbols { display: inline-flex; flex-direction: column; align-items: center; gap: .25em; }
+.card-country-symbols .club-badge img { width: 1.3em; height: 1.3em; }
 .card-rating[data-rating-layout="compact"],
 .card-rating[data-rating-layout="sidecar"] {
   display: grid;
