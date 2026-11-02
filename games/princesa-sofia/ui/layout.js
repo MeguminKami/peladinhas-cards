@@ -116,7 +116,11 @@ export function installLayout() {
   const observer = new ResizeObserver(schedule);
   observer.observe(shell);
   const dialogs = document.querySelectorAll('#rules-dialog, #buy-dialog');
-  const dialogObserver = new MutationObserver(schedule);
+  // So interessa quando uma destas janelas abre/fecha ou muda estando aberta. Fechadas, alteracoes de texto
+  // la dentro (ex.: o botao do Hunt, reescrito em cada spin) disparavam um recalculo completo e um frame preso.
+  const dialogObserver = new MutationObserver(records => {
+    if (records.some(record => record.attributeName === 'open') || document.querySelector('#rules-dialog[open], #buy-dialog[open]')) schedule();
+  });
   for (const dialog of dialogs) {
     observer.observe(dialog);
     dialogObserver.observe(dialog, { attributes:true, attributeFilter:['open'], childList:true, subtree:true });

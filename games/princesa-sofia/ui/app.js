@@ -426,7 +426,8 @@ function controls() {
   $('balance').textContent = money(heldBalance ?? session.balanceUnits);
   if (session.host) document.documentElement.dataset.casinoBalance = String(heldBalance ?? session.balanceUnits);
   $('hunt-button').setAttribute('aria-pressed', String(hunt));
-  $('hunt-button').textContent = hunt ? 'Desativar' : 'Ativar';
+  const huntLabel = hunt ? 'Desativar' : 'Ativar';
+  if ($('hunt-button').textContent !== huntLabel) $('hunt-button').textContent = huntLabel;
   $('buy-button').classList.toggle('hunt-active', hunt);
   $('buy-button').setAttribute('aria-label', hunt ? 'Bónus e Hunt · 4 opções · Hunt ativo' : 'Bónus e Hunt · 4 opções');
   $('auto-status').textContent = autoRunning ? `${autoRemaining} spins por iniciar${autoCancel ? ' · a parar' : ''}` : '';
@@ -787,11 +788,14 @@ $('auto-range').addEventListener('input', autoDetails);
 $('auto-start').addEventListener('click', () => { sound.autoStart(); startAuto(); });
 $('speed-button').addEventListener('click', () => {
   sound.speed();
-  cancelBoardMotion($('board'));
   const order = ['normal', 'fast', 'ultra'];
   const labels = { normal: 'Normal', fast: 'Rápido', ultra: 'Ultra' };
   const index = (order.indexOf(speed) + 1) % order.length;
+  const rate = SPEEDS[speed] / SPEEDS[order[index]];
   speed = order[index];
+  // Não cancelar a apresentação em curso (apagava a camada dos scatters comprados e o jogo
+  // ficava à espera sem nada no ecrã): as animações a decorrer mudam já de ritmo, as próximas usam a nova velocidade.
+  for (const animation of document.getAnimations()) { if (animation instanceof CSSAnimation || animation instanceof CSSTransition) continue; try { animation.updatePlaybackRate(animation.playbackRate * rate); } catch { } }
   $('speed-button').dataset.speed = speed;
   $('speed-label').textContent = labels[speed];
   $('speed-button').setAttribute('aria-label', `Velocidade: ${labels[speed]}. Mudar para ${labels[order[(index + 1) % order.length]]}.`);
