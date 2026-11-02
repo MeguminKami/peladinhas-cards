@@ -892,6 +892,8 @@
 @media (max-width: 650px) {
   .casino-table-mount iframe[src*="/rift/"] { min-height: 760px; }
 }
+/* A Princesa Sofia escala-se sozinha ao espaço visível (sem scroll): ocupa tudo até ao fundo. */
+.casino-table-mount iframe[src*="/princesa-sofia/"] { height: max(300px, calc(100dvh - var(--casino-header-height, 80px) - var(--casino-toolbar-height, 70px) - var(--casino-bottom-height, 0px) - 24px)); background: #100b24; }
 .is-centered .casino-blackjack-mount iframe { height: var(--casino-fit-height); }
 @media (max-width: 800px) {
   .casino-toolbar { gap: 16px; flex-wrap: wrap; }

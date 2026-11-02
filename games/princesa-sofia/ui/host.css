@@ -1,2 +1,5 @@
-﻿*{box-sizing:border-box}html{height:100%;color-scheme:light;background:#fff}body{height:100%;margin:0;background:#fff;overflow:hidden}.website{width:min(100%,1200px);margin:16px auto;padding:0 24px}.website iframe{display:block;width:100%;height:calc(100dvh - 32px);border:0;border-radius:16px;box-shadow:0 10px 40px #100b2426;background:#100b24}@media(max-width:760px){.website{padding:0 12px}.website iframe{border-radius:12px}}
+*{box-sizing:border-box}html{height:100%;color-scheme:light;background:#fff}body{height:100%;margin:0;background:#fff;overflow:hidden}.website{width:min(100%,1200px);margin:16px auto;padding:0 24px}.website iframe{display:block;width:100%;height:calc(100dvh - 32px);border:0;border-radius:16px;box-shadow:0 10px 40px #100b2426;background:#100b24}@media(max-width:760px){.website{padding:0 12px}.website iframe{border-radius:12px}}
 body{display:flow-root}
+
+/* Telemovel e ecras baixos: o jogo ocupa o ecra todo, sem margens nem cantos */
+@media (max-width:760px),(max-height:520px){.website{width:100%;margin:0;padding:0}.website iframe{height:100dvh;border-radius:0;box-shadow:none}}

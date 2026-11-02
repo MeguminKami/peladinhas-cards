@@ -33,21 +33,68 @@ export function showRibbon(text,kind='win') {
  const el=document.getElementById('event-ribbon');el.replaceChildren();if(kind==='retrigger'){const art=document.createElement('img');art.src='ui/art/retrigger.png';art.alt='';el.append(art);}const caption=document.createElement('strong');caption.textContent=text;el.append(caption);el.dataset.kind=kind;el.hidden=false;
  clearTimeout(el.dismiss);pulse(el);el.dismiss=setTimeout(()=>{el.hidden=true;},kind==='win'?1500:950);
 }
-export async function showHitAmount(hit,board,receivedUnits,format,duration=1000) {
+// Espera interrompivel: termina mais cedo se o jogador acelerar (fast-forward).
+function beatWait(ms, skip) {
+ return new Promise(resolve => {
+  const start = performance.now();
+  const tick = () => (skip?.() || document.hidden || performance.now() - start >= ms) ? resolve() : requestAnimationFrame(tick);
+  tick();
+ });
+}
+function pop(el, beat, from = .55) {
+ if (reduce.matches || !beat) return;
+ el.animate([{ opacity: 0, scale: from }, { opacity: 1, scale: 1.18, offset: .6 }, { opacity: 1, scale: 1 }], { duration: Math.max(90, beat * .8), easing: 'cubic-bezier(.2,.8,.3,1.2)' });
+}
+/**
+ * Ganho de um hit. Quando um WILD com multiplicador participa (multiplicador total > 1) e beat > 0,
+ * mostra primeiro o calculo por etapas: ganho do cluster -> "× N" -> resultado; so depois o valor
+ * final sobe e desaparece. beat (ms) vem da velocidade de jogo. A promessa so resolve no fim de tudo,
+ * para a pipeline apresentar um hit de cada vez.
+ */
+export async function showHitAmount(hit,board,receivedUnits,format,duration=1000,{betUnits=100,beat=0,skip,onBeat}={}) {
  const layer=document.getElementById('group-prizes');layer.replaceChildren();
  if(receivedUnits<=0)return;
  const cells=hit.positions.map(p=>board.querySelector(`[data-position="${p}"]`)).filter(Boolean);
  const label=document.createElement('span');label.className='group-prize';
- label.textContent=format(receivedUnits/100);
  const multiple=(Number(hit.rawPay100)||0)/100;
- label.dataset.tier=prizeTier(multiple);
- const style=prizeStyle(multiple);
- if(style)Object.assign(label.style,style);
+ const applyTier=value=>{label.dataset.tier=prizeTier(value);label.removeAttribute('style');const style=prizeStyle(value);if(style)Object.assign(label.style,style);};
  const x=cells.reduce((sum,el)=>sum+el.offsetLeft+el.offsetWidth/2,0)/cells.length;
  const y=cells.reduce((sum,el)=>sum+el.offsetTop+el.offsetHeight/2,0)/cells.length;
- label.style.left=`${x+board.offsetLeft}px`;label.style.top=`${y+board.offsetTop}px`;layer.append(label);
- if(document.hidden||!duration){label.remove();return;}
- const frames=reduce.matches?[{opacity:1},{opacity:1}]:[{opacity:0,translate:'0 8px'},{opacity:1,translate:'0 0',offset:.18},{opacity:1,translate:'0 -8px',offset:.55},{opacity:0,translate:'0 -44px'}];
+ const place=()=>{label.style.left=`${x+board.offsetLeft}px`;label.style.top=`${y+board.offsetTop}px`;};
+ let multiplier=1n;try{multiplier=BigInt(hit.multiplier??1);}catch{}
+ const showCalc=multiplier>1n&&beat>0&&duration>0&&!document.hidden&&!reduce.matches&&!skip?.();
+ if(showCalc){
+  // 1) ganho do cluster sem multiplicador
+  const base100=BigInt(hit.rawPay100)/multiplier;
+  const baseUnits=Number(base100*BigInt(betUnits)/100n);
+  applyTier(Number(base100)/100);place();label.classList.add('prize-calc');
+  const part=(cls,text)=>{const el=document.createElement('span');el.className=cls;el.textContent=text;return el;};
+  const baseEl=part('calc-base',format(baseUnits/100));
+  label.append(baseEl);layer.append(label);pop(baseEl,beat);onBeat?.('base');
+  await beatWait(beat,skip);
+  // 2) "× N": os WILDs do hit brilham ao mesmo tempo
+  if(!skip?.()){
+   const op=part('calc-op','×'),mult=part('calc-mult',`${multiplier}`);
+   label.append(op,mult);pop(op,beat,.3);pop(mult,beat,.3);onBeat?.('multiplier');
+   cells.filter(c=>c.classList.contains('wild')).forEach(c=>{const art=c.querySelector('.wild-art')??c;art.animate([{scale:1,filter:'brightness(1)'},{scale:1.12,filter:'brightness(1.45) drop-shadow(0 0 10px #e9d9ff)',offset:.45},{scale:1,filter:'brightness(1)'}],{duration:Math.max(160,beat*1.4),easing:'ease-out'});});
+   await beatWait(beat*1.15,skip);
+  }
+  // 3) a operacao funde-se e transforma-se no resultado
+  if(!skip?.()){
+   await label.animate([{scale:1,opacity:1,filter:'blur(0)'},{scale:.7,opacity:.25,filter:'blur(2px)'}],{duration:Math.max(70,beat*.35),easing:'ease-in'}).finished.catch(()=>{});
+  }
+  label.classList.remove('prize-calc');label.replaceChildren(format(receivedUnits/100));applyTier(multiple);place();
+  if(!skip?.()){
+   label.animate([{scale:.6,filter:'brightness(1.8)'},{scale:1.28,filter:'brightness(1.3)',offset:.55},{scale:1,filter:'brightness(1)'}],{duration:Math.max(110,beat*.9),easing:'cubic-bezier(.2,.8,.3,1.2)'});
+   onBeat?.('result');
+   await beatWait(beat*.9,skip);
+  }
+ } else {
+  label.textContent=format(receivedUnits/100);applyTier(multiple);place();layer.append(label);
+ }
+ if(document.hidden||!duration||skip?.()){label.remove();return;}
+ // 4) animacao habitual: sobe e desaparece
+ const frames=reduce.matches?[{opacity:1},{opacity:1}]:[{opacity:showCalc?1:0,translate:showCalc?'0 0':'0 8px'},{opacity:1,translate:'0 0',offset:.18},{opacity:1,translate:'0 -8px',offset:.55},{opacity:0,translate:'0 -44px'}];
  const animation=label.animate(frames,{duration:reduce.matches?Math.min(200,duration):duration,easing:'ease-out'});floatingPrize=animation;
  try{await animation.finished;}catch{}finally{label.remove();if(floatingPrize===animation)floatingPrize=null;}
 }

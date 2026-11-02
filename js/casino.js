@@ -209,6 +209,10 @@ export async function casinoPage(ctx) {
       modal("Retoma a Rift", "<p>Conclui o b\u00f3nus da Rift Core Overdrive antes de mudar de jogo.</p>");
       return;
     }
+    if (game.id !== "princesa-sofia" && localWallet.sofiaActive()) {
+      modal("Retoma a Princesa Sofia", "<p>Conclui a jogada da Princesa Sofia antes de mudar de jogo.</p>");
+      return;
+    }
     if (slot) {
       playArea.scrollIntoView({ block: "start" });
       return;
@@ -222,11 +226,11 @@ export async function casinoPage(ctx) {
     showGame(button);
     bindClose();
     root.querySelector(".casino-game-nav h2").innerHTML = game.id === "cardoso-road" ? '<span class="cardoso-toolbar-logo">CARDOSO<em>ROAD</em></span>' : esc(game.title);
-    root.classList.toggle("is-table", game.category === "tables" || game.id === "rift" || game.id === "cardoso-road");
+    root.classList.toggle("is-table", game.category === "tables" || game.id === "rift" || game.id === "princesa-sofia" || game.id === "cardoso-road");
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
       const [sdk, latest] = await Promise.all([
-        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "roulette" ? import("./casino-roulette.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
+        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "roulette" ? import("./casino-roulette.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.id === "princesa-sofia" ? import("./casino-sofia-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
         localWallet.enterGame(),
       ]);
       if (!active || run !== gameRun) return;
@@ -238,7 +242,7 @@ export async function casinoPage(ctx) {
         streamId = crypto.randomUUID();
         localStorage.setItem(key, streamId);
       }
-      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "cardoso-road" ? " casino-table-mount" : ""}${game.id === "blackjack" ? " casino-blackjack-mount" : ""}"></div>`;
+      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "princesa-sofia" || game.id === "cardoso-road" ? " casino-table-mount" : ""}${game.id === "blackjack" ? " casino-blackjack-mount" : ""}"></div>`;
       if (game.id === "blackjack" && !legacyBlackjack) {
         slot = sdk.mountBlackjackMultiplayer(playArea.querySelector(".casino-slot-mount"), {
           uid,
@@ -261,6 +265,10 @@ export async function casinoPage(ctx) {
         if (!active || run !== gameRun) return;
       } else if (game.id === "rift") {
         slot = sdk.mountCasinoRift(playArea.querySelector(".casino-slot-mount"), localWallet);
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "princesa-sofia") {
+        slot = sdk.mountCasinoSofia(playArea.querySelector(".casino-slot-mount"), localWallet);
         await slot.ready;
         if (!active || run !== gameRun) return;
       } else if (game.category === "tables") {
@@ -318,7 +326,7 @@ export async function casinoPage(ctx) {
   function history() {
     modal(
       "Movimentos Djabucoin",
-      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "shop" ? "Compra na loja do casino" : entry.kind === "vault" ? "Depósito na Vault" : entry.kind === "rejuice" ? "Rejuice" : entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
+      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "shop" ? "Compra na loja do casino" : entry.kind === "vault" ? "Depósito na Vault" : entry.kind === "rejuice" ? "Rejuice" : entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "princesa-sofia" ? "Princesa Sofia" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
     );
   }
   function drawWallet(error = "") {

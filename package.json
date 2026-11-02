@@ -16,6 +16,7 @@
     "predev:casino": "node scripts/build-casino.mjs",
     "test:casino:cardoso": "node tests/casino-cardoso.mjs",
     "test:casino:tables": "node tests/casino-tables.mjs",
+    "test:casino:sofia": "node scripts/build-casino-sofia.mjs && node --test tests/casino-sofia.test.js && npm.cmd test --prefix games/princesa-sofia",
     "test:casino:rift": "node --test tests/casino-rift.test.js && node scripts/build-casino-rift.mjs && node tests/casino-rift-mobile.mjs",
     "test:casino": "node --test tests/casino.test.js tests/casino-session.test.js tests/casino-football.test.js && node tests/casino-local-wallet.mjs && node tests/casino-football.mjs && node tests/casino.mjs",
     "test:casino:football": "npm.cmd run check --prefix games/futebol && npm.cmd test --prefix games/futebol && node --test tests/casino.test.js tests/casino-session.test.js tests/casino-football.test.js && npm.cmd run build:casino && node tests/casino-football.mjs",

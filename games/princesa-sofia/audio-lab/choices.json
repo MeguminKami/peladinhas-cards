@@ -1,0 +1,29 @@
+{
+  "choices": {
+    "bonus-end": "synth-d",
+    "bonus-trigger": "synth-d",
+    "hit-epic": "synth-d",
+    "hit-large": "synth-d",
+    "hit-medium": "synth-d",
+    "hit-small": "synth-d",
+    "magic-cast": "synth-d",
+    "magic-ready": "synth-d",
+    "purchase-flowers": "synth-d",
+    "retrigger": "synth-d",
+    "scatter-converge": "synth-d",
+    "scatter-land": "synth-d",
+    "wild-place": "synth-d",
+    "win-count-end": "synth-d",
+    "xp-fly": "synth-d",
+    "reel-land": "synth-a",
+    "scatter-anticipation": "synth-d",
+    "intro-common": "synth-a",
+    "intro-super": "synth-a",
+    "intro-secret": "synth-a",
+    "max-win": "synth-a",
+    "spin-whoosh": "silencio",
+    "symbols-land": "silencio",
+    "cascade-dissolve": "silencio"
+  },
+  "notes": {}
+}

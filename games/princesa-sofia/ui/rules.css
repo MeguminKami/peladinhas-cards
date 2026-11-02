@@ -1,0 +1,109 @@
+/* ==== Painel de regras: visual, com a arte do jogo ==== */
+#rules-content{gap:14px}
+#rules-content section.rule-panel{min-height:430px;display:grid;align-content:start;gap:14px}
+#rules-content h3{margin:0;font-size:19px;color:#fff3e2;font-weight:600}
+#rules-content p{margin:0;line-height:1.5;font-size:14px;color:#e4d2e2}
+#rules-content b{color:#fff2dc;font-weight:600}
+.rules-tabs{flex-wrap:wrap}
+.rules-tabs button{border-radius:999px!important;padding:8px 16px!important}
+.rule-note{font-size:13px!important;color:#cdb8d0!important}
+.rule-card{padding:14px 16px;border:1px solid #b38d9155;border-radius:16px;background:linear-gradient(180deg,#3d2b4acc,#2a2036cc);display:grid;gap:8px;align-content:start}
+.rule-duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rule-hero{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.rule-copy{display:grid;gap:8px}
+
+/* mini-grelha de exemplo */
+.mini-board{display:grid;grid-template-columns:repeat(6,34px);grid-auto-rows:29px;gap:3px;padding:8px;border-radius:12px;background:#1d1528;border:1px solid #c9a6b866;box-shadow:inset 0 0 0 2px #00000033}
+.mini-board span{position:relative;display:grid;place-items:center;border-radius:6px;background:#2b2138;opacity:.5}
+.mini-board img{width:92%;height:92%;object-fit:contain}
+.mini-board span.on{opacity:1;background:#5a3f63;box-shadow:0 0 0 1.5px #ffe7a8,0 0 10px #ffd98a88}
+.mini-board span.diag{opacity:1;background:#3a2b43;box-shadow:0 0 0 1.5px #ff9fb8}
+.mini-board span.diag::after{content:'';position:absolute;inset:3px;border-radius:5px;background:linear-gradient(135deg,transparent 46%,#ff9fb8 47% 53%,transparent 54%)}
+.rule-legend{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:13px;color:#d9c6d9}
+.rule-legend li{display:flex;align-items:center;gap:8px}
+.key{width:16px;height:16px;border-radius:4px;display:inline-block}
+.key.on{background:#5a3f63;box-shadow:0 0 0 1.5px #ffe7a8}
+.key.diag{background:#3a2b43;box-shadow:0 0 0 1.5px #ff9fb8}
+
+/* 3 passos */
+.rule-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;counter-reset:step}
+.rule-steps li{counter-increment:step;display:grid;justify-items:center;text-align:center;gap:4px;padding:12px 10px;border-radius:14px;background:#2d2239;border:1px solid #b38d9144}
+.rule-steps b{color:#fff2dc;font-size:15px}
+.rule-steps b::before{content:counter(step) '. ';color:#f4d5e7}
+.rule-steps small{font-size:12px;color:#cdb8d0;line-height:1.4}
+.step-art{height:46px;display:flex;align-items:center;justify-content:center;gap:2px}
+.step-art img{width:38px;height:38px;object-fit:contain}
+.step-win img{filter:drop-shadow(0 0 6px #ffe7a8)}
+.step-fall i{width:2px;height:30px;margin:0 6px;background:linear-gradient(#f4d5e700,#f4d5e7);position:relative}
+.step-fall i::after{content:'';position:absolute;left:-4px;bottom:-2px;border:5px solid transparent;border-top-color:#f4d5e7;border-bottom:0}
+.mini-xp{display:block;width:96px;height:12px;border-radius:8px;background:#1d1528;box-shadow:inset 0 0 0 1px #d7b1c566;overflow:hidden}
+.mini-xp i{display:block;height:100%;width:70%;background:linear-gradient(90deg,#fff6e6,#e9d9ff,#d5f6ef,#ffe5c2)}
+.mini-xp.full i{width:100%;box-shadow:0 0 10px #fff}
+
+/* WILD e equacoes */
+.mini-wild{position:relative;display:inline-grid;place-items:center;width:46px;height:44px}
+.mini-wild img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.mini-wild b{position:relative;font-size:15px;font-weight:800!important;color:#533557!important;text-shadow:0 1px 0 #fff,1px 0 1px #fff,-1px 0 1px #fff;transform:translateY(-6%)}
+.equation{display:flex;align-items:center;justify-content:center;gap:4px;min-height:52px;padding:4px;border-radius:12px;background:#1d1528}
+.equation>img{width:40px;height:40px;object-fit:contain}
+.equation .op{font-size:22px;color:#fff2dc;padding:0 4px}
+.equation .result{font-size:26px;font-weight:800;color:#fffaff;-webkit-text-stroke:1.5px #4a1580;paint-order:stroke fill;text-shadow:0 0 10px #d6b8ff,0 0 20px #a77bff}
+.calc-demo{text-align:center;font-size:20px!important;color:#fff3d6!important}
+.calc-demo em{font-style:normal;font-weight:800;color:#fffaff;text-shadow:0 0 8px #c9b0ff}
+.calc-demo strong{color:#ffe072}
+.rule-magic{grid-template-columns:auto 1fr;align-items:center;gap:16px}
+.magic-flow{display:flex;align-items:center;gap:6px}
+.flow-arrow{width:26px;height:2px;background:#f4d5e7;position:relative;margin:0 2px}
+.flow-arrow::after{content:'';position:absolute;right:-2px;top:-4px;border:5px solid transparent;border-left-color:#f4d5e7;border-right:0}
+
+/* tabelas */
+.rule-table,.pay-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.rule-table th,.rule-table td,.pay-table th,.pay-table td{padding:7px 8px!important;font-size:12.5px!important;text-align:center;border-bottom:1px solid #b38d9133}
+.rule-table thead th,.pay-table thead th{color:#f4d5e7;font-weight:600;letter-spacing:.03em;border-bottom:1px solid #b38d9177}
+.rule-table tbody th,.pay-table tbody th{text-align:left;color:#fff2dc;font-weight:500}
+.pay-symbol{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.pay-symbol img{width:30px;height:30px;object-fit:contain}
+.pay-table tbody tr:nth-child(n+6) th{color:#ffe7b8}
+.rule-more>summary{color:#e9d6ea;font-size:14px;padding:4px 0}
+.rule-more{display:grid;gap:8px}
+
+/* flores e bonus */
+.scatter-hero .scatter-big{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 0 12px #f4b9dc99)}
+.bonus-ladder{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bonus-step{justify-items:center;text-align:center}
+.bonus-step .bonus-art{width:84px;height:78px;object-fit:contain}
+.bonus-step h3{font-size:16px!important}
+.flower-row{display:inline-flex;align-items:center;justify-content:center}
+.flower-row .mini-flower{width:26px;height:26px;object-fit:contain;margin:0 -3px;filter:drop-shadow(0 1px 2px #0008)}
+.bonus-step[data-mode=super]{border-color:#f3cf9f88}
+.bonus-step[data-mode=secret]{border-color:#e1d4ffaa;box-shadow:0 0 18px #ceadff33}
+.retrigger-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.retrigger-row b{font-size:16px;color:#d5f6ef!important}
+.hunt{grid-template-columns:auto 1fr;align-items:center;gap:12px}
+.bonus-art.small{width:64px;height:60px;object-fit:contain}
+
+/* vertical / estreito */
+body[data-layout=portrait] #rules-content section.rule-panel{min-height:0}
+body[data-layout=portrait] .rule-duo,body[data-layout=portrait] .rule-hero{grid-template-columns:1fr}
+body[data-layout=portrait] .rule-hero{justify-items:center;text-align:center}
+body[data-layout=portrait] .rule-steps{grid-template-columns:1fr}
+body[data-layout=portrait] .rule-steps li{grid-template-columns:auto 1fr;justify-items:start;text-align:left;column-gap:12px}
+body[data-layout=portrait] .rule-steps li .step-art{grid-row:span 2}
+body[data-layout=portrait] .bonus-ladder{gap:6px}
+body[data-layout=portrait] .bonus-step{padding:10px 6px}
+body[data-layout=portrait] .bonus-step .bonus-art{width:60px;height:56px}
+body[data-layout=portrait] .pay-symbol span{display:none}
+
+/* retoques: WILDs maiores, algarismos alinhados, flores arejadas, letra maior na vertical */
+#rules-content{font-variant-numeric:lining-nums;font-feature-settings:"lnum" 1}
+.mini-wild{width:56px;height:54px}
+.mini-wild b{font-size:19px}
+.equation{min-height:64px}
+.equation>img{width:46px;height:46px}
+.flower-row .mini-flower{width:30px;height:30px;margin:0 -1px}
+body[data-layout=portrait] #rules-content p{font-size:16px}
+body[data-layout=portrait] #rules-content h3{font-size:21px}
+body[data-layout=portrait] .rule-steps small,body[data-layout=portrait] .rule-legend{font-size:14px}
+body[data-layout=portrait] .rule-table th,body[data-layout=portrait] .rule-table td,body[data-layout=portrait] .pay-table th,body[data-layout=portrait] .pay-table td{font-size:14px!important;padding:7px 5px!important}
+body[data-layout=portrait] .rule-magic{grid-template-columns:1fr;justify-items:center;text-align:center}
+body[data-layout=portrait] .rules-tabs button{font-size:14px!important}

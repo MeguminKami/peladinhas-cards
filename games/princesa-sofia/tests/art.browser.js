@@ -33,7 +33,7 @@ try {
    await page.locator(`#${id}-button`).click();
    await page.waitForFunction(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
    assert.ok(await page.locator(`#${id}-dialog`).evaluate(el=>{const r=el.getBoundingClientRect();return r.left>=-1&&r.top>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&el.scrollHeight<=el.clientHeight+1&&el.scrollWidth<=el.clientWidth+1;}),`${id} menu fits ${size.width}x${size.height}`);
-   if(id==='rules')for(const tab of ['magic','bonus','symbols','pay','play']){await page.locator(`[data-rule=${tab}]`).click();await page.waitForFunction(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.ok(await page.locator('#rules-dialog').evaluate(el=>{const r=el.getBoundingClientRect();return r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&el.scrollWidth<=el.clientWidth+1;}));}
+   if(id==='rules')for(const tab of ['wilds','bonus','pay','play']){await page.locator(`[data-rule=${tab}]`).click();await page.waitForFunction(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.ok(await page.locator('#rules-dialog').evaluate(el=>{const r=el.getBoundingClientRect();return r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&el.scrollWidth<=el.clientWidth+1;}));}
    await page.keyboard.press('Escape');
   }
  }

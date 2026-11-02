@@ -4,6 +4,7 @@ import { resolve, relative, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import "./build-casino-tables.mjs";
 import "./build-casino-rift.mjs";
+import "./build-casino-sofia.mjs";
 import "../games/cardoso-road/build-cardoso.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");

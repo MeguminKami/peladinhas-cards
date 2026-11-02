@@ -1,0 +1,26 @@
+{
+  "variants": {},
+  "normalized": [
+    "bonus-end",
+    "bonus-trigger",
+    "hit-epic",
+    "hit-large",
+    "hit-medium",
+    "hit-small",
+    "intro-common",
+    "intro-secret",
+    "intro-super",
+    "magic-cast",
+    "magic-ready",
+    "max-win",
+    "purchase-flowers",
+    "reel-land",
+    "retrigger",
+    "scatter-anticipation",
+    "scatter-converge",
+    "scatter-land",
+    "wild-place",
+    "win-count-end",
+    "xp-fly"
+  ]
+}

@@ -23,6 +23,16 @@ export const CASINO_CATALOG = Object.freeze([
     art: "reels",
   },
   {
+    id: "princesa-sofia",
+    available: CASINO_TABLES_ENABLED,
+    category: "slots",
+    title: "Princesa Sofia",
+    label: "Um conto de fadas em cascata.",
+    description: "Grupos de cinco, magia que lança wilds e três bónus encantados.",
+    thumbnail: "assets/casino/covers/princesa-sofia.webp",
+    art: "reels",
+  },
+  {
     id: "blackjack",
     available: CASINO_TABLES_ENABLED,
     category: "tables",

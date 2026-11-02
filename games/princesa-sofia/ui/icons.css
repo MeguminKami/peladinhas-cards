@@ -1,0 +1,38 @@
+.ui-sprite{position:absolute;width:0;height:0;overflow:hidden}
+/* ==== Icones e botoes tematicos (substituem simbolos de texto do sistema) ==== */
+.ui-icon{display:block;width:1em;height:1em;flex:none;pointer-events:none;overflow:visible}
+/* botoes redondos comuns: perola com aro rosa-dourado */
+#rules-button,#mute-button,#expand-button,#bet-minus,#bet-plus,#buy-bet-minus,#buy-bet-plus,dialog .dialog-close{
+  display:inline-grid;place-items:center;aspect-ratio:1;border-radius:50%;padding:0;font-size:22px;line-height:1;color:#fff2dc;
+  border:1px solid #e7c3d4b3;background:radial-gradient(circle at 36% 28%,#644870,#352643 62%,#2a1f37);
+  box-shadow:inset 0 0 0 3px #f6dbe814,inset 0 1px 0 #ffffff2e,0 2px 6px #12091f8c;transition:box-shadow .2s,border-color .2s,transform .12s,filter .2s}
+#rules-button,#mute-button,#expand-button{width:44px;height:44px;min-height:44px}
+#bet-minus,#bet-plus{font-size:24px}
+dialog .dialog-close{width:42px;height:42px;min-height:42px;font-size:20px;flex:none}
+#buy-bet-minus,#buy-bet-plus{width:40px;height:40px;min-height:40px;font-size:20px}
+#rules-button:hover:not(:disabled),#mute-button:hover:not(:disabled),#expand-button:hover:not(:disabled),#bet-minus:hover:not(:disabled),#bet-plus:hover:not(:disabled),#buy-bet-minus:hover:not(:disabled),#buy-bet-plus:hover:not(:disabled),dialog .dialog-close:hover{
+  border-color:#ffe2c4;background:radial-gradient(circle at 36% 28%,#7a5884,#3f2d4f 62%,#2f2240);box-shadow:inset 0 0 0 3px #f6dbe826,inset 0 1px 0 #ffffff40,0 0 12px #f4d5e766,0 2px 6px #12091f8c}
+#rules-button:active,#mute-button:active,#expand-button:active,#bet-minus:active,#bet-plus:active,#buy-bet-minus:active,#buy-bet-plus:active,dialog .dialog-close:active{transform:scale(.94)}
+#bet-minus:disabled,#bet-plus:disabled,#buy-bet-minus:disabled,#buy-bet-plus:disabled{filter:saturate(.4) brightness(.8);opacity:.6}
+#mute-button.muted{opacity:1;text-decoration:none;color:#d9c3d8}
+/* icone do Rodar */
+.spin-symbol .ui-icon{width:1em;height:1em}
+.spin-button .spin-symbol{display:grid;place-items:center;color:#51384e;filter:drop-shadow(0 1px 0 #fff8)}
+/* Demonstracoes: marcador proprio */
+details>summary{list-style:none;display:flex;align-items:center;gap:6px;cursor:pointer}
+details>summary::-webkit-details-marker{display:none}
+details>summary .ui-icon{width:16px;height:16px;color:#f4d5e7;transition:transform .2s}
+details[open]>summary .ui-icon{transform:rotate(90deg)}
+
+/* ==== Barras deslizantes (volume e autoplay): trilho rosa ate ao valor, puxador de perola ==== */
+.shell input[type=range],dialog input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;--fill:50%;accent-color:auto}
+.shell input[type=range]::-webkit-slider-runnable-track,dialog input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;
+  background:linear-gradient(90deg,#f7c6de,#e6d6ff var(--fill),#251b31 var(--fill));box-shadow:inset 0 0 0 1px #d7b1c566,inset 0 1px 2px #0007}
+.shell input[type=range]::-webkit-slider-thumb,dialog input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#f8dfea 45%,#cdaedb);border:1.5px solid #e9c792;box-shadow:0 0 7px #f4d5e799,0 1px 2px #0009}
+.shell input[type=range]::-moz-range-track,dialog input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:#251b31;box-shadow:inset 0 0 0 1px #d7b1c566}
+.shell input[type=range]::-moz-range-progress,dialog input[type=range]::-moz-range-progress{height:6px;border-radius:6px;background:linear-gradient(90deg,#f7c6de,#e6d6ff)}
+.shell input[type=range]::-moz-range-thumb,dialog input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#f8dfea 45%,#cdaedb);border:1.5px solid #e9c792;box-shadow:0 0 7px #f4d5e799}
+dialog input[type=range]::-webkit-slider-runnable-track{height:8px}
+dialog input[type=range]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-7px}
+.shell input[type=range]:focus-visible::-webkit-slider-thumb,dialog input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px #d5f6ef,0 0 7px #f4d5e799}

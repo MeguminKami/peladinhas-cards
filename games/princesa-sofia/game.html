@@ -2,16 +2,35 @@
 <html lang="pt" data-theme="volt">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#221b36"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
   <title>Princesa Sofia · Protótipo</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="ui/prototype.css">
   <link rel="stylesheet" href="ui/theme.css">
   <link rel="stylesheet" href="ui/presentation.css">
+  <link rel="stylesheet" href="ui/responsive.css">
+  <link rel="stylesheet" href="ui/icons.css">
+  <link rel="stylesheet" href="ui/rules.css">
 </head>
 <body>
+<svg class="ui-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+  <defs>
+    <!-- brilho de estrela de 4 pontas: a assinatura do conjunto -->
+    <path id="i-spark" d="M0-3.2 .75-.75 3.2 0 .75.75 0 3.2-.75.75-3.2 0-.75-.75Z"/>
+  </defs>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12.5" r="8.6" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="8.4" r="1.25" fill="currentColor"/><path d="M12 11.4v5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><use href="#i-spark" transform="translate(19.6 4.2) scale(.8)" fill="currentColor"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M9.5 17.2V6.1l9-2.2v11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="7.3" cy="17.4" rx="2.6" ry="2.1" fill="currentColor"/><ellipse cx="16.3" cy="15.2" rx="2.6" ry="2.1" fill="currentColor"/><use href="#i-spark" transform="translate(4.6 5.4) scale(.75)" fill="currentColor"/></symbol>
+  <symbol id="i-sound-off" viewBox="0 0 24 24"><g opacity=".55"><path d="M9.5 17.2V6.1l9-2.2v11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="7.3" cy="17.4" rx="2.6" ry="2.1" fill="currentColor"/><ellipse cx="16.3" cy="15.2" rx="2.6" ry="2.1" fill="currentColor"/></g><path d="M4 4l16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4.5 9V5.6a1.1 1.1 0 0 1 1.1-1.1H9M15 4.5h3.4a1.1 1.1 0 0 1 1.1 1.1V9M19.5 15v3.4a1.1 1.1 0 0 1-1.1 1.1H15M9 19.5H5.6a1.1 1.1 0 0 1-1.1-1.1V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><use href="#i-spark" transform="translate(12 12) scale(.9)" fill="currentColor"/></symbol>
+  <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M9 4.5v3.4a1.1 1.1 0 0 1-1.1 1.1H4.5M19.5 9h-3.4A1.1 1.1 0 0 1 15 7.9V4.5M15 19.5v-3.4a1.1 1.1 0 0 1 1.1-1.1h3.4M4.5 15h3.4A1.1 1.1 0 0 1 9 16.1v3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><use href="#i-spark" transform="translate(12 12) scale(.9)" fill="currentColor"/></symbol>
+  <symbol id="i-spin" viewBox="0 0 24 24"><path d="M19.1 9.2A7.6 7.6 0 1 0 19.6 14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><path d="M20.2 4.6l-.9 4.9-4.8-1.1" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><use href="#i-spark" transform="translate(12 12.2) scale(1.05)" fill="currentColor"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M6.5 12h11" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M6.5 12h11M12 6.5v11" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
   <div class="shell">
-    <header class="widget-toolbar"><span class="game-logo" aria-label="Princesa Sofia"><img src="ui/art/logo.png" alt="Princesa Sofia"></span><button id="expand-button" aria-label="Expandir para ecrã inteiro" aria-pressed="false" title="Expandir">&#x26F6;</button></header>
+    <header class="widget-toolbar"><span class="game-logo" aria-label="Princesa Sofia"><img src="ui/art/logo.png" alt="Princesa Sofia"></span><button id="expand-button" aria-label="Expandir para ecrã inteiro" aria-pressed="false" title="Expandir"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-expand"/></svg></button></header>
     <h1 class="sr-only">Princesa Sofia</h1>
     <main>
       <div class="game-heading"><span id="mode-label" class="mode-chip sr-only">JOGO NORMAL</span><span id="demo-label" class="demo-badge" hidden>DEMONSTRAÇÃO</span></div>
@@ -30,14 +49,14 @@
 
       <section class="control-deck" aria-label="Controlos do jogo" tabindex="0">
         <div class="deck-left">
-        <button id="rules-button" class="utility" aria-label="Regras" aria-haspopup="dialog">ⓘ</button>
-        <div class="volume-control"><button id="mute-button" class="icon-button" aria-label="Desativar som" aria-pressed="false">♪</button><label class="sr-only" for="volume">Volume</label><input id="volume" type="range" min="0" max="100" value="35"><output id="volume-value" class="sr-only" for="volume">35%</output></div>
+        <button id="rules-button" class="utility" aria-label="Regras" aria-haspopup="dialog"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-info"/></svg></button>
+        <div class="volume-control"><button id="mute-button" class="icon-button" aria-label="Desativar som" aria-pressed="false"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-sound"/></svg></button><div class="volume-sliders"><label class="volume-row"><span class="volume-tag" aria-hidden="true">Música</span><span class="sr-only">Volume da música</span><input id="volume-music" type="range" min="0" max="100" value="35"></label><label class="volume-row"><span class="volume-tag" aria-hidden="true">Efeitos</span><span class="sr-only">Volume dos efeitos</span><input id="volume-sfx" type="range" min="0" max="100" value="35"></label></div><output id="volume-value" class="sr-only">Música 35%, efeitos 35%</output></div>
         <div class="money-block"><span class="eyebrow">SALDO</span><strong id="balance">10 000,00 DJC</strong></div>
         <section class="result-panel"><span class="eyebrow">GANHO</span><strong id="win">0,00 <small>DJC</small></strong><span id="win-multiple" class="sr-only">0× a aposta</span></section>
         </div>
         <div class="deck-right">
         <select id="bet" aria-label="Aposta base" hidden></select>
-        <div class="spin-controls"><button id="bet-minus" class="round-step" aria-label="Diminuir aposta">−</button><button id="spin" class="spin-button"><span class="spin-symbol" aria-hidden="true">↻</span><span id="spin-label" class="sr-only">Rodar</span><small id="spin-cost">1,00 DJC</small></button><button id="bet-plus" class="round-step" aria-label="Aumentar aposta">+</button><button id="auto-button" class="auto-button" aria-haspopup="dialog">Autoplay</button></div>
+        <div class="spin-controls"><button id="bet-minus" class="round-step" aria-label="Diminuir aposta"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-minus"/></svg></button><button id="spin" class="spin-button"><span class="spin-symbol" aria-hidden="true"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-spin"/></svg></span><span id="spin-label" class="sr-only">Rodar</span><small id="spin-cost">1,00 DJC</small></button><button id="bet-plus" class="round-step" aria-label="Aumentar aposta"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></button><button id="auto-button" class="auto-button" aria-haspopup="dialog">Autoplay</button></div>
         <div class="speed-control"><button id="speed-button" data-speed="normal" aria-label="Velocidade: Normal. Mudar para Rápido."><span class="speed-stars" aria-hidden="true"><span class="active">✦</span><span>✦</span><span>✦</span></span><span id="speed-label">Normal</span></button></div>
         </div>
       </section>
@@ -46,8 +65,8 @@
     </main>
   </div>
 
-  <dialog id="rules-dialog" aria-labelledby="rules-title"><header><div><span class="eyebrow">COMO JOGAR</span><h2 id="rules-title">Regras e pagamentos</h2></div><button class="dialog-close" data-close aria-label="Fechar regras">×</button></header><div id="rules-content" class="dialog-body"></div><details class="demo-controls"><summary>Demonstrações</summary><p>Não alteram o saldo.</p><div><button data-demo="hit">Cluster de 5</button><button data-demo="multi">Dois grupos</button><button data-demo="magic">Magia</button><button data-demo="common">Jardim Encantado</button><button data-demo="super">Baile ao Luar</button><button data-demo="secret">Coroa da Aurora</button><button data-demo="max">MAX WIN</button></div></details></dialog>
-  <dialog id="buy-dialog" aria-labelledby="buy-title"><header><h2 id="buy-title">Bónus</h2><button class="dialog-close" data-close aria-label="Fechar compra">×</button></header><div class="dialog-body"><div class="popup-bet"><span class="eyebrow">APOSTA</span><strong id="buy-bet"></strong><div><button id="buy-bet-minus" aria-label="Diminuir aposta no painel">−</button><button id="buy-bet-plus" aria-label="Aumentar aposta no painel">+</button></div></div><div id="buy-options" class="buy-options"><article class="buy-option" data-mode="hunt"><h3>Caça às Flores</h3><img class="bonus-icon" src="ui/art/bonus-hunt.png" alt=""><p>Procura as flores. Cada spin custa 4× a aposta base.</p><strong id="hunt-price"></strong><button id="hunt-button" aria-pressed="false">Ativar</button></article><div id="bonus-cards"></div></div></div></dialog>
+  <dialog id="rules-dialog" aria-labelledby="rules-title"><header><div><span class="eyebrow">COMO JOGAR</span><h2 id="rules-title">Regras e pagamentos</h2></div><button class="dialog-close" data-close aria-label="Fechar regras"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button></header><div id="rules-content" class="dialog-body"></div><details class="demo-controls"><summary><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-chevron"/></svg>Demonstrações</summary><p>Não alteram o saldo.</p><div><button data-demo="hit">Cluster de 5</button><button data-demo="multi">Dois grupos</button><button data-demo="magic">Magia</button><button data-demo="common">Jardim Encantado</button><button data-demo="super">Baile ao Luar</button><button data-demo="secret">Coroa da Aurora</button><button data-demo="max">MAX WIN</button></div></details></dialog>
+  <dialog id="buy-dialog" aria-labelledby="buy-title"><header><h2 id="buy-title">Bónus</h2><button class="dialog-close" data-close aria-label="Fechar compra"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button></header><div class="dialog-body"><div class="popup-bet"><span class="eyebrow">APOSTA</span><strong id="buy-bet"></strong><div><button id="buy-bet-minus" aria-label="Diminuir aposta no painel"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-minus"/></svg></button><button id="buy-bet-plus" aria-label="Aumentar aposta no painel"><svg class="ui-icon" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg></button></div></div><div id="buy-options" class="buy-options"><article class="buy-option" data-mode="hunt"><h3>Caça às Flores</h3><img class="bonus-icon" src="ui/art/bonus-hunt.png" alt=""><p>Procura as flores. Cada spin custa 4× a aposta base.</p><strong id="hunt-price"></strong><button id="hunt-button" aria-pressed="false">Ativar</button></article><div id="bonus-cards"></div></div></div></dialog>
   <dialog id="auto-dialog" aria-label="Autoplay"><div class="dialog-body"><output id="auto-count" class="auto-count" for="auto-range">50 <small>spins</small></output><label class="sr-only" for="auto-range">Quantidade de spins pagos</label><input id="auto-range" type="range" min="0" max="13" step="1" value="4" aria-valuetext="50 spins" autofocus><div class="auto-actions"><button data-close>Cancelar</button><button id="auto-start" class="primary">Iniciar</button></div></div></dialog>
   <dialog id="notice-dialog" class="notice-dialog" aria-labelledby="notice-title"><img class="notice-art" src="ui/art/notice-frame.png" alt=""><div class="dialog-body"><img id="notice-emblem" class="notice-emblem" src="ui/art/bonus-common.png" alt=""><span id="notice-kicker" class="eyebrow">BÓNUS</span><h2 id="notice-title">12 spins</h2><strong id="notice-total" hidden></strong><p id="notice-body"></p><button class="primary" data-close>Continuar</button></div></dialog>
   <script type="module" src="ui/app.js"></script>

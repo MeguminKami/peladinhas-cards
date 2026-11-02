@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Princesa Sofia · Pré-visualização telemóvel</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="ui/preview.css">
+</head>
+<body data-preview="phone">
+  <header class="pv-bar">
+    <strong class="pv-title">Princesa Sofia <span>· Telemóvel</span></strong>
+    <nav class="pv-sizes" id="sizes" aria-label="Modelo de telemóvel"></nav>
+    <button class="pv-rotate" id="rotate" type="button" aria-pressed="false">⟳ Rodar</button>
+    <button class="pv-rotate" id="site-toggle" type="button" aria-pressed="false">Com menu do site</button>
+    <a class="pv-link" href="pc.html">Ver em PC →</a>
+  </header>
+  <main class="pv-stage" id="stage">
+    <div class="pv-screen phone" id="screen"><iframe id="game" src="game.html" title="Slot Princesa Sofia" allow="autoplay"></iframe></div>
+  </main>
+  <p class="pv-info" id="info"></p>
+  <script type="module" src="ui/preview.js"></script>
+</body>
+</html>

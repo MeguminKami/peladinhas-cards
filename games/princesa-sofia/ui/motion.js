@@ -9,6 +9,12 @@ const effects = {
     { opacity: 1, transform: 'translateY(2%) scale(1)', offset: .84 },
     { opacity: 1, transform: 'translateY(0) scale(1)' },
   ],
+  // queda curta e individual durante o suspense (cai de perto, com um pequeno ressalto)
+  suspenseDrop: [
+    { opacity: 0, transform: 'translateY(-130%)' },
+    { opacity: 1, transform: 'translateY(4%)', offset: .78 },
+    { opacity: 1, transform: 'translateY(0)' },
+  ],
   hit: [
     { filter: 'brightness(1)', transform: 'scale(1)' },
     { filter: 'brightness(1.35) drop-shadow(0 0 5px #fff3dc)', transform: 'scale(1.035)', offset: .45 },
@@ -118,21 +124,116 @@ function motionScope(board, duration, skip) {
 
 const artworkOf = cell => cell?.querySelector('.symbol-art, strong') ?? cell;
 
-/** Purchased-bonus theatre only: never writes scatters into the engine board. */
-export async function purchaseScatters(board,mode,asset,{duration=1000,skip}={}) {
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Revelacao de um spin com suspense de Scatters. So apresenta a grelha ja decidida pelo motor:
+ * a ordem e o ritmo dependem apenas do que ja aterrou, nunca do resultado futuro.
+ * - As colunas caem da esquerda para a direita (cada coluna de baixo para cima).
+ * - levels: { scattersJaAterrados: nivel } - ex. base {2:1, 3:2, 4:3}: com 2 aterrados e possibilidade
+ *   de mais um, as celulas seguintes caem uma a uma com suspense de nivel 1; com 3, nivel 2; com 4, nivel 3.
+ * - maxScatters: acima disto deixa de haver suspense (ja nao pode aparecer outro).
+ * onScatter(n) toca quando aterra o n-esimo Scatter; onSuspense(nivel) quando o suspense sobe.
+ */
+export async function revealSpin(board, { duration = 900, levels = { 2: 1, 3: 2, 4: 3 }, maxScatters = 5, skip, onScatter, onSuspense, onColumn, onSuspenseCell } = {}) {
+  const scope = motionScope(board, duration, skip);
+  const cells = [...board.querySelectorAll('.cell')];
+  const isScatter = cell => cell?.dataset.symbol === 'S';
+  const hidden = new Set(cells);
+  const show = cell => { hidden.delete(cell); cell.style.visibility = ''; };
+  let landed = 0, level = 0;
+  const setLevel = next => {
+    if (next === level) return;
+    level = next;
+    if (level) { board.dataset.suspense = String(level); onSuspense?.(level); } else delete board.dataset.suspense;
+    cells.forEach(c => c.classList.toggle('suspense-held', level > 0 && isScatter(c) && !hidden.has(c)));
+  };
+  const land = cell => {
+    if (!isScatter(cell)) return;
+    landed++;
+    onScatter?.(landed);
+    if (level) cell.classList.add('suspense-held');
+  };
+  const levelFor = n => (n < maxScatters ? levels[n] || 0 : 0);
+  // O som acompanha o impacto (o simbolo bate no fundo a 84% / 78% da queda), nao o fim da animacao.
+  const IMPACT = new Map([[effects.spin, .84], [effects.suspenseDrop, .78]]);
+  const drop = (cell, fall, frames = effects.spin, onImpact) => {
+    show(cell);
+    const impact = new Promise(resolve => setTimeout(() => { land(cell); onImpact?.(); resolve(); }, fall * (IMPACT.get(frames) ?? 1)));
+    return Promise.all([scope.play(cell, frames, { duration: fall }), impact]);
+  };
+  try {
+    if (scope.stopped) return;
+    cells.forEach(c => { c.style.visibility = 'hidden'; });
+    const pending = [];
+    for (let column = 0; column < 6; column++) {
+      if (scope.stopped) break;
+      const columnCells = [4, 3, 2, 1, 0].map(row => cells[row * 6 + column]).filter(Boolean);
+      // Antes de uma coluna em suspense, tudo o que esta a cair tem de aterrar: o nivel depende do que ja se ve.
+      const scattersSoFar = cells.filter(c => c.dataset.position % 6 < column && isScatter(c)).length;
+      if (levelFor(scattersSoFar)) {
+        await Promise.all(pending.splice(0));
+        if (scope.stopped) break;
+        setLevel(levelFor(landed));
+        columnCells.forEach(c => c.classList.add('suspense-col'));
+        await wait(duration * (0.08 + 0.07 * level)); // respirar antes da coluna
+        for (const cell of columnCells) {
+          if (scope.stopped) break;
+          const current = levelFor(landed);
+          setLevel(current);
+          if (!current) { pending.push(drop(cell, duration * .5)); await wait(duration * .05); continue; }
+          const index = columnCells.indexOf(cell);
+          await drop(cell, duration * (0.08 + 0.035 * current), effects.suspenseDrop, () => onSuspenseCell?.(index, current)); // cai sozinho
+          await wait(duration * (0.02 + 0.02 * current));                              // pequena pausa de suspense
+        }
+        columnCells.forEach(c => c.classList.remove('suspense-col'));
+        setLevel(levelFor(landed));
+      } else {
+        setLevel(0);
+        const col = column;
+        columnCells.forEach((cell, index) => pending.push(wait(index * duration * .045).then(() => scope.stopped ? undefined : drop(cell, duration * .62, effects.spin, index === 0 ? () => onColumn?.(col) : undefined))));
+        await wait(duration * .2);
+      }
+    }
+    await Promise.all(pending);
+  } finally {
+    cells.forEach(c => { c.style.visibility = ''; c.classList.remove('suspense-col', 'suspense-held'); });
+    delete board.dataset.suspense;
+    scope.close();
+  }
+}
+
+/** Pesos aproximados dos simbolos regulares (so para a grelha teatral da compra). */
+const FILLER_WEIGHTS = { N1: 155, N2: 137, N3: 121, N4: 119, N5: 103, P1: 95, P2: 85, P3: 80, P4: 65, P5: 40 };
+function randomFiller() {
+  const total = Object.values(FILLER_WEIGHTS).reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (const [id, w] of Object.entries(FILLER_WEIGHTS)) if ((r -= w) < 0) return id;
+  return 'N1';
+}
+
+/**
+ * Purchased-bonus theatre only: never writes scatters into the engine board.
+ * Cada compra sorteia uma grelha nova: os Scatters caem em colunas e linhas aleatorias,
+ * e a revelacao usa o mesmo suspense progressivo de um spin normal.
+ */
+export async function purchaseScatters(board,mode,asset,{duration=1000,skip,onScatter,onSuspense,onColumn,onSuspenseCell}={}) {
   const scope=motionScope(board,duration,skip);
   const layer=scope.node(board.cloneNode(true));layer.removeAttribute('id');layer.className='board purchase-scatters purchase-grid';
   layer.setAttribute('aria-label','Spin de apresentação do bónus comprado');
-  const count={common:3,super:4,secret:5}[mode],destinations=[2,15,26,8,21].slice(0,count);
-  const regular=Object.entries(symbolAssets).filter(([id])=>id!=='S');
+  const count={common:3,super:4,secret:5}[mode]??3;
+  // colunas distintas ao acaso, uma linha ao acaso em cada
+  const columns=[0,1,2,3,4,5].sort(()=>Math.random()-.5).slice(0,count);
+  const destinations=columns.map(c=>Math.floor(Math.random()*5)*6+c);
   for(const [p,cell] of [...layer.querySelectorAll('.cell')].entries()) {
-    const scatter=destinations.includes(p),[id,src]=regular[(p*7+3)%regular.length];
-    cell.replaceChildren();cell.className='cell '+(scatter?'scatter purchase-flower':id.startsWith('P')?'premium':'normal');cell.dataset.symbol=scatter?'S':id;
-    const image=document.createElement('img');image.className='symbol-art';image.src=scatter?asset:src;image.alt='';cell.append(image);
+    const scatter=destinations.includes(p),id=scatter?'S':randomFiller();
+    cell.replaceChildren();cell.removeAttribute('style');cell.className='cell '+(scatter?'scatter purchase-flower':id.startsWith('P')?'premium':'normal');
+    cell.dataset.symbol=id;cell.dataset.position=String(p);
+    const image=document.createElement('img');image.className='symbol-art';image.src=scatter?asset:symbolAssets[id];image.alt='';cell.append(image);
   }
   board.parentElement.append(layer);
   try {
-    await Promise.all([...layer.children].filter(el=>el.classList.contains('cell')).map((cell,p)=>scope.play(cell,effects.spin,{duration:duration*.85,delay:((4-Math.floor(p/6))*6+p%6)*duration*.045})));
+    await revealSpin(layer,{duration,levels:{2:1,3:2,4:3},maxScatters:count,skip,onScatter,onSuspense,onColumn,onSuspenseCell});
     await gatherScatters(layer,mode,{duration:duration*.7,skip});
   } finally {scope.close();}
 }
@@ -158,7 +259,12 @@ export async function dissolveToXP(board,positions,target,{duration=650,skip}={}
 }
 
 /** Engine removed positions are required: repeated symbol names cannot identify survivors. */
-export async function cascadeBoard(board, before, after, render, { duration = 350, removed = [], skip, removalAlreadyPresented = false } = {}) {
+/**
+ * suspense (opcional): { levels, maxScatters, duration, onScatter, onSuspense, onSuspenseCell } - as mesmas regras
+ * do revealSpin. Se as flores ja no tabuleiro (mais as que forem caindo) permitirem mais uma, os simbolos novos
+ * caem um a um, da esquerda para a direita, com suspense; senao caem como antes. onScatter avisa cada flor nova.
+ */
+export async function cascadeBoard(board, before, after, render, { duration = 350, removed = [], skip, removalAlreadyPresented = false, suspense = null } = {}) {
   const scope = motionScope(board, duration, skip);
   const cells = [...board.querySelectorAll('.cell')];
   const erased = new Set(removed);
@@ -208,13 +314,60 @@ export async function cascadeBoard(board, before, after, render, { duration = 35
       });
     }
     await Promise.all(falls);
-    await Promise.all(replacements.sort((a,b)=>Number(b.dataset.position)-Number(a.dataset.position)).map((cell,index) => {
-      const art=artworkOf(cell); art.style.opacity='0'; cell.style.visibility='';
-      return scope.play(art,effects.spin,{duration:duration*1.15,delay:index*duration*.07}).finally(()=>{art.style.opacity='';});
-    }));
+    if (!suspense) {
+      await Promise.all(replacements.sort((a,b)=>Number(b.dataset.position)-Number(a.dataset.position)).map((cell,index) => {
+        const art=artworkOf(cell); art.style.opacity='0'; cell.style.visibility='';
+        return scope.play(art,effects.spin,{duration:duration*1.15,delay:index*duration*.07}).finally(()=>{art.style.opacity='';});
+      }));
+    } else {
+      // Ordem natural: colunas da esquerda para a direita, cada uma de baixo para cima.
+      const ordered = replacements.slice().sort((a, b) => { const pa = +a.dataset.position, pb = +b.dataset.position; return (pa % 6) - (pb % 6) || pb - pa; });
+      const fresh = new Set(ordered);
+      const isScatter = cell => cell?.dataset.symbol === 'S';
+      const { levels = {}, maxScatters = 5, onScatter, onSuspense, onSuspenseCell, onFirstLand } = suspense;
+      let firstLanded = false;
+      const impactAt = (ms, cell, extra) => new Promise(resolve => setTimeout(() => { land(cell); extra?.(); if (!firstLanded) { firstLanded = true; onFirstLand?.(); } resolve(); }, ms));
+      const sd = suspense.duration ?? duration * 1.8;
+      const levelFor = n => (n < maxScatters ? levels[n] || 0 : 0);
+      let count = settled.filter(c => isScatter(c) && !fresh.has(c)).length, level = 0;
+      const visibleScatters = () => settled.filter(c => isScatter(c) && c.style.visibility !== 'hidden' && (!fresh.has(c) || c.dataset.landed));
+      const setLevel = next => {
+        if (next === level) return;
+        level = next;
+        if (level) { board.dataset.suspense = String(level); onSuspense?.(level); } else delete board.dataset.suspense;
+        visibleScatters().forEach(c => c.classList.toggle('suspense-held', level > 0));
+      };
+      const land = cell => { cell.dataset.landed = '1'; if (isScatter(cell)) { count++; onScatter?.(count); if (level) cell.classList.add('suspense-held'); } };
+      const pending = [];
+      let normalIndex = 0, suspenseIndex = 0;
+      for (const cell of ordered) {
+        if (scope.stopped) break;
+        const current = levelFor(count);
+        if (current) {
+          await Promise.all(pending.splice(0)); // o que ja estava a cair aterra antes do suspense
+          if (scope.stopped) break;
+          setLevel(levelFor(count));
+          cell.classList.add('suspense-col'); cell.style.visibility = '';
+          const fall = sd * (0.1 + 0.04 * level), lvl = level, idx = suspenseIndex++ % 5;
+          await Promise.all([scope.play(cell, effects.suspenseDrop, { duration: fall }), impactAt(fall * .78, cell, () => onSuspenseCell?.(idx, lvl))]);
+          cell.classList.remove('suspense-col');
+          await wait(sd * (0.03 + 0.03 * level));
+        } else {
+          setLevel(0);
+          const art = artworkOf(cell); art.style.opacity = '0'; cell.style.visibility = '';
+          const delay = normalIndex++ * duration * .07, fall = duration * 1.15;
+          pending.push(Promise.all([scope.play(art, effects.spin, { duration: fall, delay }).finally(() => { art.style.opacity = ''; }), impactAt(delay + fall * .84, cell)]));
+          // se esta pode ser a flor que abre o suspense, as seguintes esperam por ela
+          if (isScatter(cell) && levelFor(count + 1)) { await Promise.all(pending.splice(0)); normalIndex = 0; }
+        }
+      }
+      await Promise.all(pending);
+    }
   } finally {
     if (!rendered) render(after);
-    replacements.forEach(cell => { cell.style.visibility = ''; });
+    replacements.forEach(cell => { cell.style.visibility = ''; cell.classList.remove('suspense-col'); delete cell.dataset.landed; });
+    board.querySelectorAll('.suspense-held').forEach(cell => cell.classList.remove('suspense-held'));
+    if (suspense) delete board.dataset.suspense;
     scope.close();
   }
 }

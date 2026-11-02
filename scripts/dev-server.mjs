@@ -33,6 +33,10 @@ const types = {
   ".png": "image/png",
   ".webp": "image/webp",
   ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".opus": "audio/ogg",
+  ".mp3": "audio/mpeg",
+  ".json": "application/json",
   ".webmanifest": "application/manifest+json",
 };
 const server = createServer(async (req, res) => {

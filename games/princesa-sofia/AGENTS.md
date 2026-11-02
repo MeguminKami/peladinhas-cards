@@ -1,3 +1,5 @@
+> **Incorporar no site do casino:** começa por [PARA-O-PROXIMO-AGENTE.md](PARA-O-PROXIMO-AGENTE.md) e [INTEGRACAO.md](INTEGRACAO.md). As regras abaixo são fixas.
+
 # Regras da slot
 
 - A slot nunca pode ter barras de deslocação horizontais ou verticais, no widget ou em ecrã inteiro, incluindo a barra de controlos. Ajustar a composição e a escala ao espaço disponível; todos os elementos e ações devem permanecer visíveis. Ocultar overflow sem garantir que o conteúdo cabe não resolve o problema.

@@ -1,0 +1,35 @@
+/* Simulacao do site principal (cabecalho) + bloco do jogo. Do jogo, so interessam as regras .game-slot. */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#0a0d12;color:#e7ebf0;font:14px/1.3 Inter,system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden}
+.site-header{position:sticky;top:0;z-index:5;background:#0a0d12;border-bottom:1px solid #1b2028}
+.site-bar{max-width:1360px;margin:0 auto;height:86px;padding:0 20px;display:flex;align-items:center;gap:28px}
+.site-logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;flex:none}
+.site-logo svg{width:28px;height:32px}
+.site-logo span{display:grid;line-height:1}
+.site-logo b{font-size:14px;letter-spacing:.02em}
+.site-logo small{font-size:9px;letter-spacing:.32em;color:#9aa4b1;margin-top:4px}
+.site-nav{display:flex;align-items:center;gap:22px;flex:1;min-width:0}
+.site-nav a{display:flex;align-items:center;gap:7px;color:#c9d1db;text-decoration:none;font-size:13.5px;white-space:nowrap}
+.site-nav a:hover{color:#fff}
+.site-nav a[aria-current=page]{color:#3ddc84}
+.site-nav svg,.site-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.site-nav em{font-style:normal;font-size:10px;font-weight:700;color:#0a0d12;background:#3ddc84;border-radius:999px;padding:1px 6px}
+.site-actions{display:flex;align-items:center;gap:22px;flex:none;color:#c9d1db}
+.site-icon svg{width:18px;height:18px}
+.site-user{display:flex;align-items:center;gap:10px}
+.site-user .avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#2a1f2f;color:#f4d5e7;font-size:12px;font-weight:700;box-shadow:0 0 0 2px #3ddc8455}
+.site-user span:last-child{display:grid}
+.site-user b{font-size:13px;font-weight:600;color:#fff}
+.site-user small{font-size:11px;color:#3ddc84;font-weight:600}
+
+/* ---- Bloco do jogo: e isto que o site principal precisa ---- */
+.site-main{max-width:1440px;margin:0 auto;padding:16px 20px 0}
+.game-slot iframe{--game-bottom-gap:16px;display:block;width:100%;height:calc(100dvh - 86px - 32px);border:0;border-radius:16px;background:#100b24;box-shadow:0 12px 40px #00000066,0 0 0 1px #2a2236}
+
+/* Ecras mais estreitos: o menu reduz-se (como no site real deve acontecer) e o jogo fica de ponta a ponta */
+@media (max-width:1180px){.site-nav a{font-size:0;gap:0}.site-nav a svg{width:19px;height:19px}.site-nav em{font-size:10px;margin-left:4px}.site-user span:last-child{display:none}}
+@media (max-width:760px){
+  .site-bar{height:58px;gap:14px;padding:0 12px}.site-nav,.site-actions .site-icon{display:none}.site-actions{margin-left:auto}
+  .site-main{padding:0}.game-slot iframe{--game-bottom-gap:0px;border-radius:0;box-shadow:none;height:calc(100dvh - 58px)}
+}

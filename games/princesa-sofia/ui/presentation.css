@@ -169,3 +169,60 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 @keyframes magic-vision-enter{from{opacity:0;scale:.9}to{opacity:1;scale:1}}
 #notice-dialog[data-intro=true]::backdrop{background:#21152c88;backdrop-filter:blur(5px)}
 #magic-upgrade::before{opacity:.28}#magic-upgrade::after{opacity:.16}
+
+/* Volume: barras separadas de musica e efeitos, empilhadas no espaco do antigo controlo */
+.volume-control{display:flex;align-items:center;gap:6px}
+.volume-sliders{display:grid;gap:6px}
+.volume-row{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;cursor:pointer}
+.volume-tag{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#d9c8df;line-height:1;min-width:34px}
+.shell .volume-control input[type=range],.volume-control input[type=range]{width:84px;height:18px;min-height:0;margin:0;padding:0;accent-color:#f4d5e7}
+.shell[data-layout=portrait] .volume-control input[type=range]{width:58px}
+#mute-button.muted{opacity:.55;text-decoration:line-through}
+/* Numeros de saldo, ganho e precos: algarismos alinhados (lining) e um pouco maiores */
+#balance,#win,#spin-cost,.buy-option>strong,#buy-bet,#bet-value,.bet-control strong{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
+.shell[data-layout] .money-block strong,.shell[data-layout] .result-panel>strong,.money-block strong,.result-panel>strong{font-size:1.18rem}
+.result-panel small{font-size:.78rem}
+.buy-option>strong{font-size:1.3rem}
+
+/* WILD: emblema, multiplicador e etiqueta animam como uma so peca */
+.cell.wild .wild-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+
+/* ---- Suspense de Scatters (spin normal e compra de bonus) ----
+   nivel 1: 2 Scatters, pode vir o 3.o  | nivel 2: 3, pode vir o 4.o | nivel 3: 4, pode vir o 5.o */
+.board[data-suspense]{--sus:#ffd3ea;--sus-soft:#ffd3ea55}
+.board[data-suspense="2"]{--sus:#d9c4ff;--sus-soft:#c9b0ff66}
+.board[data-suspense="3"]{--sus:#ffe08a;--sus-soft:#ffd56a77}
+.board .cell{transition:filter .35s ease}
+.board[data-suspense="2"] .cell:not(.suspense-col):not(.suspense-held){filter:brightness(.82) saturate(.9)}
+.board[data-suspense="3"] .cell:not(.suspense-col):not(.suspense-held){filter:brightness(.58) saturate(.75)}
+.board-frame:has(> .board[data-suspense]),.board-frame:has(.board[data-suspense]){transition:box-shadow .4s ease}
+.board-frame:has(.board[data-suspense="1"]){box-shadow:0 6px 0 #533842,0 0 26px #ffd3ea66}
+.board-frame:has(.board[data-suspense="2"]){box-shadow:0 6px 0 #533842,0 0 40px #c9b0ff99;animation:sus-frame 1.1s ease-in-out infinite alternate}
+.board-frame:has(.board[data-suspense="3"]){box-shadow:0 6px 0 #533842,0 0 56px #ffd56acc;animation:sus-frame .7s ease-in-out infinite alternate}
+@keyframes sus-frame{to{filter:brightness(1.08)}}
+/* coluna que esta a cair: feixe de luz */
+.cell.suspense-col::after{content:'';position:absolute;inset:-2px;border-radius:9px;pointer-events:none;z-index:4;
+  background:linear-gradient(180deg,transparent,var(--sus-soft) 45%,transparent);box-shadow:0 0 14px var(--sus-soft),inset 0 0 12px var(--sus-soft);
+  animation:sus-beam .55s ease-in-out infinite alternate}
+.board[data-suspense="2"] .cell.suspense-col::after{animation-duration:.42s;box-shadow:0 0 22px var(--sus),inset 0 0 16px var(--sus-soft)}
+.board[data-suspense="3"] .cell.suspense-col::after{animation-duration:.3s;box-shadow:0 0 30px var(--sus),inset 0 0 22px var(--sus)}
+.board[data-suspense="3"] .cell.suspense-col{animation:sus-tremble .12s linear infinite}
+@keyframes sus-beam{from{opacity:.45}to{opacity:1}}
+@keyframes sus-tremble{0%,100%{translate:0 0}25%{translate:.6px -.4px}75%{translate:-.6px .4px}}
+/* Scatters ja pousados: batimento */
+.cell.scatter.suspense-held .symbol-art{animation:sus-heart .8s ease-in-out infinite;filter:drop-shadow(0 0 8px var(--sus,#ffd3ea)) brightness(1.12)}
+.board[data-suspense="2"] .cell.scatter.suspense-held .symbol-art{animation-duration:.6s;filter:drop-shadow(0 0 12px var(--sus)) brightness(1.2)}
+.board[data-suspense="3"] .cell.scatter.suspense-held .symbol-art{animation-duration:.42s;filter:drop-shadow(0 0 16px var(--sus)) drop-shadow(0 0 6px #fff) brightness(1.3)}
+@keyframes sus-heart{0%,100%{transform:scale(1)}40%{transform:scale(1.08)}60%{transform:scale(1.03)}}
+@media (prefers-reduced-motion: reduce){.cell.suspense-col::after,.cell.scatter.suspense-held .symbol-art,.board[data-suspense] .cell{animation:none!important}}
+
+/* Calculo do ganho com WILD multiplicador: "1,50 x 12" antes do resultado */
+.group-prize.prize-calc{display:inline-flex;align-items:baseline;gap:.18em;white-space:nowrap}
+.group-prize .calc-base,.group-prize .calc-op,.group-prize .calc-mult{display:inline-block}
+.group-prize .calc-op{font-size:1.3em;font-weight:800;font-style:normal;color:#fff6e6;-webkit-text-stroke:1px #391a45}
+.group-prize .calc-mult{font-size:1.45em;font-style:normal;font-weight:800;color:#fffaff;-webkit-text-stroke:2.5px #4a1580;paint-order:stroke fill;
+  text-shadow:0 0 6px #fff,0 0 14px #d6b8ff,0 0 26px #a77bff,0 0 40px #8a5cff,0 3px 3px #24102d;animation:calc-mult-glow .5s ease-in-out infinite alternate}
+.group-prize.prize-calc{scale:1.15}
+@keyframes calc-mult-glow{to{filter:brightness(1.25) drop-shadow(0 0 8px #d6b8ff)}}
+@media (prefers-reduced-motion: reduce){.group-prize .calc-mult{animation:none}}
+.group-prize{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}

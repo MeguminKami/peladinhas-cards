@@ -165,14 +165,11 @@ try {
   // Mobile native dialog containment, table-local scrolling, focus and Escape.
   await page.getByRole('button', { name: 'Regras', exact: true }).click();
   await page.waitForSelector('#rules-dialog[open]');
-  assert.equal(await page.locator('#rules-content tbody tr').count(), 10);
+  assert.equal(await page.locator('#rules-content .pay-table tbody tr').count(), 10);
   await page.locator('[data-rule=pay]').click();
-  for (const mode of ['common','super','secret','base']) {
-    await page.locator('#payout-mode').selectOption(mode);
-    const table=DEFAULT_CONFIG.bonusPay100?.[mode] ?? DEFAULT_CONFIG.pay100;
-    const displayed=await page.locator('#rules-content tbody td').allTextContents();
-    assert.deepEqual(displayed,table.flat().map(v=>new Intl.NumberFormat('pt-PT',{maximumFractionDigits:2}).format(v/100)+'\u00d7'));
-  }
+  // Tabela unica, igual em todos os modos (contrato fixado): sem seletor de modo.
+  const displayed=await page.locator('#rules-content .pay-table tbody td').allTextContents();
+  assert.deepEqual(displayed,DEFAULT_CONFIG.pay100.flat().map(v=>new Intl.NumberFormat('pt-PT',{maximumFractionDigits:2}).format(v/100)+'\u00d7'));
 
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('Tab');
@@ -196,10 +193,12 @@ try {
   await page.keyboard.press('Escape');
 
   await page.locator('#mute-button').click();
-  assert.equal(await page.locator('#volume').inputValue(), '0');
+  assert.equal(await page.locator('#mute-button').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#mute-button').getAttribute('aria-label'), 'Ativar som');
+  assert.equal(await page.locator('#volume-music').inputValue(), '35');
   await page.locator('#mute-button').click();
-  assert.equal(await page.locator('#volume').inputValue(), '35');
+  assert.equal(await page.locator('#mute-button').getAttribute('aria-pressed'), 'false');
+  assert.equal(await page.locator('#volume-sfx').inputValue(), '35');
   await page.locator('#buy-button').click();
   assert.deepEqual(await page.locator('.buy-option').evaluateAll(items => items.map(el => el.dataset.mode)), ['hunt','common','super','secret']);
   await page.locator('#hunt-button').click();

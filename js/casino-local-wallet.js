@@ -222,6 +222,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
             tableReceipts: previous?.tableReceipts || {},
             rift: previous?.rift || null,
             riftReceipts: previous?.riftReceipts || {},
+            sofia: previous?.sofia || null,
+            sofiaReceipts: previous?.sofiaReceipts || {},
             cardoso: previous?.cardoso || null,
             cardosoReceipt: previous?.cardosoReceipt || null,
             cardosoReceipts: previous?.cardosoReceipts || {},
@@ -409,6 +411,48 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     });
     if (bonusComplete) void checkpoint("bonus").catch(() => {});
     else if (action === "play" && !state.rift?.state?.round && (state.normalSpins || 0) - Math.max(state.confirmedNormalSpins || 0, state.lastAttemptNormalSpins || 0) >= 15)
+      void checkpoint("spins").catch(() => {});
+    return result;
+  }
+  async function sofiaRequest(action, payload, id) {
+    if (!tables) throw Error("A Princesa Sofia está indisponível.");
+    const { applyLocalSofia } = await import("./casino-sofia-local.js");
+    let completed = null, normalSpin = false;
+    const result = await lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para recuperar.");
+      if (typeof id !== "string" || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error("Pedido inválido.");
+      const fingerprint = JSON.stringify({ action, payload });
+      const receipt = state.sofiaReceipts && Object.hasOwn(state.sofiaReceipts, id) ? state.sofiaReceipts[id] : null;
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
+        return structuredClone(receipt.result);
+      }
+      if (action === "start") assertPlayable();
+      const next = applyLocalSofia(state.sofia, state.balance, { action, payload });
+      completed = next.completed;
+      normalSpin = action === "start" && ["base", "hunt"].includes(payload.mode);
+      const changed = action !== "connect" || !state.sofia || !!completed;
+      if (!changed) return structuredClone(next.result);
+      const spent = state.spent + next.debit, won = state.won + next.credit;
+      if (![spent, won].every(n => Number.isSafeInteger(n) && n <= 1e12)) throw Error("Limite da sessão atingido.");
+      try {
+        await save({ ...state, sofia: next.session, balance: next.balance, spent, won,
+          dirty: state.dirty || next.debit > 0 || next.credit > 0,
+          normalSpins: (state.normalSpins || 0) + (normalSpin ? 1 : 0),
+          wallet: { ...state.wallet,
+            recent: completed ? [{ id: completed.id, kind: "princesa-sofia", amount: completed.creditedUnits - completed.costUnits, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
+          // Receipts let a lost response be repeated without moving money twice.
+          sofiaReceipts: action === "connect" ? state.sofiaReceipts : Object.fromEntries([...Object.entries(state.sofiaReceipts || {}), [id, { fingerprint, result: next.result }]].slice(-8)),
+        });
+      } catch (error) {
+        error.code = "SITE_TIMEOUT";
+        error.publicMessage = "Não foi possível confirmar a gravação local. Repete para recuperar a mesma jogada.";
+        throw error;
+      }
+      return structuredClone(next.result);
+    });
+    if (completed?.bonus) void checkpoint("bonus").catch(() => {});
+    else if (completed && !state.sofia?.round && (state.normalSpins || 0) - Math.max(state.confirmedNormalSpins || 0, state.lastAttemptNormalSpins || 0) >= 15)
       void checkpoint("spins").catch(() => {});
     return result;
   }
@@ -662,6 +706,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     settleTable,
     riftRequest,
     riftActive: () => !!state?.rift?.state?.round,
+    sofiaRequest,
+    sofiaActive: () => !!state?.sofia?.round,
     cardosoState,
     cardosoAct,
     checkpoint,
