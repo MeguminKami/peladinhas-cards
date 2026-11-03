@@ -87,7 +87,7 @@ input[type=range]{min-width:0;height:44px;margin:0;accent-color:var(--accent);cu
 .demo-controls summary{min-height:44px;padding:14px 0;cursor:pointer;color:var(--text-secondary)}
 .demo-controls p{color:var(--text-secondary);margin-bottom:12px}.demo-controls>div{display:flex;flex-wrap:wrap;gap:8px}
 dialog { width: min(760px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #716083; border-radius: 18px; background: var(--bg-surface); color: var(--text-primary); overflow: auto; }
-dialog::backdrop { background: #080412c9; backdrop-filter: blur(4px); }
+dialog::backdrop { background: #080412de; } /* sem backdrop-filter: o desfoque e muito pesado em telemoveis */
 dialog > header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 24px 24px 16px; border-bottom: 1px solid var(--border); }
 dialog h2 { font-size: 1.5rem; letter-spacing: -.04em; }
 .dialog-close { width: 44px; padding: 0; font-size: 25px; background: transparent; flex-shrink: 0; }

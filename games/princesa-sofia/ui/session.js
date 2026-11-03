@@ -68,7 +68,7 @@ export class HostSession {
     this.origin = origin; this.target = target; this.timeout = timeout;
     this.waiting = new Map();
     this.balanceUnits = 0; this.state = null; this.roundId = null; this.cursor = 0;
-    this.sessionId = null; this.revision = 0; this.host = true;
+    this.sessionId = null; this.revision = 0; this.host = true; this.prefetched = null;
     window.addEventListener('message', event => {
       const data = event.data;
       if (event.source !== this.target || event.origin !== this.origin || data?.channel !== HOST_CHANNEL || data.type !== 'response') return;
@@ -85,11 +85,16 @@ export class HostSession {
   cost(mode, betUnits) { return entryCostMultiplier(mode) * betUnits; }
 
   request(action, payload = {}, id = crypto.randomUUID()) {
-    return new Promise((resolve, reject) => {
+    const started = performance.now();
+    const timed = new Promise((resolve, reject) => {
       const timer = setTimeout(() => { this.waiting.delete(id); reject(Object.assign(Error('O site não respondeu. Tenta novamente.'), { code: 'TIMEOUT' })); }, this.timeout);
       this.waiting.set(id, { resolve, reject, timer });
       this.target.postMessage({ channel: HOST_CHANNEL, type: 'request', id, action, payload }, this.origin);
     });
+    // Tempo de resposta da carteira do casino (painel ui/perf.js).
+    const report = () => { try { dispatchEvent(new CustomEvent('sofia-wallet-timing', { detail: { action, ms: performance.now() - started } })); } catch { } };
+    timed.then(report, report);
+    return timed;
   }
 
   apply(result) {
@@ -99,25 +104,58 @@ export class HostSession {
     return result;
   }
 
-  async connect() { return this.apply(await this.request('connect')); }
+  async connect() { this.prefetched = null; return this.apply(await this.request('connect')); }
 
   async start(mode, betUnits) {
     if (this.active) throw Error('Já existe uma jogada em curso.');
     if (this.balanceUnits < this.cost(mode, betUnits)) throw Error('Saldo insuficiente para esta jogada.');
-    this.apply(await this.request('start', { sessionId: this.sessionId, expectedRevision: this.revision, mode, betUnits }));
+    this.prefetched = null;
+    // withFirstStep: o site pode devolver logo o 1.o passo na resposta ao start (campo firstStep, igual a
+    // resposta de um step com index 0, e guardado como recibo desse step). Poupa uma ida e volta por spin.
+    // Um site que ainda nao o suporte ignora o campo e tudo funciona como antes.
+    const result = await this.request('start', { sessionId: this.sessionId, expectedRevision: this.revision, mode, betUnits, withFirstStep: true });
+    this.apply(result);
+    if (result.firstStep && this.active) this.prefetched = { id: `${this.roundId}-${this.cursor}`, promise: Promise.resolve(result.firstStep) };
+    else this.prefetch(); // compras: o 1.o passo chega enquanto as flores caem e o aviso do bónus esta aberto
     return this.state;
+  }
+
+  requestStep() {
+    const payload = { sessionId: this.sessionId, roundId: this.roundId, index: this.cursor };
+    // O mesmo id em cada repetição: o site devolve o recibo sem mexer duas vezes no saldo.
+    const id = `${this.roundId}-${this.cursor}`;
+    const promise = this.request('step', payload, id)
+      .catch(error => { if (error.code !== 'TIMEOUT') throw error; return this.request('step', payload, id); });
+    return { id, promise };
+  }
+
+  /**
+   * Pede ja o passo seguinte enquanto o atual esta a ser apresentado (o resultado da jogada esta fixo
+   * desde o start; os pedidos sao idempotentes). Assim a latencia do site/servidor fica escondida
+   * dentro da animacao, em vez de se somar a cada free spin.
+   */
+  prefetch() {
+    if (!this.active || this.prefetched) return;
+    this.prefetched = this.requestStep();
+    this.prefetched.promise.catch(() => { }); // o erro e tratado quando advance() o consumir
   }
 
   async advance() {
     if (!this.active) throw Error('Não existe uma jogada em curso.');
-    const payload = { sessionId: this.sessionId, roundId: this.roundId, index: this.cursor };
-    // O mesmo id em cada repetição: o site devolve o recibo sem mexer duas vezes no saldo.
-    const id = `${this.roundId}-${this.cursor}`;
+    const expected = `${this.roundId}-${this.cursor}`;
+    const early = this.prefetched?.id === expected;
+    const pending = early ? this.prefetched : this.requestStep();
+    this.prefetched = null;
     let result;
-    try { result = await this.request('step', payload, id); }
-    catch (error) { if (error.code !== 'TIMEOUT') throw error; result = await this.request('step', payload, id); }
+    try { result = await pending.promise; }
+    catch (error) {
+      // Um pedido antecipado que falhou volta a ser tentado uma vez, ja no momento certo.
+      if (!early) throw error;
+      result = await this.requestStep().promise;
+    }
     this.apply(result);
     this.state = result.step.state;
+    this.prefetch();
     return { state: result.step.state, events: result.step.events };
   }
 }

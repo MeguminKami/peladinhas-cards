@@ -1,0 +1,27 @@
+/* Exemplo de outro tema: mesma barra, só variáveis diferentes (néon / ficção científica). */
+:root{
+  --deck-font:"Trebuchet MS","Segoe UI",system-ui,sans-serif; --deck-font-label:var(--deck-font);
+  --deck-text:#e8fbff; --deck-text-muted:#7fb6c4; --deck-value:#ffffff; --deck-focus:#39f3ff;
+  --deck-bg:linear-gradient(180deg,#0b1a2cf2,#06101df2); --deck-border:#1f6f86; --deck-radius:6px;
+  --deck-shadow:0 0 0 1px #39f3ff22,0 6px 18px #0009;
+  --deck-extra-bg:linear-gradient(180deg,#2c0b2cf2,#16061df2); --deck-extra-border:#ff3df2;
+  --deck-btn-text:#bff9ff; --deck-btn-border:#2bb7cf; --deck-btn-border-hover:#8ff9ff;
+  --deck-btn-bg:radial-gradient(circle at 36% 28%,#13405a,#0a2235 62%,#06131f);
+  --deck-btn-bg-hover:radial-gradient(circle at 36% 28%,#1a5878,#0d2c45 62%,#081a2a);
+  --deck-btn-shadow:inset 0 0 0 2px #39f3ff1a,0 2px 6px #000a; --deck-btn-glow:0 0 14px #39f3ff88; --deck-btn-muted-text:#5d8a96;
+  --deck-spin-bg:linear-gradient(145deg,#7dfcff,#28c7e8 58%,#1170c9); --deck-spin-bg-hover:linear-gradient(145deg,#b5feff,#55dcf5 58%,#2b8be0);
+  --deck-spin-border:#d8feff; --deck-spin-icon:#04223a; --deck-spin-cost:#03182b; --deck-spin-cost-size:12px; --deck-spin-cost-shadow:0 1px 0 #ffffff88;
+  --deck-spin-shadow:0 0 18px #39f3ff99,0 4px 0 #0b4a78;
+  --deck-auto-bg:#0f3550; --deck-auto-bg-hover:#165074; --deck-auto-text:#bff9ff;
+  --deck-speed-glyph:"▲"; --deck-speed-shape:6px; --deck-speed-inner-shape:3px;
+  --deck-speed-text:#d6fbff; --deck-speed-border:#2bb7cf; --deck-speed-inner:#39f3ff30;
+  --deck-speed-bg:linear-gradient(145deg,#0f3550,#081a2a); --deck-speed-shadow:0 3px 0 #02080f;
+  --deck-speed-star:#2e6878; --deck-speed-line:transparent; --deck-speed-star-on:#39f3ff; --deck-speed-star-glow:#39f3ffaa;
+  --deck-speed-fast-bg:linear-gradient(145deg,#0d4a3a,#062a22); --deck-speed-fast-border:#3dffb0; --deck-speed-fast-star:#3dffb0; --deck-speed-fast-glow:#3dffb0;
+  --deck-speed-ultra-bg:linear-gradient(145deg,#4a0d4a,#22062a); --deck-speed-ultra-border:#ff3df2; --deck-speed-ultra-star:#ff7df6; --deck-speed-ultra-glow:#ff3df2;
+  --deck-speed-hover-border:#8ff9ff; --deck-speed-hover-glow:0 0 14px #39f3ff66;
+  --deck-range-fill:linear-gradient(90deg,#1170c9,#39f3ff); --deck-range-track:#04101a; --deck-range-edge:#2bb7cf66;
+  --deck-range-thumb:radial-gradient(circle at 35% 30%,#fff,#9ffcff 50%,#28c7e8); --deck-range-thumb-border:#d8feff; --deck-range-thumb-glow:0 0 8px #39f3ff;
+  --deck-dialog-bg:linear-gradient(145deg,#0d2238,#06101d); --deck-dialog-border:#2bb7cf; --deck-dialog-count:#39f3ff;
+  --deck-dialog-btn-bg:#0f2a40; --deck-dialog-btn-border:#2bb7cf;
+}

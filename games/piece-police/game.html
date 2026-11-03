@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#101224">
+  <title>Peace Police: The Afterparty</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="ui/base.css">
+  <link rel="stylesheet" href="ui/layout.css">
+  <link rel="stylesheet" href="ui/kit/barra.css">
+  <link rel="stylesheet" href="ui/tema-barra.css">
+</head>
+<body data-layout="landscape">
+  <div class="shell" data-layout="landscape">
+    <header class="topbar">
+      <div class="brand"><strong>PEACE POLICE</strong><span>THE AFTERPARTY</span></div>
+      <span id="mode-label" class="mode-chip" data-mode="base">JOGO BASE</span>
+      <span id="forced-label" class="forced-chip" hidden>CENÁRIO FORÇADO</span>
+      <div class="top-actions">
+        <button id="history-button" class="top-btn" type="button" aria-haspopup="dialog">Histórico</button>
+        <button id="settings-button" class="top-btn" type="button" aria-haspopup="dialog">Definições</button>
+        <button id="fullscreen-button" class="top-btn" type="button" aria-pressed="false" aria-label="Ecrã inteiro">⛶</button>
+      </div>
+    </header>
+
+    <aside class="side" aria-label="Bónus e Peace Police">
+      <!-- Jogo base: compras, aposta extra e Peace Police. No bónus, tudo isto dá lugar ao registo do spin. -->
+      <div class="side-base">
+        <button id="buy-button" class="side-btn buy" type="button" aria-haspopup="dialog">COMPRAR BÓNUS</button>
+        <button id="hunt-button" class="side-btn hunt" type="button" role="switch" aria-checked="false">
+          <span class="hunt-title">MAIS SCATTERS</span><span class="hunt-state" id="hunt-state">DESLIGADO</span>
+          <small id="hunt-cost"></small>
+        </button>
+        <section id="police-panel" class="panel police" data-police="idle" aria-live="polite">
+          <h3>PEACE POLICE</h3>
+          <strong id="police-short" class="police-short">à espera</strong>
+          <p id="police-text">Ainda não apareceu neste spin.</p>
+          <p id="police-badge" class="badge-line" hidden></p>
+        </section>
+      </div>
+      <section id="bonus-panel" class="bonus-log" hidden aria-label="Registo do free spin">
+        <header class="log-head">
+          <h3 id="bonus-name">AFTERPARTY</h3>
+          <div class="fs-row"><span>FREE SPINS</span><strong id="fs-count">0 / 10</strong></div>
+          <div class="fs-row"><span>Ganho no bónus</span><strong id="bonus-win">0,00</strong></div>
+        </header>
+        <ol id="event-log" class="event-log" aria-live="polite"></ol>
+      </section>
+    </aside>
+
+    <main class="stage">
+      <div id="board-wrap" class="board-wrap" data-party="false">
+        <span id="party-neon" class="party-neon" aria-live="polite">PARTY MODE</span>
+        <div id="board" class="board" role="grid" aria-label="Party Stage 3-5-5-5-3"></div>
+        <div id="board-flash" class="board-flash" aria-hidden="true"></div>
+      </div>
+    </main>
+
+    <section id="chem-bar" class="chem-bar" aria-label="Chemistry">
+      <div id="chem-personas" class="chem-personas"></div>
+      <p id="chem-level" class="chem-level"></p>
+    </section>
+
+    <div id="deck-slot" class="deck-slot"></div>
+    <p id="status-line" class="status-line" role="status"></p>
+  </div>
+
+  <!-- Avisos: entrada no bónus, retrigger, resumo, ganho grande, limite atingido, erro -->
+  <dialog id="overlay" class="overlay" aria-labelledby="overlay-title">
+    <p id="overlay-kicker" class="kicker"></p>
+    <h2 id="overlay-title"></h2>
+    <div id="overlay-body" class="overlay-body"></div>
+    <p id="overlay-amount" class="overlay-amount" hidden></p>
+    <button id="overlay-continue" class="primary" type="button">CONTINUAR</button>
+  </dialog>
+
+  <dialog id="buy-dialog" class="big" aria-labelledby="buy-title">
+    <header class="dlg-head"><h2 id="buy-title">Comprar bónus</h2><button class="close" type="button" data-close aria-label="Fechar">✕</button></header>
+    <div class="buy-bet"><span>Aposta</span><button id="buy-bet-minus" type="button" aria-label="Diminuir aposta">−</button><strong id="buy-bet"></strong><button id="buy-bet-plus" type="button" aria-label="Aumentar aposta">+</button></div>
+    <div id="buy-cards" class="buy-cards"></div>
+    <div id="buy-confirm" class="buy-confirm" hidden>
+      <p id="buy-confirm-text"></p>
+      <div class="row"><button id="buy-cancel" type="button">Cancelar</button><button id="buy-ok" class="primary" type="button">Confirmar compra</button></div>
+    </div>
+    <p class="note">Uma compra entra diretamente no bónus. Não acumula com a aposta extra. Os prémios são sobre a aposta base.</p>
+  </dialog>
+
+  <dialog id="rules-dialog" class="big" aria-labelledby="rules-title">
+    <header class="dlg-head"><h2 id="rules-title">Regras</h2><button class="close" type="button" data-close aria-label="Fechar">✕</button></header>
+    <nav id="rules-tabs" class="tabs" role="tablist"></nav>
+    <div id="rules-body" class="rules-body"></div>
+  </dialog>
+
+  <dialog id="history-dialog" class="big" aria-labelledby="history-title">
+    <header class="dlg-head"><h2 id="history-title">Histórico</h2><button class="close" type="button" data-close aria-label="Fechar">✕</button></header>
+    <div id="history-body" class="history-body"></div>
+  </dialog>
+
+  <dialog id="settings-dialog" class="small" aria-labelledby="settings-title">
+    <header class="dlg-head"><h2 id="settings-title">Definições</h2><button class="close" type="button" data-close aria-label="Fechar">✕</button></header>
+    <label class="check"><input id="reduced-motion" type="checkbox"> Movimento reduzido</label>
+    <div id="seed-row" class="seed-row"><span>Seed da sessão de teste</span><code id="seed-value"></code><button id="seed-renew" type="button">Renovar seed</button></div>
+    <button id="balance-reset" type="button">Repor saldo de teste (10 000 DJC)</button>
+    <p class="note">Créditos fictícios. Este jogo não serve para dinheiro real.</p>
+  </dialog>
+
+  <script type="module" src="ui/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* Tema da barra de controlos — Princesa Sofia (referência do aspeto aprovado).
+   Um tema SÓ redefine variáveis --deck-* (e, se quiser, a fonte). Nada de seletores de estrutura. */
+@font-face{font-family:'Sofia Storybook';src:url('../../../princesa-sofia/ui/fonts/CormorantGaramond.woff2') format('woff2');font-weight:100 900;font-display:swap}
+:root{
+  --deck-font:'Sofia Storybook',Georgia,serif; --deck-font-label:var(--deck-font);
+  --deck-text:#fff7ed; --deck-text-muted:#d5bdcc; --deck-value:#fff5e5; --deck-focus:#fbe2ac;
+  --deck-bg:linear-gradient(180deg,#3b2947f7,#271f35f7); --deck-border:#b38d9177; --deck-radius:16px;
+  --deck-shadow:0 6px 18px #160c2944,inset 0 1px 0 #f8dbed22;
+  --deck-extra-bg:linear-gradient(180deg,#614331f7,#352638f7); --deck-extra-border:#d5aa77;
+
+  --deck-btn-text:#fff2dc; --deck-btn-border:#e7c3d4b3; --deck-btn-border-hover:#ffe2c4;
+  --deck-btn-bg:radial-gradient(circle at 36% 28%,#644870,#352643 62%,#2a1f37);
+  --deck-btn-bg-hover:radial-gradient(circle at 36% 28%,#7a5884,#3f2d4f 62%,#2f2240);
+  --deck-btn-shadow:inset 0 0 0 3px #f6dbe814,inset 0 1px 0 #ffffff2e,0 2px 6px #12091f8c;
+  --deck-btn-glow:0 0 12px #f4d5e766; --deck-btn-muted-text:#d9c3d8;
+
+  --deck-spin-bg:linear-gradient(145deg,#fff5dd,#f3d5e5 58%,#ccbfed);
+  --deck-spin-bg-hover:linear-gradient(145deg,#fffbe8,#ffe3ee 58%,#e2d9fb);
+  --deck-spin-border:#fff0d8; --deck-spin-icon:#51384e; --deck-spin-cost:#38213e; --deck-spin-cost-size:16px; --deck-spin-cost-shadow:0 1px 0 #fff6e8;
+  --deck-spin-shadow:inset 0 0 0 3px #fff5df55,0 4px 0 #795467,0 5px 14px #120a2340;
+
+  --deck-auto-bg:#78576d; --deck-auto-bg-hover:#95718b; --deck-auto-text:#fff7ed;
+
+  --deck-speed-glyph:"✦"; --deck-speed-shape:27px 12px 27px 12px; --deck-speed-inner-shape:21px 8px 21px 8px;
+  --deck-speed-text:#fff1e0; --deck-speed-border:#c4a0ba; --deck-speed-inner:#e9c8d440;
+  --deck-speed-bg:linear-gradient(145deg,#71506e,#392c4c); --deck-speed-shadow:inset 0 0 0 3px #ecd4e51a,0 3px 0 #23192f;
+  --deck-speed-star:#ab93b5; --deck-speed-line:#e5c4df77; --deck-speed-star-on:#fff0c9; --deck-speed-star-glow:#f9d5ad99;
+  --deck-speed-fast-bg:linear-gradient(145deg,#346a74,#293951); --deck-speed-fast-border:#a3dfde; --deck-speed-fast-star:#dcffff; --deck-speed-fast-glow:#88dfef;
+  --deck-speed-ultra-bg:linear-gradient(145deg,#775394,#3d2c65); --deck-speed-ultra-border:#e2b8ff; --deck-speed-ultra-star:#ffedff; --deck-speed-ultra-glow:#d7a1ff;
+  --deck-speed-hover-border:#fff2d8; --deck-speed-hover-glow:0 0 12px #d7ace544;
+
+  --deck-range-fill:linear-gradient(90deg,#f7c6de,#e6d6ff); --deck-range-track:#251b31; --deck-range-edge:#d7b1c566;
+  --deck-range-thumb:radial-gradient(circle at 35% 30%,#fff,#f8dfea 45%,#cdaedb); --deck-range-thumb-border:#e9c792; --deck-range-thumb-glow:0 0 7px #f4d5e799;
+
+  --deck-dialog-bg:linear-gradient(145deg,#44304f,#2b203c); --deck-dialog-border:#d4abb8; --deck-dialog-count:#f4d5e7;
+  --deck-dialog-btn-bg:#44304e; --deck-dialog-btn-border:#a98199;
+}

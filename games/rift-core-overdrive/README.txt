@@ -49,7 +49,7 @@ Perfis pagos: bias por coluna 4,06 e 4,24, respetivamente; Wild 0,1% e 4,16%.
 A configuração atual ultrapassa 100% de RTP estimado e não está equilibrada
 para o alvo anterior de 96%. Os restantes parâmetros e preços não foram
 ajustados para compensar o aumento pedido. Não é certificação.
-Regra atual e limites da validação RTP: [RTP-v4.16.md](./RTP-v4.16.md). O relatório 4.15 é histórico.
+Regra atual e limites da validação RTP: [RTP-v4.16.md](./RTP-v4.16.md).
 
 Barra Normal compacta, sem campo Ganho do bónus. A presença de uma futura
 ronda de bónus não altera o layout enquanto o spin base ainda é apresentado.

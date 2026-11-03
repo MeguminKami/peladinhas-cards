@@ -37,11 +37,13 @@ export async function readCasinoLocal(uid) {
       reject(tx.error || Error("Não foi possível ler o progresso local."));
   });
 }
-export async function writeCasinoLocal(uid, value) {
+// durability "relaxed" only for writes whose loss moves no money (e.g. an
+// intermediate Princesa Sofia step: the cursor rewinds and replays the same result).
+export async function writeCasinoLocal(uid, value, { durability = "strict" } = {}) {
   const db = await casinoDatabase();
   return new Promise((resolve, reject) => {
     const tx = db.transaction("sessions", "readwrite", {
-      durability: "strict",
+      durability,
     });
     tx.objectStore("sessions").put(value, uid);
     tx.oncomplete = () => resolve();

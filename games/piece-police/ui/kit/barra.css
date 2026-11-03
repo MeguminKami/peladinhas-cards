@@ -1,0 +1,188 @@
+/* ==========================================================================
+   Barra de controlos padrão das slots (modelo: Princesa Sofia)
+   ESTRUTURA E COMPORTAMENTO SÃO FIXOS. Para outra slot muda-se apenas o tema:
+   um ficheiro que redefine as variáveis --deck-* (ver tema-sofia.css).
+   Não editar este ficheiro por jogo; correções aqui valem para todas as slots.
+   O desenho segue [data-layout=landscape|portrait|compact] num antecessor
+   (normalmente .shell, definido pelo layout.js do jogo).
+   ========================================================================== */
+
+/* ---- Tokens (valores neutros por omissão = GUI de teste da fase 2) ---- */
+:root{
+  --deck-font:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --deck-font-label:var(--deck-font);
+  --deck-text:#f4f2fa; --deck-text-muted:#b8b2c8; --deck-value:#ffffff;
+  --deck-focus:#ffd76a;
+  --deck-bg:linear-gradient(180deg,#2b2a3af7,#1f1e2cf7);
+  --deck-border:#5c5a74; --deck-radius:16px;
+  --deck-shadow:0 6px 18px #0004,inset 0 1px 0 #ffffff14;
+  --deck-extra-bg:linear-gradient(180deg,#4a3a22f7,#2c2533f7); --deck-extra-border:#c9a15c;
+  /* botões redondos (regras, som, − / +) */
+  --deck-btn-text:#f4f2fa; --deck-btn-border:#8d89a8;
+  --deck-btn-bg:radial-gradient(circle at 36% 28%,#4a4862,#2c2b3c 62%,#222131);
+  --deck-btn-bg-hover:radial-gradient(circle at 36% 28%,#5c5a78,#35344a 62%,#28273a);
+  --deck-btn-border-hover:#d9d5ef;
+  --deck-btn-shadow:inset 0 0 0 3px #ffffff0d,inset 0 1px 0 #ffffff26,0 2px 6px #0008;
+  --deck-btn-glow:0 0 12px #c9c3ff55;
+  --deck-btn-muted-text:#a9a4bd;
+  /* botão Rodar */
+  --deck-spin-bg:linear-gradient(145deg,#f4f2ff,#d9d4f2 58%,#b9b2e3);
+  --deck-spin-bg-hover:linear-gradient(145deg,#ffffff,#e6e2fb 58%,#cbc5ee);
+  --deck-spin-border:#ffffff; --deck-spin-icon:#2a2840; --deck-spin-cost:#1f1d33;
+  --deck-spin-cost-shadow:0 1px 0 #ffffffaa; --deck-spin-cost-size:12px;
+  --deck-spin-shadow:inset 0 0 0 3px #ffffff55,0 4px 0 #57527a,0 5px 14px #0006;
+  /* aba Autoplay por baixo do Rodar */
+  --deck-auto-bg:#47445f; --deck-auto-bg-hover:#5c5878; --deck-auto-text:var(--deck-text);
+  /* velocidade */
+  --deck-speed-shape:27px 12px 27px 12px; --deck-speed-inner-shape:21px 8px 21px 8px;
+  --deck-speed-glyph:"✦";
+  --deck-speed-text:#f4f2fa; --deck-speed-border:#9b97b8; --deck-speed-inner:#ffffff30;
+  --deck-speed-bg:linear-gradient(145deg,#4f4c6a,#2d2b40);
+  --deck-speed-star:#8a86a3; --deck-speed-line:#ffffff55; --deck-speed-star-on:#fff3c9; --deck-speed-star-glow:#f9d5ad99;
+  --deck-speed-fast-bg:linear-gradient(145deg,#2f6470,#25344a); --deck-speed-fast-border:#a3dfde;
+  --deck-speed-fast-star:#dcffff; --deck-speed-fast-glow:#88dfef;
+  --deck-speed-ultra-bg:linear-gradient(145deg,#6a4c8a,#36295c); --deck-speed-ultra-border:#e2b8ff;
+  --deck-speed-ultra-star:#ffedff; --deck-speed-ultra-glow:#d7a1ff;
+  --deck-speed-shadow:inset 0 0 0 3px #ffffff12,0 3px 0 #15141f;
+  --deck-speed-hover-border:#ffffff; --deck-speed-hover-glow:0 0 12px #c9c3ff44;
+  /* barras deslizantes */
+  --deck-range-fill:linear-gradient(90deg,#c9c3ff,#e6e3ff); --deck-range-track:#1d1c2a;
+  --deck-range-edge:#a9a4c866;
+  --deck-range-thumb:radial-gradient(circle at 35% 30%,#fff,#e9e6fb 45%,#b5aedb);
+  --deck-range-thumb-border:#ffd98a; --deck-range-thumb-glow:0 0 7px #c9c3ff99;
+  /* janela do Autoplay */
+  --deck-dialog-bg:linear-gradient(145deg,#33314a,#232236); --deck-dialog-border:#8d89a8;
+  --deck-dialog-count:#ffd76a; --deck-dialog-btn-bg:#3a3852; --deck-dialog-btn-border:#8d89a8;
+  /* espaço no topo do desenho compacto (ex.: logótipo sobreposto) */
+  --deck-compact-top:20px;
+}
+
+/* ---- Contentor ---- */
+.control-deck{position:relative;display:flex;justify-content:space-between;align-items:center;gap:16px;
+  margin:20px 0 0;padding:12px 14px 26px;overflow:visible;font-family:var(--deck-font);color:var(--deck-text);
+  background:var(--deck-bg);border:1px solid var(--deck-border);border-radius:var(--deck-radius);box-shadow:var(--deck-shadow);
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.control-deck[data-extra=on]{background:var(--deck-extra-bg);border-color:var(--deck-extra-border)}
+.control-deck *,.control-deck *::before,.control-deck *::after,#auto-dialog,#auto-dialog *{box-sizing:border-box}
+:where(.control-deck,#auto-dialog) :where(button,input){font:inherit;cursor:pointer;touch-action:manipulation}
+.control-deck button:disabled,#auto-dialog button:disabled{cursor:not-allowed}
+.control-deck :focus-visible,#auto-dialog :focus-visible{outline:3px solid var(--deck-focus);outline-offset:3px}
+.deck-left,.deck-right{display:flex;align-items:center;gap:14px;min-width:0}
+.deck-left{flex:1 0 auto}.deck-right{flex-shrink:0}
+.deck-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.control-deck .ui-icon{display:block;width:1em;height:1em;flex:none;pointer-events:none;overflow:visible}
+.control-deck .sr-only,#auto-dialog .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---- Saldo e ganho ---- */
+.control-deck .eyebrow{display:block;font-size:.6rem;font-weight:650;letter-spacing:.08em;color:var(--deck-text-muted);zoom:var(--ui-boost,1)}
+.money-block,.result-panel,.bet-panel{flex:1 0 auto;min-width:0;white-space:nowrap}
+.money-block strong,.result-panel>strong,.bet-panel>strong{display:block;margin-top:6px;font-size:1.18rem;color:var(--deck-value);white-space:nowrap;
+  font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
+.result-panel small,.bet-panel small{font-size:.78rem;color:var(--deck-text-muted)}
+
+/* ---- Botões redondos ---- */
+.deck-round{display:inline-grid;place-items:center;aspect-ratio:1;width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;
+  font-size:22px;line-height:1;color:var(--deck-btn-text);border:1px solid var(--deck-btn-border);background:var(--deck-btn-bg);
+  box-shadow:var(--deck-btn-shadow);transition:box-shadow .2s,border-color .2s,transform .12s,filter .2s}
+.deck-round.step{font-size:24px}
+.deck-round:hover:not(:disabled){border-color:var(--deck-btn-border-hover);background:var(--deck-btn-bg-hover);box-shadow:var(--deck-btn-shadow),var(--deck-btn-glow)}
+.deck-round:active:not(:disabled){transform:scale(.94)}
+.deck-round:disabled{filter:saturate(.4) brightness(.8);opacity:.6}
+#mute-button.muted{color:var(--deck-btn-muted-text)}
+@media (pointer:coarse){ /* área de toque real de ~40 px mesmo com o jogo encolhido */
+  .deck-round{position:relative}
+  .deck-round::after{content:'';position:absolute;border-radius:50%;inset:calc(-1 * max(6px,(40px / var(--game-scale,1) - 40px) / 2))}
+}
+
+/* ---- Volume (silêncio + Música + Efeitos) ---- */
+.volume-control{display:flex;align-items:center;gap:6px}
+.volume-sliders{display:grid;gap:6px}
+.volume-row{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;cursor:pointer}
+.volume-tag{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--deck-text-muted);line-height:1;min-width:34px;zoom:var(--ui-boost,1)}
+.control-deck input[type=range],#auto-dialog input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;margin:0;padding:0;min-width:0;--fill:50%;touch-action:manipulation}
+.volume-control input[type=range]{width:84px;height:18px}
+.control-deck input[type=range]::-webkit-slider-runnable-track,#auto-dialog input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;
+  background:linear-gradient(90deg,transparent var(--fill),var(--deck-range-track) var(--fill)),var(--deck-range-fill);
+  box-shadow:inset 0 0 0 1px var(--deck-range-edge),inset 0 1px 2px #0007}
+.control-deck input[type=range]::-webkit-slider-thumb,#auto-dialog input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-5px;border-radius:50%;
+  background:var(--deck-range-thumb);border:1.5px solid var(--deck-range-thumb-border);box-shadow:var(--deck-range-thumb-glow)}
+.control-deck input[type=range]::-moz-range-track,#auto-dialog input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:var(--deck-range-track);box-shadow:inset 0 0 0 1px var(--deck-range-edge)}
+.control-deck input[type=range]::-moz-range-progress,#auto-dialog input[type=range]::-moz-range-progress{height:6px;border-radius:6px;background:var(--deck-range-fill)}
+.control-deck input[type=range]::-moz-range-thumb,#auto-dialog input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--deck-range-thumb);border:1.5px solid var(--deck-range-thumb-border);box-shadow:var(--deck-range-thumb-glow)}
+.control-deck input[type=range]:focus-visible,#auto-dialog input[type=range]:focus-visible{outline:0}
+.control-deck input[type=range]:focus-visible::-webkit-slider-thumb,#auto-dialog input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--deck-focus),var(--deck-range-thumb-glow)}
+
+/* ---- Rodar, − / + e aba Autoplay ---- */
+.spin-controls{position:relative;display:grid;grid-template-columns:44px 80px 44px;grid-template-rows:80px;gap:0 8px;align-items:center}
+.spin-button{position:relative;z-index:1;width:80px;height:80px;min-height:80px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:4px;
+  color:var(--deck-spin-icon);border:1px solid var(--deck-spin-border);background:var(--deck-spin-bg);box-shadow:var(--deck-spin-shadow);transition:background .16s,transform .16s}
+.spin-button:hover:not(:disabled){background:var(--deck-spin-bg-hover)}
+.spin-button:active:not(:disabled){transform:translateY(1px)}
+.spin-button:disabled{opacity:.45}
+.spin-symbol{display:grid;place-items:center;font-size:39px;line-height:1;filter:drop-shadow(0 1px 0 #fff8)}
+#spin-cost{font-size:var(--deck-spin-cost-size);white-space:nowrap;letter-spacing:-.02em;font-weight:900;line-height:1.1;color:var(--deck-spin-cost);text-shadow:var(--deck-spin-cost-shadow);font-variant-numeric:lining-nums tabular-nums}
+.auto-button{position:absolute;isolation:isolate;left:52px;top:60px;width:80px;min-width:0;height:44px;min-height:44px;display:flex;align-items:flex-end;justify-content:center;
+  padding:0 2px 10px;border:0;border-radius:0 0 40px 40px;background:transparent;color:var(--deck-auto-text);
+  font-size:calc(.55rem * var(--ui-boost,1));font-weight:650;line-height:10px;text-transform:uppercase;white-space:nowrap}
+.auto-button::before{content:'';position:absolute;z-index:-1;left:0;top:-20px;width:80px;height:60px;background:var(--deck-auto-bg);
+  clip-path:path('M 0 0 A 40 40 0 0 0 80 0 L 80 20 A 40 40 0 0 1 0 20 Z');pointer-events:none}
+.auto-button:hover:not(:disabled)::before{background:var(--deck-auto-bg-hover)}
+.auto-button:disabled{opacity:.45}
+.auto-button:focus-visible{outline:0;box-shadow:inset 0 -3px var(--deck-focus)}
+
+/* ---- Velocidade ---- */
+#speed-button{position:relative;isolation:isolate;display:grid;place-content:center;gap:5px;width:88px;min-height:72px;padding:8px 5px;
+  font-size:.7rem;font-weight:650;color:var(--deck-speed-text);border:1px solid var(--deck-speed-border);border-radius:var(--deck-speed-shape);
+  background:var(--deck-speed-bg);box-shadow:var(--deck-speed-shadow);transition:border-color .16s,box-shadow .16s}
+#speed-button::before{content:'';position:absolute;inset:5px;border:1px solid var(--deck-speed-inner);border-radius:var(--deck-speed-inner-shape);z-index:-1;pointer-events:none}
+#speed-button:hover:not(:disabled){border-color:var(--deck-speed-hover-border);box-shadow:var(--deck-speed-shadow),var(--deck-speed-hover-glow)}
+.speed-stars{position:relative;display:flex;justify-content:center;align-items:center;gap:3px;font-size:20px;line-height:22px;color:var(--deck-speed-star)}
+.speed-stars::before{content:'';position:absolute;left:5px;right:5px;top:11px;height:1px;background:linear-gradient(90deg,transparent,var(--deck-speed-line),transparent);z-index:-1;transform:rotate(-12deg)}
+.speed-stars>span::before{content:var(--deck-speed-glyph)}
+.speed-stars>span:nth-child(2){font-size:25px}
+.speed-stars .active{color:var(--deck-speed-star-on);text-shadow:0 0 7px var(--deck-speed-star-glow)}
+#speed-label{font-family:var(--deck-font-label);font-size:12px;letter-spacing:.02em;zoom:var(--ui-boost,1)}
+#speed-button[data-speed=fast]{background:var(--deck-speed-fast-bg);border-color:var(--deck-speed-fast-border)}
+#speed-button[data-speed=fast] .speed-stars .active{color:var(--deck-speed-fast-star);text-shadow:0 0 8px var(--deck-speed-fast-glow)}
+#speed-button[data-speed=ultra],#speed-button[data-turbo=true]{background:var(--deck-speed-ultra-bg);border-color:var(--deck-speed-ultra-border)}
+#speed-button[data-speed=ultra] .speed-stars .active,#speed-button[data-turbo=true] .speed-stars>span{color:var(--deck-speed-ultra-star);text-shadow:0 0 9px var(--deck-speed-ultra-glow)}
+
+/* ---- Janela do Autoplay (ancorada por cima da aba) ---- */
+#auto-dialog{position:fixed;inset:auto;margin:0;padding:0;width:min(260px,calc(100vw - 16px));max-width:260px;max-height:none;overflow:visible;
+  border-radius:12px;border:1px solid var(--deck-dialog-border);background:var(--deck-dialog-bg);color:var(--deck-text);font-family:var(--deck-font);box-shadow:0 8px 28px #0007}
+#auto-dialog::backdrop{background:transparent}
+#auto-dialog .dialog-body{display:grid;padding:12px;gap:6px}
+#auto-dialog .auto-count{text-align:center;font-size:1rem;font-weight:650;color:var(--deck-dialog-count);font-variant-numeric:lining-nums tabular-nums}
+#auto-dialog .auto-count small{font-size:.75rem;color:var(--deck-text);font-weight:500}
+#auto-range{width:100%;height:44px}
+.auto-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.auto-actions button{min-height:44px;padding:8px;font-size:.75rem;font-weight:650;border-radius:8px;color:var(--deck-text);border:1px solid var(--deck-dialog-btn-border);background:var(--deck-dialog-btn-bg)}
+.auto-actions .primary{color:var(--deck-spin-icon);border-color:var(--deck-spin-border);background:var(--deck-spin-bg)}
+.auto-actions .primary:disabled{opacity:.45}
+
+/* ==== Vertical: SALDO | GANHO | APOSTA / − RODAR + / regras som | velocidade ==== */
+[data-layout=portrait] .control-deck{margin:0;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,.9fr);grid-template-areas:"money win bet" "spin spin spin" "util . speed";
+  align-items:center;gap:8px;padding:10px 14px 12px;border-radius:calc(var(--deck-radius) + 6px)}
+[data-layout=portrait] .deck-left,[data-layout=portrait] .deck-right{display:contents}
+[data-layout=portrait] .money-block{grid-area:money;justify-self:start}
+[data-layout=portrait] .result-panel{grid-area:win;justify-self:center;text-align:center}
+[data-layout=portrait] .bet-panel{grid-area:bet;justify-self:end;text-align:right}
+[data-layout=portrait] .money-block strong,[data-layout=portrait] .result-panel>strong{font-size:1.3rem}
+[data-layout=portrait] .bet-panel>strong{font-size:1.05rem}
+[data-layout=portrait] .spin-controls{--spin-gap:14px;grid-area:spin;justify-self:center;zoom:1.25;margin-bottom:30px;column-gap:var(--spin-gap)}
+[data-layout=portrait] .spin-controls>.auto-button{left:calc(44px + var(--spin-gap))}
+[data-layout=portrait] #rules-button{grid-area:util;justify-self:start}
+[data-layout=portrait] .volume-control{grid-area:util;justify-self:start;margin-left:56px}
+[data-layout=portrait] .volume-control input[type=range]{width:96px}
+[data-layout=portrait] .speed-control{grid-area:speed;justify-self:end}
+[data-layout=portrait] #speed-button{min-height:54px}
+
+/* ==== Compacto (espaço baixo e largo): coluna à direita ==== */
+[data-layout=compact] .control-deck{margin:0;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;gap:14px;padding:var(--deck-compact-top) 12px 20px}
+[data-layout=compact] .deck-left{display:grid;grid-template-columns:auto 1fr;gap:14px 10px;align-items:center;flex:none}
+[data-layout=compact] .deck-left .money-block,[data-layout=compact] .deck-left .result-panel,[data-layout=compact] .deck-left .bet-panel{grid-column:1/-1}
+[data-layout=compact] .deck-right{display:flex;flex-direction:column;align-items:center;gap:16px;flex:none}
+[data-layout=compact] .volume-control input[type=range]{width:68px}
+[data-layout=compact] .spin-controls{zoom:1.15;margin-bottom:26px}
+
+@media (prefers-reduced-motion:reduce){.control-deck *,#auto-dialog *{transition-duration:0s!important}}

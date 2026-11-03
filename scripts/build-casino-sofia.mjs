@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,8 +11,10 @@ const excluded = /(^|[/\\])(preview\.(js|css)|site\.css|audio-lab\.(js|css)|fixt
 // Arte sem referência no código publicado (variantes antigas) fica de fora: ~23 MB a menos.
 const code = ["game.html", ...readdirSync(resolve(source, "ui")).filter(f => /\.(js|css)$/.test(f) && !excluded.test(f)).map(f => "ui/" + f)]
   .map(f => readFileSync(resolve(source, f), "utf8")).join("\n");
+// PNG com versao .webp ao lado tambem fica de fora: o jogo carrega o WebP e o PNG e so a fonte.
 const unusedArt = file => /[/\\]ui[/\\]art[/\\][^/\\]+\.png$/.test(file) && (() => {
   const name = file.split(/[/\\]/).pop();
+  if (existsSync(file.slice(0, -4) + ".webp")) return true;
   return !code.includes(name) && !code.includes(`'${name.slice(0, -4)}'`);
 })();
 rmSync(target, { recursive: true, force: true });

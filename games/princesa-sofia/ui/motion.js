@@ -1,4 +1,5 @@
 import {symbolAssets} from './symbols.js';
+import { track, wait as clockWait } from './tempo.js';
 /** Representative art-direction motion. Only presents the board supplied by the engine. */
 const activeBoards = new WeakMap();
 
@@ -17,18 +18,18 @@ const effects = {
   ],
   hit: [
     { filter: 'brightness(1)', transform: 'scale(1)' },
-    { filter: 'brightness(1.35) drop-shadow(0 0 5px #fff3dc)', transform: 'scale(1.035)', offset: .45 },
+    { filter: 'brightness(1.35)', transform: 'scale(1.035)', offset: .45 },
     { filter: 'brightness(1)', transform: 'scale(1)' },
   ],
   scatter: [
     { filter: 'brightness(1)', transform: 'rotate(0deg)' },
-    { filter: 'brightness(1.3) drop-shadow(0 0 6px #ffd8ec)', transform: 'rotate(-4deg)', offset: .35 },
+    { filter: 'brightness(1.3)', transform: 'rotate(-4deg)', offset: .35 },
     { filter: 'brightness(1.15)', transform: 'rotate(3deg)', offset: .7 },
     { filter: 'brightness(1)', transform: 'rotate(0deg)' },
   ],
   magic: [
-    { opacity: .5, filter: 'brightness(1.5) drop-shadow(0 0 7px #e4dfff)', transform: 'scale(.84)' },
-    { opacity: 1, filter: 'brightness(1.3) drop-shadow(0 0 5px #ffd9ed)', transform: 'scale(1.035)', offset: .65 },
+    { opacity: .5, filter: 'brightness(1.5)', transform: 'scale(.84)' },
+    { opacity: 1, filter: 'brightness(1.3)', transform: 'scale(1.035)', offset: .65 },
     { opacity: 1, filter: 'brightness(1)', transform: 'scale(1)' },
   ],
 };
@@ -65,12 +66,12 @@ export async function animateBoard(kind, board, { duration = 350 } = {}) {
       const artwork = kind === 'spin' ? cell : cell.querySelector('.symbol-art, strong') ?? cell;
       if (typeof artwork.animate !== 'function') continue;
       const column = Number(cell.dataset.position ?? 0) % 6;
-      animations.push(artwork.animate(keyframes, {
+      animations.push(track(artwork.animate(keyframes, {
         duration,
         delay: kind === 'spin' ? ((4-Math.floor(Number(cell.dataset.position)/6))*6+column) * duration * .045 : 0,
         easing: 'cubic-bezier(.22,.65,.32,1)',
         fill: 'backwards',
-      }));
+      })));
     }
     await Promise.allSettled(animations.map(animation => animation.finished));
   } finally {
@@ -109,7 +110,7 @@ function motionScope(board, duration, skip) {
     node(node) { nodes.add(node); return node; },
     play(element, frames, options = {}) {
       if (this.stopped || !element?.animate) return Promise.resolve();
-      const animation = element.animate(frames, { duration, easing: 'cubic-bezier(.22,.65,.32,1)', fill: 'backwards', ...options });
+      const animation = track(element.animate(frames, { duration, easing: 'cubic-bezier(.22,.65,.32,1)', fill: 'backwards', ...options }));
       animations.add(animation);
       return animation.finished.catch(() => {}).finally(() => { if(options.fill !== 'forwards') { animation.cancel(); animations.delete(animation); } });
     },
@@ -124,7 +125,8 @@ function motionScope(board, duration, skip) {
 
 const artworkOf = cell => cell?.querySelector('.symbol-art, strong') ?? cell;
 
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+// Esperas no relogio da apresentacao (ui/tempo.js): seguem a velocidade, mesmo se mudar a meio.
+const wait = ms => clockWait(ms);
 
 /**
  * Revelacao de um spin com suspense de Scatters. So apresenta a grelha ja decidida pelo motor:
@@ -135,7 +137,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
  * - maxScatters: acima disto deixa de haver suspense (ja nao pode aparecer outro).
  * onScatter(n) toca quando aterra o n-esimo Scatter; onSuspense(nivel) quando o suspense sobe.
  */
-export async function revealSpin(board, { duration = 900, levels = { 2: 1, 3: 2, 4: 3 }, maxScatters = 5, skip, onScatter, onSuspense, onColumn, onSuspenseCell } = {}) {
+export async function revealSpin(board, { duration = 900, levels = { 2: 1, 3: 2, 4: 3 }, maxScatters = 5, skip, onScatter, onSuspense, onColumn, onSuspenseCell, together = false } = {}) {
   const scope = motionScope(board, duration, skip);
   const cells = [...board.querySelectorAll('.cell')];
   const isScatter = cell => cell?.dataset.symbol === 'S';
@@ -159,7 +161,7 @@ export async function revealSpin(board, { duration = 900, levels = { 2: 1, 3: 2,
   const IMPACT = new Map([[effects.spin, .84], [effects.suspenseDrop, .78]]);
   const drop = (cell, fall, frames = effects.spin, onImpact) => {
     show(cell);
-    const impact = new Promise(resolve => setTimeout(() => { land(cell); onImpact?.(); resolve(); }, fall * (IMPACT.get(frames) ?? 1)));
+    const impact = wait(fall * (IMPACT.get(frames) ?? 1)).then(() => { land(cell); onImpact?.(); });
     return Promise.all([scope.play(cell, frames, { duration: fall }), impact]);
   };
   try {
@@ -177,7 +179,12 @@ export async function revealSpin(board, { duration = 900, levels = { 2: 1, 3: 2,
         setLevel(levelFor(landed));
         columnCells.forEach(c => c.classList.add('suspense-col'));
         await wait(duration * (0.08 + 0.07 * level)); // respirar antes da coluna
-        for (const cell of columnCells) {
+        if (together) {
+          // Ultra/turbo: a coluna de suspense cai inteira de uma vez, com uma pausa curta a seguir.
+          const lvl = levelFor(landed);
+          await Promise.all(columnCells.map((cell, index) => drop(cell, duration * (0.1 + 0.04 * lvl), effects.suspenseDrop, index ? undefined : () => onSuspenseCell?.(0, lvl))));
+          await wait(duration * 0.03 * lvl);
+        } else for (const cell of columnCells) {
           if (scope.stopped) break;
           const current = levelFor(landed);
           setLevel(current);
@@ -192,7 +199,8 @@ export async function revealSpin(board, { duration = 900, levels = { 2: 1, 3: 2,
         setLevel(0);
         const col = column;
         columnCells.forEach((cell, index) => pending.push(wait(index * duration * .045).then(() => scope.stopped ? undefined : drop(cell, duration * .62, effects.spin, index === 0 ? () => onColumn?.(col) : undefined))));
-        await wait(duration * .2);
+        // Ultra/turbo: as colunas caem quase juntas (ligeira onda da esquerda para a direita).
+        await wait(duration * (together ? .035 : .2));
       }
     }
     await Promise.all(pending);
@@ -217,7 +225,7 @@ function randomFiller() {
  * Cada compra sorteia uma grelha nova: os Scatters caem em colunas e linhas aleatorias,
  * e a revelacao usa o mesmo suspense progressivo de um spin normal.
  */
-export async function purchaseScatters(board,mode,asset,{duration=1000,skip,onScatter,onSuspense,onColumn,onSuspenseCell}={}) {
+export async function purchaseScatters(board,mode,asset,{duration=1000,skip,onScatter,onSuspense,onColumn,onSuspenseCell,together=false}={}) {
   const scope=motionScope(board,duration,skip);
   const layer=scope.node(board.cloneNode(true));layer.removeAttribute('id');layer.className='board purchase-scatters purchase-grid';
   layer.setAttribute('aria-label','Spin de apresentação do bónus comprado');
@@ -233,7 +241,7 @@ export async function purchaseScatters(board,mode,asset,{duration=1000,skip,onSc
   }
   board.parentElement.append(layer);
   try {
-    await revealSpin(layer,{duration,levels:{2:1,3:2,4:3},maxScatters:count,skip,onScatter,onSuspense,onColumn,onSuspenseCell});
+    await revealSpin(layer,{duration,levels:{2:1,3:2,4:3},maxScatters:count,skip,onScatter,onSuspense,onColumn,onSuspenseCell,together});
     await gatherScatters(layer,mode,{duration:duration*.7,skip});
   } finally {scope.close();}
 }
@@ -243,7 +251,7 @@ export async function dissolveToXP(board,positions,target,{duration=650,skip}={}
  try {
   const effects=[];
   for(const cell of cells){
-   effects.push(scope.play(artworkOf(cell),[{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(5px)',transform:'scale(.6)'}],{duration:duration*.5,fill:'forwards'}).then(()=>{cell.classList.add('dissolved');}));
+   effects.push(scope.play(artworkOf(cell),[{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scale(.6)'}],{duration:duration*.5,fill:'forwards'}).then(()=>{cell.classList.add('dissolved');}));
    if(scope.stopped)continue;
    const r=cell.getBoundingClientRect();
    for(let i=0;i<3;i++){
@@ -326,7 +334,7 @@ export async function cascadeBoard(board, before, after, render, { duration = 35
       const isScatter = cell => cell?.dataset.symbol === 'S';
       const { levels = {}, maxScatters = 5, onScatter, onSuspense, onSuspenseCell, onFirstLand } = suspense;
       let firstLanded = false;
-      const impactAt = (ms, cell, extra) => new Promise(resolve => setTimeout(() => { land(cell); extra?.(); if (!firstLanded) { firstLanded = true; onFirstLand?.(); } resolve(); }, ms));
+      const impactAt = (ms, cell, extra) => wait(ms).then(() => { land(cell); extra?.(); if (!firstLanded) { firstLanded = true; onFirstLand?.(); } });
       const sd = suspense.duration ?? duration * 1.8;
       const levelFor = n => (n < maxScatters ? levels[n] || 0 : 0);
       let count = settled.filter(c => isScatter(c) && !fresh.has(c)).length, level = 0;
@@ -340,7 +348,33 @@ export async function cascadeBoard(board, before, after, render, { duration = 35
       const land = cell => { cell.dataset.landed = '1'; if (isScatter(cell)) { count++; onScatter?.(count); if (level) cell.classList.add('suspense-held'); } };
       const pending = [];
       let normalIndex = 0, suspenseIndex = 0;
-      for (const cell of ordered) {
+      if (suspense.together) {
+        // Ultra/turbo: cada coluna de simbolos novos cai de uma vez; o suspense mantem-se, mas por coluna.
+        for (let column = 0; column < 6 && !scope.stopped; column++) {
+          const group = ordered.filter(cell => +cell.dataset.position % 6 === column);
+          if (!group.length) continue;
+          const current = levelFor(count);
+          if (current) {
+            await Promise.all(pending.splice(0));
+            if (scope.stopped) break;
+            setLevel(levelFor(count));
+            const fall = sd * (0.1 + 0.04 * level), lvl = level;
+            group.forEach(cell => { cell.classList.add('suspense-col'); cell.style.visibility = ''; });
+            await Promise.all(group.map((cell, index) => Promise.all([scope.play(cell, effects.suspenseDrop, { duration: fall }), impactAt(fall * .78, cell, index ? undefined : () => onSuspenseCell?.(suspenseIndex++ % 5, lvl))])));
+            group.forEach(cell => cell.classList.remove('suspense-col'));
+            await wait(sd * 0.03 * level);
+          } else {
+            setLevel(0);
+            group.forEach((cell, index) => {
+              const art = artworkOf(cell); art.style.opacity = '0'; cell.style.visibility = '';
+              const delay = (column * 0.35 + index) * duration * .05, fall = duration * 1.15;
+              pending.push(Promise.all([scope.play(art, effects.spin, { duration: fall, delay }).finally(() => { art.style.opacity = ''; }), impactAt(delay + fall * .84, cell)]));
+            });
+            // se esta coluna pode trazer a flor que abre o suspense, a seguinte espera por ela
+            if (group.some(isScatter) && levelFor(count + group.filter(isScatter).length)) await Promise.all(pending.splice(0));
+          }
+        }
+      } else for (const cell of ordered) {
         if (scope.stopped) break;
         const current = levelFor(count);
         if (current) {
@@ -403,7 +437,7 @@ export async function gatherScatters(board, mode, { duration = 650, skip } = {})
       return scope.play(clone, [
         { opacity: 0, transform: 'scale(.85)' },
         { opacity: 1, transform: 'scale(1)', offset: .15 },
-        { opacity: 1, transform: `translate(${x}px,${y}px) rotate(${variant.turn}deg) scale(${variant.scale})`, filter: `drop-shadow(0 0 9px ${variant.glow})`, offset: .8 },
+        { opacity: 1, transform: `translate(${x}px,${y}px) rotate(${variant.turn}deg) scale(${variant.scale})`, offset: .8 },
         { opacity: 0, transform: `translate(${x}px,${y}px) rotate(${variant.turn}deg) scale(.15)` },
       ], { delay: index * duration * .035 });
     }));
@@ -419,7 +453,7 @@ export async function gatherScatters(board, mode, { duration = 650, skip } = {})
 }
 
 /** Animate only actual new wild destinations and strictly increased existing wilds. */
-export async function castMagic(board,before,after,{duration=850,positions=[],source,skip,onWild}={}) {
+export async function castMagic(board,before,after,{duration=850,positions=[],source,skip,onWild,together=false}={}) {
  const scope=motionScope(board,duration,skip),cells=[...board.querySelectorAll('.cell')],origin=source?.getBoundingClientRect();
  const upgrades=after.flatMap((cell,p)=>cell?.symbol==='W'&&before[p]?.symbol==='W'&&cell.multiplier>before[p].multiplier?[p]:[]);
  const labels=upgrades.map(p=>({el:cells[p].querySelector('.symbol-letter'),old:before[p].multiplier+'×',final:after[p].multiplier+'×'}));
@@ -438,8 +472,9 @@ export async function castMagic(board,before,after,{duration=850,positions=[],so
  try {
   if(scope.stopped)return;
   if(source)await scope.play(source,[{translate:'0 0'},{background:'#dbc8f5',boxShadow:'0 0 12px #b49bd7',translate:'-2px 0',offset:.25},{background:'#c3e8e1',boxShadow:'0 0 12px #a1d4d1',translate:'2px 0',offset:.5},{background:'#f2dfba',boxShadow:'0 0 12px #dfc48f',translate:'-2px 0',offset:.75},{translate:'0 0'}],{duration:duration*.55});
-  for(const p of positions){
-   if(scope.stopped)break;
+  // together (ultra/turbo): os WILDs aparecem em onda, sobrepostos, em vez de um de cada vez.
+  const place=async p=>{
+   if(scope.stopped)return;
    const cell=cells[p],r=cell.getBoundingClientRect();
    const dust=[],dustNodes=[];
    for(let i=0;i<6;i++){
@@ -452,11 +487,15 @@ export async function castMagic(board,before,after,{duration=850,positions=[],so
    dustNodes.forEach(node=>node.remove());
    displaced.get(p)?.remove();
    cell.style.visibility='';
-   const fairy=scope.node(document.createElement('img'));fairy.src='ui/art/fairy-dust.png';fairy.className='wild-fairy';fairy.alt='';cell.append(fairy);
+   const fairy=scope.node(document.createElement('img'));fairy.src='ui/art/fairy-dust.webp';fairy.className='wild-fairy';fairy.alt='';cell.append(fairy);
    await Promise.all([scope.play(artworkOf(cell),[{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1.04)',offset:.8},{opacity:1,transform:'scale(1)'}],{duration:duration*.55}),scope.play(fairy,[{opacity:0},{opacity:.9,offset:.2},{opacity:0,transform:'translate(15%,-15%)'}],{duration:duration*.55})]);
    fairy.remove();
    if(onWild)onWild(p);
-  }
-  for(const item of labels){item.el.textContent=item.old;await scope.play(item.el,[{opacity:1},{opacity:0}],{duration:duration*.15});item.el.textContent=item.final;await scope.play(item.el,[{opacity:0},{opacity:1}],{duration:duration*.2});}
+  };
+  if(together)await Promise.all(positions.map((p,i)=>wait(i*duration*.12).then(()=>place(p))));
+  else for(const p of positions){if(scope.stopped)break;await place(p);}
+  const relabel=async item=>{item.el.textContent=item.old;await scope.play(item.el,[{opacity:1},{opacity:0}],{duration:duration*.15});item.el.textContent=item.final;await scope.play(item.el,[{opacity:0},{opacity:1}],{duration:duration*.2});};
+  if(together)await Promise.all(labels.map(relabel));
+  else for(const item of labels)await relabel(item);
  }finally{positions.forEach(p=>{cells[p].style.visibility='';});labels.forEach(item=>{item.el.textContent=item.final;});scope.close();}
 }

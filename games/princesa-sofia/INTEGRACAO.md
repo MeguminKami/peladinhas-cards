@@ -69,7 +69,7 @@ Não são precisos no site: `scripts/`, `tests/`, `audio-lab/`, `audio-lab.html`
 
 - O jogo usa só ficheiros da sua própria origem (nenhum pedido externo). A política de segurança do servidor local é `default-src 'self'` sem scripts nem estilos inline; o servidor do site pode usar a mesma.
 - Se o jogo for servido noutra origem (outro domínio/subdomínio) do site, essa origem tem de permitir ser incorporada pelo site: `Content-Security-Policy: frame-ancestors https://<domínio-do-site>` (e não enviar `X-Frame-Options: DENY`). Na mesma origem, `frame-ancestors 'self'` chega.
-- Tipos MIME necessários: `.opus` → `audio/ogg`, `.mp3` → `audio/mpeg`, `.woff2` → `font/woff2`, `.json` → `application/json`.
+- Tipos MIME necessários: `.webp` → `image/webp`, `.opus` → `audio/ogg`, `.mp3` → `audio/mpeg`, `.woff2` → `font/woff2`, `.json` → `application/json`. A arte publicada é WebP; os `ui/art/*.png` são só fonte e não precisam de ser publicados.
 
 ## Saldo, apostas e contas (importante)
 
@@ -84,3 +84,19 @@ Não são precisos no site: `scripts/`, `tests/`, `audio-lab/`, `audio-lab.html`
 - Build: `node scripts/build-casino-sofia.mjs` (incluído em `npm.cmd run build:casino`); testes: `npm.cmd run test:casino:sofia`.
 
 **Fora do casino** (páginas de pré-visualização) continua a usar créditos locais de teste (10 000 DJC que reiniciam ao recarregar) com o gerador reprodutível Mulberry32, que não é um gerador para dinheiro real. O RTP medido ainda não está certificado (ver `docs/matematica.md`).
+
+## Latência e ritmo (para o lado do site)
+
+O jogo esconde a latência da carteira assim:
+
+- **Passo seguinte antecipado:** enquanto apresenta o passo *n*, o `HostSession` já pede o passo *n+1* (mesmo id idempotente `roundId-index`). Nos bónus, a latência deixa de se somar a cada free spin. Consequência: o último passo pode ser entregue (e o prémio creditado) um pouco antes de a animação terminar; o saldo mostrado continua retido até à contagem final.
+- **`withFirstStep` no `start` (já implementado em `js/casino-local-wallet.js`):** o pedido `start` leva `withFirstStep: true`. Se o site responder com `firstStep` (exatamente a resposta que daria a `step` com `index: 0`, guardada como recibo desse id), o jogo poupa uma ida e volta por spin. Um site que ignore o campo continua a funcionar como antes.
+- **As respostas a `start`/`step` não devem esperar pela rede.** A sincronização com o servidor (`casinoSession`) deve correr em segundo plano; se a resposta ao `step` esperar por ela, cada spin fica com esse atraso.
+
+Medido com uma carteira simulada a 150 ms por resposta, em Ultra: o spin base passou de +300 ms para +60 ms de atraso, e num bónus comprado a latência deixou de acrescentar tempo (antes +1,9 s).
+
+### Diagnóstico no site real
+
+Painel de desempenho do jogo (FPS, tarefas longas e tempo de resposta da carteira por pedido): na consola do site, `localStorage.setItem('sofia-perf', '1')` e recarregar; para desligar, `localStorage.removeItem('sofia-perf')`. Fora do casino também funciona com `game.html?perf=1`. Os mesmos números ficam em `window.sofiaPerf` dentro do iframe.
+
+O jogo corre num iframe da **mesma origem** que o site, por isso partilha o fio principal com a página do casino: trabalho pesado do site (listeners, animações, `backdrop-filter`) também faz a slot perder frames.

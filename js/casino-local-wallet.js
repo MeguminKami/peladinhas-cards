@@ -29,8 +29,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     if (value) changed(value);
     return value;
   };
-  const save = async (next) => {
-    await writeCasinoLocal(uid, next);
+  const save = async (next, options) => {
+    await writeCasinoLocal(uid, next, options);
     state = next;
     return publish();
   };
@@ -428,7 +428,18 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         return structuredClone(receipt.result);
       }
       if (action === "start") assertPlayable();
-      const next = applyLocalSofia(state.sofia, state.balance, { action, payload });
+      let next = applyLocalSofia(state.sofia, state.balance, { action, payload });
+      // withFirstStep: o 1.o passo segue na mesma resposta e na mesma gravacao (uma ida e volta
+      // e uma escrita no IndexedDB por spin em vez de duas). Fica com recibo proprio, por isso
+      // um "step" com index 0 repetido pelo jogo devolve exatamente o mesmo resultado.
+      let firstReceipt = null;
+      if (action === "start" && payload?.withFirstStep === true && next.session.round) {
+        const stepPayload = { sessionId: next.session.sessionId, roundId: next.session.round.id, index: 0 };
+        const step = applyLocalSofia(next.session, next.balance, { action: "step", payload: stepPayload });
+        firstReceipt = [`${stepPayload.roundId}-0`, { fingerprint: JSON.stringify({ action: "step", payload: stepPayload }), result: step.result }];
+        next = { ...step, debit: next.debit + step.debit, credit: next.credit + step.credit,
+          result: { ...next.result, firstStep: step.result } }; // o saldo do start fica o de depois da entrada: o premio so aparece no fim da apresentacao
+      }
       completed = next.completed;
       normalSpin = action === "start" && ["base", "hunt"].includes(payload.mode);
       const changed = action !== "connect" || !state.sofia || !!completed;
@@ -442,7 +453,11 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
           wallet: { ...state.wallet,
             recent: completed ? [{ id: completed.id, kind: "princesa-sofia", amount: completed.creditedUnits - completed.costUnits, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
           // Receipts let a lost response be repeated without moving money twice.
-          sofiaReceipts: action === "connect" ? state.sofiaReceipts : Object.fromEntries([...Object.entries(state.sofiaReceipts || {}), [id, { fingerprint, result: next.result }]].slice(-8)),
+          sofiaReceipts: action === "connect" ? state.sofiaReceipts : Object.fromEntries([...Object.entries(state.sofiaReceipts || {}), [id, { fingerprint, result: next.result }], ...(firstReceipt ? [firstReceipt] : [])].slice(-8)),
+        }, {
+          // Passos intermedios nao mexem no saldo: se a gravacao se perder num crash, o cursor recua
+          // e o passo repete-se igual. So a entrada e o passo final (credito) exigem "strict".
+          durability: action === "step" && !completed && next.debit === 0 && next.credit === 0 ? "relaxed" : "strict",
         });
       } catch (error) {
         error.code = "SITE_TIMEOUT";

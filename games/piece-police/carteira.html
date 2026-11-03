@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Peace Police · Carteira simulada</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="ui/carteira-simulada.css">
+</head>
+<body>
+  <!-- Faz de «site» para testar o HostSession sem o casino real: guarda o saldo e a jogada,
+       responde a connect/start/step por postMessage, com latência e falhas injetáveis. -->
+  <header class="cw-bar">
+    <strong>Carteira simulada <span>· canal peace-police:v1</span></strong>
+    <span>Saldo do site: <b id="cw-balance">—</b></span>
+    <label>Latência <input id="cw-latency" type="number" min="0" max="10000" step="50" value="150"> ms</label>
+    <button id="cw-drop" type="button">Perder a próxima resposta</button>
+    <button id="cw-reject" type="button">Rejeitar o próximo pedido</button>
+    <button id="cw-reload" type="button">Recarregar o jogo</button>
+    <button id="cw-reset" type="button">Repor (10 000 DJC)</button>
+  </header>
+  <main class="cw-main">
+    <iframe id="game" title="Peace Police: The Afterparty" allow="fullscreen; autoplay" allowfullscreen></iframe>
+    <aside><h2>Pedidos</h2><ol id="cw-log" reversed></ol></aside>
+  </main>
+  <script type="module" src="ui/carteira-simulada.js"></script>
+</body>
+</html>

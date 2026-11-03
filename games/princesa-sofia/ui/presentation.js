@@ -1,4 +1,5 @@
 ﻿import { prizeTier, prizeStyle } from './payout-presentation.js';
+import { animate, now as clockNow, wait as clockWait } from './tempo.js';
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 const counting = new WeakMap();
 let floatingPrize;
@@ -12,8 +13,8 @@ export function countAmount(element,from,to,format,duration=450) {
  const finish=()=>{if(done)return;done=true;cancelAnimationFrame(frame);element.textContent=format(to);counting.delete(element);};
  counting.set(element,finish);
  if (reduce.matches || document.hidden || !duration) return finish();
- const start=performance.now();
- const tick=now=>{if(done)return;const t=Math.min(1,(now-start)/duration);element.textContent=format(Math.round(from+(to-from)*(1-(1-t)**3)));if(t===1)finish();else frame=requestAnimationFrame(tick);};
+ const start=clockNow();
+ const tick=()=>{if(done)return;const t=Math.min(1,(clockNow()-start)/duration);element.textContent=format(Math.round(from+(to-from)*(1-(1-t)**3)));if(t===1)finish();else frame=requestAnimationFrame(tick);};
  frame=requestAnimationFrame(tick);
 }
 export function finishCounts() { floatingPrize?.cancel(); for(const el of document.querySelectorAll('#win,#balance,#notice-total')) counting.get(el)?.(); }
@@ -30,20 +31,16 @@ export async function flyXP(board,target,positions,duration) {
  }));
 }
 export function showRibbon(text,kind='win') {
- const el=document.getElementById('event-ribbon');el.replaceChildren();if(kind==='retrigger'){const art=document.createElement('img');art.src='ui/art/retrigger.png';art.alt='';el.append(art);}const caption=document.createElement('strong');caption.textContent=text;el.append(caption);el.dataset.kind=kind;el.hidden=false;
+ const el=document.getElementById('event-ribbon');el.replaceChildren();if(kind==='retrigger'){const art=document.createElement('img');art.src='ui/art/retrigger.webp';art.alt='';el.append(art);}const caption=document.createElement('strong');caption.textContent=text;el.append(caption);el.dataset.kind=kind;el.hidden=false;
  clearTimeout(el.dismiss);pulse(el);el.dismiss=setTimeout(()=>{el.hidden=true;},kind==='win'?1500:950);
 }
 // Espera interrompivel: termina mais cedo se o jogador acelerar (fast-forward).
 function beatWait(ms, skip) {
- return new Promise(resolve => {
-  const start = performance.now();
-  const tick = () => (skip?.() || document.hidden || performance.now() - start >= ms) ? resolve() : requestAnimationFrame(tick);
-  tick();
- });
+ return document.hidden ? Promise.resolve() : clockWait(ms, skip);
 }
 function pop(el, beat, from = .55) {
  if (reduce.matches || !beat) return;
- el.animate([{ opacity: 0, scale: from }, { opacity: 1, scale: 1.18, offset: .6 }, { opacity: 1, scale: 1 }], { duration: Math.max(90, beat * .8), easing: 'cubic-bezier(.2,.8,.3,1.2)' });
+ animate(el, [{ opacity: 0, scale: from }, { opacity: 1, scale: 1.18, offset: .6 }, { opacity: 1, scale: 1 }], { duration: beat * .8, easing: 'cubic-bezier(.2,.8,.3,1.2)' });
 }
 /**
  * Ganho de um hit. Quando um WILD com multiplicador participa (multiplicador total > 1) e beat > 0,
@@ -51,8 +48,9 @@ function pop(el, beat, from = .55) {
  * final sobe e desaparece. beat (ms) vem da velocidade de jogo. A promessa so resolve no fim de tudo,
  * para a pipeline apresentar um hit de cada vez.
  */
-export async function showHitAmount(hit,board,receivedUnits,format,duration=1000,{betUnits=100,beat=0,skip,onBeat}={}) {
- const layer=document.getElementById('group-prizes');layer.replaceChildren();
+export async function showHitAmount(hit,board,receivedUnits,format,duration=1000,{betUnits=100,beat=0,skip,onBeat,keep=false}={}) {
+ // keep: varios ganhos ao mesmo tempo (ultra/turbo) partilham a camada em vez de a limpar.
+ const layer=document.getElementById('group-prizes');if(!keep)layer.replaceChildren();
  if(receivedUnits<=0)return;
  const cells=hit.positions.map(p=>board.querySelector(`[data-position="${p}"]`)).filter(Boolean);
  const label=document.createElement('span');label.className='group-prize';
@@ -76,16 +74,16 @@ export async function showHitAmount(hit,board,receivedUnits,format,duration=1000
   if(!skip?.()){
    const op=part('calc-op','×'),mult=part('calc-mult',`${multiplier}`);
    label.append(op,mult);pop(op,beat,.3);pop(mult,beat,.3);onBeat?.('multiplier');
-   cells.filter(c=>c.classList.contains('wild')).forEach(c=>{const art=c.querySelector('.wild-art')??c;art.animate([{scale:1,filter:'brightness(1)'},{scale:1.12,filter:'brightness(1.45) drop-shadow(0 0 10px #e9d9ff)',offset:.45},{scale:1,filter:'brightness(1)'}],{duration:Math.max(160,beat*1.4),easing:'ease-out'});});
+   cells.filter(c=>c.classList.contains('wild')).forEach(c=>{const art=c.querySelector('.wild-art')??c;animate(art,[{scale:1,filter:'brightness(1)'},{scale:1.12,filter:'brightness(1.45)',offset:.45},{scale:1,filter:'brightness(1)'}],{duration:beat*1.4,easing:'ease-out'});});
    await beatWait(beat*1.15,skip);
   }
   // 3) a operacao funde-se e transforma-se no resultado
   if(!skip?.()){
-   await label.animate([{scale:1,opacity:1,filter:'blur(0)'},{scale:.7,opacity:.25,filter:'blur(2px)'}],{duration:Math.max(70,beat*.35),easing:'ease-in'}).finished.catch(()=>{});
+   await animate(label,[{scale:1,opacity:1},{scale:.7,opacity:.25}],{duration:beat*.35,easing:'ease-in'}).finished.catch(()=>{});
   }
   label.classList.remove('prize-calc');label.replaceChildren(format(receivedUnits/100));applyTier(multiple);place();
   if(!skip?.()){
-   label.animate([{scale:.6,filter:'brightness(1.8)'},{scale:1.28,filter:'brightness(1.3)',offset:.55},{scale:1,filter:'brightness(1)'}],{duration:Math.max(110,beat*.9),easing:'cubic-bezier(.2,.8,.3,1.2)'});
+   animate(label,[{scale:.6,filter:'brightness(1.8)'},{scale:1.28,filter:'brightness(1.3)',offset:.55},{scale:1,filter:'brightness(1)'}],{duration:beat*.9,easing:'cubic-bezier(.2,.8,.3,1.2)'});
    onBeat?.('result');
    await beatWait(beat*.9,skip);
   }
@@ -95,7 +93,7 @@ export async function showHitAmount(hit,board,receivedUnits,format,duration=1000
  if(document.hidden||!duration||skip?.()){label.remove();return;}
  // 4) animacao habitual: sobe e desaparece
  const frames=reduce.matches?[{opacity:1},{opacity:1}]:[{opacity:showCalc?1:0,translate:showCalc?'0 0':'0 8px'},{opacity:1,translate:'0 0',offset:.18},{opacity:1,translate:'0 -8px',offset:.55},{opacity:0,translate:'0 -44px'}];
- const animation=label.animate(frames,{duration:reduce.matches?Math.min(200,duration):duration,easing:'ease-out'});floatingPrize=animation;
+ const animation=animate(label,frames,{duration:reduce.matches?Math.min(200,duration):duration,easing:'ease-out'});floatingPrize=animation;
  try{await animation.finished;}catch{}finally{label.remove();if(floatingPrize===animation)floatingPrize=null;}
 }
 // Two 400 ms rainbow flashes when the full XP bar triggers the magic.
@@ -131,7 +129,8 @@ export function installPresentation() {
  document.addEventListener('fullscreenchange',()=>requestAnimationFrame(positionNotice));
  document.addEventListener('game-layout',positionNotice);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)finishCounts();});
- document.getElementById('spin').addEventListener('click',finishCounts);
+ // As contagens terminam quando comeca a jogada seguinte (app.js), nao em cada toque: um toque
+ // durante o spin acelera a apresentacao em vez de a cortar.
  for(const dialog of document.querySelectorAll('dialog')) {
   dialog.addEventListener('close',()=>{finishCounts();});
  }

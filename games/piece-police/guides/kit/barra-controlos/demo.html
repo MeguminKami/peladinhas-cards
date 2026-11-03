@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Barra de controlos — pré-visualização</title>
+<link rel="stylesheet" href="barra.css">
+<link id="theme" rel="stylesheet" href="tema-sofia.css">
+<style>
+  body{margin:0;padding:20px;background:#15111f;color:#eee;font:14px system-ui,sans-serif}
+  .tools{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  .tools select,.tools button{min-height:36px;padding:4px 10px}
+  .stage{display:grid;place-items:start}
+  .shell{position:relative;background:#221b36;padding:16px;border-radius:12px}
+  .shell[data-layout=landscape]{width:1040px}
+  .shell[data-layout=portrait]{width:430px}
+  .shell[data-layout=compact]{width:236px;height:560px;display:flex}
+  .shell[data-layout=compact] #deck-slot{display:flex;flex:1}
+  .shell[data-layout=compact] .control-deck{flex:1}
+  .fake-board{height:180px;border:1px dashed #ffffff33;border-radius:10px;display:grid;place-items:center;color:#ffffff66}
+  .shell[data-layout=compact] .fake-board{display:none}
+  #log{margin-top:12px;font:12px ui-monospace,monospace;color:#9a9;white-space:pre-line}
+</style>
+</head>
+<body>
+<div class="tools">
+  <label>Desenho <select id="layout"><option>landscape</option><option>portrait</option><option>compact</option></select></label>
+  <label>Tema <select id="skin"><option value="tema-sofia.css">Princesa Sofia</option><option value="tema-exemplo-neon.css">Exemplo néon</option><option value="">Neutro (GUI de teste)</option></select></label>
+  <button id="extra">Aposta extra on/off</button>
+  <button id="turbo">Turbo on/off</button>
+</div>
+<div class="stage"><div class="shell" data-layout="landscape"><div class="fake-board">grelha</div><div id="deck-slot"></div></div></div>
+<div id="log"></div>
+<script type="module">
+import { createControlDeck } from './barra.js';
+const log = text => { const el = document.getElementById('log'); el.textContent = (text + '\n' + el.textContent).slice(0, 1200); };
+let balance = 1000000, auto = 0, extra = false;
+const deck = createControlDeck(document.getElementById('deck-slot'), {
+  bets: [20, 40, 60, 80, 100, 150, 200, 500, 1000], bet: 100, currency: 'DJC', storageKey: 'demo-barra',
+  onSpin: ({ running, autoRunning }) => { if (autoRunning) { auto = 0; deck.setState({ autoRunning: false }); log('auto parado'); } else if (running) log('acelerar'); else play(); },
+  onBetChange: bet => { deck.setCost(bet * (extra ? 4 : 1)); log('aposta ' + bet); },
+  onAutoStart: count => { auto = count; deck.setState({ autoRunning: true }); log('auto ' + count); play(); },
+  onAutoStop: () => { auto = 0; deck.setState({ autoRunning: false }); log('auto parado'); },
+  onSpeedChange: speed => log('velocidade ' + speed),
+  onVolumeChange: v => log('volume ' + JSON.stringify(v)),
+  onRules: () => log('abrir regras'),
+  onUiSound: name => log('som ui: ' + name),
+  canAutoStart: () => balance >= deck.bet,
+});
+deck.setBalance(balance); deck.setCost(deck.bet);
+async function play() {
+  const cost = deck.bet * (extra ? 4 : 1);
+  if (balance < cost) return log('saldo insuficiente');
+  balance -= cost; deck.setBalance(balance); deck.setWin(0); deck.setState({ running: true });
+  await new Promise(r => setTimeout(r, 900));
+  const win = Math.random() < .3 ? Math.round(deck.bet * Math.random() * 8) : 0;
+  balance += win; deck.setBalance(balance); deck.setWin(win, win / deck.bet); deck.setState({ running: false });
+  if (auto > 0 && --auto > 0) setTimeout(play, 150); else deck.setState({ autoRunning: false });
+}
+document.getElementById('layout').onchange = e => document.querySelector('.shell').dataset.layout = e.target.value;
+document.getElementById('skin').onchange = e => { const link = document.getElementById('theme'); if (e.target.value) link.href = e.target.value; else link.removeAttribute('href'); };
+document.getElementById('extra').onclick = () => { extra = !extra; deck.setExtraActive(extra); deck.setCost(deck.bet * (extra ? 4 : 1)); };
+let turbo = false; document.getElementById('turbo').onclick = () => { turbo = !turbo; deck.setTurbo(turbo); };
+const params = new URLSearchParams(location.search);
+if (params.get('layout')) { document.getElementById('layout').value = params.get('layout'); document.querySelector('.shell').dataset.layout = params.get('layout'); }
+if (params.has('skin')) { document.getElementById('skin').value = params.get('skin'); document.getElementById('skin').onchange({ target: document.getElementById('skin') }); }
+</script>
+</body>
+</html>

@@ -14,4 +14,4 @@ RTP por medir nesta configuração; relatórios anteriores não a validam.
 
 ## Verificacao local em 2026-10-26
 
-Amostra exploratoria de 10 000 rondas por modo, aposta 20, seeds independentes por modo: RTP observado base 54,51% (IC95 47,42-61,60%), compra normal 56,07% (53,25-58,88%), compra superior 96,93% (89,95-103,90%). Custos das compras incluidos no denominador. [Relatorio bruto](../reports/maestro-0.7.0-local.json). Amostra pequena, sem calibracao nem validacao conclusiva de RTP ou caudas; bonus naturais nao foram isolados nesta amostra.
+Amostra exploratoria de 10 000 rondas por modo, aposta 20, seeds independentes por modo: RTP observado base 54,51% (IC95 47,42-61,60%), compra normal 56,07% (53,25-58,88%), compra superior 96,93% (89,95-103,90%). Custos das compras incluidos no denominador. Amostra pequena, sem calibracao nem validacao conclusiva de RTP ou caudas; bonus naturais nao foram isolados nesta amostra.

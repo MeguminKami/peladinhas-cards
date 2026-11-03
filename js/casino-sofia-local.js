@@ -15,14 +15,25 @@ const seed = () => crypto.getRandomValues(new Uint32Array(1))[0];
 
 // The engine is deterministic for a given RNG snapshot, so a round is stored as
 // its starting snapshot and replayed up to the requested step (no event dumps).
-function replay(round, upto) {
-  const engine = createEngine({ rng: createRandom(round.rngStart) });
-  let state = engine.start({ mode: round.entryMode, betUnits: round.betUnits });
-  let last = null;
-  for (let i = 0; i < upto; i++) {
+// The last replayed engine stays in memory: the next step continues from it
+// instead of replaying the whole round again (each step used to replay every
+// previous step twice). A miss (reload, other round) falls back to a full replay
+// with the same result.
+let memo = null;
+function replay(round, upto, { needLast = false } = {}) {
+  let engine, state, at, last = null;
+  // needLast: o passo pedido tem de ser jogado agora (a cache tem de estar antes dele).
+  if (memo && memo.id === round.id && memo.rngStart === round.rngStart && (memo.cursor < upto || (memo.cursor === upto && !needLast))) ({ engine, state, cursor: at } = memo);
+  else {
+    engine = createEngine({ rng: createRandom(round.rngStart) });
+    state = engine.start({ mode: round.entryMode, betUnits: round.betUnits });
+    at = 0;
+  }
+  for (; at < upto; at++) {
     last = engine.step(state);
     state = last.state;
   }
+  memo = state.complete ? null : { id: round.id, rngStart: round.rngStart, cursor: upto, engine, state };
   return { state, last };
 }
 
@@ -84,7 +95,7 @@ export function applyLocalSofia(previous, balance, { action, payload = {} }) {
     if (!round || payload.roundId !== round.id) fail("NO_ROUND", "Esta jogada já terminou. Volta a abrir o jogo.");
     if (round.configVersion !== DEFAULT_CONFIG.version) fail("VERSION_MISMATCH", "O jogo foi atualizado. Volta a abrir o jogo para concluir a jogada.");
     if (payload.index !== round.cursor) fail("STALE_REVISION", "A sessão mudou. A recuperar a jogada.");
-    const { last } = replay(round, round.cursor + 1);
+    const { last } = replay(round, round.cursor + 1, { needLast: true });
     step = { state: last.state, events: last.events };
     round.cursor++;
     if (round.cursor >= round.steps) {

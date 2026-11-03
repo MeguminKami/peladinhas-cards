@@ -4,7 +4,9 @@ import { previewBoard, demoScenario } from './fixtures.js';
 import { symbolNames, symbolAssets, artAssets, bonusAssets, bonusNames } from './symbols.js';
 import { animateBoard, cancelBoardMotion, observeMotionVisibility, cascadeBoard, gatherScatters, castMagic, purchaseScatters, dissolveToXP, revealSpin } from './motion.js';
 import { installLayout } from './layout.js';
-import { installPresentation, enterScene, showHitAmount, pulse, countAmount, showRibbon, flashXPBar } from './presentation.js';
+import { installPresentation, enterScene, showHitAmount, pulse, countAmount, showRibbon, flashXPBar, finishCounts } from './presentation.js';
+import { setRate, currentRate, wait as clockWait, flushWaits, createTempo } from './tempo.js';
+import { installPerfPanel } from './perf.js';
 import { hitCredits, prizeTier } from './payout-presentation.js';
 import { buildSfxBus, sfxProfile } from './audio-bus.js';
 
@@ -24,6 +26,16 @@ let running = false, autoRunning = false, autoCancel = false, autoRemaining = 0;
 let artReady = false;
 let hunt = false, speed = 'normal', fastForward = false, betUnits = 100;
 let view = { mode: 'base', xp100: 0, level: 0, remaining: 0, paid100: 0, betUnits: 100, demo: false };
+// ---- Ritmo (ver ui/tempo.js) ----
+// Politica de ritmo. Mercados que o exigem (ex.: Reino Unido, RTS 14 da Gambling Commission) pedem
+// MIN_CYCLE_MS = 2500 e TURBO_ALLOWED = false (sem turbo, sem acelerar a apresentacao por toque).
+const MIN_CYCLE_MS = 0, TURBO_ALLOWED = true, HOLD_TO_SPIN = true;
+const tempo = createTempo();
+let turboRound = false;      // turbo automatico ligado nesta jogada (toques rapidos ou espaco premido)
+let boost = 1, slams = 0;    // aceleracao suave pedida com toques durante o spin atual
+let bufferedSpin = false;    // toque recebido no fim de uma jogada: a seguinte arranca logo
+let preExit = null;          // saida dos simbolos ja iniciada no toque, enquanto o pedido segue para o servidor
+let lastCycleStart = -Infinity;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const sound = {
@@ -338,8 +350,26 @@ const BONUS_FAST = 0.42;
 function scatterSuspense(mode) {
   return mode === 'base' ? { levels: { 2: 1, 3: 2, 4: 3 }, maxScatters: 5 } : { levels: { 1: 1, 2: 2 }, maxScatters: 3 };
 }
+function effectiveSpeed() { return TURBO_ALLOWED && turboRound ? 'ultra' : speed; }
 function speedFactor() {
-  return speed === 'fast' && ['common', 'super', 'secret'].includes(view.mode) ? BONUS_FAST : SPEEDS[speed];
+  const chosen = effectiveSpeed();
+  return chosen === 'fast' && ['common', 'super', 'secret'].includes(view.mode) ? BONUS_FAST : SPEEDS[chosen];
+}
+// Ultra (escolhido ou automatico) tem coreografia propria: colunas juntas, ganhos em simultaneo.
+function ultraChoreo() { return effectiveSpeed() === 'ultra'; }
+// Todas as duracoes do codigo estao em ms da velocidade Normal; o relogio aplica a velocidade.
+function applyRate(rampMs = 140) {
+  setRate(boost / speedFactor(), { rampMs });
+  updateTurboBadge();
+}
+let turboBadgeTimer = 0;
+function updateTurboBadge() {
+  const on = TURBO_ALLOWED && speed !== 'ultra' && (turboRound || tempo.turbo);
+  document.body.dataset.turbo = String(on);
+  const label = $('speed-label'), text = on ? 'Turbo' : ({ normal: 'Normal', fast: 'Rápido', ultra: 'Ultra' })[speed];
+  if (label && label.textContent !== text) label.textContent = text;
+  clearTimeout(turboBadgeTimer);
+  if (on && !running) turboBadgeTimer = setTimeout(updateTurboBadge, 400); // apaga-se sozinho quando o turbo expira
 }
 
 function renderBoard(board, hits = [], placed = []) {
@@ -363,7 +393,7 @@ function renderBoard(board, hits = [], placed = []) {
       // Emblema, multiplicador e "WILD" num unico invólucro: as animacoes (saida, hits, cascatas)
       // movem-nos juntos, sem o numero ficar para tras.
       const wrap=document.createElement('span');wrap.className='symbol-art wild-art';
-      const emblem=document.createElement('img');emblem.className='wild-emblem';emblem.src='ui/art/wild-emblem.png';emblem.alt='';emblem.draggable=false;
+      const emblem=document.createElement('img');emblem.className='wild-emblem';emblem.src='ui/art/wild-emblem.webp';emblem.alt='';emblem.draggable=false;
       const identity=document.createElement('span');identity.className='wild-identity';identity.textContent='WILD';
       wrap.append(emblem,label,identity);element.append(wrap);
     }
@@ -378,6 +408,7 @@ function renderBoard(board, hits = [], placed = []) {
     fragment.append(element);
   });
   $('board').replaceChildren(fragment);
+  $('board').classList.remove('cleared');
   const count = board.filter(cell => cell === 'S').length;
   $('scatter-count').textContent = `${count} scatter${count === 1 ? '' : 's'}`;
 }
@@ -437,6 +468,7 @@ function errorMessage(error) { $('error').textContent = error.message || String(
 function status(message) { $('status').textContent = message; }
 function openDialog(id) { if (!$(id).open) $(id).showModal(); }
 function notice(title, body, kicker = 'BÓNUS', max = false, totalUnits = null) {
+  bufferedSpin = false; // um aviso pede um toque proprio; nao arrancar outra jogada por tras dele
   $('notice-title').textContent = title; $('notice-body').textContent = body; $('notice-kicker').textContent = kicker;
   $('notice-dialog').dataset.max = String(max);
   const intro = totalUnits === null && !max;
@@ -445,16 +477,19 @@ function notice(title, body, kicker = 'BÓNUS', max = false, totalUnits = null) 
   $('notice-dialog').dataset.mode = view.mode;
   $('notice-emblem').src = bonusAssets[view.mode] ?? bonusAssets.common;
   $('notice-total').hidden = totalUnits === null;
-  return new Promise(resolve => { $('notice-dialog').addEventListener('close', resolve, { once: true }); openDialog('notice-dialog'); if(totalUnits!==null) countAmount($('notice-total'),0,totalUnits,money,fastForward?0:700*speedFactor()); });
+  return new Promise(resolve => { $('notice-dialog').addEventListener('close', resolve, { once: true }); openDialog('notice-dialog'); if(totalUnits!==null) countAmount($('notice-total'),0,totalUnits,money,fastForward?0:700); });
 }
 
+const dialogsClosed = async () => { while (document.querySelector('dialog[open]')) await new Promise(resolve => setTimeout(resolve, 40)); };
 async function pause(duration) {
   // Other panels pause presentation; the engine result is never re-sorted.
-  while (document.querySelector('dialog[open]')) await new Promise(resolve => setTimeout(resolve, 40));
+  // duration em ms da velocidade Normal: o relogio (tempo.js) aplica a velocidade atual.
+  await dialogsClosed();
   let elapsed = 0;
-  while (elapsed < duration * speedFactor() && !fastForward && !reducedMotion.matches) {
-    await new Promise(resolve => setTimeout(resolve, 20)); elapsed += 20;
-    while (document.querySelector('dialog[open]')) await new Promise(resolve => setTimeout(resolve, 40));
+  while (elapsed < duration && !fastForward && !reducedMotion.matches) {
+    const chunk = Math.min(80, duration - elapsed);
+    await clockWait(chunk, () => fastForward); elapsed += chunk;
+    await dialogsClosed();
   }
 }
 
@@ -466,12 +501,15 @@ async function present(event) {
   switch (event.type) {
     case 'spin-start':
       view.magicProgress = event.magicProgress; view.mode = event.mode; view.xp100 = event.xp100; view.level = event.magicLevel; view.remaining = event.remainingSpins;
-      await animateBoard('exit', $('board'), { duration: fastForward ? 0 : 120 * speedFactor() });
+      // Novo spin: velocidade de base para este spin (a aceleracao por toque vale so para um spin).
+      boost = 1; slams = 0; fastForward = false; applyRate(0);
+      if (preExit) { await preExit; preExit = null; }
+      else await animateBoard('exit', $('board'), { duration: fastForward ? 0 : 120 });
       shownBoard = event.board; renderBoard(shownBoard); indicators();
       status(event.mode === 'base' ? 'A resolver o spin…' : `${names[event.mode]} · ${event.remainingSpins} spins após este.`);
       sound.spin();
       // Suspense de Scatters (regras em scatterSuspense): tambem se aplica as cascatas.
-      await revealSpin($('board'), { duration: fastForward ? 0 : 900 * speedFactor(), skip: () => fastForward,
+      await revealSpin($('board'), { duration: fastForward ? 0 : 900, skip: () => fastForward, together: ultraChoreo(),
         ...scatterSuspense(event.mode),
         onScatter: n => sound.scatterLand(n), onSuspense: level => sound.suspense(level),
         onColumn: c => sound.columnLand(c), onSuspenseCell: (i, l) => sound.suspenseTick(i, l) });
@@ -479,7 +517,24 @@ async function present(event) {
     case 'hits':
       const previousPaid = view.paid100;
       const credits = hitCredits(event.hits,event.credited100,previousPaid,view.betUnits);
-      for (const [index,hit] of event.hits.entries()) {
+      if (ultraChoreo() && event.hits.length > 1) {
+        // Ultra/turbo: todos os grupos brilham e mostram o seu valor ao mesmo tempo.
+        const winning = new Set(event.hits.flatMap(hit => hit.positions));
+        for (const cell of $('board').querySelectorAll('.cell')) cell.classList.toggle('hit', winning.has(Number(cell.dataset.position)));
+        view.paid100 += credits.reduce((sum, credit) => sum + credit.amount100, 0); indicators();
+        const tiers = ['small', 'medium', 'large', 'epic', 'mega', 'huge', 'colossal'];
+        const best = event.hits.map(hit => prizeTier((Number(hit.rawPay100) || 0) / 100)).sort((a, b) => tiers.indexOf(b) - tiers.indexOf(a))[0];
+        sound.hit(best);
+        $('group-prizes').replaceChildren();
+        await Promise.all([
+          animateBoard('hit', $('board'), { duration: fastForward ? 0 : 700 }),
+          ...event.hits.map((hit, index) => showHitAmount(hit, $('board'), credits[index].receivedUnits, value => number.format(value), fastForward ? 0 : 650, {
+            betUnits: view.betUnits, beat: fastForward ? 0 : 360, skip: () => fastForward, keep: true,
+            onBeat: index ? undefined : step => { if (step === 'multiplier') sound.calcMultiplier(); },
+          })),
+        ]);
+        $('board').querySelectorAll('.hit').forEach(cell => cell.classList.add('hit-presented'));
+      } else for (const [index,hit] of event.hits.entries()) {
         const winning=new Set(hit.positions);
         for(const cell of $('board').querySelectorAll('.cell')) {
           cell.classList.toggle('hit',winning.has(Number(cell.dataset.position)));
@@ -489,11 +544,11 @@ async function present(event) {
         // ao ritmo da velocidade de jogo; o proximo hit so comeca quando este acabar.
         const multiplied = BigInt(hit.multiplier ?? 1) > 1n;
         const rawMultiple = (Number(hit.rawPay100) || 0) / 100;
-        const beat = fastForward ? 0 : Math.max(105, 360 * speedFactor()); // +50% de tempo no ecra
+        const beat = fastForward ? 0 : 360; // +50% de tempo no ecra; sem minimos fixos: escala com a velocidade
         sound.hit(prizeTier(multiplied ? rawMultiple / Number(hit.multiplier) : rawMultiple));
         await Promise.all([
-          animateBoard('hit',$('board'),{duration:fastForward?0:700*speedFactor()}),
-          showHitAmount(hit,$('board'),credits[index].receivedUnits,value=>number.format(value),fastForward?0:1000*speedFactor(),{
+          animateBoard('hit',$('board'),{duration:fastForward?0:700}),
+          showHitAmount(hit,$('board'),credits[index].receivedUnits,value=>number.format(value),fastForward?0:1000,{
             betUnits:view.betUnits, beat, skip:()=>fastForward,
             onBeat:step=>{ if(step==='multiplier') sound.calcMultiplier(); else if(step==='result') sound.hit(prizeTier(rawMultiple)); },
           }),
@@ -509,10 +564,10 @@ async function present(event) {
       if (event.xp100 >= event.threshold100) { sound.magicReady(); flashXPBar($('xp-bar')); }
       break;
     case 'refill':
-      if (view.mode !== 'base') { sound.xpFly(); await dissolveToXP($('board'),event.removed,$('xp-bar'),{duration:650*speedFactor(),skip:()=>fastForward}); }
+      if (view.mode !== 'base') { sound.xpFly(); await dissolveToXP($('board'),event.removed,$('xp-bar'),{duration:650,skip:()=>fastForward}); }
       view.xp100=pendingXP;indicators();
-      await cascadeBoard($('board'), shownBoard, event.board, b => renderBoard(b), { removed:event.removed, duration:500 * speedFactor(), skip:() => fastForward, removalAlreadyPresented:true,
-        suspense: { ...scatterSuspense(view.mode), duration: 900 * speedFactor(), onScatter: n => sound.scatterLand(n), onSuspense: level => sound.suspense(level), onSuspenseCell: (i, l) => sound.suspenseTick(i, l), onFirstLand: () => sound.refillLand() } });
+      await cascadeBoard($('board'), shownBoard, event.board, b => renderBoard(b), { removed:event.removed, duration:500, skip:() => fastForward, removalAlreadyPresented:true,
+        suspense: { ...scatterSuspense(view.mode), duration: 900, together: ultraChoreo(), onScatter: n => sound.scatterLand(n), onSuspense: level => sound.suspense(level), onSuspenseCell: (i, l) => sound.suspenseTick(i, l), onFirstLand: () => sound.refillLand() } });
       sound.endSuspense();
       shownBoard = event.board; await pause(180); break;
     case 'magic':
@@ -525,24 +580,23 @@ async function present(event) {
       const detail=document.createElement('span');detail.textContent=`Multiplicador dos WILDs: ${event.multiplier || 1}×`;
       const vision=document.createElement('div');vision.className='magic-vision';vision.setAttribute('aria-hidden','true');
       const wild=document.createElement('div');wild.className='magic-wild-preview';
-      const emblem=document.createElement('img');emblem.src='ui/art/wild-emblem.png';emblem.alt='';
+      const emblem=document.createElement('img');emblem.src='ui/art/wild-emblem.webp';emblem.alt='';
       const quantity=document.createElement('b');quantity.textContent=String(event.placed);
       wild.append(emblem,quantity);
       const arrow=document.createElement('span');arrow.className='magic-arrow';arrow.textContent='\u2726';
       const factor=document.createElement('span');factor.className='magic-factor';factor.textContent=`${event.multiplier || 1}\u00d7`;
       vision.append(wild,arrow,factor);
       $('magic-upgrade').append(vision,heading,detail);
-      const magicDuration=Math.max(650,2500*speedFactor());
-      $('magic-upgrade').style.setProperty('--magic-enter',`${350*speedFactor()}ms`);
+      // 2500 ms em Normal; a velocidade (incluindo Ultra) escala tudo, sem minimos fixos.
+      const magicDuration=ultraChoreo()?1600:2500;
+      $('magic-upgrade').style.setProperty('--magic-enter',`${Math.round(350/currentRate())}ms`);
       $('magic-upgrade').hidden=false;
       clearTimeout(magicToast);
-      magicToast=setTimeout(()=>{$('magic-upgrade').hidden=true;},magicDuration);
-      await pause(magicDuration/speedFactor());
-      clearTimeout(magicToast);
+      await pause(magicDuration);
       $('magic-upgrade').hidden=true;
       renderBoard(shownBoard, [], event.positions);
       sound.magicCast();
-      await castMagic($('board'), beforeMagic, event.board, { positions:event.positions, duration:850 * speedFactor(), source:$('xp-bar'), skip:() => fastForward, onWild:() => sound.wildPlace() });
+      await castMagic($('board'), beforeMagic, event.board, { positions:event.positions, duration:850, together:ultraChoreo(), source:$('xp-bar'), skip:() => fastForward, onWild:() => sound.wildPlace() });
 
       status(`Magia: ${event.placed} wild${event.placed === 1 ? '' : 's'}${event.multiplier ? ` de ×${event.multiplier}` : ''}. Barra a zero.`);
       break;
@@ -550,20 +604,20 @@ async function present(event) {
     case 'bonus-start':
       sound.preloadMusic(event.mode);
       sound.scatterConverge();
-      await gatherScatters($('board'), event.mode, { duration:650 * speedFactor(), skip:() => fastForward });
+      await gatherScatters($('board'), event.mode, { duration:650, skip:() => fastForward });
       sound.bonusTrigger();
-      stopAuto(); view.mode = event.mode; view.remaining = event.spins; view.xp100 = 0; view.level = 0; indicators();
+      stopAuto(); view.mode = event.mode; view.remaining = event.spins; view.xp100 = 0; view.level = 0; indicators(); applyRate(0);
       try { sound.playMusic(event.mode); } catch { }
       try { sound.intro(event.mode); } catch { }
       await notice(names[event.mode], bonusDescription[event.mode], `${event.spins} SPINS GRÁTIS`); break;
     case 'retrigger':
-      await gatherScatters($('board'), view.mode, {duration:400 * speedFactor(),skip:() => fastForward});
+      await gatherScatters($('board'), view.mode, {duration:400,skip:() => fastForward});
       view.remaining = event.remainingSpins; indicators(); showRibbon(`+${event.added} spins`, 'retrigger'); pulse($('free-spins')); status(`+${event.added} spins! ${event.remainingSpins} por jogar.`); sound.retrigger(); await pause(450); break;
     case 'max-win':
       view.paid100 = event.totalPaid100; view.remaining = view.xp100 = 0; indicators(); stopAuto();
       sound.maxWin();
       await notice('MAX WIN', '10 000× a aposta. A jogada terminou.', 'PRÉMIO MÁXIMO', true, creditedUnits(event.totalPaid100, view.betUnits)); break;
-    case 'round-end': view.paid100 = event.paid100; indicators(); if(!view.demo) heldBalance=null; if(session.host) document.documentElement.dataset.casinoBalance=String(session.balanceUnits); countAmount($('balance'),session.balanceUnits-event.creditedUnits,session.balanceUnits,money,fastForward?0:400*speedFactor()); pulse($('balance')); if (view.paid100 > 0) await pause(450); break;
+    case 'round-end': view.paid100 = event.paid100; indicators(); if(!view.demo) heldBalance=null; if(session.host) document.documentElement.dataset.casinoBalance=String(session.balanceUnits); countAmount($('balance'),session.balanceUnits-event.creditedUnits,session.balanceUnits,money,fastForward?0:400); pulse($('balance')); if (view.paid100 > 0) await pause(ultraChoreo() ? 200 : 450); break;
   }
 }
 
@@ -572,22 +626,35 @@ function stopAuto() { autoCancel = true; autoRemaining = 0; controls(); }
 async function runRound({ mode = hunt ? 'hunt' : 'base', demo = null, resume = false } = {}) {
   if (running) return;
   const activeSession = demo ? new TestSession({ seed: 123456, balanceUnits: 100000000 }) : session;
-  let started = false;
+  let started = false, failed = false;
   $('error').hidden = true;
   try {
     running = true;
+    finishCounts();
+    if (MIN_CYCLE_MS > 0) {
+      const gap = MIN_CYCLE_MS - (performance.now() - lastCycleStart);
+      if (gap > 0) await new Promise(resolve => setTimeout(resolve, gap));
+    }
+    lastCycleStart = performance.now();
+    turboRound = TURBO_ALLOWED && !autoRunning && tempo.turbo;
+    boost = 1; slams = 0; fastForward = false;
+    applyRate(0);
+    // Arranque imediato: os simbolos comecam a sair no toque, ao mesmo tempo que o pedido segue
+    // para a carteira do casino. A latencia fica escondida dentro da animacao de saida.
+    if (!resume && !demo && (mode === 'base' || mode === 'hunt')) {
+      preExit = animateBoard('exit', $('board'), { duration: 120 }).then(() => $('board').classList.add('cleared'));
+    }
     const state = resume ? activeSession.state : await activeSession.start(mode, betUnits); started = true;
     if (!demo) heldBalance = activeSession.balanceUnits;
-    fastForward = false;
     if (resume) { betUnits = state.betUnits; hunt = state.entryMode === 'hunt'; }
-    view = { mode: state.mode, xp100: state.xp100 || 0, level: state.magicLevel || 0, remaining: state.mode === 'base' ? 0 : state.remainingSpins, paid100: state.paid100 || 0, betUnits: state.betUnits, demo: Boolean(demo) };
+    view = { mode: state.mode, xp100: state.xp100 || 0, level: state.magicLevel || 0, magicProgress: state.magicProgress, remaining: state.mode === 'base' ? 0 : state.remainingSpins, paid100: state.paid100 || 0, betUnits: state.betUnits, demo: Boolean(demo) };
     indicators(); controls(); sound.unlock();
     if (state.mode === 'base' || state.mode === 'hunt') try { sound.playMusic(hunt ? 'hunt' : 'base'); } catch { }
     if (resume && state.mode !== 'base') { try { sound.playMusic(state.mode); } catch { } status(`A retomar ${names[state.mode]} · ${state.remainingSpins} spins por jogar.`); }
     else if (state.mode !== 'base' && !demo) {
       sound.preloadMusic(state.mode);
       sound.purchase();
-      await purchaseScatters($('board'),state.mode,symbolAssets.S,{duration:1150*speedFactor(),skip:()=>fastForward,onScatter:n=>sound.scatterLand(n),onSuspense:level=>sound.suspense(level),onColumn:c=>sound.columnLand(c),onSuspenseCell:(i,l)=>sound.suspenseTick(i,l)});
+      await purchaseScatters($('board'),state.mode,symbolAssets.S,{duration:1150,together:ultraChoreo(),skip:()=>fastForward,onScatter:n=>sound.scatterLand(n),onSuspense:level=>sound.suspense(level),onColumn:c=>sound.columnLand(c),onSuspenseCell:(i,l)=>sound.suspenseTick(i,l)});
       sound.endSuspense();
       try { sound.playMusic(state.mode); } catch { }
       try { sound.intro(state.mode); } catch { }
@@ -610,6 +677,7 @@ async function runRound({ mode = hunt ? 'hunt' : 'base', demo = null, resume = f
     }
     status(demo ? `Demonstração terminada: ${demo.name}. O saldo não foi alterado.` : `Jogada terminada · prémio ${money(creditedUnits(final.paid100, view.betUnits))}.`);
   } catch (error) {
+    failed = true; bufferedSpin = false; tempo.held = false;
     stopAuto(); errorMessage(error);
     if (activeSession.host) {
       // O site guarda a jogada: voltar a ligar e retomar no ponto confirmado.
@@ -618,8 +686,17 @@ async function runRound({ mode = hunt ? 'hunt' : 'base', demo = null, resume = f
     } else status(started && !activeSession.state ? 'Jogada interrompida. O saldo de teste foi reposto.' : 'Não foi possível iniciar ou apresentar a jogada.');
   } finally {
     running = false; heldBalance = null;
+    if (preExit) { const pending = preExit; preExit = null; pending.then(() => $('board').classList.remove('cleared')); }
+    $('board').classList.remove('cleared');
     view.mode = 'base'; view.xp100 = view.level = view.remaining = 0;
+    boost = 1; slams = 0; turboRound = false; applyRate(0);
+    tempo.roundEnded();
     indicators(); controls();
+  }
+  // Toque recebido no fim da jogada, ou espaco premido: a seguinte arranca ja, sem tempo morto.
+  if (!failed && !demo && !autoRunning && (bufferedSpin || (HOLD_TO_SPIN && TURBO_ALLOWED && tempo.held))) {
+    bufferedSpin = false;
+    setTimeout(() => { if (!running && !autoRunning && !$('spin').disabled) runRound(); }, 0);
   }
 }
 
@@ -663,7 +740,7 @@ function buyOptions() {
 function rulesContent() {
   const C = DEFAULT_CONFIG, xp = mode => C.xpThreshold100[mode] / 100;
   const img = (symbol, cls = '') => `<img class="${cls}" src="${symbolAssets[symbol]}" alt="">`;
-  const wild = (mult = '') => `<span class="mini-wild"><img src="ui/art/wild-emblem.png" alt=""><b>${mult || 'W'}</b></span>`;
+  const wild = (mult = '') => `<span class="mini-wild"><img src="ui/art/wild-emblem.webp" alt=""><b>${mult || 'W'}</b></span>`;
   const flowers = n => Array.from({ length: n }, () => img('S', 'mini-flower')).join('');
   // Mini-grelha de exemplo: grupo de 5 ligados (em L) e um igual so na diagonal, que nao conta.
   const fill = ['N1','P2','N3','N5','P1','N4','N4','N2','N2','N2','N5','P3','N3','N1','P4','N2','N1','N5','P1','N5','N3','N2','N4','N1','N4','P3','N1','N5','N2','N3'];
@@ -765,7 +842,27 @@ for (const [id, direction] of [['bet-minus', -1], ['bet-plus', 1], ['buy-bet-min
   $('bet').value = String(betUnits); controls(); indicators();
   if ($('buy-dialog').open) buyOptions();
 });
-$('spin').addEventListener('click', () => { sound.spinPress(); if (autoRunning) stopAuto(); else if (running) { fastForward = true; cancelBoardMotion($('board')); } else runRound(); });
+/**
+ * Toque no spin (rato, toque ou espaco). Fora de uma jogada: roda; toques seguidos ligam o turbo
+ * (tempo.js). Durante a jogada nada e cortado: 1.o toque acelera 3x de forma suave, 2.o toque 8x e
+ * deixa o spin seguinte em espera; so um 3.o toque salta o resto da apresentacao deste spin.
+ */
+function pressSpin() {
+  if ($('spin').disabled) return;
+  sound.spinPress();
+  if (autoRunning) { stopAuto(); return; }
+  if (!running) { if (TURBO_ALLOWED) tempo.press(); runRound(); return; }
+  if (!TURBO_ALLOWED) return; // politica sem turbo: a apresentacao segue ao seu ritmo
+  tempo.press({ running: true });
+  turboRound = true;
+  slams++;
+  if (slams === 1) boost = 3;
+  else if (slams === 2) boost = 8;
+  else { fastForward = true; flushWaits(); cancelBoardMotion($('board')); }
+  if (slams >= 2 && view.mode === 'base' && !view.demo) bufferedSpin = true;
+  applyRate(slams > 2 ? 0 : 120);
+}
+$('spin').addEventListener('click', pressSpin);
 $('hunt-button').addEventListener('click', () => { if (running || autoRunning) return; hunt = !hunt; if (hunt) sound.huntOn(); else sound.huntOff(); if (sound.music) try { sound.playMusic(hunt ? 'hunt' : 'base'); } catch { } controls(); indicators(); $('buy-dialog').close(); status(hunt ? 'Bonus Hunt ativado. O spin custa 4× a aposta base.' : 'Jogo normal ativado.'); });
 $('rules-button').addEventListener('click', () => { sound.dialogOpen(); openDialog('rules-dialog'); });
 $('buy-button').addEventListener('click', () => { if (running || autoRunning) return; sound.dialogOpen(); buyOptions(); openDialog('buy-dialog'); });
@@ -791,11 +888,9 @@ $('speed-button').addEventListener('click', () => {
   const order = ['normal', 'fast', 'ultra'];
   const labels = { normal: 'Normal', fast: 'Rápido', ultra: 'Ultra' };
   const index = (order.indexOf(speed) + 1) % order.length;
-  const rate = SPEEDS[speed] / SPEEDS[order[index]];
   speed = order[index];
-  // Não cancelar a apresentação em curso (apagava a camada dos scatters comprados e o jogo
-  // ficava à espera sem nada no ecrã): as animações a decorrer mudam já de ritmo, as próximas usam a nova velocidade.
-  for (const animation of document.getAnimations()) { if (animation instanceof CSSAnimation || animation instanceof CSSTransition) continue; try { animation.updatePlaybackRate(animation.playbackRate * rate); } catch { } }
+  // Não cancelar a apresentação em curso: o relógio (tempo.js) muda o ritmo das animações e das esperas já, de forma suave.
+  applyRate(150);
   $('speed-button').dataset.speed = speed;
   $('speed-label').textContent = labels[speed];
   $('speed-button').setAttribute('aria-label', `Velocidade: ${labels[speed]}. Mudar para ${labels[order[(index + 1) % order.length]]}.`);
@@ -834,7 +929,28 @@ for (const id of ['volume-music', 'volume-sfx']) $(id).addEventListener('input',
 $('volume-sfx').addEventListener('change', () => sound.click());
 $('mute-button').addEventListener('click', () => { sound.muted = !sound.muted; volumeChanged(); });
 volumeChanged();
-document.addEventListener('keydown', event => { if (event.code === 'Space' && !event.repeat && event.target === document.body && !document.querySelector('dialog[open]')) { event.preventDefault(); $('spin').click(); } });
+// Espaco roda em qualquer sitio do jogo (antes so funcionava com o foco no fundo: depois de clicar
+// em Velocidade, o espaco carregava nesse botao). Manter premido = turbo continuo.
+const typingIn = target => target?.closest?.('input,select,textarea,[contenteditable=true]');
+document.addEventListener('keydown', event => {
+  if (event.code !== 'Space' || document.querySelector('dialog[open]') || typingIn(event.target)) return;
+  event.preventDefault();
+  if (event.repeat) {
+    if (HOLD_TO_SPIN && TURBO_ALLOWED && !autoRunning) {
+      tempo.held = true;
+      if (running && !turboRound) { turboRound = true; applyRate(120); }
+    }
+    return;
+  }
+  pressSpin();
+});
+addEventListener('blur', () => { tempo.held = false; });
+document.addEventListener('keyup', event => {
+  if (event.code !== 'Space') return;
+  tempo.held = false;
+  // Impede o botao com foco de tambem ser ativado pelo espaco.
+  if (!document.querySelector('dialog[open]') && !typingIn(event.target)) event.preventDefault();
+});
 
 // A musica so pode comecar apos interacao do utilizador (politica dos browsers).
 // No primeiro clique/toque em qualquer lado, desbloqueia o audio e inicia o tema.
@@ -899,3 +1015,4 @@ document.addEventListener('fullscreenchange', () => {
 
 installLayout();
 installPresentation();
+installPerfPanel();

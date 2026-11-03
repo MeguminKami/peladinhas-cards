@@ -1,0 +1,5 @@
+/* Tema da barra de controlos — Fase 2: neutro (os valores por omissão do kit).
+   A Fase 3 põe aqui as cores e fontes do Peace Police, só com variáveis --deck-*. */
+:root{
+  --deck-compact-top:12px;
+}

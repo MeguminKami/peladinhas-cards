@@ -6,7 +6,7 @@ Atualização de 29/10/2026: Wilds com probabilidade exata de **7% por posição
 
 ## Histórico 0.8.1
 
-Atualização de 29/10/2026: probabilidade de Wild em Lendas duplicada face ao valor vigente da 0.8.0, de 5,8173076923% para 11,6346153846% por posição livre antes dos Scatters. Compra 450× e sticky 36% mantidos; proporções dos restantes símbolos preservadas. Pesos N1…W: `44112,39517,34003,28489,14704,10109,6433,3676,23837`. A medição posterior de 100 000 compras da 0.8.1 deu RTP observado de 1027,57% ([relatório](../reports/lendas-0.8.1-100k.json)); as simulações abaixo são históricas da 0.8.0 e não validam esta mudança. Sessões 0.8.0 preservam saldo, RNG e resultados confirmados ao migrar; próximas jogadas usam 0.8.1.
+Atualização de 29/10/2026: probabilidade de Wild em Lendas duplicada face ao valor vigente da 0.8.0, de 5,8173076923% para 11,6346153846% por posição livre antes dos Scatters. Compra 450× e sticky 36% mantidos; proporções dos restantes símbolos preservadas. Pesos N1…W: `44112,39517,34003,28489,14704,10109,6433,3676,23837`. A medição posterior de 100 000 compras da 0.8.1 deu RTP observado de 1027,57%; as simulações abaixo são históricas da 0.8.0 e não validam esta mudança. Sessões 0.8.0 preservam saldo, RNG e resultados confirmados ao migrar; próximas jogadas usam 0.8.1.
 
 ## Histórico 0.8.0
 
@@ -37,7 +37,7 @@ Migração de sessões 0.7.0 conserva saldo, RNG, histórico confirmado, modo e 
 
 Testes do motor cobrem ativação natural alcançável, cinco colunas, proporção exata de Wilds, fronteira sticky de 36%, persistência, retrigger, idempotência, custo, teto, reprodução e migração. TypeScript e build locais verificados. Testes de browser local em Edge: loja a 320/390/768/1280 px, teclado, preços, entrada, retoma, prolongamento e conclusão. Capturas inspecionadas; sem acesso a Firebase/Storage real e sem deploy.
 
-Amostra exploratória: 10 000 rondas por seed, duas seeds por modo, aposta 20 unidades mínimas; custos das compras/Hunt no denominador. [Relatório bruto](../reports/lendas-0.8.0-local.json).
+Amostra exploratória: 10 000 rondas por seed, duas seeds por modo, aposta 20 unidades mínimas; custos das compras/Hunt no denominador.
 
 | Modo | RTP observado seed A (IC95 aproximado) | Seed B (IC95 aproximado) |
 |---|---:|---:|

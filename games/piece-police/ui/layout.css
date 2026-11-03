@@ -1,0 +1,62 @@
+/* Os três desenhos. A largura de referência de cada um está em ui/layout.js; o jogo inteiro é escalado. */
+.shell{position:absolute;left:0;top:0;transform-origin:0 0;display:grid;gap:10px;padding:12px;overflow:hidden;background:radial-gradient(900px 500px at 50% 0%,#2a2145,var(--bg) 70%)}
+.topbar{grid-area:top}.side{grid-area:side;display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}.stage{grid-area:stage;display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0}
+.deck-slot{grid-area:deck;min-width:0}.status-line{grid-area:status}
+.status-line:empty{min-height:0}
+.brand strong,.brand span,.mode-chip,.forced-chip{white-space:nowrap}
+.top-actions{margin-left:auto}
+
+/* ---- Computador: coluna esquerda | palco | Chemistry à direita ---- */
+.shell[data-layout=landscape]{--cell:84px;grid-template-columns:220px 1fr 200px;grid-template-rows:auto 1fr auto auto;grid-template-areas:"top top top" "side stage chem" "deck deck deck" "status status status"}
+.shell[data-layout=landscape] .persona{min-height:66px}
+
+/* ---- Telemóvel ao alto: Chemistry por cima do palco (não há largura para uma coluna) ---- */
+.shell[data-layout=portrait]{--cell:72px;--gap:4px;gap:6px;grid-template-columns:1fr;grid-template-rows:auto auto auto auto 1fr auto auto;grid-template-areas:"top" "side" "chem" "stage" "." "deck" "status";padding:6px 6px 4px}
+.shell[data-layout=portrait] .topbar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"brand brand actions" "chips forced forced";gap:2px 6px;min-height:0}
+.shell[data-layout=portrait] .brand{grid-area:brand}
+.shell[data-layout=portrait] .brand strong{font-size:15px}
+.shell[data-layout=portrait] .mode-chip{grid-area:chips;justify-self:start;padding:2px 7px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.shell[data-layout=portrait] .forced-chip{grid-area:forced;justify-self:start;padding:1px 6px}
+.shell[data-layout=portrait] .top-actions{grid-area:actions;justify-self:end;gap:4px}
+.shell[data-layout=portrait] .top-btn{padding:3px 6px}
+.shell[data-layout=portrait] .side-base{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:5px}
+body[data-in-bonus=true] .shell[data-layout=portrait] .side-base{display:none}
+.shell[data-layout=portrait] .side-btn{padding:4px 3px;border-radius:10px;font-size:11.5px;justify-content:center}
+.shell[data-layout=portrait] .side-btn.hunt small{display:none}
+.shell[data-layout=portrait] #police-text,.shell[data-layout=portrait] #police-badge{display:none}
+.shell[data-layout=portrait] .police-short{display:block}
+.shell[data-layout=portrait] .police{padding:4px 6px;display:flex;flex-direction:column;justify-content:center}
+.shell[data-layout=portrait] .police h3{margin:0;font-size:calc(8.5px * var(--ui-boost))}
+.shell[data-layout=portrait] .log-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 10px}
+.shell[data-layout=portrait] .log-head .fs-row{gap:5px}
+.shell[data-layout=portrait] .log-head .fs-row span{font-size:calc(9px * var(--ui-boost));color:var(--muted)}
+.shell[data-layout=portrait] .log-head h3{margin:0}
+.shell[data-layout=portrait] .event-log{max-height:104px}
+.shell[data-layout=portrait] .chem-personas{display:grid;grid-template-columns:repeat(5,1fr);gap:3px}
+.shell[data-layout=portrait] .persona{min-height:44px;padding:3px 4px;border-radius:8px}
+.shell[data-layout=portrait] .persona .fx{font-size:calc(8.5px * var(--ui-boost))}
+.shell[data-layout=portrait] .chem-bar{gap:4px}
+.shell[data-layout=portrait] .chem-level{padding:3px 8px;font-size:calc(9.5px * var(--ui-boost))}
+.shell[data-layout=portrait] .chem-level b,.shell[data-layout=portrait] .chem-level span{display:inline;margin:0 6px 0 0}
+
+/* ---- Compacto (baixo e largo): coluna esquerda | palco | Chemistry | controlos ---- */
+.shell[data-layout=compact]{--cell:64px;--gap:5px;gap:8px;grid-template-columns:186px 1fr 165px 248px;grid-template-rows:auto 1fr auto;grid-template-areas:"top stage chem deck" "side stage chem deck" "status stage chem deck";padding:10px}
+.shell[data-layout=compact] .topbar{display:grid;grid-template-columns:1fr auto;gap:4px;align-items:center}
+.shell[data-layout=compact] .brand,.shell[data-layout=compact] .top-actions{grid-column:1/-1}
+.shell[data-layout=compact] .top-actions{margin-left:0}
+.shell[data-layout=compact] .top-btn{padding:3px 6px}
+.shell[data-layout=compact] .side-btn{padding:6px}
+.shell[data-layout=compact] #police-text,.shell[data-layout=compact] .side-btn.hunt small{display:none}
+.shell[data-layout=compact] .police-short{display:block}
+.shell[data-layout=compact] .persona{min-height:0;padding:3px 6px;gap:0}
+.shell[data-layout=compact] .persona .st{display:none}
+.shell[data-layout=compact] .chem-bar .chem-personas{gap:4px}
+.shell[data-layout=compact] .chem-level{padding:4px 6px;font-size:calc(10px * var(--ui-boost))}
+.shell[data-layout=compact] .chem-bar{justify-content:center}
+.shell[data-layout=compact] .deck-slot{display:flex}
+.shell[data-layout=compact] .deck-slot .control-deck{flex:1}
+.shell[data-layout=compact] .status-line{text-align:left}
+/* O registo não empurra o jogo: ocupa só a altura que a coluna já tem (o resto desvanece) */
+.side{position:relative}
+.shell:not([data-layout=portrait]) .bonus-log{position:absolute;inset:0}
+.log-head strong{white-space:nowrap}

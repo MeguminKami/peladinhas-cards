@@ -1,0 +1,28 @@
+{
+  "name": "peace-police-the-afterparty",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "PEACE POLICE: THE AFTERPARTY — motor, tabelas, simulador (Fase 1) e GUI de teste (Fase 2)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "sim": "node scripts/simulate.js",
+    "sim:rapido": "node scripts/simulate.js --rapido",
+    "validate:rtp": "node scripts/simulate.js --validar",
+    "round": "node scripts/round.js",
+    "tabelas": "node scripts/tabelas.js",
+    "cenario": "node scripts/round.js --cenario",
+    "dev": "node scripts/serve.js",
+    "dev:debug": "node scripts/serve.js --open debug",
+    "dev:pc": "node scripts/serve.js --open pc",
+    "dev:telemovel": "node scripts/serve.js --open telemovel",
+    "dev:site": "node scripts/serve.js --open site",
+    "dev:carteira": "node scripts/serve.js --open carteira",
+    "dev:rede": "node scripts/serve.js --rede",
+    "test:ui": "node tests/prototype.browser.js",
+    "verificar:kit": "node guides/kit/verificar-kit.mjs ."
+  }
+}

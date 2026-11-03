@@ -57,7 +57,7 @@ Motor, avaliador e apresentação são distribuídos no frontend, incluindo o if
 
 ## Simulação local — 29/10/2026
 
-100 000 compras completas **por bónus**, duas seeds independentes de 50 000 por modo, aposta base 0,20 créditos. Custo da compra no denominador; inclui retriggers, arredondamento e teto acumulado de 10 000× a aposta base. [Relatório com seeds, hash da configuração e lotes](../reports/poderes-0.9.0-100k-compras.json).
+100 000 compras completas **por bónus**, duas seeds independentes de 50 000 por modo, aposta base 0,20 créditos. Custo da compra no denominador; inclui retriggers, arredondamento e teto acumulado de 10 000× a aposta base.
 
 | Compra | Custo | RTP observado | IC95 aproximado | Prémio médio / aposta base | Com lucro | Teto |
 |---|---:|---:|---:|---:|---:|---:|

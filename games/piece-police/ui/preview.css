@@ -1,0 +1,29 @@
+/* Paginas de pre-visualizacao (pc.html e telemovel.html). Nao fazem parte do jogo. */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;background:radial-gradient(1200px 700px at 30% 0%,#3a2752,#16111f 70%);color:#f3e7f3;font:14px/1.4 system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden}
+.pv-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 16px;border-bottom:1px solid #4a3858;background:#1d1628e6}
+.pv-title{font-weight:600;font-size:15px}
+.pv-title span{color:#cdb6d6;font-weight:400}
+.pv-sizes{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.pv-sizes button,.pv-rotate{font:inherit;font-size:13px;cursor:pointer;border-radius:999px;border:1px solid #5d4566;background:#2b2138;color:#f3e7f3;padding:6px 12px}
+.pv-sizes button:hover,.pv-rotate:hover{border-color:#f4d5e7}
+.pv-sizes button[aria-pressed=true],.pv-rotate[aria-pressed=true]{background:#f4d5e7;color:#2a1d3a;border-color:#f4d5e7;font-weight:600}
+.pv-link{color:#d5f6ef;text-decoration:none;font-size:13px;white-space:nowrap}
+.pv-link:hover{text-decoration:underline}
+.pv-stage{position:relative;flex:1;min-height:0;display:grid;place-items:center;overflow:hidden;padding:16px}
+.pv-screen{position:absolute;left:50%;top:50%;transform-origin:center center}
+.pv-screen iframe{display:block;width:100%;height:100%;border:0;background:#101224}
+/* PC: monitor simples */
+.pv-screen.pc{border:10px solid #0d0a14;border-radius:14px;box-shadow:0 20px 60px #0008,0 0 0 1px #3d2f4a}
+.pv-screen.pc.fill{border:0;border-radius:0;box-shadow:none}
+/* Telemovel: moldura com cantos arredondados e entalhe */
+.pv-screen.phone{border:14px solid #0b0910;border-radius:46px;box-shadow:0 24px 70px #000a,0 0 0 2px #3d2f4a,inset 0 0 0 1px #000}
+.pv-screen.phone iframe{border-radius:32px}
+.pv-screen.phone::before{content:'';position:absolute;z-index:2;left:50%;top:8px;width:96px;height:24px;margin-left:-48px;border-radius:14px;background:#0b0910;pointer-events:none}
+.pv-screen.phone.landscape::before{left:8px;top:50%;width:24px;height:96px;margin:-48px 0 0}
+.pv-info{margin:0;padding:6px 16px 10px;color:#bba6c6;font-size:12px;text-align:center}
+/* index.html */
+.pv-index{display:grid;gap:10px;padding:24px;max-width:560px}
+.pv-index a{display:block;padding:12px 16px;border:1px solid #5d4566;border-radius:12px;background:#2b2138;color:#f3e7f3;text-decoration:none}
+.pv-index a:hover{border-color:#f4d5e7}

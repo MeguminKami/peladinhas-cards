@@ -17,6 +17,6 @@ O motor do navegador e o adaptador Node gerado aplicam a mesma fórmula. Rondas 
 
 Testes: `node --test tests/retrigger.test.mjs tests/scatters.test.mjs tests/ways.test.mjs` (74 aprovados). Cobertura dos três modos, 2 a 6 Scatters, limite de 40 FS e compatibilidade de rondas locais 4.15.
 
-Esta alteração aumenta os FS esperados dos retriggers de 4 a 6 Scatters. O [relatório 4.15](./RTP-v4.15.md) é histórico; o RTP da versão 4.16 ainda não foi medido nem validado. Não usar o alvo configurado de 96% como resultado medido.
+Esta alteração aumenta os FS esperados dos retriggers de 4 a 6 Scatters. O RTP da versão 4.16 ainda não foi medido nem validado. Não usar o alvo configurado de 96% como resultado medido.
 
 Publicação no site: `npm.cmd run deploy:frontend` na raiz do projeto. Não há função Firebase que importe estes módulos no código atual. Um host externo que use o adaptador Node deve atualizar também o motor, configuração e arquivos de versões importados.

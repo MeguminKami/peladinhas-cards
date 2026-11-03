@@ -13,7 +13,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const portIndex = process.argv.indexOf('--port');
 const port = portIndex < 0 ? 4175 : Number(process.argv[portIndex + 1]);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Invalid local port');
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.opus': 'audio/ogg', '.json': 'application/json' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.opus': 'audio/ogg', '.json': 'application/json' };
 
 // Pagina de teste de som: lista dos candidatos e gravacao das escolhas (so neste servidor local).
 async function audioLab(req, res, path) {

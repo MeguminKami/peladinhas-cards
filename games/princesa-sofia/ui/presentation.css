@@ -75,7 +75,9 @@ body[data-layout=portrait] #rules-dialog th,body[data-layout=portrait] #rules-di
  dialog[open] .bonus-icon{animation:emblem-enter .35s both}
 }
 @keyframes star-breath{to{opacity:.4;transform:translateY(3px)}}
-@keyframes magic-breath{to{opacity:.9;filter:hue-rotate(25deg) drop-shadow(0 0 7px #fff3f8)}}
+/* So opacity/transform: corre no compositor. Antes animava filter (hue-rotate + drop-shadow) e obrigava o
+   browser a recalcular estilos 60x/s mesmo com o jogo parado. */
+@keyframes magic-breath{to{opacity:.7;transform:scale(1.05)}}
 @keyframes emblem-enter{from{opacity:0;transform:translateY(10px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
 @font-face{font-family:'Sofia Storybook';src:url('./fonts/CormorantGaramond.woff2') format('woff2');font-weight:100 900;font-display:swap}
 :root{--font-theme:'Sofia Storybook',Georgia,serif}
@@ -118,7 +120,7 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 .cell.wild .wild-emblem{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:0;filter:drop-shadow(0 3px 2px #19102d88)}
 .cell.wild strong.symbol-letter{position:relative;z-index:2;font-style:normal;font-weight:800;line-height:1;color:#533557;text-shadow:0 1px 0 #fffef8,1px 0 1px #fffef8,-1px 0 1px #fffef8;letter-spacing:-.03em;transform:translateY(-5%)}
 .wild-identity{position:absolute;z-index:3;bottom:24%;left:8%;right:8%;text-align:center;font-size:12px;line-height:1;font-weight:800;letter-spacing:.12em;color:#654767;text-shadow:0 1px 1px #fffef6}
-.magic-icon::before{inset:0;clip-path:none;opacity:1;background:url('./art/wild-emblem.png') center/contain no-repeat}
+.magic-icon::before{inset:0;clip-path:none;opacity:1;background:url('./art/wild-emblem.webp') center/contain no-repeat}
 .magic-icon::after{display:none}
 .magic-icon{color:#fff4c9!important;text-shadow:0 2px 1px #24123d!important;font-style:normal!important}
 .purchase-scatters.purchase-grid{display:grid;inset:var(--frame-padding);grid-template-columns:repeat(6,minmax(0,1fr));gap:var(--gap);align-items:stretch;justify-content:normal;background:linear-gradient(#34213f,#4c3350);box-shadow:none;border-radius:11px}
@@ -155,7 +157,7 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 
 /* A centred magical vignette, sized in the same scaled coordinate space as the board. */
 #magic-upgrade{left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,86%);max-width:86%;padding:22px 28px!important;border:0;border-radius:50%!important;background:radial-gradient(ellipse,#33203ff5 20%,#33203fd9 48%,#33203f00 74%);box-shadow:none;color:#fff6de;z-index:12;isolation:isolate}
-#magic-upgrade::before,#magic-upgrade::after{content:'';position:absolute;inset:5% 0;z-index:-1;background:url('./art/fairy-dust.png') center/contain no-repeat;opacity:.5;pointer-events:none}
+#magic-upgrade::before,#magic-upgrade::after{content:'';position:absolute;inset:5% 0;z-index:-1;background:url('./art/fairy-dust.webp') center/contain no-repeat;opacity:.5;pointer-events:none}
 #magic-upgrade::after{transform:rotate(180deg);opacity:.3}
 .magic-vision{display:flex!important;align-items:center;justify-content:center;gap:14px;margin:0 auto 10px;height:104px}
 .magic-vision .magic-wild-preview{position:relative;width:110px;height:104px;flex:none}
@@ -167,7 +169,7 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 #magic-upgrade>span{font-size:19px;margin-top:6px;text-shadow:0 2px 3px #24102f}
 @media(prefers-reduced-motion:no-preference){#magic-upgrade:not([hidden]){animation:magic-vision-enter var(--magic-enter,350ms) both}#magic-upgrade:not([hidden])::before{animation:magic-breath 1.2s ease-in-out infinite alternate}}
 @keyframes magic-vision-enter{from{opacity:0;scale:.9}to{opacity:1;scale:1}}
-#notice-dialog[data-intro=true]::backdrop{background:#21152c88;backdrop-filter:blur(5px)}
+#notice-dialog[data-intro=true]::backdrop{background:#21152cc4}
 #magic-upgrade::before{opacity:.28}#magic-upgrade::after{opacity:.16}
 
 /* Volume: barras separadas de musica e efeitos, empilhadas no espaco do antigo controlo */
@@ -193,13 +195,15 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 .board[data-suspense="2"]{--sus:#d9c4ff;--sus-soft:#c9b0ff66}
 .board[data-suspense="3"]{--sus:#ffe08a;--sus-soft:#ffd56a77}
 .board .cell{transition:filter .35s ease}
-.board[data-suspense="2"] .cell:not(.suspense-col):not(.suspense-held){filter:brightness(.82) saturate(.9)}
-.board[data-suspense="3"] .cell:not(.suspense-col):not(.suspense-held){filter:brightness(.58) saturate(.75)}
+/* Escurecer por opacidade (barato) em vez de filter nas 30 celulas. */
+.board .cell>.symbol-art{transition:opacity .25s ease}
+.board[data-suspense="2"] .cell:not(.suspense-col):not(.suspense-held)>.symbol-art{opacity:.78}
+.board[data-suspense="3"] .cell:not(.suspense-col):not(.suspense-held)>.symbol-art{opacity:.55}
 .board-frame:has(> .board[data-suspense]),.board-frame:has(.board[data-suspense]){transition:box-shadow .4s ease}
 .board-frame:has(.board[data-suspense="1"]){box-shadow:0 6px 0 #533842,0 0 26px #ffd3ea66}
-.board-frame:has(.board[data-suspense="2"]){box-shadow:0 6px 0 #533842,0 0 40px #c9b0ff99;animation:sus-frame 1.1s ease-in-out infinite alternate}
-.board-frame:has(.board[data-suspense="3"]){box-shadow:0 6px 0 #533842,0 0 56px #ffd56acc;animation:sus-frame .7s ease-in-out infinite alternate}
-@keyframes sus-frame{to{filter:brightness(1.08)}}
+.board-frame:has(.board[data-suspense="2"]){box-shadow:0 6px 0 #533842,0 0 40px #c9b0ff99}
+.board-frame:has(.board[data-suspense="3"]){box-shadow:0 6px 0 #533842,0 0 56px #ffd56acc}
+
 /* coluna que esta a cair: feixe de luz */
 .cell.suspense-col::after{content:'';position:absolute;inset:-2px;border-radius:9px;pointer-events:none;z-index:4;
   background:linear-gradient(180deg,transparent,var(--sus-soft) 45%,transparent);box-shadow:0 0 14px var(--sus-soft),inset 0 0 12px var(--sus-soft);
@@ -210,7 +214,7 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 @keyframes sus-beam{from{opacity:.45}to{opacity:1}}
 @keyframes sus-tremble{0%,100%{translate:0 0}25%{translate:.6px -.4px}75%{translate:-.6px .4px}}
 /* Scatters ja pousados: batimento */
-.cell.scatter.suspense-held .symbol-art{animation:sus-heart .8s ease-in-out infinite;filter:drop-shadow(0 0 8px var(--sus,#ffd3ea)) brightness(1.12)}
+.cell.scatter.suspense-held .symbol-art{will-change:transform;animation:sus-heart .8s ease-in-out infinite;filter:drop-shadow(0 0 8px var(--sus,#ffd3ea)) brightness(1.12)}
 .board[data-suspense="2"] .cell.scatter.suspense-held .symbol-art{animation-duration:.6s;filter:drop-shadow(0 0 12px var(--sus)) brightness(1.2)}
 .board[data-suspense="3"] .cell.scatter.suspense-held .symbol-art{animation-duration:.42s;filter:drop-shadow(0 0 16px var(--sus)) drop-shadow(0 0 6px #fff) brightness(1.3)}
 @keyframes sus-heart{0%,100%{transform:scale(1)}40%{transform:scale(1.08)}60%{transform:scale(1.03)}}
@@ -223,6 +227,15 @@ body,body *,dialog *{font-family:var(--font-theme)!important}
 .group-prize .calc-mult{font-size:1.45em;font-style:normal;font-weight:800;color:#fffaff;-webkit-text-stroke:2.5px #4a1580;paint-order:stroke fill;
   text-shadow:0 0 6px #fff,0 0 14px #d6b8ff,0 0 26px #a77bff,0 0 40px #8a5cff,0 3px 3px #24102d;animation:calc-mult-glow .5s ease-in-out infinite alternate}
 .group-prize.prize-calc{scale:1.15}
-@keyframes calc-mult-glow{to{filter:brightness(1.25) drop-shadow(0 0 8px #d6b8ff)}}
+@keyframes calc-mult-glow{to{opacity:.8}}
 @media (prefers-reduced-motion: reduce){.group-prize .calc-mult{animation:none}}
 .group-prize{font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum" 1,"tnum" 1}
+
+/* ---- Ritmo / turbo (ui/tempo.js) ---- */
+/* Saida dos simbolos iniciada no toque: a grelha fica vazia ate o resultado chegar (sem piscar a antiga). */
+.board.cleared .cell{visibility:hidden}
+/* Turbo automatico (toques rapidos ou espaco premido): o botao de velocidade mostra-o sem mudar a escolha. */
+body[data-turbo=true] #speed-button{border-color:#e2b8ff;background:linear-gradient(145deg,#775394,#3d2c65)}
+body[data-turbo=true] #speed-button .speed-stars span{color:#ffedff;text-shadow:0 0 9px #d7a1ff}
+/* Sem atraso de duplo toque nos controlos em telemoveis. */
+button,.shell input[type=range]{touch-action:manipulation}

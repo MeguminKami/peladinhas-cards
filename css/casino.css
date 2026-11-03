@@ -765,8 +765,7 @@
   align-items: center;
   gap: 24px;
   padding: 12px 8px;
-  background: var(--bg-app);
-  backdrop-filter: blur(18px);
+  background: var(--bg-app); /* fundo opaco: o backdrop-filter nao se via e custava GPU por cima dos jogos */
   border-bottom: 1px solid var(--border-strong);
 }
 .casino-brand { font-size: .72rem; letter-spacing: .12em; }

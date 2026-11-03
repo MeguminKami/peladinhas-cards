@@ -68,3 +68,30 @@ test("Sofia conclui com o resultado guardado se a matemática mudar a meio", () 
   assert.equal(settled.session.round, null);
   assert.ok(settled.result.notice);
 });
+
+test("Sofia dá o mesmo resultado com a cache de reprodução, mesmo intercalando jogadas", () => {
+  // Duas sessões a alternar passos obrigam a cache a falhar e a reconstruir; o resultado tem de ser igual
+  // ao de uma sessão jogada sozinha (sem cache útil).
+  const solo = finish(start(connect(), "secret"));
+  let a = start(connect(), "secret"), b = start(connect(), "common");
+  const eventsA = [];
+  while (a.session.round) {
+    a = step(a); eventsA.push(...a.result.step.events);
+    if (b.session.round) b = step(b);
+  }
+  // Mesmo RNG de partida -> mesma sequência de eventos (a sessão nova usa outra semente, por isso compara-se com replay direto).
+  const round = a.completed;
+  const engine = createEngine({ rng: createRandom(round.rngStart) });
+  let state = engine.start({ mode: round.entryMode, betUnits: round.betUnits }); const direct = [];
+  while (!state.complete) { const r = engine.step(state); state = r.state; direct.push(...r.events); }
+  assert.deepEqual(eventsA, direct);
+  assert.ok(solo.events.length > 0);
+});
+
+test("Sofia repete o mesmo passo se a gravação anterior falhou (cache já adiantada)", () => {
+  let next = start(connect(), "common");
+  const before = next;
+  const first = step(before);   // a cache avança para o cursor 1...
+  const again = step(before);   // ...mas a carteira não gravou: o mesmo passo volta a ser pedido
+  assert.deepEqual(again.result.step, first.result.step);
+});

@@ -10,7 +10,8 @@ const server=spawn(process.execPath,['scripts/serve.js','--port',String(port)],{
 let browser;
 try {
  for(let i=0;i<100;i++){try{if((await fetch(origin)).ok)break;}catch{}await new Promise(r=>setTimeout(r,30));}
- for(const asset of artAssets){const buffer=readFileSync(new URL('../'+asset,import.meta.url));assert.equal(buffer.toString('ascii',1,4),'PNG');if(!asset.endsWith('scene.png'))assert.equal(buffer[25],6,`${asset} must include alpha`);}
+ // Arte publicada em WebP (muito mais leve que os PNG originais, que ficam em ui/art como fonte).
+ for(const asset of artAssets){const buffer=readFileSync(new URL('../'+asset,import.meta.url));assert.equal(buffer.toString('ascii',0,4)+buffer.toString('ascii',8,12),'RIFFWEBP',`${asset} must be WebP`);if(!asset.endsWith('scene.webp'))assert.ok(buffer.toString('ascii',12,16)==='VP8L'||(buffer.toString('ascii',12,16)==='VP8X'&&(buffer[20]&0x10)),`${asset} must include alpha`);}
  const edge='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
  browser=await chromium.launch({headless:true,...(existsSync(chromium.executablePath())?{}:{executablePath:edge})});
  const page=await browser.newPage();const errors=[];
