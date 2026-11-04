@@ -274,7 +274,7 @@ function logEvent(e) {
       break;
     }
     case 'persona.awaken': logItem('awaken', chip(e.persona), e.kind === 'refire' ? 'volta a disparar' : 'desperta'); break;
-    case 'fusion.trigger': logItem('fusion', chip(e.pair[0]), chip(e.pair[1]), fusionName(e.fusionId)); break;
+    case 'fusion.trigger': logItem('fusion', chip(e.pair[0]), chip(e.pair[1]), e.surprise ? `${fusionName(e.fusionId)} (surpresa)` : fusionName(e.fusionId)); break;
     case 'police.enter': logItem(`police ${e.mode}`, Object.assign(document.createElement('span'), { className: 'badge-ico', textContent: '★' }), e.mode === 'calmer' ? 'CALMER' : 'JOINER'); break;
     case 'wild.place': if (e.source === 'DISTINTIVO') logItem('police joiner', miniCell('DW', e.multiplier), 'Distintivo'); break;
     case 'corner.open': logItem('corner', miniCell('CW', e.multiplier), 'Canto aberto'); break;

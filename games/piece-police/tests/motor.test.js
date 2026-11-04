@@ -5,7 +5,7 @@ import { config, MATH_VERSION } from '../src/index.js';
 import { Rng } from '../src/random.js';
 import { playRound, seedState, scenario, forced, ofType, allEvents } from './helpers.js';
 
-const pay = (sym, size) => config.pay[{ N1: 1, N2: 2, N3: 3, N4: 4, N5: 5, P1: 6, P2: 7, P3: 8, P4: 9, P5: 10 }[sym]][Math.min(size, 15) - 4];
+const pay = (sym, size) => config.pay[{ N1: 1, N2: 2, N3: 3, N4: 4, N5: 5, P1: 6, P2: 7, P3: 8, P4: 9, P5: 10 }[sym]][Math.min(size, config.payMaxSize) - 4];
 const idx = (c, r) => c * 5 + r;
 
 // ---------------------------------------------------------------- configuração
@@ -220,7 +220,8 @@ test('Wild de Canto cresce +1 por prémio até ao máximo', () => {
   let rng = seedState('cw'); let seen = 0;
   for (let i = 0; i < 20000 && seen < 30; i++) {
     const r = playRound(rng, { bet: 100, mode: 'base' }); rng = r.rngAfter;
-    for (const e of ofType(r, 'multiplier.change')) {
+    // só o jogo base (os bónus têm teto e incremento próprios: ver o teste do estado inicial dos bónus)
+    for (const e of r.steps[0].events.filter((x) => x.type === 'multiplier.change')) {
       if (r.steps[0].events.some((x) => x.type === 'chemistry.total')) continue;
       seen++; assert.equal(e.to - e.from, config.corners_.incrementoPorPremio); assert.ok(e.to <= config.corners_.multiplicadorMax);
     }
@@ -271,13 +272,37 @@ for (const [n, bonus] of [[3, 'afterparty'], [4, 'vip'], [5, 'police']]) {
 test('estado inicial de cada bónus (personagens, cantos, Joiner)', () => {
   const vip = scenario('bonus:vip');
   const s0 = vip.steps[0].events[0];
-  assert.equal(s0.awake.length, 1); assert.equal(s0.corners.length, 2);
+  assert.equal(s0.awake.length, 1); assert.equal(s0.corners.length, 3);
   const pol = scenario('bonus:police');
   const p0 = pol.steps[0].events[0];
-  assert.equal(p0.awake.length, 2); assert.equal(p0.fused.length, 1); assert.equal(p0.corners.length, 4);
+  assert.equal(p0.awake.length, 2); assert.equal(p0.fused.length, 1); assert.equal(p0.corners.length, 0);
   for (const st of pol.steps) assert.ok(st.events.some((e) => e.type === 'police.joiner.party_mode'));
   const aft = scenario('bonus:afterparty');
-  assert.equal(aft.steps[0].events[0].awake.length, 0);
+  const a0 = aft.steps[0].events[0];
+  assert.equal(a0.awake.length, 0); assert.equal(a0.corners.length, 4);
+});
+
+test('volatilidade por bónus: tetos, incremento e Distintivo próprios (pp-v5)', () => {
+  // POLICE PARTY: cantos nascem ×1, crescem +2 e nunca passam de ×50; Distintivo dos pesos do bónus
+  let rng = seedState('vol-police'); let grows = 0, badges = 0;
+  for (let i = 0; i < 40 && grows < 20; i++) {
+    const r = playRound(rng, { bet: 100, mode: 'buy-police' }); rng = r.rngAfter;
+    for (const st of r.steps) {
+      const total = st.events.some((e) => e.type === 'chemistry.total');
+      for (const e of st.events) {
+        if (e.type === 'multiplier.change') { assert.ok(e.to <= config.bonus.police.multMaxAbsoluto); if (!total && e.to - e.from === config.bonus.police.incrementoCanto) grows++; }
+        if (e.type === 'corner.open') assert.equal(e.multiplier, config.bonus.police.multCantoInicial);
+        if (e.type === 'wild.place' && e.source === 'DISTINTIVO') { badges++; assert.ok(config.police.dwByBonus.police.mults.includes(e.multiplier)); }
+      }
+    }
+  }
+  assert.ok(grows > 0, 'os cantos do POLICE PARTY crescem +2'); assert.ok(badges > 0);
+  // AFTERPARTY: teto ×2
+  rng = seedState('vol-after');
+  for (let i = 0; i < 40; i++) {
+    const r = playRound(rng, { bet: 100, mode: 'buy-afterparty' }); rng = r.rngAfter;
+    for (const st of r.steps) for (const e of st.events) if (e.type === 'multiplier.change' && !st.events.some((x) => x.type === 'chemistry.total')) assert.ok(e.to <= config.bonus.afterparty.multCantoMax);
+  }
 });
 
 test('compras: só passos de bónus e custo = preço', () => {
@@ -354,4 +379,23 @@ test('--desligar (análise): a peça desligada não acontece e o jogo normal nã
   const a = playRound(seedState('igual'), { bet: 100, mode: 'base', roundId: 'z' });
   const b = playRound(seedState('igual'), { bet: 100, mode: 'base', roundId: 'z', desligar: [] });
   assert.deepEqual(a, b);
+});
+
+test('fusão surpresa: só no jogo base/hunt, sem acordar personagens, frequência da tabela (pp-v6)', () => {
+  const f = scenario('surpresa');
+  const ev = f.steps[0].events;
+  const t = ev.find((e) => e.type === 'fusion.trigger');
+  assert.ok(t && t.surprise && t.persona === null);
+  assert.equal(ev[ev.indexOf(t) - 1].type, 'grid.drop', 'dispara logo depois da queda');
+  assert.equal(ofType(f, 'persona.awaken').length, 0, 'não acorda personagens');
+  let rng = seedState('surpresa-freq'), n = 0; const N = 20000;
+  for (let i = 0; i < N; i++) {
+    const r = playRound(rng, { bet: 100, mode: 'base' }); rng = r.rngAfter;
+    if (r.steps[0].events.some((e) => e.surprise)) n++;
+    for (const st of r.steps) if (st.kind === 'bonus') assert.ok(!st.events.some((e) => e.surprise), 'nunca nos bónus');
+  }
+  const p = config.tables.FUSAO_SURPRESA.probabilidade.base / 100;
+  assert.ok(Math.abs(n / N - p) < 4 * Math.sqrt(p * (1 - p) / N), `frequência ${n / N}`);
+  rng = seedState('surpresa-bonus');
+  for (let i = 0; i < 20; i++) { const r = playRound(rng, { bet: 100, mode: 'buy-police' }); rng = r.rngAfter; assert.ok(!allEvents(r).some((e) => e.surprise)); }
 });

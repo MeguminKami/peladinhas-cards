@@ -18,7 +18,7 @@ try{for(const width of [1440,390]){
  const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:2}),page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript(()=>{
-  localStorage.setItem('cardoso-road-demo-v1-settings',JSON.stringify({effects:false,music:false,voices:false,reduced:false}));
+  localStorage.setItem('cardoso-road-render','page');localStorage.setItem('cardoso-road-demo-v1-settings',JSON.stringify({effects:false,music:false,voices:false,reduced:false}));
   Object.defineProperty(crypto,'getRandomValues',{value:a=>{a.fill(window.failNext?4294967295:0);return a;}});
  });
  await page.goto(origin+'/game.html');await page.waitForFunction(()=>!!document.querySelector('canvas')?.dataset.camera&&!document.querySelector('#play').disabled);
@@ -26,7 +26,7 @@ try{for(const width of [1440,390]){
  while(Date.now()<deadline){complete=await page.evaluate(async paths=>{const keys=await caches.keys(),name=keys.find(k=>k.startsWith('cardoso-road:'));if(!name)return false;const cache=await caches.open(name);return (await Promise.all(paths.map(path=>cache.match(new URL(path,location.href))))).every(Boolean);},inventory);if(complete)break;await page.waitForTimeout(200);}
  assert.equal(complete,true,'all public resources must finish warming');
  const backgroundMatches=await page.evaluate(async()=>{
-  await new Promise(requestAnimationFrame);const canvas=document.querySelector('canvas'),view=canvas.getBoundingClientRect(),layout=JSON.parse(canvas.dataset.camera).background,image=new Image();image.src=layout.source;await image.decode();
+  await new Promise(requestAnimationFrame);const world=document.querySelector('canvas'),canvas=document.querySelector('canvas.scene-bg'),view=canvas.getBoundingClientRect(),layout=JSON.parse(world.dataset.camera).background,image=new Image();image.src=layout.source;await image.decode();
   const expected=document.createElement('canvas');expected.width=canvas.width;expected.height=canvas.height;const ctx=expected.getContext('2d');ctx.scale(canvas.width/view.width,canvas.height/view.height);ctx.drawImage(image,layout.x,layout.y,layout.width,layout.height);
   const fog=ctx.createLinearGradient(0,0,0,view.height);fog.addColorStop(0,'#17154610');fog.addColorStop(.65,'#17133300');fog.addColorStop(1,'#0b123bd9');ctx.fillStyle=fog;ctx.fillRect(0,0,view.width,view.height);
   const x=Math.floor(canvas.width*.05),y=Math.floor(canvas.height*.05),actual=canvas.getContext('2d').getImageData(x,y,1,1).data,target=ctx.getImageData(x,y,1,1).data;return [...target].every((n,i)=>Math.abs(actual[i]-n)<=2);

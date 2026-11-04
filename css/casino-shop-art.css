@@ -123,6 +123,15 @@
   color: var(--sca-ink);
   text-shadow: 0 2px 8px #000a;
 }
+.sca-rating::before {
+  /* Keeps OVR, position and country legible over each edition's motifs. */
+  content: "";
+  position: absolute;
+  inset: -18% -45% -12%;
+  z-index: -1;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--sca-shadow) 82%, transparent) 45%, transparent);
+  pointer-events: none;
+}
 .sca-rating b {
   position: relative;
   font-size: clamp(26px, 15cqw, 40px);
@@ -156,13 +165,13 @@
 }
 .sca-identity {
   position: absolute;
-  top: 62%;
-  left: 17%;
-  right: 17%;
+  top: 60%;
+  left: 18.5%;
+  right: 18.5%;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 2cqw;
+  gap: 1.5cqw;
 }
 .sca-identity > strong {
   font-size: clamp(12px, 6.6cqw, 18px);
@@ -183,8 +192,8 @@
 .sca-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2.5cqw 1cqw;
-  padding-top: 2.5cqw;
+  gap: 1.8cqw 1cqw;
+  padding-top: 2cqw;
   border-top: 1px solid color-mix(in srgb, var(--sca-bright) 45%, transparent);
 }
 .sca-stats > span {
@@ -197,7 +206,7 @@
 }
 .sca-stats b {
   position: relative;
-  font-size: 6.3cqw;
+  font-size: 6cqw;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   line-height: 1;

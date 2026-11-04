@@ -7,8 +7,10 @@
 .top-actions{margin-left:auto}
 
 /* ---- Computador: coluna esquerda | palco | Chemistry à direita ---- */
-.shell[data-layout=landscape]{--cell:84px;grid-template-columns:220px 1fr 200px;grid-template-rows:auto 1fr auto auto;grid-template-areas:"top top top" "side stage chem" "deck deck deck" "status status status"}
+.shell[data-layout=landscape]{--cell:84px;grid-template-columns:210px 1fr 210px;grid-template-rows:auto 1fr auto auto;grid-template-areas:"top top top" "side stage chem" "deck deck deck" "status status status"}
 .shell[data-layout=landscape] .persona{min-height:66px}
+/* Colunas iguais e conteúdo ao centro da altura do palco: o tabuleiro fica no centro horizontal e vertical */
+.shell[data-layout=landscape] .side,.shell[data-layout=landscape] .chem-bar{justify-content:center;padding-top:16px} /* = padding-top do .board-wrap (néon) */
 
 /* ---- Telemóvel ao alto: Chemistry por cima do palco (não há largura para uma coluna) ---- */
 .shell[data-layout=portrait]{--cell:72px;--gap:4px;gap:6px;grid-template-columns:1fr;grid-template-rows:auto auto auto auto 1fr auto auto;grid-template-areas:"top" "side" "chem" "stage" "." "deck" "status";padding:6px 6px 4px}

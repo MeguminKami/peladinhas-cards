@@ -26,10 +26,9 @@ const DESC_FUSAO = {
 };
 
 function tabelaPagamentos() {
-  const sizes = [];
-  for (let s = config.clusterMin; s <= config.payMaxSize; s++) sizes.push(s === config.payMaxSize ? `${s}+` : String(s));
+  const sizes = config.payColumns.map(c => c.label);
   const rows = T.SIMBOLOS.filter(s => s.cat === 'baixo' || s.cat === 'premium').map(s =>
-    `<tr><td>${s.id} ${s.cat === 'premium' ? s.personagem : s.nome}</td>${config.pay[config.tables.SIMBOLOS.indexOf(s) + 1].map(v => `<td>${f3.format(v / 1000)}</td>`).join('')}</tr>`);
+    `<tr><td>${s.id} ${s.cat === 'premium' ? s.personagem : s.nome}</td>${config.payTable[config.tables.SIMBOLOS.indexOf(s) + 1].map(v => `<td>${f3.format(v / 1000)}</td>`).join('')}</tr>`);
   return `<table><thead><tr><th>Símbolo \\ tamanho</th>${sizes.map(s => `<th>${s}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 
@@ -76,6 +75,7 @@ function seccoes(bet) {
       <p>Cada poder dispara no máximo ${P.maxDisparosPorSpin} vezes por spin.</p>`],
     ['Fusões', `
       <p>Cada despertar a partir do segundo gera <b>exatamente uma fusão</b>: com o parceiro desperto de melhor rank ainda não fundido. A fusão substitui o poder normal. No bónus, as fusões persistem.</p>
+      <p><b>Fusão surpresa:</b> no jogo base e no MAIS SCATTERS, ${pct(T.FUSAO_SURPRESA.probabilidade.base)} dos spins disparam uma fusão ao acaso logo depois de cair a grelha. Não acorda personagens nem conta para o Chemistry.</p>
       <table><thead><tr><th>Rank</th><th>Par</th><th>Fusão</th><th>Efeito</th></tr></thead><tbody>
       ${T.FUSOES.map(f => `<tr><td>${f.rank}</td><td>${f.par.join(' + ')}</td><td>${fusionName(f.id)}</td><td class="l">${DESC_FUSAO[f.id]?.(f) ?? ''}</td></tr>`).join('')}</tbody></table>`],
     ['Chemistry e cantos', `
@@ -96,12 +96,13 @@ function seccoes(bet) {
     ['Bónus', `
       <p>3, 4 ou 5 Scatters no fim de um spin base ativam o bónus. As personagens despertas ficam despertas até ao fim, as fusões persistem e os cantos abertos ficam abertos.</p>
       <table><thead><tr><th></th>${Object.entries(T.ATIVACAO).map(([n, id]) => `<th>${n} S — ${B[id].nome}</th>`).join('')}</tr></thead><tbody>
+      <tr><td>Volatilidade</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].volatilidade || ''}</td>`).join('')}</tr>
       <tr><td>Free spins</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].spins}</td>`).join('')}</tr>
       <tr><td>Personagens despertas no início</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].personagensIniciais}</td>`).join('')}</tr>
       <tr><td>Cantos abertos no início</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].cantosIniciais}</td>`).join('')}</tr>
-      <tr><td>Wild de Canto</td>${Object.values(T.ATIVACAO).map(id => `<td>×${B[id].multCantoInicial} (máx. ×${B[id].multCantoMax}), ${B[id].cantosPersistemMultiplicador ? 'persiste entre spins' : 'volta ao início em cada spin'}</td>`).join('')}</tr>
+      <tr><td>Wild de Canto</td>${Object.values(T.ATIVACAO).map(id => `<td>×${B[id].multCantoInicial}, +${B[id].incrementoCanto || C.incrementoPorPremio} por prémio (máx. ×${B[id].multCantoMax}${(B[id].multMaxAbsoluto ?? C.multiplicadorMaxAbsoluto) > B[id].multCantoMax ? `; ×${B[id].multMaxAbsoluto ?? C.multiplicadorMaxAbsoluto} com o Total Chemistry` : ''}), ${B[id].cantosPersistemMultiplicador ? 'persiste entre spins' : 'volta ao início em cada spin'}</td>`).join('')}</tr>
       <tr><td>Peace Police</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].joinerEmTodosOsSpins ? 'Joiner em todos os spins' : `${pct(PP.probAparecer[id])} por despertar, Joiner ${pct(PP.probJoiner[id])}`}</td>`).join('')}</tr>
-      <tr><td>Distintivo</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].distintivoEmTodosOsSpins ? '1 novo em cada spin' : 'só via Joiner'}</td>`).join('')}</tr>
+      <tr><td>Distintivo</td>${Object.values(T.ATIVACAO).map(id => `<td>${B[id].distintivoEmTodosOsSpins ? '1 novo em cada spin' : 'só via Joiner'}${B[id].distintivo ? `: ${Object.keys(B[id].distintivo).map(m => `×${m}`).join(', ')}` : ''}</td>`).join('')}</tr>
       </tbody></table>
       <p><b>Retrigger:</b> ${R.scattersMinimos}+ Scatters dentro do bónus dão +${R.spinsExtra} spins (máximo ${R.spinsMaximoTotal} no total).</p>`],
     ['Compras e aposta extra', `

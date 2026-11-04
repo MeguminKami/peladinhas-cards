@@ -71,7 +71,7 @@ export function narrar(e, m, bet) {
       const what = e.kind === 'refire' ? 'voltou a disparar' : 'despertou';
       return `${e.persona} ${what}${e.party ? ' em Party Mode' : ''}${e.fusion ? '' : ` — ${POWER_NAME[e.persona]}`}`;
     }
-    case 'fusion.trigger': return `FUSÃO: ${fusionName(e.fusionId)} (${e.pair.join(' + ')})`;
+    case 'fusion.trigger': return `${e.surprise ? 'FUSÃO SURPRESA' : 'FUSÃO'}: ${fusionName(e.fusionId)} (${e.pair.join(' + ')})`;
     case 'power.reality_break': return `LCD transformou ${e.cells.length} células em ${symName(e.target)}${e.party ? ' (Party Mode: mais um tipo de baixo)' : ''}`;
     case 'power.slow_motion.start':
       if (e.kind === 'frozen') return `FROZEN REALITY: ${e.cells.length} células de ${symName(e.symbol)} ficam sticky e crescem`;

@@ -1,6 +1,6 @@
 # Matemática e regras exatas — PEACE POLICE: THE AFTERPARTY
 
-> **Versão da matemática:** ver `tabelas/versao.js` (atual: `pp-v2`). Este documento descreve **exatamente** o que o motor faz. Os valores numéricos vivem nas tabelas (`tabelas/*.js`, `npm run tabelas`). O RTP é **medido localmente** por simulação: **não é certificação.**
+> **Versão da matemática:** ver `tabelas/versao.js` (atual: `pp-v6`). Este documento descreve **exatamente** o que o motor faz. Os valores numéricos vivem nas tabelas (`tabelas/*.js`, `npm run tabelas`). O RTP é **medido localmente** por simulação: **não é certificação.**
 
 ---
 
@@ -26,10 +26,17 @@ O **contrato fixo** está em `AGENTS.md` e não se mexe para calibrar. São **pa
 ## 4. Pagamento (Cluster Pays)
 
 - Um cluster é um grupo **ortogonal** de células do tipo *t* ou wild (W, CW, DW) com **pelo menos 4 células** e **pelo menos 1 símbolo real** do tipo *t* (`clusterMinimoReais`, pp-v3): os wilds contam por inteiro; um cluster só de wilds não paga. As diagonais não ligam. Um wild pode pertencer a clusters de tipos diferentes no mesmo ciclo.
-- Prémio = `PAGAMENTOS[t][min(tamanho, 15) − 4]` × multiplicador.
+- Prémio = valor de `PAGAMENTOS[t]` na coluna do tamanho × multiplicador. As colunas (`COLUNAS`, desde pp-v4) são 4, 5, …, 14, **15–17, 18–20, 21–24 e 25**: cada coluna vale desde o seu tamanho até ao início da seguinte − 1. Sem cantos abertos, o maior cluster tem 21 células (coluna 21–24); a coluna 25 é o ecrã cheio com os 4 cantos.
+- **A tabela é design, não calibração** (decisão do dono, pp-v5): cada linha = valor base do símbolo × a mesma curva de crescimento (ver o cabeçalho de `tabelas/pagamentos.js`). O RTP e a volatilidade afinam-se com probabilidades e multiplicadores, nunca a mexer nos pagamentos.
+- **Nenhum prémio paga menos de 0,10×** (pp-v4): só o N1 num cluster de 4 paga o mínimo.
+- **Regras de forma**, validadas ao arrancar (o `src/config.js` recusa uma tabela que as quebre):
+  1. o símbolo de cima paga sempre mais do que o de baixo (N1 < … < N5 < P1 < … < P5), sem empates;
+  2. em cada linha, cada salto é ≥ ao anterior (o crescimento nunca abranda);
+  3. a diferença entre dois símbolos seguidos nunca encolhe com o tamanho;
+  4. cada coluna paga pelo menos +15 % do que a anterior.
 - **Multiplicador** = soma dos multiplicadores dos CW e DW no cluster (mínimo ×1).
 - Todos os clusters do ciclo pagam-se em simultâneo, do maior prémio para o menor. Em caso de empate: P5 → N1, depois o maior tamanho.
-- **Wild de Canto:** depois do pagamento, cada CW que participou em pelo menos um cluster nesse ciclo ganha `+incrementoPorPremio`, até `multiplicadorMax` (no bónus, `multCantoMax` do bónus).
+- **Wild de Canto:** depois do pagamento, cada CW que participou em pelo menos um cluster nesse ciclo ganha `+incrementoPorPremio`, até `multiplicadorMax` (no bónus, `+incrementoCanto` se o bónus o definir, até `multCantoMax` do bónus).
 - **HOLD wild** (pp-v3): um W que fica no tabuleiro através das cascatas e respins até entrar num prémio; quando paga, sai com o cluster. São HOLD os W do rasto do SLOW DISASTER e os W que entram num grupo sticky (WEED, FROZEN REALITY, FREEZE & FREAK) e pagam num cluster de outro tipo (no cluster do próprio grupo ficam até ao pagamento final do grupo). Um W preso num grupo também não salta com o TOTAL MAYHEM. Os CW e DW não são HOLD: ficam até ao fim do spin.
 
 ## 5. Cascatas e gravidade
@@ -60,7 +67,7 @@ Formato: **condição → alvo → efeito → limites → sem alvo**. Os valores
   - `'diferenca'`: paga a cada crescimento a diferença da tabela.
   - `'novo-tamanho'`: paga a cada crescimento o valor completo.
 - **Party:** não dissolve; paga o tamanho final no fim do spin.
-- **Exemplo** (tabela P1: 5 = 0,60×, 15+ = 26×): grupo 5 → 7 → 10 → 15 com um canto ×5 no fim = **uma** linha `26 × 5 = 130×`.
+- **Exemplo** (tabela P1 em pp-v5: 5 = 0,50×, 15–17 = 3,60×): grupo 5 → 7 → 10 → 15 com um canto ×5 no fim = **uma** linha `3,60 × 5 = 18,00×`.
 
 **MDMA — RAVE RUSH** (depois do refill)
 - Movimentos = `[movimentosBase]` + nº de Colunas de som (N4), até `[movimentosMax]` (Party: `[movimentosMaxParty]`).
@@ -84,6 +91,7 @@ Formato: **condição → alvo → efeito → limites → sem alvo**. Os valores
 ## 8. Fusões
 
 - **Regra:** cada despertar a partir do 2.º (sem Calmer ativo) funde com o parceiro desperto **de rank mais forte** cujo par ainda não fundiu. A fusão **substitui** o poder normal desse despertar.
+- **Fusão surpresa** (pp-v6): no início de cada spin do jogo base / hunt, depois da queda da grelha, com `FUSAO_SURPRESA.probabilidade[modo]` % dispara uma das 10 fusões (pesos iguais), sem cluster (`runFusion(ctx, f, null)`), fora de Party Mode. Emite `fusion.trigger` com `persona: null` e `surprise: true`. Não acorda personagens, não conta para o Chemistry e não entra no conjunto de pares fundidos do spin (os despertares continuam a gerar a sua fusão). Nunca acontece nos bónus nem em cenários forçados sem `force.surprise`. Desliga-se para análise com `--desligar surpresa`.
 - **No bónus:** os pares fundidos ficam fundidos. Quando uma personagem fundida volta a disparar, dispara a fusão de rank mais forte dos seus pares fundidos.
 
 | Fusão | O que o motor faz |
@@ -103,14 +111,14 @@ Formato: **condição → alvo → efeito → limites → sem alvo**. Os valores
 
 - Nível = nº de personagens diferentes despertas (no spin, ou no bónus inteiro).
 - **Ao chegar ao nível 3** abrem `cantosNivel3` cantos fechados (escolhidos pelo RNG). **Ao chegar ao 4** abrem todos os que faltam. Os cantos abrem com um CW de multiplicador inicial: `multiplicadorInicial` no jogo base, `multCantoInicial` no bónus.
-- **Nível 5 — TOTAL CHEMISTRY** (uma vez por spin no jogo base, uma vez por bónus): todos os CW e DW duplicam (até `multiplicadorMaxAbsoluto`), e o poder normal de cada personagem desperta re-dispara em **Party Mode**.
+- **Nível 5 — TOTAL CHEMISTRY** (uma vez por spin no jogo base, uma vez por bónus): todos os CW e DW duplicam (até `multiplicadorMaxAbsoluto`; no bónus, `multMaxAbsoluto` do bónus se existir), e o poder normal de cada personagem desperta re-dispara em **Party Mode**.
 - O **Calmer** bloqueia cantos, fusões e Total Chemistry no resto desse spin.
 
 ## 10. Peace Police
 
 - Em cada despertar (ou re-disparo), se ainda não apareceu nesse spin, aparece com `probAparecer[modo]` %. O modo é Joiner com `probJoiner[modo]` %, senão Calmer.
 - **CALMER:** todos os baixos livres são removidos (sem pagar) e há refill (as células novas contam como origem `CALMER`). Fecha a escalada nesse spin. Nunca tira prémios.
-- **JOINER:** Party Mode para o resto do spin. Deixa cair 1 **Distintivo** (DW, multiplicador sorteado em `distintivo`) junto ao maior grupo premium. Com `joinerRepetePoderes`, o poder normal de cada personagem já desperta re-dispara uma vez em Party Mode.
+- **JOINER:** Party Mode para o resto do spin. Deixa cair 1 **Distintivo** (DW, multiplicador sorteado em `distintivo`; um bónus pode ter pesos próprios em `BONUS.<id>.distintivo`) junto ao maior grupo premium. Com `joinerRepetePoderes`, o poder normal de cada personagem já desperta re-dispara uma vez em Party Mode.
 - **POLICE PARTY:** o Joiner entra no início de **todos** os spins (Party Mode e 1 Distintivo novo por spin). Não há outras aparições.
 
 ## 11. Bónus
@@ -118,10 +126,12 @@ Formato: **condição → alvo → efeito → limites → sem alvo**. Os valores
 | | AFTERPARTY (3 S) | VIP (4 S) | POLICE PARTY (5 S) |
 |---|---|---|---|
 | Spins | 10 | 10 | 10 |
+| Volatilidade (pp-v5) | média | alta | muito alta |
 | Personagens no início | 0 | 1 (RNG) | 2 (RNG), com o par já fundido |
-| Cantos no início | 0 | 2 (RNG) | 4 |
+| Cantos no início | 4 | 3 (RNG) | 0 (abrem com o Chemistry) |
 | CW entre spins | voltam ao inicial | persistem | persistem |
-| CW inicial / máx. | ver `tabelas/bonus.js` | | |
+| CW inicial / incremento / máx. | ×1 / +1 / ×2 | ×2 / +1 / ×10 (×20 com Total) | ×1 / +2 / ×50 |
+| Distintivo | pesos gerais | pesos gerais | pesos próprios, até ×50 |
 | Joiner | aleatório | aleatório | todos os spins |
 
 - Comum: as personagens ficam despertas e as fusões persistem. Os cantos abertos ficam abertos. Os grupos sticky, os wilds pegajosos, os DW e o Party Mode reiniciam em cada spin (o DW do POLICE PARTY é novo em cada spin).
@@ -160,29 +170,48 @@ Cada célula guarda a origem: `natural`, o poder ou fusão que a criou ou mexeu,
 
 ---
 
-## 16. RTP medido (`pp-v3`)
+## 16. RTP e volatilidade medidos (`pp-v6`)
 
-Validação com seeds diferentes das de calibração: «validacao-pp-v3» (3 M spins de base e de hunt, 100 000 por compra) e «validacao-pp-v3-police» / «-police-b» (100 000 compras POLICE PARTY cada). Para repetir: `npm run sim -- --seed validacao-pp-v3 --spins 3000000 --compras 100000`. Medição local, não certificação: o dono confirma com as suas corridas.
+Validação com uma seed diferente das de calibração: «validacao-pp-v6-c» (16 M spins de base e de hunt, 200 000 por compra). Para repetir: `npm run sim -- --seed validacao-pp-v6-c --spins 16000000 --compras 200000`. Calibração: «calib-v6a/b», «validacao-pp-v6» e «validacao-pp-v6-b» (estas duas passaram a calibração quando o peso do N1 voltou a mexer). Alvo do dono: **98 %**. Medição local, não certificação: o dono confirma com as suas corridas.
 
-| Modo | Custo | RTP | σ | Com prémio | Valor médio do bónus |
-|---|---|---|---|---|---|
-| Jogo base | 1× | **98,39 % ± 1,86** (decomposto) · 99,36 % ± 2,54 (direto) | 22,5 | 45,2 % | — |
-| Aposta extra MAIS SCATTERS | 1,4× | **96,06 % ± 1,59** (decomposto) · 96,34 % ± 2,31 (direto) | 20,4 | 45,4 % | — |
-| Compra AFTERPARTY | 53× | **97,20 % ± 2,04** | 3,3 | 99,9 % | 51,5× |
-| Compra VIP AFTERPARTY | 128× | **97,23 % ± 1,22** | 2,0 | 100 % | 124,5× (×2,4) |
-| Compra POLICE PARTY | 687× | **≈ 97,7 % ± 0,4** (média de 300 000 compras; valor médio ≈ 671×) | 0,9 | 100 % | 671× (×13) |
+| Modo | Custo | RTP | Valor médio | Mediana | p90 | Maior visto |
+|---|---|---|---|---|---|---|
+| Jogo base | 1× | **97,07 % ± 0,89** (decomposto) · 96,86 % ± 1,11 (direto) | — | 0× | — | 9 954× |
+| Aposta extra MAIS SCATTERS | 2× | **98,39 % ± 0,66** (decomposto) · 99,08 % ± 1,08 (direto) | — | 0× | — | 16 660× |
+| Compra AFTERPARTY | 160× | **97,59 % ± 0,65** | 156,1× | 37× | 490× | 2 560× |
+| Compra VIP AFTERPARTY | 336× | **97,67 % ± 0,86** | 328,2× | 39× | 1 181× | 8 249× |
+| Compra POLICE PARTY | 830× | **98,20 % ± 1,00** | 815,1× | 16× | 3 056× | 25 000× (3×) |
 
-**Jogo base sem bónus:** 62,7 %. **Bónus:** ~35,7 %. Maior prémio visto: 5 452× (nenhuma jogada bateu nos 10 000× nestas amostras).
+Todos os modos ficam a menos de 1 ponto de 98 %, com 98 % dentro do intervalo de confiança.
 
-| Bónus | Frequência no base | Frequência no hunt |
+**Fusão surpresa (3 %):** cada uma vale em média cerca de 5× a aposta (arma respins, deixa rastos de wilds, cria grupos sticky e ajuda a cair Scatters). Sem compensação, o jogo base passava de 97 % para ~115 %. Compensou-se com o Scatter do jogo base mais raro (S 20 → 16).
+
+**Jogo base sem bónus:** 73,2 % (era 60 % em pp-v5): a fusão surpresa passa valor dos bónus para o jogo base. No MAIS SCATTERS, 34,2 % do custo.
+
+| Bónus | Frequência no base | Frequência no MAIS SCATTERS |
 |---|---|---|
-| AFTERPARTY | 1 em 246 | 1 em 124 |
-| VIP AFTERPARTY | 1 em 2 052 | 1 em 873 |
-| POLICE PARTY | 1 em ~7 600 | 1 em ~3 300 |
+| AFTERPARTY | 1 em 831 | 1 em 177 |
+| VIP AFTERPARTY | 1 em 8 904 | 1 em 1 355 |
+| POLICE PARTY | 1 em ~57 600 | 1 em ~5 100 |
 
-**Calibração de pp-v3** (os wilds a contar por inteiro levaram o RTP a ~380 %; quase todo vinha de clusters grandes multiplicados pelos cantos): a tabela de pagamentos foi comprimida mais nos tamanhos grandes do que nos pequenos (×0,645 nos clusters de 4 até ×0,188 nos de 15+); aposta extra 1,5× → 1,4× e Scatter do hunt 36 → 35; preços 69 / 216 / 820 → 53 / 128 / 687. Os cantos, o Distintivo e os poderes não mudaram.
+**Volatilidade por bónus** (não muda com a fusão surpresa, que não existe nos bónus):
 
-**Para afinar:** a aposta extra ficou um pouco abaixo (96,1 %) e o jogo base um pouco acima (98,4 %), ambos com o alvo dentro do intervalo. A volatilidade baixou (σ do base 31 → 22,5).
+| | AFTERPARTY (média) | VIP (alta) | POLICE PARTY (muito alta) |
+|---|---|---|---|
+| Desvio-padrão ÷ preço | 1,47 | 1,96 | 2,28 |
+| Compras abaixo de metade do preço | 61,7 % | 72,2 % | 75,4 % |
+| Compras acima do preço | 29,5 % | 22,3 % | 21,4 % |
+| Ganho máximo (25 000×) | nunca visto | nunca visto | 1 em ~40 000 compras (todas as corridas) |
+
+O que mais mexe na volatilidade é **quantos cantos começam abertos**, não os tetos: subir os multiplicadores aumenta o valor do bónus, mas o preço sobe na mesma proporção. Por isso a AFTERPARTY começa com os 4 cantos (paga com regularidade) e a POLICE PARTY começa com eles fechados (o valor depende de os abrir e de os fazer crescer até ×50).
+
+**O que mudou em pp-v6** (desde pp-v5):
+- **Fusão surpresa:** 3 % dos spins do jogo base e do MAIS SCATTERS (§8).
+- **Scatter do jogo base:** S 20 → 16 (N1 430, igual).
+- **MAIS SCATTERS:** custo 1,4× → 2×; Scatter 26 → 29 (N1 415 → 369). O AFTERPARTY fica ~4,7× mais frequente do que no jogo base.
+- **Preços das compras** para o alvo de 98 %: 161 / 336 / 836 → 160 / 336 / 830.
+
+**pp-v5** (tabela de pagamentos fixa de design, ganho máximo 25 000×, volatilidade por bónus): AFTERPARTY 4 cantos ×1 (máx. ×2); VIP 3 cantos persistentes (máx. ×10, ×20 com Total); POLICE PARTY cantos fechados, nascem ×1, +2 por prémio, até ×50, Distintivo `{×2: 40, ×3: 30, ×5: 18, ×10: 8, ×25: 3, ×50: 1}`.
 
 ## 17. Decisões tomadas na Fase 1 que precisam da aprovação do dono
 
@@ -211,4 +240,7 @@ Estas decisões não estavam no GDD ou mudam algo do GDD. **Ainda por aprovar: D
 | pp-v1 | 03-11-2026 | Primeira versão completa: motor, tabelas iniciais, calibração inicial |
 | pp-v2 | 03-11-2026 | Decisões do dono sobre D1–D13: vários Scatters por coluna; grupos sticky pagam o **tamanho final** uma vez; pagamentos +13 %; preços 71× / 220× / 820×; Scatter base 26 / hunt 36 / bónus 12 |
 | pp-v2 (sem mudança de versão) | 03-11-2026 | Fase 2: eventos com mais informação para a interface — `grid.drop.mult`, `power.rave_rush.move.symbol`, `power.slow_motion.grow.symbol` e `power.slow_motion.start` com `kind: 'frozen'` (FROZEN REALITY). **Os resultados não mudam**: mesmas grelhas, prémios e estado do gerador em 34 500 jogadas comparadas (todos os modos); por isso a versão e o RTP medido mantêm-se |
+| pp-v6 | 04-11-2026 | Decisões do dono: fusão surpresa em 3 % dos spins do jogo base e do MAIS SCATTERS; alvo de RTP 98 %; Scatter base 16; MAIS SCATTERS a 2× com Scatter 29; preços 160× / 336× / 830× |
+| pp-v5 | 04-11-2026 | Decisões do dono: tabela de pagamentos fixa de design (4 regras de forma); ganho máximo 25 000×; volatilidade por bónus (AFTERPARTY média, VIP alta, POLICE PARTY muito alta); Scatter base 20 / hunt 26; preços 161× / 336× / 836× |
+| pp-v4 | 04-11-2026 | Decisões do dono: nenhum prémio abaixo de 0,10×; ecrãs cheios de wilds mais raros e mais bem pagos (colunas 18–20, 21–24 e 25 na tabela; menos wilds do ALCOOL, SLOW DISASTER e TOTAL MAYHEM); tabela +2 %; preços 61,5× / 160× / 864× |
 | pp-v3 | 03-11-2026 | Decisão do dono: os wilds contam por inteiro (1 símbolo real chega); HOLD wilds saem quando pagam; W preso num grupo não salta no TOTAL MAYHEM (corrige um caso que deixava símbolos estranhos num grupo sticky). Pagamentos comprimidos nos tamanhos grandes, aposta extra 1,4× (Scatter 35), preços 53× / 128× / 687× |

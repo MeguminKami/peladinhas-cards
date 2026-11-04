@@ -31,8 +31,8 @@ export const PODERES = {
   },
   // ALCOOL — DRUNK WALK: rasto diagonal de wilds a partir de um Copo de shot (N2).
   ALCOOL: {
-    passosBase: 3,              // passos = base + nº de Copos de shot (N2)
-    passosMax: 6,
+    passosBase: 1,              // passos = base + nº de Copos de shot (N2). pp-v4: 3 -> 2
+    passosMax: 4,               // pp-v4: 6 -> 5 (ecrãs cheios de wilds mais raros)
     rastosParty: 2,
   },
   // COPIUM — ONE MORE CHANCE: no fim da sequência, guarda o maior grupo e faz respin.
@@ -56,9 +56,9 @@ export const FUSOES = [
   // rank id                    par                    parâmetros
   { rank: 1,  id: 'NEVER_ENDING_DREAM', par: ['WEED', 'COPIUM'], maxRespins: 5 },
   { rank: 2,  id: 'ONE_MORE_ROUND',     par: ['ALCOOL', 'COPIUM'], maxRespinsExtra: 3 },
-  { rank: 3,  id: 'SLOW_DISASTER',      par: ['WEED', 'ALCOOL'], passosExtraMax: 4 },
+  { rank: 3,  id: 'SLOW_DISASTER',      par: ['WEED', 'ALCOOL'], passosExtraMax: 2 },
   { rank: 4,  id: 'RAVE_DIMENSION',     par: ['LCD', 'MDMA'] },
-  { rank: 5,  id: 'TOTAL_MAYHEM',       par: ['MDMA', 'ALCOOL'], saltosMax: 4 },
+  { rank: 5,  id: 'TOTAL_MAYHEM',       par: ['MDMA', 'ALCOOL'], saltosMax: 2 },
   { rank: 6,  id: 'FROZEN_REALITY',     par: ['LCD', 'WEED'] },
   { rank: 7,  id: 'FREEZE_AND_FREAK',   par: ['WEED', 'MDMA'], puxoesMax: 5 },
   { rank: 8,  id: 'DREAM_GLITCH',       par: ['LCD', 'COPIUM'] },
@@ -82,4 +82,12 @@ export const CANTOS = {
   incrementoPorPremio: 1,       // +1 por cada ciclo em que participa num prémio
   multiplicadorMax: 5,
   multiplicadorMaxAbsoluto: 10, // teto após a duplicação do Total Chemistry
+};
+
+// --- FUSÃO SURPRESA (pp-v6, decisão do dono: «dar ânimo ao jogo base»)
+// Em cada spin do jogo base / MAIS SCATTERS, com esta probabilidade (%), dispara UMA das 10 fusões,
+// sorteada com pesos iguais, logo depois de cair a grelha. Não acorda personagens (não conta para o
+// Chemistry) e nunca acontece nos bónus.
+export const FUSAO_SURPRESA = {
+  probabilidade: { base: 3, hunt: 3 },
 };

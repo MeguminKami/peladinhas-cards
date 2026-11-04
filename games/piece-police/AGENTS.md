@@ -26,8 +26,9 @@ Regras fixas do dono do jogo. **Prevalecem sobre tudo.** Lê também `GUIA-DO-PR
 13. As probabilidades nunca dependem do saldo, das perdas ou do histórico do jogador.
 14. O resultado nasce dos símbolos. É proibido sortear o prémio e depois fabricar a grelha.
 15. Créditos fictícios. Português de Portugal. Sem objetos de consumo das substâncias.
-16. RTP 97–98 % em cada modo (base, hunt e cada compra). Volatilidade alta. Ganho máximo 10 000× por jogada completa.
-17. Compras dos 3 bónus. Aposta extra «MAIS SCATTERS» (~1,5×). Sem wilds naturais. Integração com o casino Peladinhas.
+16. RTP 97–98 % em cada modo (base, hunt e cada compra), com alvo de 98 % (decisão do dono, 04-11-2026). Volatilidade alta no jogo base; nos bónus, AFTERPARTY média, VIP alta e POLICE PARTY muito alta (decisão do dono, 04-11-2026). Ganho máximo 25 000× por jogada completa.
+17. Compras dos 3 bónus. Aposta extra «MAIS SCATTERS» (2×, decisão do dono, 04-11-2026). Sem wilds naturais. Integração com o casino Peladinhas.
+18. A tabela de pagamentos é design: valor base × curva comum, com as 4 regras de forma de `docs/matematica.md` §4. Calibra-se com probabilidades e multiplicadores, não com a tabela.
 
 ## Regras técnicas
 

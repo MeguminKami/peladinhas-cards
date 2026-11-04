@@ -73,7 +73,7 @@ A Fase 1 copia esta lista para o `AGENTS.md`.
 15. Créditos fictícios. Português de Portugal.
 16. Não se mostram objetos de consumo, preparação nem dosagens. As personagens são caricaturas.
 17. **RTP 97–98 %** em cada modo (base, aposta extra e cada compra). **Volatilidade alta.**
-18. **Ganho máximo 10 000×** a aposta por jogada completa, bónus incluído.
+18. **Ganho máximo 25 000×** a aposta por jogada completa, bónus incluído (pp-v5; era 10 000×).
 19. **Compras dos 3 bónus** (AFTERPARTY, VIP, POLICE PARTY), com preço calculado a partir do valor medido.
 20. **Aposta extra «mais Scatters»:** custo 1,4× a aposta base (provisório; era 1,5×), com mais Scatters a cair. Os prémios são calculados sobre a aposta base.
 21. Ordem de raridade: P1 WEED · P2 ALCOOL · P3 COPIUM · P4 MDMA · **P5 LCD** (a mais rara e a mais forte).
@@ -110,6 +110,9 @@ Cada mudança de design entra aqui primeiro e depois no GDD. Formato: data — d
 | 03-11-2026 | Fase 2: os eventos do motor ganham informação só para a interface (`grid.drop.mult`, `symbol` nos movimentos do MDMA e no crescimento dos grupos, início dos grupos do FROZEN REALITY). Resultados iguais, sem mudar `MATH_VERSION` | Aprovado pelo dono: a interface não deduz nada |
 | 03-11-2026 | **Os wilds contam por inteiro** nos clusters (basta 1 símbolo real; substitui o «mínimo de 3 reais» do D1). Os wilds que ficam presos chamam-se **HOLD wilds**: ficam até entrarem num prémio e saem com o cluster. Recalibrado em `pp-v3` (pagamentos comprimidos nos tamanhos grandes, aposta extra 1,4×, preços 53 / 128 / 687) | Decisão do dono: «o cluster paga com wilds, é para isso que o WILD serve» (num spin com o tabuleiro cheio de wilds e 2 ALCOOL, pp-v2 pagava 0) |
 | 03-11-2026 | Revisão da GUI de teste: no bónus a coluna da esquerda passa a ser um **registo do free spin** (limpa em cada spin: prémios com o símbolo e o cálculo «3,40 × 4 = 13,60», despertares, fusões, Peace Police, Distintivo, cantos) com o contador e o ganho do bónus por cima; o MAIS SCATTERS e as compras desaparecem no bónus; as cartas de Chemistry passam para a direita do palco com a dica do próximo nível por baixo; Party Mode = néon à volta do palco (ligado/desligado); saem o painel Aposta/Custo/Ganho, a faixa de narração e «Créditos fictícios · versão» do topo; a **barra do kit ganha APOSTA** à direita do GANHO (vale para todas as slots) | Pedido do dono |
+| 04-11-2026 | **Nenhum prémio abaixo de 0,10×** e **ecrãs cheios de wilds mais raros e mais bem pagos**: a tabela ganha as colunas 18–20, 21–24 e 25 (×1,5 / ×2,1 / ×4,2 o valor de 15–17); o ALCOOL, o SLOW DISASTER e o TOTAL MAYHEM criam menos wilds. Recalibrado em `pp-v4` (preços 61,5 / 160 / 864) | Decisão do dono: «nada pode pagar menos que 0,1×»; «com um full screen ter 136× não sei como se tem um 1000×» |
+| 04-11-2026 | **Tabela de pagamentos fixa de design** (valor base × curva comum; 4 regras validadas ao arrancar: o símbolo de cima paga sempre mais, o crescimento nunca abranda, a diferença entre símbolos nunca encolhe, +15 % mínimo por coluna). **Ganho máximo 25 000×.** **Volatilidade por bónus:** AFTERPARTY média (4 cantos ×1, teto ×2), VIP alta (3 cantos persistentes, teto ×10), POLICE PARTY muito alta (cantos fechados, ×1 +2 por prémio até ×50, Distintivo até ×50). RTP afinado pelo Scatter (base 20, hunt 26) e preços 161 / 336 / 836. `pp-v5` | Decisões do dono: «nunca uma ultrapassagem de pagamento»; «prémios mais raros mas bem melhores»; «cada bónus com a sua volatilidade»; opção A (trocar o desenho dos bónus) |
+| 04-11-2026 | **Fusão surpresa:** em 3 % dos spins do jogo base e do MAIS SCATTERS dispara uma fusão ao acaso, sem acordar personagens. **Alvo de RTP 98 %.** Para compensar, o Scatter do jogo base fica mais raro (20 → 16, N1 430); o **MAIS SCATTERS passa a custar 2×** com o Scatter mais comum (26 → 29). Compras 160 / 336 / 830. `pp-v6` | Decisões do dono: «dar ânimo ao jogo base»; «mete 3 %, os scatters ligeiramente mais raros, aumenta o preço do MAIS SCATTERS e torna aí os scatters mais comuns»; «98 % RTP é o aim» |
 | 03-11-2026 | Fase 2 só dentro do jogo: `HostSession` e carteira simulada feitos; a ligação ao casino (ficheiros do site) fica para depois | Decisão do dono |
 
 ---
@@ -157,7 +160,7 @@ VOLATILIDADE PRETENDIDA: alta
 FREQUÊNCIAS DESEJADAS (provisórias): pelo menos 1 despertar em ~1 de 4 spins; fusão ~1 em 15;
 Peace Police ~1 em 40; AFTERPARTY ~1 em 200; VIP ~1 em 700; POLICE PARTY ~1 em 2500;
 valor médio dos bónus a crescer ~x1 -> x3 -> x10
-GANHO MÁXIMO: 10 000x a aposta por jogada completa, bónus incluído
+GANHO MÁXIMO: 25 000x a aposta por jogada completa, bónus incluído
 O QUE É FIXO: GUIA-DO-PROJETO.md §4 (contrato fixo)
 O QUE PODE SER AJUSTADO: pesos, tabela de pagamentos, p das Raspadinhas, p_pp e % Calmer/Joiner por modo,
 máximos dos poderes, ranking das fusões, CW máx., intervalo do DW, retrigger, custo/efeito da aposta extra,
@@ -187,6 +190,8 @@ poder, cada fusão, Calmer, Joiner, Total Chemistry e cada bónus
 ```
 
 ### 7.3 Input da Fase 3 (`guides/3-VISUAIS-E-ANIMACOES.md`)
+
+> Desenvolvido em `docs/fase3/` (04-11-2026): plano com 3 agentes e prompts, perfil do jogo e inventário da arte. Referências do dono em `INSPIRATION/`.
 
 ```text
 PASTA DO JOGO: games/piece-police

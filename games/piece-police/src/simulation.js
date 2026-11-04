@@ -2,7 +2,7 @@
 import { playRound } from './engine.js';
 import { config, TAGS, PERSONAS } from './config.js';
 
-export const HIST_EDGES = [0, 0.5, 1, 2, 5, 10, 20, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+export const HIST_EDGES = [0, 0.5, 1, 2, 5, 10, 20, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000];
 export const PCTS = [50, 75, 90, 95, 99, 99.9, 99.99];
 const BATCHES = 20;
 const BONUS_IDS = Object.keys(config.bonus);
@@ -214,6 +214,12 @@ export class ModeStats {
     return {
       mode: this.mode, name: config.modes[this.mode].nome, rounds: n, n, costX: cost,
       sdX: Math.sqrt(Math.max(0, this.sumR2 * cost * cost / n - mean * mean)),
+      // Volatilidade (pp-v5): desvio-padrão ÷ custo, % de rondas que devolvem menos de metade do custo, ganho máximo
+      volatility: {
+        sdPerCost: Math.sqrt(Math.max(0, this.sumR2 * cost * cost / n - mean * mean)) / cost,
+        underHalfCost: lowerBound(sorted, cost / 2) / n,
+        maxWinOneIn: this.capHits ? n / this.capHits : Infinity,
+      },
       rtp, ci, ciBatch, sigma,
       hitFreq: this.hits / n, netWinFreq: this.netWins / n,
       avgWinX: mean, avgHitX: this.hits ? this.sumWin / this.hits : 0,

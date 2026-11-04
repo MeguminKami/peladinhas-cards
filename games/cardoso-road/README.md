@@ -88,6 +88,18 @@ O contexto de voz, os efeitos curtos e a faixa musical selecionada são preparad
 
 `npm.cmd run test:input` verifica o clique com carteira integrada, fixtures locais e áudio ligado, em mobile, com CPU normal e desacelerada 6×. Inclui confirmação atrasada de 600 ms, clique repetido, saldo não confirmado, levantamento, rejeição simulada da ação e reutilização do contexto de áudio. `npm.cmd run test:cache` verifica reabertura sem downloads dos recursos, áudio parcial, fundo carregado, ausência de dados privados na cache e percurso offline em 1440 e 390 px. Estes testes não consultam Firebase nem confirmam desempenho no aparelho do utilizador.
 
+## Desempenho da cena
+
+[A cena](./scene.mjs) é só o anfitrião; o desenho vive no [núcleo](./scene-core.mjs), sem DOM, e corre num [worker](./scene-worker.mjs) com `OffscreenCanvas`. Sem suporte, ou se o worker falhar ao arrancar, corre na página. Assim os botões e a confirmação da aposta não esperam pela pintura, mesmo quando o canvas é rasterizado pelo processador.
+
+- **Camadas:** o fundo do ginásio, o nevoeiro e o brilho da dificuldade ficam num canvas próprio, pintado só quando mudam o tamanho, a dificuldade ou a qualidade. O canvas transparente por cima tem apenas o que se mexe.
+- **Redesenho:** a 60 fps só durante deslocação, confronto, celebração ou efeitos. Em repouso desenha a 20 fps (10 no modo leve) e, com movimento reduzido, só quando o estado muda.
+- **Qualidade automática:** se a cadência média passar de 26 ms durante a animação, desce um nível. O nível 1 reduz resolução e partículas; o nível 2 (modo leve) também tira brilhos e raios e limita a 30 fps. Só volta a subir depois de 20 s estáveis. Um canvas sem GPU (WebGL por software ou ausente) arranca no modo leve. A opção «Modo desempenho» nas definições fixa o modo leve.
+- **Imagens:** [as imagens](./scene-assets.mjs) são descodificadas uma vez para `ImageBitmap`. Os sprites são reamostrados uma vez por escalão de tamanho, em vez de reduzir a folha completa a cada frame.
+- **Testes que leem píxeis:** gravam `cardoso-road-render=page` no `localStorage` para usar o desenho na página. Os píxeis de um canvas transferido para o worker não podem ser lidos pela página.
+
+Medição local de 04/11/2026 (Edge headless, 1920×1080 a 125 %, CPU 4× mais lenta, sem GPU): antes, 4,9 fps na página, 200–315 ms do clique à resposta e 12,4 s para três passos. Depois, 57 fps na página, cena a 29–30 fps, clique em 28–43 ms e 2,3 s. Com GPU mantém a qualidade máxima a ~59 fps.
+
 ## Pipeline de execução
 
 [O controlador da pipeline](./action-pipeline.mjs) define a ordem das ações. No arranque, o jogo prepara os gráficos e a fonte, depois o áudio, e só então disponibiliza os controlos.
@@ -97,7 +109,7 @@ O contexto de voz, os efeitos curtos e a faixa musical selecionada são preparad
 3. **Apresentação:** aplica o estado confirmado, atualiza os controlos e inicia o evento visual correspondente; deixa o browser pintar.
 4. **Animação:** aguarda que a cena desenhe a deslocação e o confronto (420 + 300 ms de relógio da cena; imediato com movimento reduzido). O relógio da cena só avança com frames desenhados (no máximo 40 ms por frame): num PC lento a animação fica mais lenta, nunca é saltada, e a lógica não avança à frente dela. Outro avanço não interrompe esta etapa.
 5. **Som:** inicia o feedback do resultado, depois da animação. A duração da gravação não bloqueia a ação seguinte; uma nova ação substitui a fala anterior.
-6. **Fecho:** numa derrota, mantém os controlos bloqueados até a pose de derrota ficar visível mais 400 ms; só então o ginásio volta ao repouso.
+6. **Fecho:** numa derrota, mantém os controlos bloqueados até a pose de derrota ficar visível mais 400 ms e o ginásio em repouso estar desenhado.
 7. **Disponível:** termina a pipeline e volta a aceitar ações.
 
 Não existe uma fila de apostas acumuladas: cliques durante uma operação não são executados mais tarde. O CASH OUT é a exceção de prioridade: depois de confirmado um passo, pode cancelar a apresentação desse passo e iniciar o levantamento; nunca ultrapassa uma operação financeira ainda pendente. O som antigo é descartado. Uma falha impede as etapas de apresentação/som e devolve os controlos, preservando pedidos financeiros ambíguos para recuperação.

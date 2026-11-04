@@ -181,6 +181,8 @@ console.log(table('RESUMO', [
   { h: 'Modo', a: 'l' }, { h: 'Rondas' }, { h: 'Custo' }, { h: 'RTP direto (IC 95 %)' }, { h: 'RTP decomposto' },
   { h: 'σ' }, { h: 'Com prémio' }, { h: 'Ganho líquido' }, { h: '× máx.' }, { h: '× mín.' }, { h: 'p99' }, { h: 'Max win' },
 ], summaryRows));
+const volRows = Object.values(results).map((r) => [r.name, x(r.costX, 1), pt(r.volatility.sdPerCost, 2), pct(r.volatility.underHalfCost, 1), pct(r.netWinFreq, 1), Number.isFinite(r.volatility.maxWinOneIn) ? `1 em ${int(r.volatility.maxWinOneIn)}` : `0 em ${int(r.rounds)}`]);
+console.log(table('VOLATILIDADE', [{ h: 'Modo', a: 'l' }, { h: 'Custo' }, { h: 'σ ÷ custo' }, { h: '< metade do custo' }, { h: 'Acima do custo' }, { h: `Ganho máximo (${int(config.maxWinMils / 1000)}×)` }], volRows));
 console.log(c.dim('RTP decomposto = jogo base sem bónus + Σ (frequência do bónus × valor médio medido nas compras). Mais preciso com a mesma amostra.'));
 
 function printMode(r) {

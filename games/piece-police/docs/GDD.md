@@ -142,7 +142,7 @@ Formato: **condição → sorteio → alvo → efeito → duração → limites 
 
 ### ALCOOL — DRUNK WALK *(rasto de wilds)*
 - **Condição:** ALCOOL desperta.
-- **Sorteio:** começa num **Copo de shot (N2)** aleatório (se não houver, numa célula normal aleatória). Número de passos = 2 + número de Copos de shot (máximo 5).
+- **Sorteio:** começa num **Copo de shot (N2)** aleatório (se não houver, numa célula normal aleatória). Número de passos = 1 + número de Copos de shot (máximo 4; valores de calibração em `tabelas/poderes.js`, pp-v4).
 - **Efeito:** a personagem cambaleia **sempre em diagonal**, e o RNG escolhe a direção entre as válidas. Cada célula pisada torna-se **W**. É o único elemento do jogo que se move em diagonal.
 - **Limites:** não pisa S, CW, DW nem sticky. Para na borda ou num canto fechado. Os W não são sticky.
 - **Party Mode:** dois rastos em simultâneo.
@@ -170,6 +170,7 @@ Formato: **condição → sorteio → alvo → efeito → duração → limites 
 - **Cada despertar a partir do segundo gera exatamente uma fusão**: entre a personagem que acabou de despertar e o parceiro já desperto com o **ranking de fusão mais alto**.
 - A fusão **substitui** o poder normal dessa personagem nesse momento. Não é uma sequência de dois poderes: é um efeito novo.
 - Cada par funde no máximo uma vez por spin (no jogo base).
+- **Fusão surpresa** (decisão do dono, pp-v6): em **3 %** dos spins do jogo base e do MAIS SCATTERS, dispara uma das 10 fusões ao acaso logo depois de cair a grelha. Não acorda personagens nem conta para o Chemistry, e não ocupa a fusão dos despertares desse spin. Não existe nos bónus. Serve para dar ânimo ao jogo base entre bónus.
 
 ## As dez fusões
 | # rank (provisório) | Par | Fusão | Efeito |
@@ -248,18 +249,19 @@ Não é símbolo pagante. Aparece fora da grelha e entra quando há um evento.
 ## Os três bónus
 | | 3 S — **AFTERPARTY** | 4 S — **VIP AFTERPARTY** | 5 S — **POLICE PARTY** |
 |---|---|---|---|
+| Volatilidade (decisão do dono, pp-v5) | **média** | **alta** | **muito alta** |
 | Personagens despertas no início | 0 | 1 (RNG) | 2 (RNG) — fusão já ativa |
-| Cantos no início | fechados | 2 abertos | 4 abertos |
-| CW entre spins | voltam a ×2 em cada spin | **persistem** | **persistem e começam em ×3** |
+| Cantos no início | **4 abertos** | 3 abertos | **fechados** (abrem com o Chemistry) |
+| CW | nascem ×1, voltam a ×1 em cada spin, máximo ×2 | **persistem**, máximo ×10 | **persistem**, nascem ×1, +2 por prémio, máximo ×50 |
 | Peace Police | Calmer ou Joiner (como na base) | Joiner mais provável | **Joiner em todos os spins** |
-| Distintivo | só via Joiner | só via Joiner | 1 novo em cada spin |
-| Sensação | a festa começa | já há ambiente | o polícia entra na festa desde o início |
+| Distintivo | só via Joiner | só via Joiner | 1 novo em cada spin, até ×50 |
+| Sensação | a festa começa: paga muitas vezes um valor razoável | já há ambiente: às vezes 1 000×+ | o polícia entra na festa: muitas vezes pouco, mas é onde mora o ganho máximo |
 
-**Objetivo de calibração:** o valor médio de cada bónus tem de subir de forma clara de nível para nível (ordem de grandeza provisória ×1 → ×3 → ×10 do bónus de 3 S). A Fase 1 mede e ajusta.
+**Objetivo de calibração:** o valor de cada bónus sobe de nível para nível, e a volatilidade também (medida no simulador: desvio-padrão ÷ preço, compras abaixo de metade do preço, frequência do ganho máximo).
 
 ## Compras de bónus e aposta extra
 - **Compras:** os três bónus podem ser comprados. O preço é calculado a partir do valor medido de cada bónus e do RTP alvo (ordem de grandeza provisória: ~100× / ~300× / ~1000×). Uma compra garante os Scatters correspondentes no spin de entrada.
-- **Aposta extra «MAIS SCATTERS»:** custo de ~1,5× a aposta base (provisório). Caem mais Scatters, e o bónus natural fica ~2× mais frequente (provisório). Os prémios são calculados sobre a aposta base. Não acumula com as compras.
+- **Aposta extra «MAIS SCATTERS»:** custo de **2×** a aposta base (decisão do dono, pp-v6; era 1,4×). Caem muito mais Scatters: o bónus natural fica ~4× mais frequente. Os prémios são calculados sobre a aposta base. Não acumula com as compras.
 - **RTP 97–98 %** em cada modo: base, aposta extra e cada compra.
 
 ## Encenação
@@ -292,7 +294,7 @@ SPIN
 
 - **Ordem de desempate** quando há vários despertares no mesmo ciclo: pela ordem de pagamento dos clusters (do maior para o menor; em caso de empate, P5 → P1).
 - **Anti-loop:** cada efeito tem um máximo explícito (ver fichas). O motor tem também um limite de segurança de subeventos por spin, com teste. **O limite nunca corta prémios já determinados.**
-- **Ganho máximo:** limite por jogada completa, bónus incluído: **10 000×**. A ordem é: prémio bruto → multiplicadores → arredondamento → limite.
+- **Ganho máximo:** limite por jogada completa, bónus incluído: **25 000×** (decisão do dono, pp-v5; antes 10 000×). A ordem é: prémio bruto → multiplicadores → arredondamento → limite.
 
 ---
 

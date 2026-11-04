@@ -18,7 +18,6 @@ export const JOGO = {
                          // os wilds contam por inteiro; basta 1 símbolo real para dar o tipo ao cluster
                          // (um cluster só de wilds não paga). Os HOLD wilds saem quando pagam (motor).
   despertarMinimo: 5,    // tamanho mínimo de cluster premium para despertar a personagem
-  tamanhoMaximoTabela: 15, // a tabela de pagamentos vai de 4 a 15+ (15 ou mais paga o valor de 15)
 
   // --- Scatter
   scatterMaximoPorColuna: 5, // vários Scatters na mesma coluna (5 = sem limite prático)
@@ -27,7 +26,7 @@ export const JOGO = {
   apostas: [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
 
   // --- Ganho máximo por jogada completa (bónus incluído), em × aposta base
-  ganhoMaximo: 10000,
+  ganhoMaximo: 25000,
 
   // --- Limites de segurança (anti-loop). Nunca cortam prémios já determinados:
   //     se forem atingidos, o motor termina a resolução em segurança.
@@ -37,11 +36,11 @@ export const JOGO = {
 // --- Modos de jogo e custos (× aposta base). Os prémios são SEMPRE sobre a aposta base.
 export const MODOS = {
   base: { nome: 'Jogo base', custo: 1, pesos: 'base' },
-  hunt: { nome: 'Aposta extra MAIS SCATTERS', custo: 1.4, pesos: 'hunt' },
+  hunt: { nome: 'Aposta extra MAIS SCATTERS', custo: 2, pesos: 'hunt' },
   // Compras: entram diretamente no bónus. Preço = valor medido do bónus / RTP alvo.
-  'buy-afterparty': { nome: 'Compra AFTERPARTY', custo: 53, bonus: 'afterparty' },
-  'buy-vip': { nome: 'Compra VIP AFTERPARTY', custo: 128, bonus: 'vip' },
-  'buy-police': { nome: 'Compra POLICE PARTY', custo: 687, bonus: 'police' },
+  'buy-afterparty': { nome: 'Compra AFTERPARTY', custo: 160, bonus: 'afterparty' },
+  'buy-vip': { nome: 'Compra VIP AFTERPARTY', custo: 336, bonus: 'vip' },
+  'buy-police': { nome: 'Compra POLICE PARTY', custo: 830, bonus: 'police' },
 };
 
 // --- Alvo de RTP (só informativo: o motor nunca o usa para decidir resultados)

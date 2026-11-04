@@ -38,6 +38,7 @@ let state = fresh(),
     musicVolume: 0.3,
     voices: true,
     volume: 0.3,
+    performance: false,
     reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
 try {
@@ -70,7 +71,7 @@ const scene = createScene($("#world"), () => ({
   reduced: settings.reduced,
   music: settings.music,
   beatAt: audio.beatAt,
-}));
+}), { lightMode: () => settings.performance });
 let cacheWarmTimer;
 function warmCacheWhenIdle() {
   clearTimeout(cacheWarmTimer);
@@ -116,8 +117,10 @@ function finishDefeat(round, presentation) {
     )
       return;
     defeatRound = null;
-    scene.event("idle");
+    const resting = scene.event("idle");
     render();
+    // Controls return only once the resting gym is on screen.
+    return resting.settled;
   });
 }
 const music = () => audio.configure();
@@ -382,7 +385,7 @@ function show(page) {
     body = `<h2>O teu percurso.</h2><p>Últimas 50 rondas deste dispositivo. Valores em ${unit}.</p>${state.history.length ? `<table><thead><tr><th>Ronda / risco</th><th>Passo</th><th>Aposta</th><th>Pago</th></tr></thead><tbody>${state.history.map((r) => `<tr><td>${r.id.slice(0, 8)}<br>${MODES[r.mode].name} · ${r.status === "lost" ? "Perdida" : r.status === "won" ? "Sofia!" : "Levantada"}</td><td>${r.step}/10</td><td>${fmt(r.bet)}</td><td>${fmt(r.payment)}</td></tr>`).join("")}</tbody></table>` : "<p>O ginásio ainda está à tua espera. Escolhe o risco e começa o teu primeiro treino.</p>"}`;
   if (page === "settings")
     body =
-      '<h2>Ao teu ritmo.</h2><label><input id="effects" type="checkbox"> Efeitos sonoros</label><label><input id="music" type="checkbox"> Música de treino</label><label><input id="voices" type="checkbox"> Vozes do Cardoso</label><p id="voice-note"></p><label for="volume">Volume</label><input id="volume" type="range" min="0" max="1" step=".05"><label><input id="reduced" type="checkbox"> Movimento reduzido</label><p>As falas acompanham o jogo sem atrasar os passos ou o levantamento.</p>';
+      '<h2>Ao teu ritmo.</h2><label><input id="effects" type="checkbox"> Efeitos sonoros</label><label><input id="music" type="checkbox"> Música de treino</label><label><input id="voices" type="checkbox"> Vozes do Cardoso</label><p id="voice-note"></p><label for="volume">Volume</label><input id="volume" type="range" min="0" max="1" step=".05"><label><input id="reduced" type="checkbox"> Movimento reduzido</label><label><input id="performance" type="checkbox"> Modo desempenho</label><p>Para computadores mais lentos: menos resolução, brilhos e partículas. Liga-se sozinho quando o jogo deteta frames lentos.</p><p>As falas acompanham o jogo sem atrasar os passos ou o levantamento.</p>';
   if (page === "help")
     body = `<h2>O melhor treino inclui pausas.</h2><p>${integrated ? "Jogo com Djabucoins fictícias para maiores de 18 anos" : "Demonstração para maiores de 18 anos"}, sem depósitos, compras ou dinheiro real. Os créditos não podem ser convertidos nem transferidos.</p><p>${integrated ? "Podes sair entre ações e retomar a ronda neste dispositivo. A carteira é partilhada com o casino. Os resultados são calculados localmente; as moedas não têm valor monetário." : "Podes sair a qualquer momento: a ronda fica guardada neste browser. O saldo e o histórico demo podem ser alterados nas ferramentas do browser e nunca representam uma carteira real."}</p><button id="pause">Fazer uma pausa</button><p>Se o jogo deixar de ser diversão, pára e procura apoio junto do SRIJ / Linha Vida 1414.</p>`;
   if (page === "victory")
@@ -392,7 +395,7 @@ function show(page) {
   if (page === "settings") {
     $("#voice-note").textContent =
       "8 grava\u00e7\u00f5es do Cardoso. Controlos independentes de m\u00fasica, efeitos e vozes.";
-    for (const id of ["effects", "music", "voices", "reduced", "volume"]) {
+    for (const id of ["effects", "music", "voices", "reduced", "performance", "volume"]) {
       const el = $("#" + id);
       if (id === "volume") el.value = settings[id];
       else el.checked = settings[id];

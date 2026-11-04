@@ -5,8 +5,8 @@
 import { MATH_VERSION, HISTORICO } from '../tabelas/versao.js';
 import { JOGO, MODOS, ALVO } from '../tabelas/jogo.js';
 import { SIMBOLOS, PESOS, EMPILHAMENTO } from '../tabelas/simbolos.js';
-import { PAGAMENTOS } from '../tabelas/pagamentos.js';
-import { PODERES, FUSOES, CHEMISTRY, CANTOS } from '../tabelas/poderes.js';
+import { PAGAMENTOS, COLUNAS } from '../tabelas/pagamentos.js';
+import { PODERES, FUSOES, CHEMISTRY, CANTOS, FUSAO_SURPRESA } from '../tabelas/poderes.js';
 import { PEACE_POLICE } from '../tabelas/peace-police.js';
 import { ATIVACAO, BONUS, RETRIGGER } from '../tabelas/bonus.js';
 
@@ -95,19 +95,45 @@ for (const [name, w] of Object.entries(PESOS)) {
   weights[name].stack = e;
 }
 
-// Pagamentos -> milésimos de aposta
-const SIZES = JOGO.tamanhoMaximoTabela - JOGO.clusterMinimo + 1;
+// Pagamentos -> milésimos de aposta, expandidos por tamanho (clusterMinimo..última coluna).
+// COLUNAS diz onde começa cada coluna; cada coluna vale até ao início da seguinte − 1.
+if (!Array.isArray(COLUNAS) || COLUNAS[0] !== JOGO.clusterMinimo || COLUNAS.some((v, i) => !Number.isInteger(v) || (i > 0 && v <= COLUNAS[i - 1])))
+  fail(`COLUNAS tem de começar em ${JOGO.clusterMinimo} e subir sempre (inteiros)`);
+const PAY_MAX = COLUNAS[COLUNAS.length - 1];
+if (PAY_MAX > 25) fail('COLUNAS: a última coluna não pode passar de 25 (o tabuleiro tem 25 células)');
+const payColumns = COLUNAS.map((from, i) => {
+  const to = i + 1 < COLUNAS.length ? COLUNAS[i + 1] - 1 : PAY_MAX;
+  return { from, to, label: from === to ? String(from) : `${from}–${to}` };
+});
 const pay = new Array(11).fill(null);
+const payTable = new Array(11).fill(null);
 for (let c = 1; c <= 10; c++) {
   const id = CODE_TO_ID[c];
   const row = PAGAMENTOS[id];
-  if (!Array.isArray(row) || row.length !== SIZES) { fail(`PAGAMENTOS.${id} tem de ter ${SIZES} valores (tamanhos ${JOGO.clusterMinimo}..${JOGO.tamanhoMaximoTabela}+)`); continue; }
-  pay[c] = row.map((v, i) => {
+  if (!Array.isArray(row) || row.length !== COLUNAS.length) { fail(`PAGAMENTOS.${id} tem de ter ${COLUNAS.length} valores (um por coluna de COLUNAS)`); continue; }
+  payTable[c] = row.map((v, i) => {
     const m = Math.round(v * 1000);
     if (!(v >= 0) || Math.abs(m - v * 1000) > 1e-6) fail(`PAGAMENTOS.${id}[${i}] = ${v}: tem de ser >= 0 com no máximo 3 casas decimais`);
-    if (i > 0 && v < row[i - 1]) fail(`PAGAMENTOS.${id}: os valores não podem descer com o tamanho`);
     return m;
   });
+  // Regras de forma da tabela (decisão do dono, pp-v5). Contas em milésimos (inteiros).
+  const t = payTable[c], col = (i) => COLUNAS[i];
+  for (let i = 1; i < t.length; i++) {
+    // 4. crescimento claro: cada coluna paga pelo menos +15 % do que a anterior
+    if (t[i] * 100 < t[i - 1] * 115) fail(`PAGAMENTOS.${id}: a coluna ${col(i)} tem de pagar pelo menos +15 % do que a ${col(i - 1)} (${t[i - 1] / 1000} → ${t[i] / 1000})`);
+    // 2. o crescimento nunca abranda: cada salto é >= ao anterior
+    if (i > 1 && t[i] - t[i - 1] < t[i - 1] - t[i - 2]) fail(`PAGAMENTOS.${id}: o salto ${col(i - 1)}→${col(i)} (+${(t[i] - t[i - 1]) / 1000}) é menor do que o anterior (+${(t[i - 1] - t[i - 2]) / 1000}); o crescimento não pode abrandar`);
+  }
+  // Ordem fixa N1 < … < N5 < P1 < … < P5
+  const prev = c > 1 ? payTable[c - 1] : null;
+  if (prev) t.forEach((m, i) => {
+    // 1. o símbolo de cima paga sempre mais (sem empates)
+    if (m <= prev[i]) fail(`PAGAMENTOS: ${id} tem de pagar mais do que ${CODE_TO_ID[c - 1]} na coluna ${col(i)} (${m / 1000} <= ${prev[i] / 1000})`);
+    // 3. a diferença entre dois símbolos seguidos nunca encolhe
+    if (i > 0 && m - prev[i] < t[i - 1] - prev[i - 1]) fail(`PAGAMENTOS: a diferença entre ${id} e ${CODE_TO_ID[c - 1]} encolhe na coluna ${col(i)}`);
+  });
+  pay[c] = [];
+  payColumns.forEach((col, i) => { for (let n = col.from; n <= col.to; n++) pay[c].push(payTable[c][i]); });
 }
 
 // Modos
@@ -130,6 +156,8 @@ for (const [id, b] of Object.entries(BONUS)) {
   if (!(b.personagensIniciais >= 0 && b.personagensIniciais <= 5)) fail(`BONUS.${id}.personagensIniciais 0..5`);
   if (!(b.cantosIniciais >= 0 && b.cantosIniciais <= 4)) fail(`BONUS.${id}.cantosIniciais 0..4`);
   if (!(isInt(b.multCantoMax) && b.multCantoMax >= b.multCantoInicial)) fail(`BONUS.${id}.multCantoMax tem de ser inteiro >= multCantoInicial`);
+  if (!(isInt(b.multCantoInicial) && b.multCantoInicial >= 1)) fail(`BONUS.${id}.multCantoInicial tem de ser inteiro >= 1`);
+  if (b.incrementoCanto !== undefined && !(isInt(b.incrementoCanto) && b.incrementoCanto >= 1)) fail(`BONUS.${id}.incrementoCanto tem de ser inteiro >= 1`);
   if (!(PEACE_POLICE.probAparecer[id] !== undefined && PEACE_POLICE.probJoiner[id] !== undefined)) fail(`PEACE_POLICE: faltam probabilidades para o bónus «${id}»`);
 }
 for (const [n, b] of Object.entries(ATIVACAO)) if (!BONUS[b]) fail(`ATIVACAO.${n} -> bónus «${b}» não existe`);
@@ -142,8 +170,20 @@ for (const m of Object.keys(modes)) {
   const wset = modes[m].pesos;
   if (wset && (PEACE_POLICE.probAparecer[m] === undefined || PEACE_POLICE.probJoiner[m] === undefined)) fail(`PEACE_POLICE: faltam probabilidades para o modo «${m}»`);
 }
-const dwMults = Object.keys(PEACE_POLICE.distintivo).map(Number);
-const dwCum = []; { let a = 0; for (const k of dwMults) { const v = PEACE_POLICE.distintivo[k]; if (!isInt(v) || v < 0) fail('PEACE_POLICE.distintivo: pesos inteiros >= 0'); a += v; dwCum.push(a); } if (a <= 0) fail('PEACE_POLICE.distintivo: soma dos pesos > 0'); }
+function dwTable(w, label) {
+  const mults = Object.keys(w).map(Number), cum = []; let a = 0;
+  for (const k of mults) { const v = w[k]; if (!(isInt(k) && k >= 2) || !isInt(v) || v < 0) fail(`${label}: multiplicadores inteiros >= 2 e pesos inteiros >= 0`); a += v; cum.push(a); }
+  if (a <= 0) fail(`${label}: soma dos pesos > 0`);
+  return { mults, cum };
+}
+const { mults: dwMults, cum: dwCum } = dwTable(PEACE_POLICE.distintivo, 'PEACE_POLICE.distintivo');
+// Por bónus (pp-v5): pesos do Distintivo e teto absoluto dos multiplicadores podem ser próprios de cada bónus
+const dwByBonus = {}, cwAbsByBonus = {};
+for (const [id, b] of Object.entries(BONUS)) {
+  dwByBonus[id] = b.distintivo ? dwTable(b.distintivo, `BONUS.${id}.distintivo`) : { mults: dwMults, cum: dwCum };
+  cwAbsByBonus[id] = b.multMaxAbsoluto ?? CANTOS.multiplicadorMaxAbsoluto;
+  if (!(isInt(cwAbsByBonus[id]) && cwAbsByBonus[id] >= b.multCantoMax)) fail(`BONUS.${id}.multMaxAbsoluto tem de ser inteiro >= multCantoMax`);
+}
 
 // Fusões
 const fusionByPair = {};
@@ -161,6 +201,7 @@ if (Object.keys(fusionByPair).length !== 10) fail('FUSOES: têm de existir exata
 
 if (!['tamanho-final', 'diferenca', 'novo-tamanho'].includes(PODERES.WEED.pagamentoAoCrescer)) fail("PODERES.WEED.pagamentoAoCrescer tem de ser 'tamanho-final', 'diferenca' ou 'novo-tamanho'");
 if (!pctOk(PODERES.COPIUM.probRaspadinha)) fail('PODERES.COPIUM.probRaspadinha 0..100');
+for (const [m, v] of Object.entries(FUSAO_SURPRESA.probabilidade)) { if (!modes[m] || modes[m].bonus) fail(`FUSAO_SURPRESA.probabilidade.${m}: só modos de jogo (base, hunt)`); if (!pctOk(v)) fail(`FUSAO_SURPRESA.probabilidade.${m} tem de ser 0..100`); }
 if (!(CANTOS.multiplicadorMax >= CANTOS.multiplicadorInicial)) fail('CANTOS.multiplicadorMax >= multiplicadorInicial');
 if (!(JOGO.ganhoMaximo > 0)) fail('JOGO.ganhoMaximo > 0');
 if (!(JOGO.clusterMinimoReais >= 1 && JOGO.clusterMinimoReais <= JOGO.clusterMinimo)) fail('JOGO.clusterMinimoReais entre 1 e clusterMinimo');
@@ -197,7 +238,7 @@ function fnv1a(str) {
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   return (h >>> 0).toString(16).padStart(8, '0');
 }
-const TABLES = { JOGO, MODOS, ALVO, SIMBOLOS, PESOS, EMPILHAMENTO, PAGAMENTOS, PODERES, FUSOES, CHEMISTRY, CANTOS, PEACE_POLICE, ATIVACAO, BONUS, RETRIGGER };
+const TABLES = { JOGO, MODOS, ALVO, SIMBOLOS, PESOS, EMPILHAMENTO, PAGAMENTOS, PODERES, FUSOES, CHEMISTRY, CANTOS, FUSAO_SURPRESA, PEACE_POLICE, ATIVACAO, BONUS, RETRIGGER };
 export const CONFIG_HASH = fnv1a(JSON.stringify(TABLES));
 
 function deepFreeze(o) {
@@ -219,14 +260,15 @@ export const config = deepFreeze({
   clusterMin: JOGO.clusterMinimo,
   clusterMinReal: JOGO.clusterMinimoReais,
   awakenMin: JOGO.despertarMinimo,
-  payMaxSize: JOGO.tamanhoMaximoTabela,
+  payMaxSize: PAY_MAX,
+  payColumns, payTable,
   scatterMaxPerCol: JOGO.scatterMaximoPorColuna,
   maxWinMils: JOGO.ganhoMaximo * 1000,
   maxCycles: JOGO.limiteCiclosPorSpin,
   bets: JOGO.apostas,
   pay, weights, modes,
-  powers: PODERES, fusions: FUSOES, fusionByPair, chemistry: CHEMISTRY, corners_: CANTOS,
-  police: { ...PEACE_POLICE, dwMults, dwCum },
+  powers: PODERES, fusions: FUSOES, fusionByPair, chemistry: CHEMISTRY, corners_: CANTOS, surprise: FUSAO_SURPRESA,
+  police: { ...PEACE_POLICE, dwMults, dwCum, dwByBonus, cwAbsByBonus },
   activation: ATIVACAO, bonus: BONUS, retrigger: RETRIGGER,
   target: ALVO,
 });

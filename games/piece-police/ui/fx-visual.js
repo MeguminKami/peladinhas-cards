@@ -80,7 +80,7 @@ export const visual = {
         await tag(ctx, `${e.persona} ${e.kind === 'refire' ? 'VOLTA A DISPARAR' : 'DESPERTOU'}`, e.fusion ? 'fusão a caminho…' : POWER_NAME[e.persona] + (e.party ? ' · Party Mode' : ''), D.tag, `var(--${e.persona})`);
         unmark(ctx, e.cluster, 'target');
         return;
-      case 'fusion.trigger': await tag(ctx, `FUSÃO: ${fusionName(e.fusionId)}`, e.pair.join(' + '), D.tag + 150, '#ffd76a'); return;
+      case 'fusion.trigger': await tag(ctx, `${e.surprise ? 'FUSÃO SURPRESA' : 'FUSÃO'}: ${fusionName(e.fusionId)}`, e.pair.join(' + '), D.tag + 150, '#ffd76a'); return;
       case 'grid.remove':
         await Promise.all(e.cells.map(c => anim(ctx, ctx.cells[c], [{ opacity: 1 }, { opacity: 0, transform: 'scale(.8)' }], D.remove)));
         ctx.render();

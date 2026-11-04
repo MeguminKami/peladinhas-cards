@@ -9,7 +9,7 @@ try{for(const width of [1440,390,320]){
  await context.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());
  await context.addInitScript(()=>{localStorage.setItem('cardoso-road-demo-v1-settings',JSON.stringify({effects:false,music:false,voices:false,reduced:false}));Object.defineProperty(crypto,'getRandomValues',{value:a=>{a.fill(window.failNext?4294967295:0);return a;}});});
  page.on('pageerror',e=>errors.push(e.message));await page.goto(origin);await page.waitForFunction(()=>document.querySelector('iframe')?.contentDocument?.querySelector('#play')?.disabled===false);
- const frame=page.frames().find(f=>f.url().endsWith('/game.html')),inspect=async()=>{await frame.waitForFunction(()=>!!document.querySelector('canvas')?.dataset.camera);return frame.locator('canvas').evaluate(el=>JSON.parse(el.dataset.camera));};
+ const frame=page.frames().find(f=>f.url().endsWith('/game.html')),inspect=async()=>{await frame.waitForFunction(()=>!!document.querySelector('canvas')?.dataset.camera);return frame.locator('#world').evaluate(el=>JSON.parse(el.dataset.camera));};
  let pose=await inspect();assert.equal(pose.position,0);assert.ok(Math.abs(pose.firstPrizeX-pose.playerX-pose.lane)<1e-6);
  await page.screenshot({path:fileURLToPath(new URL(`../reports/start-${width}.png`,import.meta.url)),fullPage:true});
  await frame.locator('#play').click();pose=await inspect();assert.equal(pose.position,0,'starting the round must stay in the safe area');

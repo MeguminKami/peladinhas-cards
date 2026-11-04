@@ -28,7 +28,10 @@ const pair = (a, b) => fromRows(['X . . . X', row5(P[a]), '. . . . .', row5(P[b]
 export const SCENARIOS = {
   'lcd': { force: { grid: single('LCD') } },
   'weed': { force: { grid: single('WEED') } },
-  'mdma': { force: { grid: single('MDMA') } },
+  // seed própria: o poder age depois do refill, que é sorteado (pp-v5 mudou os pesos do jogo base)
+  // FUSÃO SURPRESA (pp-v6): grelha neutra, a fusão dispara logo depois da queda
+  'surpresa': { force: { grid: fromRows(['X . . . X', '. . . . .', '. . . . .', '. . . . .', 'X . . . X']), surprise: 'SLOW_DISASTER' } },
+  'mdma': { force: { grid: single('MDMA') }, seed: 'scenario:mdma:1' },
   'alcool': { force: { grid: single('ALCOOL') } },
   'copium': { force: { grid: single('COPIUM') } },
 

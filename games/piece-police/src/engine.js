@@ -341,7 +341,8 @@ function payClusters(ctx, paid, growOnly) {
 
 function growCorners(ctx, cells) {
   const cfg = ctx.cfg;
-  const inc = cfg.corners_.incrementoPorPremio, max = ctx.bonus ? ctx.bonus.def.multCantoMax : cfg.corners_.multiplicadorMax;
+  const inc = (ctx.bonus && ctx.bonus.def.incrementoCanto) || cfg.corners_.incrementoPorPremio;
+  const max = ctx.bonus ? ctx.bonus.def.multCantoMax : cfg.corners_.multiplicadorMax;
   for (const c of cells) {
     const from = ctx.mult[c];
     const to = Math.min(max, from + inc);
@@ -945,7 +946,7 @@ function totalChemistry(ctx) {
   emit(ctx, { type: 'chemistry.total' });
   const ch = ctx.cfg.chemistry;
   if (ch.totalDuplicaMultiplicadores) {
-    const cap = ctx.cfg.corners_.multiplicadorMaxAbsoluto;
+    const cap = ctx.bonus ? ctx.cfg.police.cwAbsByBonus[ctx.bonus.id] : ctx.cfg.corners_.multiplicadorMaxAbsoluto;
     for (let i = 0; i < NC; i++) {
       if (ctx.sym[i] === CW || ctx.sym[i] === DW) {
         const from = ctx.mult[i], to = Math.min(cap, from * 2);
@@ -961,7 +962,8 @@ function totalChemistry(ctx) {
 function placeBadge(ctx) {
   if (ctx.off.has('distintivo')) return null;
   const pol = ctx.cfg.police;
-  const m = pol.dwMults[ctx.rng.pickCum(pol.dwCum)];
+  const dw = ctx.bonus ? pol.dwByBonus[ctx.bonus.id] : { mults: pol.dwMults, cum: pol.dwCum };
+  const m = dw.mults[ctx.rng.pickCum(dw.cum)];
   const g = largestGroup(ctx, true);
   let cand = [];
   if (g) for (const c of g.cells) for (const n of ctx.cfg.ortho[c]) if (isFree(ctx, n) && !isWild(ctx.sym[n]) && !g.cells.includes(n) && !cand.includes(n)) cand.push(n);
@@ -1049,6 +1051,27 @@ function runCascade(ctx) {
   }
 }
 
+// FUSÃO SURPRESA (só jogo base / hunt): uma fusão ao acaso logo depois da queda da grelha.
+// Não acorda personagens nem mexe no Chemistry.
+function surpriseFusion(ctx) {
+  if (ctx.bonus || ctx.off.has('surpresa') || ctx.off.has('fusoes')) return;
+  let f;
+  if (ctx.force) {
+    // cenários forçados: só há surpresa quando o cenário a pede (force.surprise = id da fusão)
+    if (!ctx.force.surprise) return;
+    f = ctx.cfg.fusions.find((x) => x.id === ctx.force.surprise);
+    if (!f) throw new Error(`force.surprise: fusão «${ctx.force.surprise}» não existe`);
+  } else {
+    const pct = ctx.cfg.surprise.probabilidade[ctx.modeKey];
+    if (!pct || !ctx.rng.chance(pct)) return;
+    f = ctx.cfg.fusions[ctx.rng.int(ctx.cfg.fusions.length)];
+  }
+  if (ctx.off.has(f.id)) return;
+  // não entra em ctx.fused: os despertares continuam a gerar a sua fusão (contrato, ponto 7)
+  emit(ctx, { type: 'fusion.trigger', fusionId: f.id, pair: f.par, persona: null, surprise: true });
+  runFusion(ctx, f, null);
+}
+
 // Um spin visível completo (cascatas + respins). Devolve o nº de Scatters.
 function playSpin(ctx) {
   initialDrop(ctx);
@@ -1064,6 +1087,7 @@ function playSpin(ctx) {
     const badge = ctx.bonus.def.distintivoEmTodosOsSpins ? placeBadge(ctx) : null;
     emit(ctx, { type: 'police.joiner.party_mode', personas: [...ctx.awakeOrder], badge });
   }
+  surpriseFusion(ctx);
   runCascade(ctx);
   let seq = 0;
   while (ctx.copium.armed && seq < 2 && !ctx.round.capped && !ctx.safety) { seq++; runRespins(ctx); }
@@ -1130,7 +1154,7 @@ let roundCounter = 0;
  * serve para medir o valor real de cada peça comparando o RTP com e sem ela.
  */
 export const DESLIGAVEIS = ['poderes', 'LCD', 'WEED', 'MDMA', 'ALCOOL', 'COPIUM', 'fusoes',
-  ...CFG.fusions.map((f) => f.id), 'cantos', 'distintivo', 'joiner', 'calmer', 'total'];
+  ...CFG.fusions.map((f) => f.id), 'cantos', 'distintivo', 'joiner', 'calmer', 'total', 'surpresa'];
 
 /**
  * Joga uma ronda completa (spin pago + bónus, ou compra de bónus).

@@ -7,6 +7,11 @@ import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { startServer } from '../scripts/serve.js';
+import { config } from '../src/index.js';
+
+// Preços das compras vêm da configuração (mudam quando a matemática é recalibrada). Aposta de 1,00 DJC = 100 cêntimos.
+const custoCompra = (mode, bet = 100) => Math.round(config.modes[mode].costMils * bet / 1000);
+const djc = (c) => `${new Intl.NumberFormat('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }).format(c / 100)} DJC`;
 
 const { chromium } = await import('playwright').catch(() => createRequire(import.meta.url)('playwright'));
 const root = fileURLToPath(new URL('../', import.meta.url));
@@ -93,15 +98,15 @@ await test('botões e janelas abrem, funcionam e fecham', async () => {
   // Aposta extra: custo real visível e estado inequívoco
   await page.click('#hunt-button');
   assert.equal(await page.getAttribute('#hunt-button', 'aria-checked'), 'true');
-  assert.equal(await text(page, '#spin-cost'), '1,40 DJC');
+  assert.equal(await text(page, '#spin-cost'), djc(custoCompra('hunt'))); // custo da aposta extra vem da tabela
   assert.equal(await page.getAttribute('.control-deck', 'data-extra'), 'on');
   await page.click('#hunt-button');
   assert.equal(await text(page, '#spin-cost'), '1,00 DJC');
   // Compras: preços pela aposta atual e a mudar dentro da janela; confirmação
   await page.click('#buy-button');
   const price = () => text(page, '.buy-card[data-mode=buy-police] .price');
-  assert.equal(await price(), '687,00 DJC');
-  await page.click('#buy-bet-plus'); assert.equal(await price(), '1374,00 DJC');
+  assert.equal(await price(), djc(custoCompra('buy-police')));
+  await page.click('#buy-bet-plus'); assert.equal(await price(), djc(custoCompra('buy-police', 200)));
   await page.click('#buy-bet-minus');
   await page.click('[data-buy=buy-vip]'); assert.ok(await page.isVisible('#buy-confirm'));
   await page.click('#buy-cancel'); assert.ok(!(await page.isVisible('#buy-confirm')));
@@ -176,7 +181,7 @@ await test('teclado: ESPAÇO roda, 100 ms entre comandos, repetição ignorada, 
 });
 
 await test('toques durante o spin: 1.º acelera 3×, 2.º 8×, 3.º salta só esse spin', async () => {
-  const page = await newPage({ path: '/game.html?seed=taps', speed: 'normal' });
+  const page = await newPage({ path: '/game.html?seed=taps5', speed: 'normal' }); // 1.º free spin longo (pp-v5: a POLICE PARTY começa sem cantos)
   await page.click('#buy-button'); await page.click('[data-buy=buy-police]'); await page.click('#buy-ok');
   await page.waitForFunction(() => document.getElementById('overlay').open); await page.waitForTimeout(520); await page.click('#overlay-continue');
   await page.waitForFunction(() => window.pp.estado === 'FREE_SPINS');
@@ -197,7 +202,7 @@ await test('toques durante o spin: 1.º acelera 3×, 2.º 8×, 3.º salta só es
 
 await test('compra de cada bónus até ao resumo; saldo certo', async () => {
   const page = await newPage({ path: '/game.html?seed=compras' });
-  for (const [mode, nome, cost] of [['buy-afterparty', 'AFTERPARTY', 5300], ['buy-vip', 'VIP AFTERPARTY', 12800], ['buy-police', 'POLICE PARTY', 68700]]) {
+  for (const [mode, nome, cost] of [['buy-afterparty', 'AFTERPARTY'], ['buy-vip', 'VIP AFTERPARTY'], ['buy-police', 'POLICE PARTY']].map(([m, n]) => [m, n, custoCompra(m)])) {
     const before = await state(page);
     await isoWins(page);
     await page.click('#buy-button'); await page.click(`[data-buy=${mode}]`); await page.click('#buy-ok');
@@ -218,7 +223,7 @@ await test('compra de cada bónus até ao resumo; saldo certo', async () => {
 });
 
 await test('retrigger: +5 free spins e contador atualizado', async () => {
-  const page = await newPage({ path: '/game.html?seed=rt29' }); // a 1.ª compra AFTERPARTY desta seed tem um retrigger (motor real)
+  const page = await newPage({ path: '/game.html?seed=rt9' }); // a 1.ª compra AFTERPARTY desta seed tem um retrigger (motor real, pp-v5)
   const totals = [];
   await page.evaluate(() => { window.__fs = []; window.pp.on('evento', e => { if (e.type === 'bonus.retrigger') window.__fs.push(e.total); }); });
   await page.click('#buy-button'); await page.click('[data-buy=buy-afterparty]'); await page.click('#buy-ok');
@@ -268,7 +273,7 @@ await test('reload a meio de um bónus: retoma no passo certo, sem débito dupli
   await page.waitForFunction(() => document.getElementById('overlay').open); await page.waitForTimeout(520); await page.click('#overlay-continue');
   await page.waitForFunction(() => window.pp.session.round?.cursor >= 3, null, { timeout: 60000 });
   const mid = await page.evaluate(() => ({ balance: window.pp.session.balance, cursor: window.pp.session.round.cursor, id: window.pp.session.round.id }));
-  assert.equal(mid.balance, 1_000_000 - 12800);
+  assert.equal(mid.balance, 1_000_000 - custoCompra('buy-vip'));
   await page.reload();
   await page.waitForFunction(() => window.pp && window.pp.busy);
   const resumed = await page.evaluate(() => ({ balance: window.pp.session.balance, round: window.pp.session.round }));
@@ -281,12 +286,12 @@ await test('reload a meio de um bónus: retoma no passo certo, sem débito dupli
   assert.ok(seen.some(s => s.startsWith('bonus:')), 'aviso de retoma do bónus');
   const info = await page.evaluate(() => window.__info);
   const end = await state(page);
-  assert.equal(end.balance, 1_000_000 - 12800 + info.win);
+  assert.equal(end.balance, 1_000_000 - custoCompra('buy-vip') + info.win);
   await ctx.close();
 });
 
 await test('autoplay: só spins pagos contam, pausa nos avisos e para depois da jogada atual', async () => {
-  const page = await newPage({ path: '/game.html?seed=bt120' }); // a 1.ª jogada base desta seed entra no bónus
+  const page = await newPage({ path: '/game.html?seed=bt7' }); // a 1.ª jogada base desta seed entra no bónus (pp-v6)
   const pedidos = () => page.evaluate(() => window.pp.pedidos);
   await page.click('#auto-button');
   await page.evaluate(() => { const r = document.getElementById('auto-range'); r.value = '0'; r.dispatchEvent(new Event('input')); });

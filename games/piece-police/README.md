@@ -102,6 +102,6 @@ Atalhos: `npm run dev:debug`, `npm run dev:carteira`, `npm run dev:site`, `npm r
 | `npm run test:ui` | Testes de browser (Playwright): botões e janelas, teclado, jogadas, compras, retrigger, limite, cenários, reload a meio do bónus, autoplay, carteira simulada, 10 tamanhos sem scroll, consola limpa. Capturas em `test-results/`. `npm run test:ui -- tamanhos` corre só os que têm «tamanhos» no nome |
 | `npm run verificar:kit` | Confirma que a barra de controlos é a do kit, sem alterações |
 
-**O que publicar** (para o site): `game.html`, `ui/` (exceto `preview.*`, `site.css`, `carteira-simulada.*`) e `src/` + `tabelas/` (o motor importa as tabelas). Não publicar: `scripts/`, `tests/`, `docs/`, `relatorios/`, `guides/`, `pc.html`, `telemovel.html`, `site.html`, `carteira.html`, `index.html`, `test-results/`.
+**O que publicar** (para o site): `game.html`, `ui/` (exceto `preview.*`, `site.css`, `carteira-simulada.*`) e `src/` + `tabelas/` (o motor importa as tabelas). Não publicar: `INSPIRATION/`, `art-src/`, `scripts/`, `tests/`, `docs/`, `relatorios/`, `guides/`, `pc.html`, `telemovel.html`, `site.html`, `carteira.html`, `index.html`, `test-results/`.
 
 Estrutura, pontos de ligação para as Fases 3 e 4, máquina de estados e protocolo da carteira: `docs/estrutura-ui.md`.

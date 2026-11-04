@@ -23,6 +23,6 @@ export function scenarioNames() {
 export function scenario(name, opts = {}) {
   const sc = SCENARIOS[name];
   if (!sc) throw new Error(`Cenário desconhecido: ${name}. Disponíveis: ${scenarioNames().join(', ')}`);
-  const rng = seedState(opts.seed ?? `scenario:${name}`);
+  const rng = seedState(opts.seed ?? sc.seed ?? `scenario:${name}`);
   return playRound(rng, { bet: opts.bet ?? 100, mode: sc.mode || 'base', force: sc.force, roundId: `scenario-${name}` });
 }

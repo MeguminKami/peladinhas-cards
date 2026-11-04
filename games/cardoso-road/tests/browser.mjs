@@ -7,7 +7,7 @@ const browser=await chromium.launch({headless:true,channel:'msedge'});await mkdi
 const origin='http://127.0.0.1:5178';
 async function setup(width,{reduced=true,lose=false}={}){const context=await browser.newContext({viewport:{width,height:1000},reducedMotion:reduced?'reduce':'no-preference'});await context.route('**/*',route=>route.request().url().startsWith(origin+'/')?route.continue():route.abort());await context.addInitScript(({lose})=>{Object.defineProperty(crypto,'getRandomValues',{value:a=>{a.fill(lose?4294967295:0);return a;}});},{lose});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(origin+"/game.html");await page.waitForFunction(()=>document.querySelector('#play')&&!document.querySelector('#play').disabled);await page.evaluate(()=>document.fonts.ready);await page.waitForFunction(()=>!!document.querySelector('canvas').dataset.camera);return {context,page,errors};}
 const saved=page=>page.evaluate(()=>JSON.parse(localStorage.getItem('cardoso-road-demo-v1')));
-const camera=page=>page.locator('canvas').evaluate(el=>JSON.parse(el.dataset.camera));
+const camera=page=>page.locator('#world').evaluate(el=>JSON.parse(el.dataset.camera));
 async function shot(page,name){await page.screenshot({path:fileURLToPath(new URL(`../reports/${name}.png`,import.meta.url)),fullPage:true});}
 async function noOverflow(page){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'page must not overflow');}
 try{
@@ -20,7 +20,7 @@ try{
   await page.locator('#play').focus();await page.keyboard.press('Shift+Tab');await page.keyboard.press('Tab');assert.equal(await page.locator('#play').evaluate(el=>el.matches(':focus-visible')),true);await page.keyboard.press('Enter');assert.equal(await page.locator('#cashout').isDisabled(),true);assert.equal(await page.locator('[data-mode=hard]').isDisabled(),true);
   await page.reload();await page.waitForFunction(()=>!document.querySelector('#play').disabled);assert.ok((await page.locator('#play').getAttribute('aria-label')).includes('Avançar'));
   await page.locator('#play').click();await page.waitForFunction(()=>document.querySelector('#markers').getAttribute('aria-valuenow')==='1');await page.waitForTimeout(60);assert.equal(await page.locator('#cashout').isEnabled(),true);
-  const shifted=await camera(page),canvasWidth=(await page.locator('canvas').boundingBox()).width;assert.ok(shifted.camera>0);assert.ok(Math.abs(shifted.playerX/canvasWidth-.3)<.02);await shot(page,`${width}-step`);
+  const shifted=await camera(page),canvasWidth=(await page.locator('#world').boundingBox()).width;assert.ok(shifted.camera>0);assert.ok(Math.abs(shifted.playerX/canvasWidth-.3)<.02);await shot(page,`${width}-step`);
   await page.locator('#cashout').click();const s=await saved(page);assert.equal(s.round.payment,payout(1000,'normal',1));assert.equal(s.history.length,1);assert.equal(s.round.status,'paid');assert.ok((await page.locator('#speech').textContent()).includes('créditos recebidos'));await shot(page,`${width}-cashout`);
   assert.deepEqual(errors,[]);await context.close();console.log(`Layout, teclado, opções, recuperação e cashout: ${width}px OK`);
  }

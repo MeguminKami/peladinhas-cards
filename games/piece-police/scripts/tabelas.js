@@ -29,7 +29,7 @@ show('pesos', 'Pesos por conjunto (relativos) e probabilidade por posição', [{
 show('empilhamento', 'Empilhamento (% de copiar o vizinho)', [{ h: 'Conjunto', a: 'l' }, { h: 'baixo ↓' }, { h: 'baixo →' }, { h: 'premium ↓' }, { h: 'premium →' }],
   sets.map((s) => { const e = T.EMPILHAMENTO[s]; return [s, pt(e.baixo.vertical, 1), pt(e.baixo.horizontal, 1), pt(e.premium.vertical, 1), pt(e.premium.horizontal, 1)]; }));
 
-const sizes = []; for (let n = config.clusterMin; n <= config.payMaxSize; n++) sizes.push(n === config.payMaxSize ? n + '+' : String(n));
+const sizes = config.payColumns.map((c) => c.label);
 show('pagamentos', 'Tabela de pagamentos (× aposta)', [{ h: 'Símbolo', a: 'l' }, ...sizes.map((s) => ({ h: s }))],
   Object.entries(T.PAGAMENTOS).map(([id, row]) => [`${id} ${names[id].split(' —')[0]}`, ...row.map((v) => pt(v, 2))]));
 

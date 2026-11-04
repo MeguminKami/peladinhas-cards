@@ -1,0 +1,8 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "piece-police", "runtimeExecutable": "npm.cmd", "runtimeArgs": ["run", "dev"], "port": 4177, "url": "http://127.0.0.1:4177" },
+    { "name": "casino", "runtimeExecutable": "npm.cmd", "runtimeArgs": ["--prefix", "../..", "run", "dev:casino"], "port": 8081 },
+    { "name": "shop-test", "runtimeExecutable": "node", "runtimeArgs": ["../../scripts/dev-server.mjs", "--port", "8082"], "port": 8082 }
+  ]
+}

@@ -33,7 +33,7 @@ scenario(name, { seed?, bet? }) // diagnóstico (forced: true). Lista: scenarioN
 | `cap.hit` | `limit`, `cut` | O ganho máximo cortou o prémio anterior |
 | `multiplier.change` | `cell`, `from`, `to` | Um Wild de Canto cresceu, ou o Total Chemistry duplicou um multiplicador |
 | `persona.awaken` | `persona`, `kind: 'awaken'\|'refire'`, `cluster`, `fusion`, `party` | Personagem desperta (ou volta a disparar, no bónus) |
-| `fusion.trigger` | `fusionId`, `pair`, `persona` | Logo a seguir ao `persona.awaken` que funde |
+| `fusion.trigger` | `fusionId`, `pair`, `persona`, `surprise?` | Logo a seguir ao `persona.awaken` que funde. **Fusão surpresa** (pp-v6): logo a seguir ao `grid.drop`, com `persona: null` e `surprise: true` |
 | `grid.remove` | `cells` | Símbolos que saem (vencedores não-sticky e grupos sticky que dissolvem) |
 | `grid.refill` | `grid`, `newCells` | Depois da gravidade e da entrada de símbolos novos |
 | `power.reality_break` | `target`, `cells`, `party` | LCD transforma células |
