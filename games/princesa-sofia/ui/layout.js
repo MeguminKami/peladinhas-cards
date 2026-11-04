@@ -104,6 +104,9 @@ export function installLayout() {
     shell.style.setProperty('--game-scale', String(finalScale));
     for (const dialog of document.querySelectorAll('#rules-dialog[open], #buy-dialog[open]')) {
       dialog.style.width = `${layout === 'portrait' ? 540 : dialog.id === 'buy-dialog' ? 960 : 760}px`;
+      // Regras: altura de desenho fixa (a do separador mais alto). Sem ela, a escala seguia a
+      // altura de cada separador e a janela e o texto mudavam de tamanho ao trocar de secao.
+      if (dialog.id === 'rules-dialog') dialog.style.minHeight = `${layout === 'portrait' ? 1010 : 780}px`;
       const dialogScale = Math.min(MAX_SCALE * .8, (width - 16) / dialog.offsetWidth, (height - 16) / dialog.offsetHeight);
       dialog.style.transform = `translate(-50%, -50%) scale(${dialogScale})`;
     }

@@ -95,9 +95,10 @@ O contexto de voz, os efeitos curtos e a faixa musical selecionada são preparad
 1. **Feedback:** recebe um clique, interrompe a fala anterior, mostra processamento e deixa o browser pintar essa resposta.
 2. **Confirmação:** executa uma única operação da carteira, conservando o identificador do pedido para recuperação. O saldo apresentado não antecipa a confirmação.
 3. **Apresentação:** aplica o estado confirmado, atualiza os controlos e inicia o evento visual correspondente; deixa o browser pintar.
-4. **Animação:** aguarda o restante da deslocação e confronto (420 + 300 ms no avanço normal; imediato com movimento reduzido). Outro avanço não interrompe esta etapa.
+4. **Animação:** aguarda que a cena desenhe a deslocação e o confronto (420 + 300 ms de relógio da cena; imediato com movimento reduzido). O relógio da cena só avança com frames desenhados (no máximo 40 ms por frame): num PC lento a animação fica mais lenta, nunca é saltada, e a lógica não avança à frente dela. Outro avanço não interrompe esta etapa.
 5. **Som:** inicia o feedback do resultado, depois da animação. A duração da gravação não bloqueia a ação seguinte; uma nova ação substitui a fala anterior.
-6. **Disponível:** termina a pipeline e volta a aceitar ações.
+6. **Fecho:** numa derrota, mantém os controlos bloqueados até a pose de derrota ficar visível mais 400 ms; só então o ginásio volta ao repouso.
+7. **Disponível:** termina a pipeline e volta a aceitar ações.
 
 Não existe uma fila de apostas acumuladas: cliques durante uma operação não são executados mais tarde. O CASH OUT é a exceção de prioridade: depois de confirmado um passo, pode cancelar a apresentação desse passo e iniciar o levantamento; nunca ultrapassa uma operação financeira ainda pendente. O som antigo é descartado. Uma falha impede as etapas de apresentação/som e devolve os controlos, preservando pedidos financeiros ambíguos para recuperação.
 

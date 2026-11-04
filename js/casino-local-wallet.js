@@ -503,6 +503,10 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
           { id: requestId, kind: 'cardoso-road', amount: credit - debit, at: Date.now() },
           ...state.wallet.recent,
         ].slice(0, 12) : state.wallet.recent },
+      }, {
+        // Um passo intermedio bem-sucedido nao move moedas: se se perder num crash, o treino
+        // recua um passo. Entrada, derrota, levantamento e meta exigem gravacao "strict".
+        durability: action.type === 'step' && !completed ? 'relaxed' : 'strict',
       });
       return structuredClone(next);
     });

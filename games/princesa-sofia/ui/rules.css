@@ -107,3 +107,12 @@ body[data-layout=portrait] .rule-steps small,body[data-layout=portrait] .rule-le
 body[data-layout=portrait] .rule-table th,body[data-layout=portrait] .rule-table td,body[data-layout=portrait] .pay-table th,body[data-layout=portrait] .pay-table td{font-size:14px!important;padding:7px 5px!important}
 body[data-layout=portrait] .rule-magic{grid-template-columns:1fr;justify-items:center;text-align:center}
 body[data-layout=portrait] .rules-tabs button{font-size:14px!important}
+
+/* historico de rondas */
+.history-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.history-head select{min-height:36px;padding:4px 10px;border-radius:10px;border:1px solid #b38d9177;background:#2a2036;color:#fff2dc;font:inherit;font-size:13px}
+.history-table tbody th small{display:block;margin-top:2px;font-size:11px;color:#bfa9c4;font-weight:400}
+.history-table td.positive{color:#c4f2cf}
+.history-table td.negative{color:#ffb7c4}
+.history-pager{display:flex;justify-content:center;align-items:center;gap:12px;font-size:13px;color:#d9c6d9}
+.history-pager button{padding:6px 14px;border-radius:999px}

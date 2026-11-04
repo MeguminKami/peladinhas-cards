@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "cardoso", "runtimeExecutable": "node", "runtimeArgs": ["games/cardoso-road/server.mjs"], "port": 5178 },
+    { "name": "casino", "runtimeExecutable": "npm.cmd", "runtimeArgs": ["run", "dev:casino"], "port": 8081 }
+  ]
+}

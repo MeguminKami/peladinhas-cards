@@ -1,7 +1,4 @@
-import {
-  createActionPipeline,
-  waitForPresentation,
-} from "./action-pipeline.mjs";
+import { createActionPipeline, untilPresented } from "./action-pipeline.mjs";
 import {
   CONFIG,
   MODES,
@@ -13,7 +10,6 @@ import {
 } from "./engine.mjs";
 import { createScene, ZONES } from "./scene.mjs";
 import { createAudio } from "./audio.mjs";
-import { TRAVEL_MS, FIGHT_MS } from "./progression.mjs";
 const $ = (s) => document.querySelector(s),
   fmt = (n) =>
     (n / 100).toLocaleString("pt-PT", {
@@ -59,14 +55,12 @@ if (state.round) mode = state.round.mode;
 const audio = createAudio(() => ({ ...settings, mode }));
 let visualBalance = null;
 let defeatRound = null,
-  defeatUntil = 0,
-  defeatTimer,
   victoryRound = null;
 function roundForScene() {
   const r = state.round;
   if (!r || r.status === "paid") return null;
   if (r.status === "lost")
-    return defeatRound === r.id && performance.now() < defeatUntil ? r : null;
+    return defeatRound === r.id ? r : null;
   if (r.status === "won") return victoryRound === r.id ? r : null;
   return r;
 }
@@ -111,20 +105,20 @@ const pipeline = createActionPipeline({
   },
 });
 const gameReady = scene.ready.then(() => audio.prepare());
-function finishDefeat(round) {
-  clearTimeout(defeatTimer);
+// The gym resets only after the scene has actually drawn the defeat.
+function finishDefeat(round, presentation) {
   defeatRound = round.id;
-  defeatUntil =
-    performance.now() + (settings.reduced ? 0 : TRAVEL_MS + FIGHT_MS + 400);
-  defeatTimer = setTimeout(
-    () => {
-      if (state.round?.id !== round.id || state.round.status !== "lost") return;
-      defeatRound = null;
-      scene.event("idle");
-      render();
-    },
-    Math.max(0, defeatUntil - performance.now()),
-  );
+  return presentation.finished.then(() => {
+    if (
+      defeatRound !== round.id ||
+      state.round?.id !== round.id ||
+      state.round.status !== "lost"
+    )
+      return;
+    defeatRound = null;
+    scene.event("idle");
+    render();
+  });
 }
 const music = () => audio.configure();
 document.body.classList.toggle("integrated", integrated);
@@ -273,7 +267,7 @@ function persist(next) {
 async function act(type) {
   if (!lockOwner || !sceneReady) return;
   const intended = pendingAction?.action.type ?? type;
-  let presentedAt = 0;
+  let presentation, reset;
   try {
     await pipeline.run(intended, {
       async confirm() {
@@ -302,32 +296,30 @@ async function act(type) {
         visualBalance = null;
         $("#error").textContent = "";
         const current = state.round;
-        presentedAt = performance.now();
         if (type === "start") {
-          clearTimeout(defeatTimer);
           defeatRound = null;
           victoryRound = null;
-          scene.event("start");
+          presentation = scene.event("start");
         } else if (current.status === "lost") {
-          finishDefeat(current);
-          scene.event("lost");
+          defeatRound = current.id;
+          presentation = scene.event("lost");
+          reset = finishDefeat(current, presentation);
         } else if (current.status === "paid" || current.status === "won") {
           victoryRound = current.status === "won" ? current.id : null;
-          scene.event(current.status === "paid" ? "idle" : current.status);
+          presentation = scene.event(
+            current.status === "paid" ? "idle" : current.status,
+          );
         } else {
-          scene.event("step");
+          presentation = scene.event("step");
           $("#play").classList.remove("ready");
           requestAnimationFrame(() => $("#play").classList.add("ready"));
         }
         render();
       },
-      animate({ type }, signal) {
-        return waitForPresentation(
-          type === "step" && !settings.reduced
-            ? TRAVEL_MS + FIGHT_MS - (performance.now() - presentedAt)
-            : 0,
-          signal,
-        );
+      // Waits for drawn frames, not wall-clock time: a slow frame rate can
+      // never let the result, sound or reset run ahead of the animation.
+      animate(_, signal) {
+        return untilPresented(presentation.settled, signal);
       },
       sound({ next, type }) {
         audio.event(
@@ -338,6 +330,9 @@ async function act(type) {
               : next.round.status,
           next.round.step,
         );
+      },
+      settle(_, signal) {
+        return reset ? untilPresented(reset, signal) : undefined;
       },
     });
   } catch (error) {

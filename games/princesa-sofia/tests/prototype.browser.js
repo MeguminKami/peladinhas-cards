@@ -29,7 +29,7 @@ try {
     if (route.request().url().startsWith(origin)) return route.continue();
     external.push(route.request().url()); return route.abort();
   });
-  await page.goto(`${origin}/game.html`);
+  await page.goto(`${origin}/game.html?fixtures=1`);
   await page.waitForSelector('#board .cell:nth-child(30)');
   await page.waitForFunction(() => !document.querySelector('#spin').disabled);
   assert.equal(await page.locator('#board .cell').count(), 30);
@@ -75,7 +75,7 @@ try {
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   assert.ok(await widget.locator('.shell').evaluate(el => el.getBoundingClientRect().bottom <= innerHeight + 1 && document.documentElement.scrollWidth <= innerWidth + 1), 'Embedded mobile slot must fit without scrollbars');
   await page.screenshot({path:join(tmpdir(),'sofia-widget-mobile.png')});
-  await page.goto(`${origin}/game.html`);
+  await page.goto(`${origin}/game.html?fixtures=1`);
   await page.setViewportSize({width:1400,height:1100});
   await page.waitForFunction(() => !document.querySelector('#spin').disabled);
 
@@ -247,12 +247,8 @@ try {
   assert.equal(await page.locator('#bet').isDisabled(), false);
 
   const balanceBeforeDemo = await page.locator('#balance').innerText();
-  await page.locator('#rules-button').click();
-  await page.locator('.demo-controls summary').click();
-  await page.keyboard.press('Escape');
   await page.locator('#bet').selectOption('5000', { force: true });
-  await page.locator('#rules-button').click();
-  await page.locator('[data-demo=max]').click();
+  await page.evaluate(()=>{void window.sofiaFixture('max');});
   await page.waitForFunction(() => document.getElementById('notice-title').textContent === 'MAX WIN' && document.getElementById('notice-dialog').open);
   assert.equal(await page.locator('#balance').innerText(), balanceBeforeDemo);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
@@ -264,8 +260,7 @@ try {
   await page.locator('#bet').selectOption('100', { force: true });
   assert.equal(await page.locator('#win').innerText(), previousWin, 'Changing bet must not revalue the previous win');
 
-  await page.locator('#rules-button').click();
-  await page.locator('[data-demo=super]').click();
+  await page.evaluate(()=>{void window.sofiaFixture('super');});
   await page.waitForSelector('#notice-dialog[open]');
   assert.equal(await page.locator('#notice-title').innerText(), 'Baile ao Luar');
   await page.locator('#notice-dialog [data-close]').click();
@@ -281,8 +276,7 @@ try {
     });
     globalThis.secretDrawObserver.observe(toast, {childList:true,characterData:true,subtree:true});
   });
-  await page.locator('#rules-button').click();
-  await page.locator('[data-demo=secret]').click();
+  await page.evaluate(()=>{void window.sofiaFixture('secret');});
   await page.waitForSelector('#notice-dialog[open]');
   await page.locator('#notice-dialog [data-close]').click();
   await settle();
@@ -302,8 +296,7 @@ try {
   assert.equal(await page.locator('#auto-status').innerText(), '');
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.locator('#rules-button').click();
-  await page.locator('[data-demo=hit]').click(); await settle();
+  await page.evaluate(()=>{void window.sofiaFixture('hit');}); await settle();
   await page.evaluate(() => document.activeElement.blur());
   await page.keyboard.press('Space'); await settle();
   assert.equal(await page.locator('#demo-label').isVisible(), false);

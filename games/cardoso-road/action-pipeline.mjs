@@ -36,6 +36,12 @@ export function createActionPipeline({
       if (signal.aborted) return false;
       enter(job, "sound");
       stages.sound(result);
+      if (stages.settle) {
+        // Commands stay blocked until the scene finished what it shows next.
+        enter(job, "settle");
+        await stages.settle(result, signal);
+        if (signal.aborted) return false;
+      }
       return true;
     } catch (error) {
       if (signal.aborted) return false;
@@ -57,6 +63,18 @@ export function createActionPipeline({
       return phase;
     },
   };
+}
+// Resolves with the presentation, or at once when the job is cancelled.
+export function untilPresented(promise, signal) {
+  if (signal.aborted) return Promise.resolve();
+  return new Promise((resolve) => {
+    const finish = () => {
+      signal.removeEventListener("abort", finish);
+      resolve();
+    };
+    signal.addEventListener("abort", finish, { once: true });
+    Promise.resolve(promise).then(finish, finish);
+  });
 }
 export function waitForPresentation(ms, signal) {
   if (signal.aborted) return Promise.resolve();

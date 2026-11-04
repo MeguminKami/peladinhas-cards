@@ -4,6 +4,8 @@ import {
   visualDestination,
   progressionPose,
   TRAVEL_MS,
+  FIGHT_MS,
+  DEFEAT_HOLD_MS,
 } from "./progression.mjs";
 import { stageVillain, villainPose, defeatPose, VILLAINS } from "./enemies.mjs";
 const prizeLabels = Object.fromEntries(
@@ -75,7 +77,14 @@ export function createScene(canvas, get) {
     motionFrom = 0,
     roundId = null,
     motionEvent = "idle",
-    motionAt = -10000;
+    motionAt = -10000,
+    // Scene clock: advances only with drawn frames (capped per frame), so a slow
+    // device plays the full animation more slowly instead of skipping it.
+    clock = 0,
+    pending = null,
+    lastCamera = "",
+    backdropCache = null,
+    backdropKey = "";
   const enemySprites = VILLAINS.map(({ sprite: path }) => {
     const sprite = new Image();
     sprite.src = path;
@@ -85,14 +94,19 @@ export function createScene(canvas, get) {
     speakerGrille = new Path2D();
   for (let y = -103; y < -10; y += 5)
     for (let x = -20; x < 23; x += 5) speakerGrille.rect(x, y, 1, 1);
+  let density = 1;
   const observer = new ResizeObserver(() => {
     const b = canvas.getBoundingClientRect();
     w = b.width;
     h = b.height;
-    const d = Math.min(devicePixelRatio || 1, 2);
-    canvas.width = w * d;
-    canvas.height = h * d;
-    c.setTransform(d, 0, 0, d, 0, 0);
+    // Large desktop frames keep a sharp image without filling >2.6 MP per frame.
+    density = Math.max(
+      1,
+      Math.min(devicePixelRatio || 1, 2, Math.sqrt(2.6e6 / Math.max(1, w * h))),
+    );
+    canvas.width = Math.round(w * density);
+    canvas.height = Math.round(h * density);
+    c.setTransform(density, 0, 0, density, 0, 0);
   });
   observer.observe(canvas);
   function box(x, y, bw, bh, color, r = 6) {
@@ -263,6 +277,53 @@ export function createScene(canvas, get) {
     );
     c.restore();
   }
+  // Gradient, painted gym and fog never move: paint them once per size/mode.
+  function backdropLayer(mode) {
+    const image =
+      backgrounds[mode]?.complete && backgrounds[mode].naturalWidth
+        ? backgrounds[mode]
+        : gym;
+    const ready = image.complete && image.naturalWidth > 0;
+    const key = `${mode}|${ready ? image.src : ""}|${w}|${h}|${density}`;
+    if (key !== backdropKey) {
+      backdropKey = key;
+      backdropCache ??= document.createElement("canvas");
+      backdropCache.width = Math.max(1, Math.round(w * density));
+      backdropCache.height = Math.max(1, Math.round(h * density));
+      const b = backdropCache.getContext("2d");
+      b.setTransform(density, 0, 0, density, 0, 0);
+      const bg = b.createLinearGradient(0, 0, w, h);
+      bg.addColorStop(0, "#23365b");
+      bg.addColorStop(0.6, "#654388");
+      bg.addColorStop(1, "#186d79");
+      b.fillStyle = bg;
+      b.fillRect(0, 0, w, h);
+      if (ready) {
+        const fit = backgroundLayout(w, h, image.naturalWidth, image.naturalHeight);
+        b.drawImage(image, fit.x, fit.y, fit.width, fit.height);
+      }
+      const fog = b.createLinearGradient(0, 0, 0, h);
+      fog.addColorStop(0, "#17154610");
+      fog.addColorStop(0.65, "#17133300");
+      fog.addColorStop(1, "#0b123bd9");
+      b.fillStyle = fog;
+      b.fillRect(0, 0, w, h);
+    }
+    return image;
+  }
+  function settle(all = false) {
+    if (!pending) return;
+    const age = clock - motionAt;
+    if (all || age >= pending.settleAt) pending.settled();
+    if (all || age >= pending.finishAt) {
+      pending.finished();
+      pending = null;
+    }
+  }
+  document.addEventListener("visibilitychange", () => {
+    // A hidden page draws no frames; never leave the game waiting for them.
+    if (document.hidden) settle(true);
+  });
   function frame(now) {
     const { round: r, mode, reduced, music = false, beatAt = 0 } = get();
     if (!r) {
@@ -274,16 +335,17 @@ export function createScene(canvas, get) {
     const dt = Math.min(40, now - last || 16);
     last = now;
     if (!document.hidden) {
+      clock += dt;
       if (!reduced) time += dt;
       const target = r?.step || 0,
         lost = r?.status === "lost",
-        age = now - eventAt;
+        age = clock - eventAt;
       if (roundId !== (r?.id ?? null)) {
         roundId = r?.id ?? null;
         position = visualDestination(r);
         motionFrom = position;
       }
-      const motionAge = now - motionAt,
+      const motionAge = clock - motionAt,
         motion = progressionPose({
           round: r,
           event: motionEvent,
@@ -317,32 +379,9 @@ export function createScene(canvas, get) {
         ),
         base = anchor - camera;
       let playerX = base + position * lane;
-      const bg = c.createLinearGradient(0, 0, w, h);
-      bg.addColorStop(0, "#23365b");
-      bg.addColorStop(0.6, "#654388");
-      bg.addColorStop(1, "#186d79");
-      c.fillStyle = bg;
-      c.fillRect(0, 0, w, h);
-      const backdrop =
-        backgrounds[mode]?.complete && backgrounds[mode].naturalWidth
-          ? backgrounds[mode]
-          : gym;
-      if (backdrop.complete && backdrop.naturalWidth) {
-        const fit = backgroundLayout(
-          w,
-          h,
-          backdrop.naturalWidth,
-          backdrop.naturalHeight,
-        );
-        c.drawImage(backdrop, fit.x, fit.y, fit.width, fit.height);
-      }
+      const backdrop = backdropLayer(mode);
+      c.drawImage(backdropCache, 0, 0, w, h);
       // Depth layers: individual training bays, luminous floor, foreground route markers.
-      const fog = c.createLinearGradient(0, 0, 0, h);
-      fog.addColorStop(0, "#17154610");
-      fog.addColorStop(0.65, "#17133300");
-      fog.addColorStop(1, "#0b123bd9");
-      c.fillStyle = fog;
-      c.fillRect(0, 0, w, h);
       const colors = [
         "#a3ff8c",
         "#5ff5ef",
@@ -717,7 +756,10 @@ export function createScene(canvas, get) {
             base + stagePosition(stage) * lane <= w + lane,
         })),
       };
-      canvas.dataset.camera = JSON.stringify(debug);
+      const serialized = JSON.stringify(debug);
+      if (serialized !== lastCamera) canvas.dataset.camera = lastCamera = serialized;
+      // Resolve only after the final pose of the presentation was drawn.
+      settle();
     }
     requestAnimationFrame(frame);
   }
@@ -733,13 +775,15 @@ export function createScene(canvas, get) {
         ...enemySprites.map((e) => e.sprite),
       ].map((image) => image.decode().catch(() => {})),
     ]),
+    // Returns when the event is visible: `settled` after the travel/fight the
+    // player must see, `finished` after any hold that follows (defeat pose).
     event(type) {
-      const now = performance.now();
+      settle(true);
       event = type;
-      eventAt = now;
+      eventAt = clock;
       motionFrom = position;
       motionEvent = type;
-      motionAt = now;
+      motionAt = clock;
       roundId = get().round?.id ?? null;
       if (type === "start") {
         position = 0;
@@ -747,6 +791,19 @@ export function createScene(canvas, get) {
         camera = 0;
       }
       defeatStart = type === "lost" ? { time } : null;
+      // Reduced motion skips the travel but still leaves the defeat readable.
+      const animated = ["step", "lost", "won"].includes(type) && !get().reduced,
+        settleAt = animated ? TRAVEL_MS + FIGHT_MS : 0,
+        finishAt =
+          type === "lost" ? TRAVEL_MS + FIGHT_MS + DEFEAT_HOLD_MS : settleAt;
+      let settled, finished;
+      const presentation = {
+        settled: new Promise((resolve) => (settled = resolve)),
+        finished: new Promise((resolve) => (finished = resolve)),
+      };
+      pending = { settleAt, finishAt, settled, finished };
+      if (document.hidden) settle(true);
+      return presentation;
     },
     inspect() {
       return debug;

@@ -83,9 +83,6 @@ input[type=range]{min-width:0;height:44px;margin:0;accent-color:var(--accent);cu
 .hunt-button[aria-pressed=true]{border-color:#84954a}.hunt-button[aria-pressed=true] .toggle{background:var(--accent)}.hunt-button[aria-pressed=true] .toggle::after{transform:translateX(14px);background:var(--bg-app)}
 .status-line{max-width:856px;margin:8px auto 0;text-align:center;font-size:.7rem;color:var(--accent)}
 .error{padding:12px 16px;border:1px solid #bf7474;background:#4b2632;color:#ffe1df;border-radius:10px;font-size:.85rem;margin-top:12px}
-.demo-controls{margin:0 24px 16px;border-top:1px solid var(--border);font-size:.75rem}
-.demo-controls summary{min-height:44px;padding:14px 0;cursor:pointer;color:var(--text-secondary)}
-.demo-controls p{color:var(--text-secondary);margin-bottom:12px}.demo-controls>div{display:flex;flex-wrap:wrap;gap:8px}
 dialog { width: min(760px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #716083; border-radius: 18px; background: var(--bg-surface); color: var(--text-primary); overflow: auto; }
 dialog::backdrop { background: #080412de; } /* sem backdrop-filter: o desfoque e muito pesado em telemoveis */
 dialog > header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 24px 24px 16px; border-bottom: 1px solid var(--border); }

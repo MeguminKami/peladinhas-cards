@@ -32,4 +32,6 @@ npm.cmd run dev:telemovel
 - **Saldo:** ✅ ligado ao casino com as regras da Rift (ver «Saldo, apostas e contas» no [INTEGRACAO.md](INTEGRACAO.md)). Fora do casino continua com créditos de teste.
 - **RTP não certificado:** a Coroa da Aurora mediu 104,9% numa amostra de 10 000 compras (ver [docs/matematica.md](docs/matematica.md)). Qualquer recalibração tem de respeitar o AGENTS.md.
 - **Sons:** as introduções dos bónus e o MAX WIN são sintetizados. Há um script para gerar versões na ElevenLabs (`npm.cmd run audio:candidates`, chave no `.env`) e uma página para escolher (`/audio-lab.html`).
+- **Demonstrações:** já não existem na interface. Os testes de browser abrem os cenários fixos com `game.html?fixtures=1` e `window.sofiaFixture(nome)`, numa sessão de teste que não toca no saldo.
+- **Regras e histórico:** a janela de informação tem altura de desenho fixa (780 px; 1010 px em retrato, em `ui/layout.js`), por isso todos os separadores usam a mesma escala e tamanho de letra. O separador «Histórico» lista as últimas 500 rondas concluídas neste dispositivo (`localStorage`), registadas só depois de terminada a apresentação.
 - **Testes de browser:** um passo do saldo das demonstrações (`tests/prototype.browser.js`) e um da poeira de XP (`tests/presentation.browser.js`) já falhavam antes das últimas revisões. Os 53 testes do motor (`npm.cmd test`) passam.

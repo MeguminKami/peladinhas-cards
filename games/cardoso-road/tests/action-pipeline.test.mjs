@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   createActionPipeline,
   waitForPresentation,
+  untilPresented,
 } from "../action-pipeline.mjs";
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 test("paint, durable confirmation, presentation, animation and sound run in order", async () => {
@@ -116,4 +117,29 @@ test("confirmation failures skip presentation and sound and release the pipeline
     animate: async () => {},
     sound() {},
   });
+});
+test("a slow presentation keeps every later stage and command waiting", async () => {
+  const order = [];
+  let drawn, reset;
+  const p = createActionPipeline({ paint: async () => {} });
+  const run = p.run("step", {
+    confirm: async () => "lost",
+    present: () => order.push("present"),
+    animate: (_, signal) =>
+      untilPresented(new Promise((resolve) => (drawn = resolve)), signal),
+    sound: () => order.push("sound"),
+    settle: (_, signal) =>
+      untilPresented(new Promise((resolve) => (reset = resolve)), signal),
+  });
+  await flush();
+  assert.deepEqual(order, ["present"]);
+  assert.equal(await p.run("start", {}), false, "no new bet while the fight is drawn");
+  drawn();
+  await flush();
+  assert.deepEqual(order, ["present", "sound"]);
+  assert.equal(p.phase, "settle");
+  assert.equal(p.active, true, "the defeat must be shown before the reset");
+  reset();
+  assert.equal(await run, true);
+  assert.equal(p.active, false);
 });

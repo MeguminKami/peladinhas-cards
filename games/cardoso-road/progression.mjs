@@ -3,6 +3,8 @@ export const stagePosition=stage=>stage+1;
 export const visualDestination=round=>round&&round.status!=='paid'?(round.step+(round.status==='lost'?1:0)):0;
 export const TRAVEL_MS=420;
 export const FIGHT_MS=300;
+// The defeated pose stays on screen before the gym resets.
+export const DEFEAT_HOLD_MS=400;
 export function progressionPose({round,event='idle',age=Infinity,from=visualDestination(round),reduced=false}){
  const destination=visualDestination(round),lost=round?.status==='lost',won=round?.status==='won';
  const stage=lost?round.step:Math.max(0,(round?.step||0)-1);

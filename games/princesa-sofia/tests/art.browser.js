@@ -18,7 +18,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
  await page.route('**/*',route=>{assert.ok(route.request().url().startsWith(origin),'Only local assets');return route.continue();});
- async function ready(){await page.goto(origin+'/game.html');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);}
+ async function ready(){await page.goto(origin+'/game.html?fixtures=1');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);}
  for(const size of [{width:1440,height:740},{width:1024,height:600},{width:390,height:568},{width:640,height:240}]){
   await page.setViewportSize(size);await page.goto(origin);
   const game=page.frameLocator('iframe');await game.locator('#spin:not(:disabled)').waitFor();
@@ -41,7 +41,7 @@ try {
  for(const mode of ['common','super','secret']){
   await page.setViewportSize({width:390,height:844});await ready();
   await page.locator('#speed-button').click();await page.locator('#speed-button').click();
-  await page.locator('#rules-button').click();await page.locator('.demo-controls summary').click();await page.locator(`[data-demo=${mode}]`).click();
+  await page.evaluate(name=>{void window.sofiaFixture(name);},mode);
   await page.waitForSelector('#notice-dialog[open]');
   await page.waitForFunction(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   await page.screenshot({path:join(tmpdir(),`sofia-bonus-${mode}-art.png`)});

@@ -12,9 +12,9 @@ try {
  const edge='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
  browser=await chromium.launch({headless:true,...(existsSync(chromium.executablePath())?{}:{executablePath:edge})});
  const page=await browser.newPage({viewport:{width:1200,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(origin+'/game.html');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);
+ await page.goto(origin+'/game.html?fixtures=1');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);
  assert.equal(await page.evaluate(()=>document.fonts.check('16px "Sofia Storybook"')),true);
- await page.locator('#rules-button').click();await page.locator('.demo-controls summary').click();await page.locator('[data-demo=multi]').click();
+ await page.evaluate(()=>{void window.sofiaFixture('multi');});
  await page.waitForSelector('#board .hit[data-symbol=N1]');
  assert.equal(await page.locator('#board .hit:not([data-symbol=N1])').count(),0);
  const amount=page.locator('.group-prize');await amount.waitFor();assert.match(await amount.innerText(),/^\d+[,.]\d{2}$/);
@@ -53,8 +53,8 @@ try {
    return {counts,unchanged:before===board.innerHTML};
  });
  assert.deepEqual(variants,{counts:[3,4,5],unchanged:true});
- await page.goto(origin+'/game.html');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);
- await page.locator('#rules-button').click();await page.locator('.demo-controls summary').click();await page.locator('[data-demo=magic]').click();
+ await page.goto(origin+'/game.html?fixtures=1');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);
+ await page.evaluate(()=>{void window.sofiaFixture('magic');});
  await page.waitForSelector('#magic-upgrade:not([hidden])');
  assert.equal(await page.locator('#magic-upgrade .magic-wild-preview img').count(),1);
  const centred=await page.locator('#magic-upgrade').evaluate(el=>{const r=el.getBoundingClientRect(),b=document.querySelector('.board-frame').getBoundingClientRect();return Math.abs(r.y+r.height/2-b.y-b.height/2)<2&&Math.abs(r.x+r.width/2-b.x-b.width/2)<2;});assert.ok(centred,'Magic vignette is centred on board');
@@ -68,9 +68,9 @@ try {
  assert.ok(await page.locator('#board .wild-identity').count()>0);
  await page.waitForTimeout(150);
  await page.screenshot({path:join(tmpdir(),'sofia-fairy-wild.png')});
- await page.goto(origin+'/game.html');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);
+ await page.goto(origin+'/game.html?fixtures=1');await page.waitForFunction(()=>!document.querySelector('#spin').disabled);
  await page.locator('#speed-button').click();await page.locator('#speed-button').click();
- await page.locator('#rules-button').click();await page.locator('.demo-controls summary').click();
+ 
  await page.evaluate(()=>{
    const toast=document.getElementById('magic-upgrade');
    globalThis.magicTiming=[];
@@ -79,7 +79,7 @@ try {
      else if(globalThis.magicTiming.length)globalThis.magicTiming.at(-1).elapsed=performance.now()-globalThis.magicTiming.at(-1).start;
    }).observe(toast,{attributes:true,attributeFilter:['hidden']});
  });
- await page.locator('[data-demo=magic]').click();
+ await page.evaluate(()=>{void window.sofiaFixture('magic');});
  await page.waitForFunction(()=>globalThis.magicTiming.some(t=>t.elapsed));
  const ultraTiming=await page.evaluate(()=>globalThis.magicTiming.find(t=>t.elapsed));
  assert.ok(ultraTiming.entrance<=80,'Ultra entrance follows spin speed');

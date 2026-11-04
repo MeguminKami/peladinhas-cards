@@ -449,7 +449,6 @@ function controls() {
   $('bet-plus').disabled = locked || BET_UNITS.indexOf(betUnits) === BET_UNITS.length - 1;
   $('buy-bet-minus').disabled = $('bet-minus').disabled;
   $('buy-bet-plus').disabled = $('bet-plus').disabled;
-  document.querySelectorAll('[data-demo]').forEach(button => { button.disabled = locked; });
   $('auto-button').disabled = !artReady || !walletReady || (running && !autoRunning);
   $('auto-button').textContent = autoRunning ? 'Parar auto' : 'Autoplay';
   $('spin-label').textContent = autoRunning ? 'Parar auto' : running ? 'Acelerar' : 'Rodar';
@@ -675,6 +674,7 @@ async function runRound({ mode = hunt ? 'hunt' : 'base', demo = null, resume = f
       await notice('Bónus concluído', `${final.bonusSpinsPlayed} spins jogados, incluindo os adicionais.`, demo ? 'DEMONSTRAÇÃO' : 'RESULTADO', false, creditedUnits(final.paid100, view.betUnits));
       try { sound.playMusic(hunt ? 'hunt' : 'base'); } catch { }
     }
+    if (!demo && final?.complete) recordHistory(final);
     status(demo ? `Demonstração terminada: ${demo.name}. O saldo não foi alterado.` : `Jogada terminada · prémio ${money(creditedUnits(final.paid100, view.betUnits))}.`);
   } catch (error) {
     failed = true; bufferedSpin = false; tempo.held = false;
@@ -756,7 +756,7 @@ function rulesContent() {
     [names.secret, `${xp('secret')} XP`, '2 W de 2×', '+2 W e +2×/+3× alternados'],
   ].map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('');
 
-  const tabs = [['play', 'Jogar'], ['wilds', 'Wilds'], ['bonus', 'Flores e bónus'], ['pay', 'Pagamentos']];
+  const tabs = [['play', 'Jogar'], ['wilds', 'Wilds'], ['bonus', 'Flores e bónus'], ['pay', 'Pagamentos'], ['history', 'Histórico']];
   $('rules-content').innerHTML = `<nav class="rules-tabs" aria-label="Secções das regras">${tabs.map(([key, label]) => `<button data-rule="${key}" aria-pressed="${key === 'play'}">${label}</button>`).join('')}</nav>
 
   <section data-rule-panel="play" class="rule-panel">
@@ -824,11 +824,43 @@ function rulesContent() {
     <p class="rule-note">Em × a aposta, pelo número de símbolos do grupo, antes dos multiplicadores. A tabela é a mesma em todos os modos.</p>
     <div class="table-wrap"><table class="pay-table"><thead><tr><th>Símbolo</th>${tiers.map(t => `<th>${t}</th>`).join('')}</tr></thead><tbody>${payoutRows(C.pay100)}</tbody></table></div>
     <p class="rule-note">Um ecrã só de W e flores paga uma vez como Princesa Sofia com 18+.</p>
-  </section>`;
+  </section>
+
+  <section data-rule-panel="history" class="rule-panel history-panel" hidden></section>`;
   document.querySelectorAll('[data-rule]').forEach(button => button.addEventListener('click', () => {
     document.querySelectorAll('[data-rule]').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
     document.querySelectorAll('[data-rule-panel]').forEach(panel => { panel.hidden = panel.dataset.rulePanel !== button.dataset.rule; });
+    if (button.dataset.rule === 'history') renderHistory();
   }));
+}
+
+// ---- Historico de rondas (como na Futebol de Bairro): so rondas concluidas e ja apresentadas ----
+const HISTORY_KEY = `princesa-sofia-history:${hostOrigin ? 'casino' : 'teste'}`, HISTORY_LIMIT = 500, HISTORY_PAGE = 8;
+let historyFilter = 'all', historyPage = 0;
+function readHistory() {
+  try { const rows = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); return Array.isArray(rows) ? rows : []; } catch { return []; }
+}
+function recordHistory(final) {
+  const rows = readHistory(), bet = final.betUnits, paid = creditedUnits(final.paid100, bet);
+  rows.unshift({ id: (rows[0]?.id || 0) + 1, at: Date.now(), entry: final.entryMode, bonus: final.bonusType || null, bet, cost: final.costUnits ?? session.cost(final.entryMode, bet), paid, spins: final.bonusSpinsPlayed || 0, max: Boolean(final.maxWin) });
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(rows.slice(0, HISTORY_LIMIT))); } catch { /* historico e so informativo */ }
+  if (!$('rules-dialog').querySelector('[data-rule-panel=history]')?.hidden) renderHistory();
+}
+const entryLabel = row => row.entry === 'hunt' ? 'Bonus Hunt' : row.entry === 'base' ? 'Jogo normal' : `Compra · ${names[row.entry]}`;
+function renderHistory() {
+  const panel = $('rules-content').querySelector('[data-rule-panel=history]'); if (!panel) return;
+  const filters = [['all', 'Todas'], ['base', 'Jogo normal'], ['hunt', 'Bonus Hunt'], ['buy', 'Compras de bónus'], ['natural', 'Bónus natural']];
+  const filtered = readHistory().filter(r => historyFilter === 'all' || (historyFilter === 'buy' ? !['base', 'hunt'].includes(r.entry) : historyFilter === 'natural' ? ['base', 'hunt'].includes(r.entry) && r.bonus : r.entry === historyFilter));
+  const pages = Math.max(1, Math.ceil(filtered.length / HISTORY_PAGE)); historyPage = Math.max(0, Math.min(historyPage, pages - 1));
+  const page = filtered.slice(historyPage * HISTORY_PAGE, (historyPage + 1) * HISTORY_PAGE);
+  const amount = units => number.format(units / 100);
+  panel.innerHTML = `<div class="history-head"><h3>Histórico de rondas</h3><label><span class="sr-only">Filtrar histórico</span><select id="history-filter">${filters.map(([key, label]) => `<option value="${key}"${key === historyFilter ? ' selected' : ''}>${label}</option>`).join('')}</select></label></div>
+    <p class="rule-note">${filtered.length} ronda(s) · últimas ${HISTORY_LIMIT} neste dispositivo · valores em DJC</p>
+    <div class="table-wrap"><table class="rule-table history-table"><thead><tr><th>Ronda / modo</th><th>Aposta</th><th>Custo</th><th>Pago</th><th>Líquido</th></tr></thead><tbody>${page.map(r => `<tr><th scope="row"><b>#${r.id}</b> · ${entryLabel(r)}${r.bonus && ['base', 'hunt'].includes(r.entry) ? ` · ${names[r.bonus]}` : ''}${r.max ? ' · MAX WIN' : ''}<small>${new Date(r.at).toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' })}${r.spins ? ` · ${r.spins} spins grátis` : ''}</small></th><td>${amount(r.bet)}</td><td>${amount(r.cost)}</td><td>${amount(r.paid)}</td><td class="${r.paid >= r.cost ? 'positive' : 'negative'}">${r.paid >= r.cost ? '+' : ''}${amount(r.paid - r.cost)}</td></tr>`).join('') || '<tr><td colspan="5">Ainda não existem rondas.</td></tr>'}</tbody></table></div>
+    <div class="history-pager"><button id="history-previous"${historyPage === 0 ? ' disabled' : ''}>Anterior</button><span>Página ${historyPage + 1} de ${pages}</span><button id="history-next"${historyPage + 1 >= pages ? ' disabled' : ''}>Seguinte</button></div>`;
+  $('history-filter').addEventListener('change', event => { historyFilter = event.target.value; historyPage = 0; renderHistory(); });
+  $('history-previous').addEventListener('click', () => { historyPage--; renderHistory(); });
+  $('history-next').addEventListener('click', () => { historyPage++; renderHistory(); });
 }
 
 BET_UNITS.forEach(value => { const option = document.createElement('option'); option.value = String(value); option.textContent = money(value); option.selected = value === betUnits; $('bet').append(option); });
@@ -906,7 +938,9 @@ document.addEventListener('keydown', event => {
   if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
   else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 });
-document.querySelectorAll('[data-demo]').forEach(button => button.addEventListener('click', () => { if (running || autoRunning) return; const demo = demoScenario(button.dataset.demo); button.closest('dialog')?.close(); runRound({ mode: demo.mode, demo }); }));
+// Sem demonstracoes na interface. Os testes de browser abrem cenarios fixos com ?fixtures=1;
+// correm numa sessao de teste separada e nunca tocam no saldo.
+if (new URLSearchParams(location.search).has('fixtures')) window.sofiaFixture = name => { if (running || autoRunning) return; const demo = demoScenario(name); document.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); return runRound({ mode: demo.mode, demo }); };
 // Barras deslizantes tematicas: a parte preenchida segue o valor (--fill).
 function paintRange(input) { const min = Number(input.min) || 0, max = Number(input.max) || 100; input.style.setProperty('--fill', `${((Number(input.value) - min) / (max - min || 1)) * 100}%`); }
 function paintRanges() { document.querySelectorAll('input[type=range]').forEach(paintRange); }

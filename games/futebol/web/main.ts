@@ -41,6 +41,9 @@ catch(error){storageError=error instanceof Error?error.message:String(error);ses
 let visualBalance:number|null=session.active ? session.balance-(session.history[0]?.paid??0) : null;
 let busy=false,reviewPending=false,assetsReady=false,autoTimer:ReturnType<typeof setTimeout>|undefined;
 let autoPlaying=false,autoRemaining=0,autoFsPaused=false;
+// Values the player has already seen. The confirmed result is stored before the reels
+// start, so the HUD must not read it until the presentation reveals each part.
+let presented:{spin:number;round:number;lines:number;active:boolean}|null=null;
 let finishAnimation:(()=>void)|undefined,historyPage=0,historyFilter='all',lastFocus:HTMLElement|null=null;
 let interruptPresentation:(()=>void)|undefined;
 let bonusEntryWaiting=false;
@@ -167,11 +170,11 @@ function render(){
   const r=lastSpin(),row=session.history[0],locked=autoPlaying||hasPendingWallet()||busy||reviewPending||!!session.active||!!session.pendingRetrigger||!!storageError;
   const visualMode=bonusView?.mode??'base';
   document.querySelector('.machine')!.classList.toggle('hunt-active',prefs.bonusHunt&&visualMode==='base');$('bonus-hunt').setAttribute('aria-pressed',String(prefs.bonusHunt));$<HTMLButtonElement>('bonus-hunt').disabled=locked||!assetsReady;$<HTMLButtonElement>('bonus-shop').disabled=locked||!assetsReady;
-  $('mode').textContent=modeName(visualMode);$('round-note').textContent=session.active?'Aposta '+money(row.bet):'40 linhas · 4 × 6';renderFreeSpins();
+  $('mode').textContent=modeName(visualMode);$('round-note').textContent=(presented?presented.active:session.active)?'Aposta '+money(row.bet):'40 linhas · 4 × 6';renderFreeSpins();
   document.querySelector<HTMLElement>('.machine')!.dataset.mode=visualMode;
   $('state').textContent=storageError?'Sessão bloqueada':busy?'A apresentar':reviewPending?'Resumo':session.active?'Free spins':'Pronto';
-  $('global').textContent='Global ×'+(r?.detail?.global??1);
-  $('balance').textContent=money(visualBalance??session.balance);if(!externalWallet||assetsReady)document.documentElement.dataset.casinoBalance=String(visualBalance??session.balance);$('spin-pay').textContent=money(r?.paid??0);$('round-pay').textContent=money(row?.paid??0);
+  if(!presented)$('global').textContent='Global ×'+(r?.detail?.global??1);
+  $('balance').textContent=money(visualBalance??session.balance);if(!externalWallet||assetsReady)document.documentElement.dataset.casinoBalance=String(visualBalance??session.balance);$('spin-pay').textContent=money(presented?presented.spin:r?.paid??0);$('round-pay').textContent=money(presented?presented.round:row?.paid??0);
   $<HTMLSelectElement>('bet').querySelectorAll('option').forEach(option=>option.textContent=money(Number(option.value)*(prefs.bonusHunt&&visualMode==='base'?config.huntCostMultiplier:1)));
   $<HTMLSelectElement>('bet').value=String(session.bet);$<HTMLSelectElement>('bet').disabled=locked;
   $<HTMLButtonElement>('minus').disabled=locked||session.bet===config.bets[0];$<HTMLButtonElement>('plus').disabled=locked||session.bet===config.bets.at(-1);
@@ -188,7 +191,7 @@ function render(){
   if(r?.retrigger)$('events').innerHTML+=`<li>Prolongamento: +${r.retrigger.awarded} FS</li>`;
   if(r?.metrics.newSticky)$('events').innerHTML+=`<li>${r.metrics.newSticky} wild(s) ficaram fixos.</li>`;
   $('line-count').textContent=String(r?.detail?.lines.length??0);
-  $('inspect-count').textContent=(r?.detail?.lines.length??0)+' linhas';
+  $('inspect-count').textContent=(presented?presented.lines:r?.detail?.lines.length??0)+' linhas';
   document.querySelector('.machine')!.classList.toggle('bonus-mode',!!bonusView);
   document.querySelector('.machine')!.classList.toggle('is-busy',busy);
   $('lines').innerHTML=r?.detail?.lines.length?r.detail.lines.map(l=>`<div class="line-item" tabindex="0" data-line="${l.line}">#${l.line} · ${l.length} ${l.symbol} · ${x(l.hundredths*(r.detail!.payoutScaleBps/10000),100)}${l.local>1?' · wild ×'+l.local:''}</div>`).join(''):'Sem combinações pagadoras.';
@@ -268,7 +271,8 @@ function animateBonusSummary(row:HistoryRound){
 async function play(command:Command){
   if(!assetsReady||busy||reviewPending||session.pendingRetrigger||$<HTMLDialogElement>('modal').open)return;cancelAuto();selectedPayline=undefined;linesPresented=false;busy=true;render();
   unlockAudio();stopEffects();if(session.active?.remaining===1)audioCue('last');
-  try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;visualBalance=session.balance-session.history[0].paid;if(result.mode==='base'&&!session.active)visualBalance=session.balance-result.paid;render();if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
+  const wasActive=!!session.active;
+  try{await mutate(s=>executeWallet(s,command));const result=lastSpin()!;presented={spin:0,round:session.history[0].paid-result.paid,lines:0,active:wasActive};visualBalance=session.balance-session.history[0].paid;if(result.mode==='base'&&!session.active)visualBalance=session.balance-result.paid;render();if(autoPlaying&&command.type==='start'&&command.mode==='base')autoRemaining=Math.max(0,autoRemaining-1);renderFreeSpins();$('autospin-count').textContent=autoPlaying?String(autoRemaining):'AUTO';
     let controller=new AbortController();const bindController=(grace=0)=>{const current=controller,since=performance.now();finishAnimation=()=>{if(performance.now()-since<grace)return;current.abort();stopEffects();};interruptPresentation=()=>{current.abort();stopEffects();};};bindController();
     if(command.type==='start'&&command.mode!=='base'){
       document.querySelector<HTMLElement>('.machine')!.dataset.presentation='purchase-activation';$('round-note').textContent='Ativação da compra · '+(command.mode==='normal'?3:command.mode==='legend'?5:4)+' bilhetes';
@@ -287,6 +291,8 @@ async function play(command:Command){
     await presentWinningLines(result,controller.signal);
     await celebrateWin(result.paid,session.history[0].bet,{speed:prefs.speed,reduced:prefs.reduced,signal:controller.signal,control:finish=>finishAnimation=finish,cue:tier=>victoryAudio(tier)});
     finishAnimation=undefined;
+    // Reels, lines and counter are done (or skipped): reveal the confirmed totals.
+    presented=null;render();
     const completedRow=session.history[0];
     const transitionMode=bonusView?.mode==='legend'?'legend':bonusView?.mode==='superior'?'superior':'normal';
     if(result.next.done&&(completedRow.spins.length>1||completedRow.mode!=='base'))await presentBonusTransition({kind:'final',mode:transitionMode,reduced:prefs.reduced,signal:controller.signal});
@@ -300,7 +306,7 @@ async function play(command:Command){
     else if(session.active&&result.mode==='base'){
       await showBonusEntry(session.active.mode as 'normal'|'superior'|'legend');scheduleAuto();
     }else scheduleAuto();
-  }catch(error){autoPlaying=false;autoRemaining=0;cancelAuto();interruptPresentation?.();interruptPresentation=undefined;finishAnimation=undefined;busy=false;visualBalance=session.active?session.balance-(session.history[0]?.paid??0):null;$('board').classList.remove('busy');render();notify(error instanceof Error?error.message:String(error));}
+  }catch(error){presented=null;autoPlaying=false;autoRemaining=0;cancelAuto();interruptPresentation?.();interruptPresentation=undefined;finishAnimation=undefined;busy=false;visualBalance=session.active?session.balance-(session.history[0]?.paid??0):null;$('board').classList.remove('busy');render();notify(error instanceof Error?error.message:String(error));}
 }
 function buy(mode:'normal'|'superior'|'legend'){
   if(busy||session.active||reviewPending)return;
