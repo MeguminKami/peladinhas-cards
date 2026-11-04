@@ -271,3 +271,34 @@
   .sca-portrait {
   filter: drop-shadow(0 2px 5px #000a);
 }
+
+/* Premium cards reserve separate lanes for rating, portrait and eight attributes. */
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) {
+  aspect-ratio: 4 / 5;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-rating {
+  inset: 17% auto auto 17%;
+  width: 23%;
+  gap: .8cqw;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-rating b {
+  font-size: 13cqw;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-photo-frame {
+  left: 43%;
+  top: 15%;
+  width: 46%;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-identity {
+  top: 56%;
+  left: 18%;
+  right: 18%;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-identity > strong {
+  height: 11cqw;
+  align-content: center;
+}
+:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .card-playstyles {
+  left: 18%;
+  top: 47%;
+}

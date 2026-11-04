@@ -741,3 +741,7 @@ body:has(> #casino-shop) {
   .shop-wallet.is-large { grid-template-columns: minmax(0, 1fr); }
   .shop-wallet.is-large > .shop-player { grid-column: 1; grid-row: auto; flex-direction: row; justify-content: space-between; border-left: 0; border-top: 1px solid var(--border); margin-top: 12px; padding: 12px 0 0; }
 }
+
+.football-card.card-shop:has(:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)) {
+  aspect-ratio: 4 / 5;
+}

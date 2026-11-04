@@ -69,6 +69,17 @@ try {
   await mkdir("artifacts/casino-shop", { recursive: true });
   for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
+    for (const card of await page.locator('.shop-item :is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)').all()) {
+      const layout = await card.evaluate(el => {
+        const box = el.getBoundingClientRect();
+        const rating = el.querySelector('.sca-rating').getBoundingClientRect();
+        const photo = el.querySelector('.sca-photo-frame').getBoundingClientRect();
+        const identity = el.querySelector('.sca-identity').getBoundingClientRect();
+        return { ratio: box.width / box.height, contained: rating.left >= box.left && rating.right <= photo.left && identity.bottom < box.top + box.height * .9 };
+      });
+      assert.ok(Math.abs(layout.ratio - .8) < .01, 'premium proportions ' + width);
+      assert.ok(layout.contained, 'premium content stays in its reserved lanes ' + width);
+    }
     for (const photo of await page.locator(".sca-photo-frame").all()) {
       const bounds = await photo.boundingBox();
       assert.ok(Math.abs(bounds.width - bounds.height) < 1, `square portrait ${width}`);
