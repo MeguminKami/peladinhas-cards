@@ -250,7 +250,10 @@ export function mount(root:HTMLElement,options:RouletteMountOptions={}){
     try{
       if(options.online){
         const joined=await options.online.ready;if(destroyed)return;
-        onlineState=joined.table;store.state.balance=joined.balance;ready=true;
+        onlineState=joined.table;store.state.balance=joined.balance;
+        // Online money lives on the server; a round left here by an interrupted animation is presentation only and would lock the table forever.
+        if(store.state.round){const next=clone(store.state);next.round=null;await store.commit(next);if(destroyed)return;}
+        ready=true;
         if(freshResult(onlineState?.result,joined.serverNow??Date.now())){skipRequested=audio.settings.reduced;await presentOnlineResult(onlineState!.result!);}
         else{if(onlineState?.result)handledOnlineRound=onlineState.result.id;phase='ready';visualBalance=null;}
       }else{
