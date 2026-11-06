@@ -182,6 +182,8 @@ As equipas distinguem **titulares e suplentes**. Os controlos permitem mover jog
 
 <img src="docs/media/game-teams.png" width="100%" alt="Equipas A e B com titulares, suplentes, cartas individuais e controlos para mover jogadores." />
 
+Nos jogos **5×5 abertos**, as cartas dos cinco titulares de cada equipa aparecem num campo horizontal, em formação **2–1–2**, sem posição de guarda-redes. As posições são sorteadas independentemente por equipa e mantêm-se durante a partida; a colocação visual não altera posições das cartas, capitães ou cálculos. Os suplentes e controlos continuam disponíveis em «Equipas, suplentes e gestão». No telemóvel, o campo adapta-se à orientação: vertical em pé e horizontal deitado, com os dez titulares visíveis sem deslocação lateral. Toca numa carta para a ampliar e aceder ao perfil; os rótulos de posição ficam ocultos para dar espaço às cartas. Rascunhos, jogos encerrados e os restantes formatos mantêm a apresentação habitual.
+
 ### Registar o resultado
 
 O resultado inclui o marcador das duas equipas e os golos e assistências de cada participante. Depois do encerramento, esses registos alimentam as estatísticas e os objetivos elegíveis.
@@ -190,14 +192,16 @@ O resultado inclui o marcador das duas equipas e os golos e assistências de cad
 
 ## 05 · Avaliações pós-jogo
 
-Após um jogo encerrado, os participantes podem avaliar os colegas e o próprio desempenho. Os jogadores estão separados por equipa, com molduras azuis e laranja. Cada dimensão ocupa uma linha com cinco estrelas clicáveis, preenchidas da esquerda até à escolhida. Os rascunhos são guardados automaticamente.
+Após um jogo encerrado, os participantes podem avaliar os colegas e o próprio desempenho. Os jogadores estão separados por equipa, com molduras azuis e laranja. Na próxima avaliação, cada jogador escolhe obrigatoriamente um método com pré-visualização: **De 0 a 5 Estrelas**, **De 0 a 5 Estrelas e Meia**, **De 0 a 10 Valores** ou **Por Palavras**. A preferência fica no perfil e pode ser alterada em **Mudar método de avaliação**. Os rascunhos são guardados automaticamente.
 
 <img src="docs/media/match-feedback.png" width="100%" alt="Área de feedback pós-jogo com progresso das avaliações e dimensões de desempenho por jogador." />
 
 | Avaliar                                                              | Guardar                                     | Concluir                                    |
 | :------------------------------------------------------------------- | :------------------------------------------ | :------------------------------------------ |
-| Tocar nas estrelas para escolher de 1 a 5, ou selecionar 0 estrelas. | Os rascunhos são guardados automaticamente. | Enviar a avaliação quando estiver completa. |
+| Escolher estrelas, meias estrelas, valores ou palavras. | Os rascunhos são guardados automaticamente. | Enviar a avaliação quando estiver completa. |
 | Escolher «Não jogou à baliza» quando não aplicável.                  | Retomar as avaliações ainda por enviar.     | As avaliações submetidas ficam concluídas.  |
+
+As palavras correspondem a 0–5: Muito fraco, Fraco, Razoável, Bom, Muito bom e Excelente. Os valores de 0–10 são divididos por dois; meias estrelas e decimais são guardados sem arredondamento na escala interna de 0–5. Mudar de método preserva as notas existentes. A roleta começa centrada no 5, sem avaliar uma dimensão até haver interação.
 
 Os restantes membros consultam os agregados permitidos. As respostas individuais não são mostradas aos outros jogadores; a administração tem acesso de revisão.
 

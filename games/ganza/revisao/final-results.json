@@ -1,0 +1,21 @@
+{
+  "keyboard": true,
+  "manualBlockedDuringAuto": true,
+  "fractionalBetRejected": true,
+  "escapeDialog": true,
+  "audio": {
+    "sfx": 44,
+    "layers": 3,
+    "musicMode": "cues",
+    "basePlaying": true,
+    "synchronized": false,
+    "context": "running"
+  },
+  "largeBalance": {
+    "titleRight": 186,
+    "settingsLeft": 276,
+    "balanceRemoved": true,
+    "overflow": false
+  },
+  "errors": []
+}

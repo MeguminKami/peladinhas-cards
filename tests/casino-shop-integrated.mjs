@@ -69,15 +69,23 @@ try {
   await mkdir("artifacts/casino-shop", { recursive: true });
   for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 1000 });
-    for (const card of await page.locator('.shop-item :is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)').all()) {
+    for (const card of await page.locator('.shop-item .casino-shop-card').all()) {
       const layout = await card.evaluate(el => {
         const box = el.getBoundingClientRect();
         const rating = el.querySelector('.sca-rating').getBoundingClientRect();
         const photo = el.querySelector('.sca-photo-frame').getBoundingClientRect();
-        const identity = el.querySelector('.sca-identity').getBoundingClientRect();
+        const identity = el.querySelector('.sca-stats').getBoundingClientRect();
+        const frame = el.querySelector('.sca-crafted-frame').getBBox();
+        if (frame.x < -8 || frame.y < -15 || frame.x + frame.width > 308 || frame.y + frame.height > 427) throw Error('Frame ornaments exceed the reserved exterior space');
+        for (const trend of el.querySelectorAll('.card-stat-trend')) {
+          const arrow = trend.getBoundingClientRect(), value = trend.closest('b').getBoundingClientRect();
+          if (Math.abs((arrow.top + arrow.height / 2) - (value.top + value.height / 2)) > 2) throw Error('Trend must stay beside its own value');
+        }
+        const caption = el.querySelector('.card-caption').getBoundingClientRect();
+        if (photo.bottom > caption.top || caption.top - photo.bottom > box.height * .03) throw Error('Portrait must sit just above the name');
         return { ratio: box.width / box.height, contained: rating.left >= box.left && rating.right <= photo.left && identity.bottom < box.top + box.height * .9 };
       });
-      assert.ok(Math.abs(layout.ratio - .8) < .01, 'premium proportions ' + width);
+      assert.ok(Math.abs(layout.ratio - .67) < .01, 'premium cards share the normal card proportions ' + width);
       assert.ok(layout.contained, 'premium content stays in its reserved lanes ' + width);
     }
     for (const photo of await page.locator(".sca-photo-frame").all()) {

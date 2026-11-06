@@ -1,0 +1,9 @@
+{
+  "source": "weed-smoking-sheet.png",
+  "keyPoses": 12,
+  "durationMs": 20000,
+  "fps": 12,
+  "reviewOnly": true,
+  "interpolation": "FFmpeg motion-compensated for GIF and MP4. WebP preserves original alpha key poses.",
+  "faceReference": "Two owner-specified photographs, never copied to public game assets."
+}

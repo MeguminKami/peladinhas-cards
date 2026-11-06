@@ -1099,7 +1099,7 @@ test("fotografia semanal: admin, upload validado, perfil independente e semanas 
   try {
     const uid = "weekly-photo-player",
       admin = "weekly-photo-admin",
-      design = { ...defaultPhotoDesign(), photoScale: 140, photoX: 40 };
+      design = { ...defaultPhotoDesign(), photoScale: 140, photoX: 40, placement: "free" };
     await db.doc(`users/${uid}`).set({
       uid,
       role: "member",
@@ -1131,6 +1131,7 @@ test("fotografia semanal: admin, upload validado, perfil independente e semanas 
     await assert.rejects(call(uid));
     await assert.rejects(call(admin, { weekId: "2026-W40" }));
     await assert.rejects(call(admin, { design: { shape: "mvp" } }));
+    await assert.rejects(call(admin, { design: { ...design, placement: "unknown" } }));
     await assert.rejects(call(admin, { photoURL: "javascript:bad" }));
     await assert.rejects(call(admin, { imageBase64: "not-an-image" }));
     await call(admin);

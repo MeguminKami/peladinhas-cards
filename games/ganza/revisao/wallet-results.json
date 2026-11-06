@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-06T14:07:18.669Z",
+  "first": {
+    "initial": 10000,
+    "balance": 9900,
+    "duplicate": true,
+    "rejected": true,
+    "pending": 1,
+    "spent": 100
+  },
+  "second": {
+    "recovered": true,
+    "seedHidden": true,
+    "retriedSame": true,
+    "duplicate": true,
+    "balance": 9920,
+    "expected": 9920,
+    "pending": 0,
+    "recent": "ganza",
+    "spent": 100,
+    "won": 20,
+    "payment": 20
+  },
+  "iframeHost": true,
+  "cloudReads": 0
+}

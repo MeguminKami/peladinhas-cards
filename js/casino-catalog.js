@@ -1,5 +1,8 @@
 export const CASINO_TABLES_ENABLED = true;
 export const CASINO_CATALOG = Object.freeze([
+  { id: "ganza", category: "slots", title: "GANZÁ", label: "Calma, que vai. Da falésia para o barco.", description: "O Plinko LoFi do WEED. Quatro volatilidades, 8, 12 e 16 linhas.", art: "reels", thumbnail: "assets/casino/covers/ganza-falesia.webp", available: CASINO_TABLES_ENABLED },
+  { id: "piece-police", category: "slots", title: "PEACE POLICE: THE AFTERPARTY", label: "A festa começa. A Chemistry sobe.", description: "Cascatas, cinco personagens, dez fusões e três afterparties.", art: "reels", thumbnail: "assets/casino/covers/peace-police.webp", available: CASINO_TABLES_ENABLED },
+  { id: "risco", category: "slots", title: "RISCO", label: "Uma linha. Uma decisão. O teu momento.", description: "O crash do LCD. Sai antes de ele perder a cabeça.", art: "reels", thumbnail: "assets/casino/covers/risco.webp", available: CASINO_TABLES_ENABLED },
   { id: "cardoso-road", category: "slots", title: "Cardoso Road", label: "Fuga ao Óleo. Arrisca o próximo passo.", description: "Dez passos até à Sofia. Sem óleo. Sem bolo. Só gains.", art: "reels", thumbnail: "assets/casino/covers/cardoso-road.webp", available: true },
   {
     id: "futebol",

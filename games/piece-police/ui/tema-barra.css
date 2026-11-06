@@ -1,5 +1,41 @@
-/* Tema da barra de controlos — Fase 2: neutro (os valores por omissão do kit).
-   A Fase 3 põe aqui as cores e fontes do Peace Police, só com variáveis --deck-*. */
+/* Acidwave: kit geometry and interaction are unchanged. */
 :root{
   --deck-compact-top:12px;
+  --deck-text:#F5F1FF;--deck-text-muted:#C0B7D3;--deck-value:#F5F1FF;--deck-focus:#F2FF2A;
+  --deck-bg:linear-gradient(90deg,#8B3DFF,#FF2D7A,#FF8A1F,#9DFF1A,#00F5A8) top/100% 3px no-repeat,radial-gradient(ellipse at 10% 0,#2F4BFF45,transparent 55%),linear-gradient(115deg,#261743,#17172F 60%,#30182F);--deck-border:#8860DB;
+  --deck-radius:20px 6px 20px 6px;--deck-shadow:0 6px 18px #0006,inset 0 -2px #8B3DFF55;
+  --deck-extra-bg:linear-gradient(180deg,#39351A,#211A31);--deck-extra-border:#FFD60A;
+  --deck-btn-text:#C5FFEF;--deck-btn-border:#00D99A;
+  --deck-btn-bg:radial-gradient(circle at 36% 28%,#236858,#142F39 65%,#15172F);
+  --deck-btn-bg-hover:radial-gradient(circle at 36% 28%,#2D9276,#204B50 65%,#201A3A);
+  --deck-btn-shadow:inset 0 0 0 3px #00F5A815,inset 0 1px #B6FFE96B,0 3px 0 #0B1826;
+  --deck-btn-border-hover:#D9C6FF;--deck-btn-glow:0 0 12px #8B3DFF55;
+  --deck-spin-bg:linear-gradient(145deg,#E1FFAE,#9DFF1A 65%,#67BA10);
+  --deck-spin-bg-hover:linear-gradient(145deg,#F1FFD7,#B6FF55 65%,#8CDE23);
+  --deck-spin-border:#D6FFAE;--deck-spin-icon:#182509;--deck-spin-cost:#182509;
+  --deck-spin-cost-shadow:none;--deck-spin-shadow:inset 0 0 0 3px #ffffff44,0 4px 0 #345B10,0 5px 14px #0006;
+  --deck-auto-bg:#42287A;--deck-auto-bg-hover:#60349D;--deck-auto-text:#F5F1FF;
+  --deck-speed-bg:linear-gradient(145deg,#7836B8,#37205A);--deck-speed-border:#C48AFF;
+  --deck-speed-star:#AC7CC3;--deck-speed-star-on:#F2FF2A;--deck-speed-star-glow:#F2FF2A70;
+  --deck-speed-fast-bg:linear-gradient(145deg,#2F4BFF,#192B79);--deck-speed-fast-border:#93B7FF;
+  --deck-speed-fast-star:#DDE5FF;--deck-speed-fast-glow:#2F4BFF;
+  --deck-speed-ultra-bg:linear-gradient(145deg,#E82479,#6F174F);--deck-speed-ultra-border:#FF94BB;
+  --deck-speed-ultra-star:#FFD8E9;--deck-speed-ultra-glow:#FF2D7A;
+  --deck-range-fill:linear-gradient(90deg,#8B3DFF,#00F5A8);--deck-range-track:#0B0A1A;
+  --deck-range-thumb-border:#F2FF2A;--deck-range-thumb-glow:0 0 7px #00F5A855;
+  --deck-dialog-bg:linear-gradient(145deg,#29243D,#171426);--deck-dialog-border:#87729F;
+  --deck-dialog-count:#F2FF2A;--deck-dialog-btn-bg:#392A50;--deck-dialog-btn-border:#87729F;
 }
+
+/* Mobile controls leave more of the viewport to the symbols. */
+.shell[data-layout=portrait] .control-deck{gap:5px;padding:7px 10px 8px}
+.shell[data-layout=portrait] .spin-controls{zoom:1;--spin-gap:12px;grid-template-columns:44px 64px 44px;grid-template-rows:64px;margin-bottom:24px}
+.shell[data-layout=portrait] .spin-button{width:64px;height:64px;min-height:64px}
+.shell[data-layout=portrait] .spin-symbol{font-size:31px}
+.shell[data-layout=portrait] .spin-controls>.auto-button{width:64px;top:48px;left:calc(44px + var(--spin-gap));height:44px;min-height:44px;padding-bottom:8px}
+.shell[data-layout=portrait] .auto-button::before{transform:scale(.8);transform-origin:top left}
+.shell[data-layout=portrait] #speed-button{min-height:44px;padding:5px;width:76px;gap:2px}
+.shell[data-layout=portrait] .speed-stars{font-size:15px;line-height:17px}
+.shell[data-layout=portrait] .speed-stars>span:nth-child(2){font-size:18px}
+.shell[data-layout=portrait] .money-block strong,.shell[data-layout=portrait] .result-panel>strong{font-size:1.1rem}
+.shell[data-layout=portrait] .bet-panel>strong{font-size:1rem}

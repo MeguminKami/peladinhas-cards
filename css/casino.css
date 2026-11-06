@@ -47,7 +47,7 @@
 .casino-store-entry:focus-visible, .casino-store button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .football-card.casino-purchased-card { padding: 0; background: none; border: 0; box-shadow: none; overflow: visible; text-decoration: none; }
 .casino-purchased-card .casino-shop-card { width: 100%; max-width: none; }
-.casino-purchased-card .sca-identity { top: 59.5%; gap: 5px; }
+.casino-purchased-card .sca-identity { gap: 5px; }
 .casino-purchased-card .sca-identity > strong { background: #0006; border-radius: 3px; text-shadow: 0 1px 3px #000; }
 .casino-purchased-card .sca-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .casino-purchased-card .sca-stats > span { flex-direction: column; align-items: center; gap: 3px; }
@@ -59,14 +59,28 @@
   height: 19px;
   flex: none;
 }
-.casino-salon-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 24px 0; }
+.casino-salon-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin: 24px 0; }
 .casino-salon-actions .casino-button { width: 181px; min-height: 46px; padding: 12px; gap: 10px; }
 .casino-salon-actions .casino-shop-link { margin: 0; }
-.casino-rejuice { position: relative; min-width: 0; }
+.casino-rejuice { position: relative; flex: none; }
+.casino-juice-button {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 2px;
+  border: 1px solid #be75ff; border-radius: 14px; cursor: pointer;
+  background: radial-gradient(circle at 20% 10%, #f92bd4aa, transparent 65%), #211039;
+  box-shadow: inset 0 0 12px #b13cff55, 0 0 10px #ed3bc52b;
+  transition: transform 160ms, box-shadow 160ms;
+}
+.casino-juice-button svg { width: 38px; height: 38px; }
+.casino-juice-button:hover { transform: rotate(-6deg); box-shadow: 0 0 16px #ed3bc566; }
+.casino-juice-button:active { transform: scale(.94); }
+@media (prefers-reduced-motion: reduce) {
+  .casino-juice-button { transition: none; }
+  .casino-juice-button:hover, .casino-juice-button:active { transform: none; }
+}
 .casino-rejuice-notice {
   position: absolute;
-  left: calc(100% + 12px);
-  top: 0;
+  right: 0;
+  top: calc(100% + 10px);
   z-index: 5;
   width: min(340px, calc(100vw - 48px));
   padding: 12px 16px;
@@ -86,10 +100,10 @@
 .casino-rejuice-notice strong { display: block; }
 .casino-rejuice-notice[data-state="success"] { border-color: var(--accent); }
 .casino-rejuice-notice[data-state="error"] { border-color: var(--danger); }
-.casino-rejuice .casino-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
-.casino-rejuice .casino-button:disabled { opacity: .65; cursor: wait; }
-@media (max-width: 700px) {
-  .casino-rejuice-notice { left: 0; top: calc(100% + 8px); }
+.casino-rejuice .casino-juice-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.casino-rejuice .casino-juice-button:disabled { opacity: .65; cursor: wait; }
+@media (max-width: 1000px) {
+  .casino-rejuice-notice { position: fixed; left: 16px; right: 16px; top: auto; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); width: auto; z-index: 110; }
 }
 @media (max-width: 420px) {
   .casino-salon-actions .casino-button { width: 140px; gap: 6px; padding: 10px 8px; font-size: .75rem; }
@@ -818,7 +832,7 @@
   .casino-vault { animation: none; }
 }
 .casino-wallet-total { display: flex; align-items: center; gap: 10px; }
-.casino-wallet-total > span:last-child { display: grid; gap: 3px; }
+.casino-wallet-total > span { display: grid; gap: 3px; }
 .casino-wallet-total small { font-size: .65rem; color: var(--text-secondary); font-weight: 500; }
 .casino-wallet-total strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .casino-balance { display: inline-flex; align-items: baseline; gap: 6px; flex-wrap: wrap; overflow-wrap: anywhere; }
@@ -876,6 +890,7 @@
 .casino-game-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
 .casino-game-art { position: relative; display: grid; place-content: center; aspect-ratio: 2 / 3; overflow: clip; isolation: isolate; }
 .casino-game-thumbnail { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; background: #0b141b; }
+.casino-game-art:has(.casino-game-thumbnail[src$="ganza-falesia.webp"]) .casino-coming { top: auto; bottom: 12px; }
 .casino-game-copy { display: grid; gap: 8px; padding: 16px; }
 .casino-game-copy .casino-kicker { color: var(--text-muted); font-size: .56rem; letter-spacing: .08em; }
 .casino-game-copy h3 { font-size: 1.05rem; letter-spacing: -.03em; }
@@ -892,8 +907,17 @@
   .casino-table-mount iframe[src*="/rift/"] { min-height: 760px; }
 }
 /* A Princesa Sofia escala-se sozinha ao espaço visível (sem scroll): ocupa tudo até ao fundo. */
+.casino-table-mount iframe[src*="/piece-police/"],
 .casino-table-mount iframe[src*="/princesa-sofia/"] { height: max(300px, calc(100dvh - var(--casino-header-height, 80px) - var(--casino-toolbar-height, 70px) - var(--casino-bottom-height, 0px) - 24px)); background: #100b24; }
+.casino-table-mount iframe[src*="/risco/"] { background: #090912; }
 .is-centered .casino-blackjack-mount iframe { height: var(--casino-fit-height); }
+@media (max-height: 500px) and (min-width: 651px) {
+  body:has(.casino-page.is-ganza) #header { display: none; }
+  .casino-page.is-ganza .casino-toolbar { position: fixed; inset: 0 0 auto; z-index: 100; margin: 0; padding: 5px 12px; min-height: 56px; gap: 8px; flex-wrap: nowrap; background: var(--bg-app); }
+  .casino-page.is-ganza .casino-wallet { width: auto; flex: none; margin-left: auto; gap: 8px; }
+  .casino-page.is-ganza .casino-wallet-actions, .casino-page.is-ganza .casino-wallet-status, .casino-page.is-ganza .casino-vault-trigger, .casino-page.is-ganza .casino-brand, .casino-page.is-ganza [data-center-game] { display: none; }
+  .casino-page.is-ganza .casino-table-mount { position: fixed; inset: 64px 8px 12px; z-index: 99; width: auto; margin: 0; }
+}
 @media (max-width: 800px) {
   .casino-toolbar { gap: 16px; flex-wrap: wrap; }
   .casino-brand { margin-left: auto; }

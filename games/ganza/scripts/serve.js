@@ -1,0 +1,5 @@
+import {createServer} from 'node:http';
+import {readFileSync,existsSync,statSync} from 'node:fs';
+import {resolve,extname,relative} from 'node:path';
+export function serve(root=resolve('.'),port=4186){const server=createServer((req,res)=>{const file=resolve(root,decodeURIComponent(new URL(req.url,'http://local').pathname).replace(/^\//,'')||'games/ganza/game.html');if(relative(root,file).startsWith('..')||!existsSync(file)||!statSync(file).isFile()){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',({'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.ogg':'audio/ogg','.mp3':'audio/mpeg','.woff2':'font/woff2'})[extname(file)]||'application/octet-stream');res.end(readFileSync(file));});return new Promise(done=>server.listen(port,'127.0.0.1',()=>done(server)));}
+if(process.argv[1]?.replaceAll('\\','/').endsWith('/scripts/serve.js')){const root=resolve(import.meta.dirname,'../../..');await serve(root);console.log('GANZÁ local: http://127.0.0.1:4186/games/ganza/game.html');}

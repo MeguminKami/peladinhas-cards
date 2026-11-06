@@ -4,6 +4,13 @@ import { config, TAGS, PERSONAS } from './config.js';
 
 export const HIST_EDGES = [0, 0.5, 1, 2, 5, 10, 20, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000];
 export const PCTS = [50, 75, 90, 95, 99, 99.9, 99.99];
+// pp-v7: RTP por tamanho do cluster e por multiplicador do cluster (cada faixa começa neste valor)
+export const SIZE_EDGES = [4, 7, 11, 15, 21];
+export const MULT_EDGES = [1, 2, 6, 21, 101];
+const bucket = (edges, v) => { let k = 0; while (k + 1 < edges.length && v >= edges[k + 1]) k++; return k; };
+const edgeLabels = (edges, pre = '') => edges.map((e, i) => (i + 1 < edges.length ? (edges[i + 1] - 1 === e ? `${pre}${e}` : `${pre}${e}–${edges[i + 1] - 1}`) : `${pre}${e}+`));
+export const SIZE_LABELS = edgeLabels(SIZE_EDGES);
+export const MULT_LABELS = edgeLabels(MULT_EDGES, '×');
 const BATCHES = 20;
 const BONUS_IDS = Object.keys(config.bonus);
 const FUSION_IDS = config.fusions.map((f) => f.id);
@@ -43,6 +50,8 @@ export class ModeStats {
     this.free = newSpinCounters();
     this.attrib = new Float64Array(TAGS.length);
     this.attribBase = new Float64Array(TAGS.length);
+    this.sizeWin = new Float64Array(SIZE_EDGES.length); this.sizeN = new Float64Array(SIZE_EDGES.length);
+    this.multWin = new Float64Array(MULT_EDGES.length); this.multN = new Float64Array(MULT_EDGES.length);
   }
 
   add(r) {
@@ -85,6 +94,7 @@ export class ModeStats {
         case 'grid.refill': cascades++; break;
         case 'win.cluster':
           for (const [t, v] of e.attrib) { this.attrib[t] += v / 1000; if (isBase) this.attribBase[t] += v / 1000; }
+          { const ks = bucket(SIZE_EDGES, e.size), km = bucket(MULT_EDGES, e.multiplier); this.sizeWin[ks] += e.pay / 1000; this.sizeN[ks]++; this.multWin[km] += e.pay / 1000; this.multN[km]++; }
           break;
         case 'persona.awaken':
           any = true;
@@ -157,6 +167,7 @@ export class ModeStats {
     }
     out.attrib = new Float64Array(TAGS.length); out.attribBase = new Float64Array(TAGS.length);
     for (const x of list) for (let t = 0; t < TAGS.length; t++) { out.attrib[t] += x.attrib[t]; out.attribBase[t] += x.attribBase[t]; }
+    for (const k of ['sizeWin', 'sizeN', 'multWin', 'multN']) { out[k] = new Float64Array(list[0][k].length); for (const x of list) x[k].forEach((v, i) => { out[k][i] += v; }); }
     out.capacity = total;
     return out;
   }
@@ -231,6 +242,9 @@ export class ModeStats {
       baseOnly: { meanX: baseMean, varX: baseVar, rtp: baseMean / cost },
       spinBase: this.base, spinBonus: this.free,
       attrib,
+      // pp-v7: parte do RTP e nº de prémios por tamanho do cluster e por multiplicador do cluster
+      bySize: SIZE_LABELS.map((label, i) => ({ label, rtp: this.sizeWin[i] / n / cost, perRound: this.sizeN[i] / n, avgX: this.sizeN[i] ? this.sizeWin[i] / this.sizeN[i] : 0 })),
+      byMult: MULT_LABELS.map((label, i) => ({ label, rtp: this.multWin[i] / n / cost, perRound: this.multN[i] / n, avgX: this.multN[i] ? this.multWin[i] / this.multN[i] : 0 })),
     };
   }
 }

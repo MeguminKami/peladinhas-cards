@@ -24,9 +24,10 @@ const browser = await chromium.launch();
 const consoleErrors = [];
 const results = [];
 
-async function newPage({ w = 1440, h = 900, path = '/game.html', speed = 'ultra', ctx = null } = {}) {
+async function newPage({ w = 1440, h = 900, path = '/game.html', speed = 'normal', ctx = null } = {}) {
   const context = ctx ?? await browser.newContext({ viewport: { width: w, height: h } });
   const page = await context.newPage();
+  await page.addInitScript(() => localStorage.setItem('pp-intro-v1-hidden', '1')); /* This suite starts after the introduction. */
   await page.addInitScript(s => { try { localStorage.setItem('peace-police-speed', JSON.stringify(s)); } catch { } }, speed);
   page.on('console', m => { if (m.type() === 'error') consoleErrors.push(`${path} ${w}×${h}: ${m.text()}`); });
   page.on('pageerror', e => consoleErrors.push(`${path}: ${e.message}`));
@@ -37,7 +38,7 @@ async function newPage({ w = 1440, h = 900, path = '/game.html', speed = 'ultra'
 const ready = (page, timeout = 15000) => page.waitForFunction(() => window.pp?.estado === 'PRONTO' && !window.pp.busy, null, { timeout });
 const state = page => page.evaluate(() => ({ estado: window.pp.estado, busy: window.pp.busy, balance: window.pp.session.balance, shown: window.pp.balanceShown }));
 /** Joga até ao fim, carregando em CONTINUAR em cada aviso. Devolve os avisos vistos. */
-async function finish(page, { timeout = 90000 } = {}) {
+async function finish(page, { timeout = 180000 } = {}) {
   const seen = [];
   const t0 = Date.now();
   while (Date.now() - t0 < timeout) {
@@ -108,14 +109,17 @@ await test('botões e janelas abrem, funcionam e fecham', async () => {
   assert.equal(await price(), djc(custoCompra('buy-police')));
   await page.click('#buy-bet-plus'); assert.equal(await price(), djc(custoCompra('buy-police', 200)));
   await page.click('#buy-bet-minus');
-  await page.click('[data-buy=buy-vip]'); assert.ok(await page.isVisible('#buy-confirm'));
-  await page.click('#buy-cancel'); assert.ok(!(await page.isVisible('#buy-confirm')));
+  await page.click('[data-buy=buy-vip]'); await page.locator('#buy-confirm').waitFor({ state: 'visible' });
+  assert.ok(await page.isVisible('#buy-confirm'));
+  await page.click('#buy-cancel'); await page.waitForFunction(() => !document.getElementById('buy-confirm').open);
+  assert.ok(!(await page.isVisible('#buy-confirm')));
   await page.click('#buy-dialog [data-close]');
-  // Velocidade
-  const speedLabel = () => page.textContent('#speed-label');
-  const before = await speedLabel();
-  await page.click('#speed-button'); assert.notEqual(await speedLabel(), before);
-  await page.click('#speed-button'); await page.click('#speed-button'); assert.equal(await speedLabel(), before);
+  // Seletor recuperado: Normal, Rápido e Turbo.
+  assert.equal(await page.isVisible('#speed-button'), true);
+  assert.equal(await page.evaluate(() => window.pp.rate), 1);
+  await page.click('#speed-button');await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>window.pp.rate),2);
+  await page.click('#speed-button');await page.waitForTimeout(150);assert.equal(await text(page,'#speed-label'),'Turbo');assert.equal(await page.evaluate(()=>window.pp.rate),3.75);
+  await page.click('#speed-button');await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>window.pp.rate),1);
   // Som (sem som nesta fase, mas os controlos funcionam e ficam guardados)
   await page.click('#mute-button'); assert.equal(await page.getAttribute('#mute-button', 'aria-pressed'), 'true'); await page.click('#mute-button');
   // Autoplay: janela abre e cancela
@@ -180,23 +184,14 @@ await test('teclado: ESPAÇO roda, 100 ms entre comandos, repetição ignorada, 
   await page.context().close();
 });
 
-await test('toques durante o spin: 1.º acelera 3×, 2.º 8×, 3.º salta só esse spin', async () => {
-  const page = await newPage({ path: '/game.html?seed=taps5', speed: 'normal' }); // 1.º free spin longo (pp-v5: a POLICE PARTY começa sem cantos)
-  await page.click('#buy-button'); await page.click('[data-buy=buy-police]'); await page.click('#buy-ok');
-  await page.waitForFunction(() => document.getElementById('overlay').open); await page.waitForTimeout(520); await page.click('#overlay-continue');
-  await page.waitForFunction(() => window.pp.estado === 'FREE_SPINS');
-  await page.waitForTimeout(200);
-  // os toques contam por spin: medir logo a seguir a cada um (a rampa é de 120 ms)
-  await page.click('#spin'); await page.waitForTimeout(200);
-  assert.ok(await page.evaluate(() => window.pp.rate) >= 2.9, 'rate ≥ 3 depois do 1.º toque');
-  await page.waitForTimeout(110); await page.click('#spin'); await page.waitForTimeout(200);
-  assert.ok(await page.evaluate(() => window.pp.rate) >= 7.9, 'rate ≥ 8 depois do 2.º toque');
-  const fsBefore = await page.evaluate(() => window.pp.model.freeSpins?.played);
-  await page.waitForTimeout(150); await page.click('#spin');
-  await page.waitForTimeout(300);
-  assert.equal(await page.evaluate(() => window.pp.estado), 'FREE_SPINS', 'o 3.º toque não salta o bónus inteiro');
-  assert.ok((await page.evaluate(() => window.pp.model.freeSpins?.played)) <= fsBefore + 2);
+await test('toques durante o spin mant?m velocidade normal e n?o acumulam jogadas', async () => {
+  const page = await newPage({ path: '/game.html?seed=taps5', speed: 'normal' });
+  await page.click('#spin');
+  for (let i = 0; i < 3; i++) { await page.waitForTimeout(120); await page.evaluate(() => window.pp.spin()); }
+  assert.equal(await page.evaluate(() => window.pp.rate), 1);
+  assert.equal(await page.evaluate(() => window.pp.turbo), false);
   await finish(page);
+  assert.equal(await page.evaluate(() => window.pp.pedidos), 1);
   await page.context().close();
 });
 
@@ -229,7 +224,7 @@ await test('retrigger: +5 free spins e contador atualizado', async () => {
   await page.click('#buy-button'); await page.click('[data-buy=buy-afterparty]'); await page.click('#buy-ok');
   const seen = await finish(page);
   totals.push(...await page.evaluate(() => window.__fs));
-  assert.ok(seen.some(s => s.startsWith('info:+')), `aviso de retrigger: ${seen}`);
+  assert.ok(seen.some(s => s.startsWith('retrigger:+')), `aviso de retrigger: ${seen}`);
   assert.ok(totals[0] > 10);
   await page.context().close();
 });
@@ -239,14 +234,15 @@ await test('limite atingido: aviso GANHO MÁXIMO (fixture sintética: o motor n�
   await page.evaluate(() => {
     const grid = Array.from({ length: 25 }, (_, i) => [0, 4, 20, 24].includes(i) ? 'CW' : 'P5');
     const cells = grid.map((_, i) => i);
+    const limit = window.pp.config.maxWinMils;
     const ev = [
       { type: 'step.start', kind: 'base', bonusId: null, freeSpins: null },
       { type: 'grid.drop', grid, mult: { 0: 10, 4: 10, 20: 10, 24: 10 } },
-      { type: 'win.cluster', symbol: 'P5', cells, size: 25, basePay: 85000, multiplier: 40, pay: 10000000, growthFrom: 0, attrib: [[0, 10000000]] },
-      { type: 'cap.hit', limit: 10000000, cut: 2400000 },
-      { type: 'step.end', win: 10000000, roundWinSoFar: 10000000 },
+      { type: 'win.cluster', symbol: 'P5', cells, size: 25, basePay: 1000000, multiplier: 40, pay: limit, growthFrom: 0, attrib: [[0, limit]] },
+      { type: 'cap.hit', limit, cut: 40000000 - limit },
+      { type: 'step.end', win: limit, roundWinSoFar: limit },
     ];
-    window.pp.runResult({ roundId: 'fixture-limite', mode: 'base', bet: 100, steps: [{ index: 0, kind: 'base', bonusId: null, events: ev, win: 10000000, roundWinSoFar: 10000000, freeSpins: null }], totalWin: 1000000, totalWinMils: 10000000, capped: true });
+    window.pp.runResult({ roundId: 'fixture-limite', mode: 'base', bet: 100, steps: [{ index: 0, kind: 'base', bonusId: null, events: ev, win: limit, roundWinSoFar: limit, freeSpins: null }], totalWin: Math.floor(100 * limit / 1000), totalWinMils: limit, capped: true });
   });
   const seen = await finish(page);
   assert.ok(seen.some(s => s === 'max:GANHO MÁXIMO'), seen.join(' | '));

@@ -599,3 +599,15 @@ test("fusion flow: milestones gate activation, origins remain intact and final c
     2,
   );
 });
+
+ test("feedback: decimal scores persist without rounding and invalid numbers are rejected", async () => {
+ const suffix=randomUUID().slice(0,8),uid='decimal-'+suffix,gid='decimal-game-'+suffix;
+ await db.doc('users/'+uid).set({uid,role:'member',disabled:false});
+ await db.doc('games/'+gid).set({status:'closed',teamA:{starters:[uid],bench:[]},teamB:{starters:[],bench:[]},closedAt:Timestamp.now()});
+ const flow=gameFlowFunctions();
+ const save=(values,submit=false)=>flow.feedbackAction.run({auth:{uid},data:{gameId:gid,targetId:uid,ratings:values,submit}});
+ for(const value of [-.5,5.5,'2.5',NaN,Infinity]) await assert.rejects(save({overall:value}),/escala/);
+ const values={...ratings,overall:2.5,attack:0,passing:5,physical:3.5,goalkeeping:null};
+ await save(values);await save(values,true);
+ assert.deepEqual((await db.doc('games/'+gid+'/feedback/'+uid+'_'+uid).get()).data().ratings,values);
+});

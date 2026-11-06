@@ -22,7 +22,16 @@
     "dev:site": "node scripts/serve.js --open site",
     "dev:carteira": "node scripts/serve.js --open carteira",
     "dev:rede": "node scripts/serve.js --rede",
+    "test:intro": "node tests/intro.browser.js",
     "test:ui": "node tests/prototype.browser.js",
+    "test:art": "node tests/art.browser.js",
+    "test:acidwave": "node tests/acidwave.browser.js",
+    "test:presentation-fixes": "node tests/presentation-fixes.browser.js",
+    "audio:generate": "node scripts/synthesize-sfx.js",
+    "audio:analyze": "node scripts/analyze-music.js",
+    "test:music": "node tests/music.browser.js",
+    "test:audio": "node --test tests/audio.test.js",
+    "test:audio:browser": "node tests/audio.browser.js",
     "verificar:kit": "node guides/kit/verificar-kit.mjs ."
   }
 }

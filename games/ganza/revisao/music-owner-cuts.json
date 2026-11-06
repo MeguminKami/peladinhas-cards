@@ -1,0 +1,42 @@
+[
+  {
+    "source": "atividade.opus",
+    "output": "activity",
+    "sourceDuration": 25.5465,
+    "detectedOnset": 1.28,
+    "cutStart": 9.55,
+    "cutEnd": 24.92,
+    "duration": 15.1,
+    "loopCrossfadeSeconds": 0.35
+  },
+  {
+    "source": "premio_alto.opus",
+    "output": "high",
+    "sourceDuration": 25.0865,
+    "detectedOnset": 1.02,
+    "cutStart": 9.69,
+    "cutEnd": 25.087,
+    "duration": 15.1,
+    "loopCrossfadeSeconds": 0.35
+  },
+  {
+    "source": "vinheta_ganza.opus",
+    "output": "stinger-max",
+    "sourceDuration": 6.3865,
+    "detectedOnset": 1.1199999999999999,
+    "cutStart": 1.12,
+    "cutEnd": 5.9,
+    "duration": 4.8,
+    "loopCrossfadeSeconds": 0
+  },
+  {
+    "source": "vinheta_carga_completa.opus",
+    "output": "stinger-carga",
+    "sourceDuration": 8.9965,
+    "detectedOnset": 1.36,
+    "cutStart": 1.36,
+    "cutEnd": 8.92,
+    "duration": 7.6,
+    "loopCrossfadeSeconds": 0
+  }
+]

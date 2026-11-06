@@ -1,4 +1,24 @@
 /* Game scenes stay below the portrait and the common typography layer. */
+.scf-wood-inlay { fill: #302019; stroke: #92704b; stroke-width: .8; }
+.scf-table-stitch { fill: none; stroke: #c6b98a; stroke-width: 1; stroke-dasharray: 2 4; opacity: .6; }
+.scf-rating-panel { fill: var(--sca-shadow); opacity: .8; }
+.scf-hazard { fill: #c4a552; }
+.scf-oil { fill: #a19a37; stroke: #d8c977; stroke-width: .7; }
+.scf-chain { fill: none; stroke: #a1a8ac; stroke-width: 3.5; stroke-linecap: round; }
+.scf-factory-pipe { fill: none; stroke: #66757b; stroke-width: 7; stroke-linejoin: round; }
+.scf-factory-joint { fill: none; stroke: #aeb9be; stroke-width: 3; }
+.scf-fence-detail { fill: none; stroke: #8c9caa; stroke-width: .75; opacity: .4; }
+.scf-reactor-shell { fill: #131a29; stroke: #7a8295; stroke-width: 2; }
+.scf-reactor-ticks { fill: none; stroke: #a8d8ea; stroke-width: 3; }
+.scf-pitch-mark { fill: #163b30; stroke: #bcc8ae; stroke-width: .65; }
+.scf-goal-frame { fill: none; stroke: #aab9bb; stroke-width: 2.5; }
+.scf-goal-net { fill: none; stroke: #aab9bb; stroke-width: .6; opacity: .5; }
+.scf-light-beam { fill: #f3f1bd; opacity: .06; }
+.scf-floodlight { fill: #f5f1d4; stroke: #9d9b86; stroke-width: .6; }
+.sca-blackjack-private { --scf-light: #e5d5a0; --scf-metal: #a88d53; --scf-dark: #3c2c1b; }
+.sca-cardoso-asphalt { --scf-light: #d0d6d7; --scf-metal: #7e8b8c; --scf-dark: #222c30; }
+.sca-rift-core { --scf-light: #b5cddc; --scf-metal: #66788d; --scf-dark: #192332; }
+.sca-glory-night { --scf-light: #d7d4c3; --scf-metal: #8d989d; --scf-dark: #28333d; }
 .casino-shop-card .scg-wood {
   fill: #38251c;
   stroke: #ad8c57;
@@ -270,35 +290,4 @@
 :is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4)
   .sca-portrait {
   filter: drop-shadow(0 2px 5px #000a);
-}
-
-/* Premium cards reserve separate lanes for rating, portrait and eight attributes. */
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) {
-  aspect-ratio: 4 / 5;
-}
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-rating {
-  inset: 17% auto auto 17%;
-  width: 23%;
-  gap: .8cqw;
-}
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-rating b {
-  font-size: 13cqw;
-}
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-photo-frame {
-  left: 43%;
-  top: 15%;
-  width: 46%;
-}
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-identity {
-  top: 56%;
-  left: 18%;
-  right: 18%;
-}
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .sca-identity > strong {
-  height: 11cqw;
-  align-content: center;
-}
-:is(.sca-football-p1, .sca-football-p2, .sca-football-p3, .sca-football-p4) .card-playstyles {
-  left: 18%;
-  top: 47%;
 }

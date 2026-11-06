@@ -77,8 +77,9 @@ try {
 
   const initialHeight = (await page.locator('.casino-rejuice').boundingBox()).height;
   assert.equal(await page.locator('.casino-store-entry').count(), 0);
-  assert.deepEqual(await page.locator('[data-rejuice]').boundingBox().then(({width,height})=>({width,height})), await page.locator('.casino-shop-link').boundingBox().then(({width,height})=>({width,height})));
-  assert.equal(await page.locator('[data-rejuice]').innerText(), 'Pedir Rejuice');
+  assert.equal(await page.locator('.casino-wallet-total [data-rejuice]').count(), 1);
+  assert.equal(await page.locator('[data-rejuice]').getAttribute('aria-label'), 'Pedir Rejuice: 50 Djabucoins');
+  assert.equal(await page.locator('[data-rejuice]').boundingBox().then(b => b.width), 44);
   await page.locator('[data-rejuice]').click();
   assert.equal((await page.locator('.casino-rejuice').boundingBox()).height, initialHeight);
   assert.equal(await page.evaluate(() => window.__casinoCalls.length), 1);
@@ -87,6 +88,15 @@ try {
     await page.setViewportSize({ width, height: 1000 });
     await page.locator('[data-rejuice]').scrollIntoViewIfNeeded();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    const notice = await page.locator('.casino-rejuice-notice').boundingBox();
+    assert.ok(notice.x >= 0 && notice.x + notice.width <= width);
+    // Shared toolbar variants used by the games, including fullscreen mobile.
+    for (const variant of ['is-playing', 'is-playing is-ganza', 'is-playing is-table']) {
+      await page.locator('.casino-page').evaluate((el, value) => { el.className = `casino-page ${value}`; }, variant);
+      const juice = await page.locator('[data-rejuice]').boundingBox();
+      assert.ok(juice && juice.x >= 0 && juice.x + juice.width <= width);
+    }
+    await page.locator('.casino-page').evaluate(el => { el.className = 'casino-page'; });
     await page.screenshot({path: `test-results/rejuice-${width}.png`});
   }
   await page.locator('.casino-rejuice-notice:not(.is-visible)').waitFor({state:'attached',timeout:7000});

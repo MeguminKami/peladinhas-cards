@@ -2,19 +2,42 @@
 import { cardWeek } from "../../js/card-week.js";
 import { currentCasinoWallet, newCasinoWallet, settleCasinoSlot } from "../../js/casino-economy.js";
 import { applyCasinoSession } from "../../js/casino-session-model.js";
+import { readCasinoLocal } from "../../js/casino-local-store.js";
+const fixtureKey = "casino-fixture-wallet";
+const persistent = () => window.__casinoPersistentFixture === true;
+function readFixture() {
+  return JSON.parse((persistent() ? localStorage.getItem(fixtureKey) : null) || sessionStorage.getItem(fixtureKey) || "null") || {
+    wallet: {...newCasinoWallet(), balance:10000}, operations: {}, rounds: {}, sessions: {},
+  };
+}
+function saveFixture(state) {
+  const text = JSON.stringify(state);
+  if (persistent()) localStorage.setItem(fixtureKey, text);
+  sessionStorage.setItem(fixtureKey, text);
+}
+async function recoverFixtureSession(state, input) {
+  if (!persistent()) return;
+  const local = await readCasinoLocal(input.owner);
+  if (!local || local.id !== input.id || local.opening || local.wallet?.edition !== state.wallet.edition) return;
+  if (![local.sequence, local.confirmedSpent, local.confirmedWon, local.sessionBalance, local.wallet.balance].every(n=>Number.isSafeInteger(n)&&n>=0)) return;
+  const record = state.sessions[input.id];
+  // Only the development fixture may rebuild its lost authority from a durable
+  // confirmed snapshot. Never relax the production checkpoint validation.
+  if (record && record.sequence >= local.sequence) return;
+  state.wallet = structuredClone(local.wallet);
+  state.sessions[input.id] = {
+    edition: local.wallet.edition, sequence: local.sequence,
+    spent: local.confirmedSpent, won: local.confirmedWon,
+    balance: local.sessionBalance, closed: !!local.closed, updatedAt: Date.now(),
+  };
+}
 export async function casinoFixture(name, input) {
   window.__casinoCalls ||= [];
   window.__casinoCalls.push({ name, input });
   if (window.__casinoFail)
     throw Error("Carteira temporariamente indisponível.");
   if (window.__casinoGate) await window.__casinoGate;
-  const key = "casino-fixture-wallet";
-  const state = JSON.parse(sessionStorage.getItem(key) || "null") || {
-    wallet: {...newCasinoWallet(), balance:10000},
-    operations: {},
-    rounds: {},
-    sessions: {},
-  };
+  const state = readFixture();
   state.wallet = currentCasinoWallet(state.wallet);
   if (name === "getCasinoShop" || name === "buyCasinoCard") {
     const league = window.__testState;
@@ -34,12 +57,22 @@ export async function casinoFixture(name, input) {
       state.wallet.revision++;
       const card=SHOP_CARDS.find(c=>c.id===input.cardId);
       collection.awards.push({id:card.id,name:card.name,duration:"permanent",earnedAt:new Date().toISOString(),source:"casino-shop"});
-      sessionStorage.setItem(key,JSON.stringify(state));
+      saveFixture(state);
     }
     return {data:{balance:state.wallet.balance,vaultBalance:state.wallet.vaultBalance||0,owned:collection.awards.filter(a=>a.source==="casino-shop").map(a=>a.id),player}};
   }
   if (name === "casinoSession") {
     state.sessions ||= {};
+    await recoverFixtureSession(state, input);
+    // Refill only the interactive dev server, after recovering saved checkpoints.
+    // Browser regression fixtures keep their exact balances, including zero.
+    const devCredits = window.__casinoDevCredits;
+    if (persistent() && input.action === "open" && state.wallet.balance < 500 &&
+        Number.isSafeInteger(devCredits) && devCredits > state.wallet.balance) {
+      state.wallet.balance = devCredits;
+      state.wallet.revision++;
+      saveFixture(state);
+    }
     let result;
     try { result = applyCasinoSession(
       state.wallet,
@@ -54,7 +87,7 @@ export async function casinoFixture(name, input) {
     if (result.write) {
       state.wallet = result.wallet;
       state.sessions[input.id] = result.session;
-      sessionStorage.setItem(key, JSON.stringify(state));
+      saveFixture(state);
       if (window.__casinoLoseResponse && input.action === "sync")
         throw Error("Resposta perdida após confirmação.");
       if (window.__casinoLoseOpenResponse && input.action === "open")
@@ -95,23 +128,17 @@ export async function casinoFixture(name, input) {
         error.details = { definitive: true };
         throw error;
       }
-      sessionStorage.setItem(key, JSON.stringify(state));
+      saveFixture(state);
       if (window.__casinoLoseResponse)
         throw Error("Resposta perdida após liquidação.");
     }
   }
-  sessionStorage.setItem(key, JSON.stringify(state));
+  saveFixture(state);
   return { data: structuredClone(state.wallet) };
 }
 
 export async function rouletteFixture(input) {
-  const key = "casino-fixture-wallet";
-  const state = JSON.parse(sessionStorage.getItem(key) || "null") || {
-    wallet: { ...newCasinoWallet(), balance: 10000 },
-    operations: {},
-    rounds: {},
-    sessions: {},
-  };
+  const state = readFixture();
   state.wallet = currentCasinoWallet(state.wallet);
   const uid = "pedro";
   const now = Date.now();
@@ -180,7 +207,7 @@ export async function rouletteFixture(input) {
     state.wallet.balance -= personal.total;
     state.wallet.balance += personal.gross;
     state.wallet.revision++;
-    sessionStorage.setItem(key, JSON.stringify(state));
+    saveFixture(state);
     room.roundId++;
     room.phase = "betting";
     room.deadline = 0;

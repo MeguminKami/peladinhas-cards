@@ -58,7 +58,22 @@ body[data-in-bonus=true] .shell[data-layout=portrait] .side-base{display:none}
 .shell[data-layout=compact] .deck-slot{display:flex}
 .shell[data-layout=compact] .deck-slot .control-deck{flex:1}
 .shell[data-layout=compact] .status-line{text-align:left}
+
+/* Low landscape: keep the stage clear and dock utilities at the bottom left. */
+.shell[data-layout=compact]{grid-template-rows:auto auto auto minmax(0,1fr) auto auto;grid-template-areas:"brand stage chem deck" "mode stage chem deck" "forced stage chem deck" "side stage chem deck" "actions stage chem deck" "status stage chem deck"}
+.shell[data-layout=compact] .topbar{display:contents}
+.shell[data-layout=compact] .brand{grid-area:brand}
+.shell[data-layout=compact] .mode-chip{grid-area:mode;justify-self:start;max-width:100%}
+.shell[data-layout=compact] .forced-chip{grid-area:forced;justify-self:start;max-width:100%}
+.shell[data-layout=compact] .top-actions{grid-area:actions;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 30px;gap:4px;align-self:end;margin:0}
+.shell[data-layout=compact] .top-btn{flex-direction:column;justify-content:center;gap:3px;min-width:0;min-height:48px;padding:5px 2px;font-size:calc(9px * var(--ui-boost));line-height:1.1}
 /* O registo não empurra o jogo: ocupa só a altura que a coluna já tem (o resto desvanece) */
 .side{position:relative}
 .shell:not([data-layout=portrait]) .bonus-log{position:absolute;inset:0}
 .log-head strong{white-space:nowrap}
+
+/* The mobile stage consumes the space released by the compact controls. */
+.shell[data-layout=portrait]{grid-template-rows:auto auto auto minmax(min-content,1fr) auto auto;grid-template-areas:"top" "side" "chem" "stage" "deck" "status"}
+.shell[data-layout=portrait] .stage{align-self:stretch;min-height:0}
+.shell[data-layout=portrait] .board-wrap{flex:1;display:flex;flex-direction:column;min-height:calc(5 * var(--cell) + 6 * var(--gap) + 18px)}
+.shell[data-layout=portrait] .board{flex:1;grid-template-rows:repeat(5,minmax(var(--cell),1fr))}

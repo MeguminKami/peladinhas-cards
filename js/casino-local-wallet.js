@@ -91,7 +91,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     releaseTab?.();
     releaseTab = undefined;
   }
-  function assertPlayable() {
+  function assertPlayable({ allowGanza = false } = {}) {
+    if (!allowGanza && Object.keys(state?.ganza?.rounds || {}).length) throw Error('Conclui primeiro as placas de GANZÁ.');
     if (!state?.syncBlocked) return;
     const error = Error(state.syncError || "Atualiza o saldo para recuperar o lote pendente antes de continuar.");
     Object.assign(error, { definitive: true, applied: false, balance: 0,
@@ -222,8 +223,14 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
             tableReceipts: previous?.tableReceipts || {},
             rift: previous?.rift || null,
             riftReceipts: previous?.riftReceipts || {},
+            risco: previous?.risco || null,
+            riscoReceipts: previous?.riscoReceipts || {},
+            peacePolice: previous?.peacePolice || null,
+            peacePoliceReceipts: previous?.peacePoliceReceipts || {},
             sofia: previous?.sofia || null,
             sofiaReceipts: previous?.sofiaReceipts || {},
+            ganza: previous?.ganza || null,
+            ganzaReceipts: previous?.ganzaReceipts || {},
             cardoso: previous?.cardoso || null,
             cardosoReceipt: previous?.cardosoReceipt || null,
             cardosoReceipts: previous?.cardosoReceipts || {},
@@ -414,6 +421,70 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       void checkpoint("spins").catch(() => {});
     return result;
   }
+  async function riscoRequest(action, payload, id) {
+    if (!tables) throw Error("O RISCO está indisponível.");
+    const { applyLocalRisco } = await import("./casino-risco-local.js");
+    let completed = null;
+    const result = await lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para recuperar.");
+      if (typeof id !== "string" || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error("Pedido inválido.");
+      const fingerprint = JSON.stringify({ action, payload });
+      const receipt = state.riscoReceipts && Object.hasOwn(state.riscoReceipts, id) ? state.riscoReceipts[id] : null;
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
+        return structuredClone(receipt.result);
+      }
+      if (action === "start") assertPlayable();
+      const next = await applyLocalRisco(state.risco, state.balance, { action, payload, now: Date.now() });
+      completed = next.completed;
+      const spent = state.spent + next.debit, won = state.won + next.credit;
+      if (![spent, won].every(n => Number.isSafeInteger(n) && n <= 1e12)) throw Error("Limite da sessão atingido.");
+      // Polls are read-only until the engine crosses a settlement or reveal boundary.
+      const changed = action !== "poll" || JSON.stringify(next.session) !== JSON.stringify(state.risco);
+      try { if (changed) await save({ ...state, risco: next.session, balance: next.balance, spent, won,
+        dirty: state.dirty || next.debit > 0 || next.credit > 0,
+        normalSpins: (state.normalSpins || 0) + (action === "start" ? 1 : 0),
+        wallet: { ...state.wallet, recent: completed ? [{ id: completed.id, kind: "risco", amount: completed.creditedUnits - completed.costUnits, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
+        riscoReceipts: ["start", "cashout"].includes(action) ? Object.fromEntries([...Object.entries(state.riscoReceipts || {}), [id, { fingerprint, result: next.result }]].slice(-16)) : state.riscoReceipts,
+      }, { durability: "strict" }); } catch (error) {
+        error.code = "SITE_TIMEOUT";
+        error.publicMessage = "Não foi possível confirmar a gravação local. Repete para recuperar o mesmo pedido.";
+        throw error;
+      }
+      return structuredClone(next.result);
+    });
+    if (completed && (state.normalSpins || 0) - Math.max(state.confirmedNormalSpins || 0, state.lastAttemptNormalSpins || 0) >= 15)
+      void checkpoint("spins").catch(() => {});
+    return result;
+  }
+  async function ganzaRequest(action, payload, id) {
+    if (!tables) throw Error('GANZÁ está indisponível.');
+    const { applyLocalGanza } = await import('./casino-ganza-local.js');
+    return lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error('Reabre o casino para recuperar.');
+      if (typeof id !== 'string' || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error('Pedido inválido.');
+      const fingerprint = JSON.stringify({ action, payload });
+      const receipt = Object.hasOwn(state.ganzaReceipts || {}, id) ? state.ganzaReceipts[id] : null;
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) throw Error('Pedido repetido com valores diferentes.');
+        return structuredClone(receipt.result);
+      }
+      if (action === 'start') {
+        assertPlayable({ allowGanza: true });
+        if (state.sofia?.round || state.peacePolice?.round || state.risco?.round && !state.risco.round.settled || state.rift?.state?.round || state.cardoso?.round?.status === 'active') throw Error('Conclui a jogada do outro jogo.');
+      }
+      const next = await applyLocalGanza(state.ganza, state.balance, { action, payload });
+      const spent = state.spent + next.debit, won = state.won + next.credit;
+      if (![spent, won].every(n => Number.isSafeInteger(n) && n <= 1e12)) throw Error('Limite da sessão atingido.');
+      await save({ ...state, ganza: next.session, balance: next.balance, spent, won,
+        dirty: state.dirty || !!next.debit || !!next.credit,
+        normalSpins: (state.normalSpins || 0) + (action === 'start' ? 1 : 0),
+        wallet: { ...state.wallet, recent: next.completed ? [{ id: next.completed.id, kind: 'ganza', amount: next.credit - next.completed.bet, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
+        ganzaReceipts: Object.fromEntries([...Object.entries(state.ganzaReceipts || {}), [id, { fingerprint, result: next.result }]].slice(-512)),
+      }, { durability: 'strict' });
+      return structuredClone(next.result);
+    });
+  }
   async function sofiaRequest(action, payload, id) {
     if (!tables) throw Error("A Princesa Sofia está indisponível.");
     const { applyLocalSofia } = await import("./casino-sofia-local.js");
@@ -471,6 +542,63 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
       void checkpoint("spins").catch(() => {});
     return result;
   }
+  async function peacePoliceRequest(action, payload, id) {
+    if (!tables) throw Error("O PEACE POLICE está indisponível.");
+    const { applyLocalPeacePolice } = await import("./casino-pp-local.js");
+    let completed = null, normalSpin = false;
+    const result = await lock(async () => {
+      if (stopped || !state || state.closed || state.opening) throw Error("Reabre o casino para recuperar.");
+      if (typeof id !== "string" || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error("Pedido inválido.");
+      const fingerprint = JSON.stringify({ action, payload });
+      const receipt = state.peacePoliceReceipts && Object.hasOwn(state.peacePoliceReceipts, id) ? state.peacePoliceReceipts[id] : null;
+      if (receipt) {
+        if (receipt.fingerprint !== fingerprint) throw Error("Pedido repetido com valores diferentes.");
+        return structuredClone(receipt.result);
+      }
+      if (action === "start") assertPlayable();
+      let next = applyLocalPeacePolice(state.peacePolice, state.balance, { action, payload });
+      // withFirstStep: o 1.o passo segue na mesma resposta e na mesma gravacao (uma ida e volta
+      // e uma escrita no IndexedDB por spin em vez de duas). Fica com recibo proprio, por isso
+      // um "step" com index 0 repetido pelo jogo devolve exatamente o mesmo resultado.
+      let firstReceipt = null;
+      if (action === "start" && payload?.withFirstStep === true && next.session.round) {
+        const stepPayload = { sessionId: next.session.sessionId, roundId: next.session.round.id, index: 0 };
+        const step = applyLocalPeacePolice(next.session, next.balance, { action: "step", payload: stepPayload });
+        firstReceipt = [`${stepPayload.roundId}-0`, { fingerprint: JSON.stringify({ action: "step", payload: stepPayload }), result: step.result }];
+        next = { ...step, debit: next.debit + step.debit, credit: next.credit + step.credit,
+          result: { ...next.result, firstStep: step.result } }; // o saldo do start fica o de depois da entrada: o premio so aparece no fim da apresentacao
+      }
+      completed = next.completed;
+      normalSpin = action === "start" && ["base", "hunt"].includes(payload.mode);
+      const changed = action !== "connect" || !state.peacePolice || !!completed;
+      if (!changed) return structuredClone(next.result);
+      const spent = state.spent + next.debit, won = state.won + next.credit;
+      if (![spent, won].every(n => Number.isSafeInteger(n) && n <= 1e12)) throw Error("Limite da sessão atingido.");
+      try {
+        await save({ ...state, peacePolice: next.session, balance: next.balance, spent, won,
+          dirty: state.dirty || next.debit > 0 || next.credit > 0,
+          normalSpins: (state.normalSpins || 0) + (normalSpin ? 1 : 0),
+          wallet: { ...state.wallet,
+            recent: completed ? [{ id: completed.id, kind: "piece-police", amount: completed.totalWin - completed.cost, at: Date.now() }, ...state.wallet.recent].slice(0, 12) : state.wallet.recent },
+          // Receipts let a lost response be repeated without moving money twice.
+          peacePoliceReceipts: action === "connect" ? state.peacePoliceReceipts : Object.fromEntries([...Object.entries(state.peacePoliceReceipts || {}), [id, { fingerprint, result: next.result }], ...(firstReceipt ? [firstReceipt] : [])].slice(-8)),
+        }, {
+          // Passos intermedios nao mexem no saldo: se a gravacao se perder num crash, o cursor recua
+          // e o passo repete-se igual. So a entrada e o passo final (credito) exigem "strict".
+          durability: action === "step" && !completed && next.debit === 0 && next.credit === 0 ? "relaxed" : "strict",
+        });
+      } catch (error) {
+        error.code = "SITE_TIMEOUT";
+        error.publicMessage = "Não foi possível confirmar a gravação local. Repete para recuperar a mesma jogada.";
+        throw error;
+      }
+      return structuredClone(next.result);
+    });
+    if (completed?.bonus) void checkpoint("bonus").catch(() => {});
+    else if (completed && !state.peacePolice?.round && (state.normalSpins || 0) - Math.max(state.confirmedNormalSpins || 0, state.lastAttemptNormalSpins || 0) >= 15)
+      void checkpoint("spins").catch(() => {});
+    return result;
+  }
   async function cardosoState() {
     const { fresh } = await import('../assets/games/cardoso-road/engine.mjs');
     return structuredClone({ ...(state?.cardoso || fresh()), balance: state?.balance || 0 });
@@ -515,6 +643,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
   }
   async function checkpoint(reason = "manual", { strict = false } = {}) {
     if (stopped) return view();
+    // A GANZA timer tick must not probe the network offline or queue duplicate syncs.
+    if (reason === "ganza-idle" && (synchronizing || navigator.onLine === false)) return view();
     if (synchronizing) {
       if (strict) {
         await synchronizing;
@@ -530,6 +660,8 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
         let pending, refresh;
         await lock(async () => {
           if (stopped || !state || state.closed || state.opening) return;
+          // start/settle use this lock: a round disappears only after its payment is durable.
+          if (reason === "ganza-idle" && Object.keys(state.ganza?.rounds || {}).length) return;
           pending = state.pending;
           if (reason === "spins") await save({ ...state, lastAttemptNormalSpins: state.normalSpins || 0 });
           if (!pending && state.dirty) {
@@ -725,8 +857,14 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
     settleTable,
     riftRequest,
     riftActive: () => !!state?.rift?.state?.round,
+    riscoRequest,
+    riscoActive: () => !!state?.risco?.round && !state.risco.round.settled,
+    peacePoliceRequest,
+    peacePoliceActive: () => !!state?.peacePolice?.round,
     sofiaRequest,
     sofiaActive: () => !!state?.sofia?.round,
+    ganzaRequest,
+    ganzaActive: () => !!Object.keys(state?.ganza?.rounds || {}).length,
     cardosoState,
     cardosoAct,
     checkpoint,

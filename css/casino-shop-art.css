@@ -7,8 +7,9 @@
   --sca-ink: #ffedd7;
   position: relative;
   isolation: isolate;
-  width: min(100%, 260px);
-  aspect-ratio: 5/7;
+  width: min(100%, var(--card-width, 235px));
+  /* Same box as the normal card (cards.css .football-card). */
+  aspect-ratio: 0.67;
   margin-inline: auto;
   color: var(--sca-ink);
   filter: drop-shadow(0 16px 14px #0005);
@@ -112,42 +113,80 @@
 .sca-bottom-mark {
   fill: var(--sca-bright);
 }
-.sca-rating {
-  position: absolute;
-  inset: 14% auto auto 15%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  line-height: 1;
-  color: var(--sca-ink);
-  text-shadow: 0 2px 8px #000a;
+.sca-base-rim {
+  fill: var(--scf-fill, var(--sca-metal-fill));
 }
-.sca-rating::before {
-  /* Keeps OVR, position and country legible over each edition's motifs. */
-  content: "";
-  position: absolute;
-  inset: -18% -45% -12%;
-  z-index: -1;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--sca-shadow) 82%, transparent) 45%, transparent);
-  pointer-events: none;
+.scf-stop-light { stop-color: var(--scf-light, var(--sca-bright)); }
+.scf-stop-mid { stop-color: var(--scf-metal, var(--sca-mid)); }
+.scf-stop-dark { stop-color: var(--scf-dark, var(--sca-base)); }
+.scf-metal, .scf-collar, .scf-socket {
+  fill: var(--scf-fill);
+  stroke: var(--scf-light, var(--sca-bright));
+  stroke-width: .65;
+  stroke-linejoin: round;
 }
-.sca-rating b {
-  position: relative;
-  font-size: clamp(26px, 15cqw, 40px);
-  font-weight: 850;
-  letter-spacing: -0.06em;
-  font-variant-numeric: tabular-nums;
+.scf-collar { stroke-width: .5; }
+.scf-channel {
+  fill: none;
+  stroke: var(--sca-shadow);
+  stroke-width: 4;
+  stroke-linejoin: round;
 }
-.sca-rating span {
-  font-size: clamp(10px, 5cqw, 14px);
-  font-weight: 750;
-  letter-spacing: 0.08em;
+.scf-gunmetal {
+  fill: var(--scf-gunmetal);
+  stroke: #89919b;
+  stroke-width: .65;
+  stroke-linejoin: round;
 }
-.sca-rating > small {
-  font-size: 3.2cqw;
-  font-weight: 600;
+.scf-steel { fill: #a8b0b9; }
+.scf-vent { fill: none; stroke: #090d13; stroke-width: 2.5; }
+.scf-rare .scf-socket { fill: var(--scf-gunmetal); stroke-width: 1; }
+.scf-seam, .scf-polish, .scf-stem, .scf-stitch {
+  fill: none;
+  stroke: var(--scf-light, var(--sca-bright));
+  stroke-width: .65;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
+.scf-seam { opacity: .65; }
+.scf-stem { stroke-width: 2.5; }
+.scf-stitch { stroke-dasharray: 1 5; opacity: .65; }
+.scf-gem, .scf-enamel { fill: var(--scf-jewel, var(--scm-colour, var(--sca-mid))); }
+.scf-gem-light { fill: var(--sca-bright); opacity: .45; }
+.scf-inlay { fill: var(--sca-shadow); stroke: var(--sca-bright); stroke-width: .4; }
+.scf-energy { fill: none; stroke: var(--scm-colour, #77e8ff); stroke-width: 1.6; stroke-linejoin: bevel; }
+.scf-lights { fill: var(--sca-bright); stroke: var(--sca-shadow); stroke-width: .7; }
+.sca-football-p1 { --scf-light: #ffe2b0; --scf-metal: #c9864d; --scf-dark: #64361c; --scf-jewel: #168568; }
+.sca-football-p2 { --scf-light: #f0fcff; --scf-metal: #a4bbd1; --scf-dark: #3e648b; --scf-jewel: #148dde; }
+.sca-football-p3, .sca-football-p4 { --scf-light: #fff1bd; --scf-metal: #d4a842; --scf-dark: #70501a; }
+.sca-football-p3 { --scf-jewel: #ab59df; }
+.sca-football-p4 { --scf-jewel: #91ffda; }
+.sca-edge-finish {
+  fill: none;
+  stroke: var(--sca-bright);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  opacity: .9;
+}
+.sca-base-texture {
+  fill: none;
+  stroke: var(--sca-bright);
+  stroke-width: 1;
+  opacity: .12;
+}
+/* The normal card's content classes provide the Card Lab composition. */
+.casino-shop-card > * { --card-width: 100cqw; }
+.sca-rating { color: var(--sca-ink); text-shadow: 0 2px 8px #000a; }
+.sca-rating > strong, .sca-stats b { position: relative; }
+.sca-identity { display: contents; }
+.casino-shop-card .card-caption { color: var(--sca-ink); }
+.casino-shop-card .card-caption h3 {
+  font-size: 7.8cqw;
+  line-height: 1.2;
+  letter-spacing: -.025em;
+}
+.casino-shop-card .sca-stats { border-color: var(--sca-bright); }
+.casino-shop-card .sca-stats small { color: var(--sca-bright); }
 .sca-rating .card-ovr-trend {
   position: absolute;
   display: inline-flex;
@@ -156,66 +195,6 @@
   right: calc(100% + 1cqw);
   width: 5cqw;
   height: 6cqw;
-}
-.sca-rating i {
-  font-size: clamp(10px, 5cqw, 14px);
-  font-style: normal;
-  margin-top: 4px;
-  color: var(--sca-bright);
-}
-.sca-identity {
-  position: absolute;
-  top: 60%;
-  left: 18.5%;
-  right: 18.5%;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5cqw;
-}
-.sca-identity > strong {
-  font-size: clamp(12px, 6.6cqw, 18px);
-  line-height: 1.1;
-  text-transform: uppercase;
-  letter-spacing: -0.035em;
-  font-weight: 850;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 1.1em;
-}
-.sca-identity > strong.sca-long-name {
-  font-size: clamp(11px, 5.3cqw, 15px);
-}
-.sca-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.8cqw 1cqw;
-  padding-top: 2cqw;
-  border-top: 1px solid color-mix(in srgb, var(--sca-bright) 45%, transparent);
-}
-.sca-stats > span {
-  display: flex;
-  flex-direction: column;
-  gap: 1cqw;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-}
-.sca-stats b {
-  position: relative;
-  font-size: 6cqw;
-  font-variant-numeric: tabular-nums;
-  font-weight: 800;
-  line-height: 1;
-}
-.sca-stats small {
-  font-size: 3.2cqw;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--sca-bright);
 }
 .sca-silver-mirror {
   --sca-base: #26343e;
@@ -291,15 +270,29 @@
   }
 }
 
-/* Larger portrait aperture; saved focus/zoom stay inside it. */
-.sca-photo-frame {
+/* Square portrait to the right of the rating, as on the normal card; saved focus/zoom stay inside it. */
+.casino-shop-card .sca-photo-frame {
   position: absolute;
-  left: 26%;
-  top: 10.5%;
-  width: 62%;
+  left: 33%;
+  top: auto;
+  bottom: 44%;
+  height: auto;
+  width: 54%;
   aspect-ratio: 1;
   overflow: hidden;
   z-index: 1;
+}
+.sca-photo-transform {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+}
+.casino-shop-card .sca-photo-frame.sca-photo-free {
+  bottom: auto;
+  aspect-ratio: auto;
+  overflow: visible;
 }
 .sca-photo-frame img {
   display: block;
@@ -323,8 +316,8 @@
 .casino-shop-card :is(.card-stat-trend, .card-ovr-trend).negative { color: #ff3958; }
 .casino-shop-card .card-playstyles {
   position: absolute;
-  left: 13%;
-  top: 48%;
+  left: 11%;
+  top: 46.5%;
   display: flex;
   gap: 1cqw;
   width: auto;

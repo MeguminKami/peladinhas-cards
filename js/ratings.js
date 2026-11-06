@@ -1,3 +1,4 @@
+import { validMethod, scoreText, methodControls, bindMethodControls, chooseMethod } from "./rating-methods.js";
 import * as DB from "./db.js";
 import { canEditRating, ratingEditDeadline } from "./rating-window.js";
 import {
@@ -170,16 +171,6 @@ const feedbackHints = {
   goalkeeping: "Avalia só se o jogador esteve à baliza.",
   attitude: "Respeito, cooperação e reação às dificuldades.",
 };
-const feedbackScale = [
-  "Muito fraco",
-  "Fraco",
-  "Razoável",
-  "Bom",
-  "Muito bom",
-  "Excelente",
-];
-const feedbackStar =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L2.9 9.4l6.3-.9Z"/></svg>';
 function feedbackField(
   uid,
   key,
@@ -188,6 +179,7 @@ function feedbackField(
   submitted,
   index,
   blocked = false,
+  method = "stars",
 ) {
   const raw = saved?.[key];
   const value =
@@ -198,57 +190,35 @@ function feedbackField(
       : Number.isFinite(raw)
         ? String(raw)
         : "";
-  const choice = (score, content, className) =>
-    `<label class="${className}${value === score ? " is-selected" : ""}" data-value="${score}"><input class="visually-hidden" type="radio" name="rating-${key}" value="${score}" data-feedback-choice ${value === score ? "checked" : ""} ${submitted ? "disabled" : "required"} aria-label="${score === "na" ? "Não jogou à baliza? Clica aqui" : `${score} ${score === "1" ? "estrela" : "estrelas"} — ${feedbackScale[Number(score)]}`}">${content}</label>`;
-  return `<fieldset class="feedback-field" data-dimension="${key}" data-score="${value}" aria-describedby="feedback-${uid}-${key}-hint"><legend class="visually-hidden">${esc(name)}</legend><div class="feedback-dimension"><span class="feedback-dimension-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><div><span class="feedback-dimension-name">${esc(name.replace("colectivo", "coletivo"))}</span><small id="feedback-${uid}-${key}-hint">${blocked ? "O jogador indicou na autoavaliação que não jogou à baliza. Este critério não conta." : feedbackHints[key]}</small><span class="feedback-rating-result" aria-live="polite">${value === "na" ? "Não aplicável" : value === "" ? (submitted ? "Sem avaliação" : "Por avaliar") : `${value}/5 · ${feedbackScale[Number(value)]}`}</span></div></div><div class="feedback-rating"><input type="hidden" data-rating="${key}" value="${value}"><div class="feedback-stars" aria-label="Escolher estrelas">${[1, 2, 3, 4, 5].map((score) => choice(String(score), feedbackStar, "feedback-star")).join("")}</div><div class="feedback-rating-extras">${choice("0", "<span>0 estrelas</span>", "feedback-zero")}${key === "goalkeeping" ? choice("na", "<span>Não jogou à baliza? Clica aqui</span>", "feedback-na") : ""}</div></div></fieldset>`;
+  return `<fieldset class="feedback-field" data-dimension="${key}" data-score="${value}" aria-describedby="feedback-${uid}-${key}-hint"><legend class="visually-hidden">${esc(name)}</legend><div class="feedback-dimension"><span class="feedback-dimension-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span><div><span class="feedback-dimension-name">${esc(name.replace("colectivo", "coletivo"))}</span><small id="feedback-${uid}-${key}-hint">${blocked ? "O jogador indicou na autoavaliação que não jogou à baliza. Este critério não conta." : feedbackHints[key]}</small><span class="feedback-rating-result" aria-live="polite">${value === "na" ? "Não aplicável" : value === "" ? (submitted ? "Sem avaliação" : "Por avaliar") : scoreText(value, method)}</span></div></div><div class="feedback-rating"><input type="hidden" data-rating="${key}" value="${value}">${methodControls(method, value, key, submitted)}</div></fieldset>`;
 }
 function bindFeedbackStars(form) {
-  form.querySelectorAll(".feedback-field").forEach((field) => {
-    const input = field.querySelector("[data-rating]");
-    const paint = (value) => {
-      field.querySelectorAll(".feedback-star").forEach((star) => {
-        star.classList.toggle(
-          "is-filled",
-          value !== "" &&
-            value !== "na" &&
-            Number(star.dataset.value) <= Number(value),
-        );
-      });
-    };
+  form.querySelectorAll('.feedback-field').forEach(field => {
+    const input = field.querySelector('[data-rating]');
+    const paint = value => field.querySelectorAll('.feedback-star').forEach(star => {
+      star.classList.toggle('is-filled', value !== '' && value !== 'na' && Number(star.dataset.value) <= Number(value));
+    });
     const sync = () => {
       const value = input.value;
       field.dataset.score = value;
-      field
-        .querySelectorAll("label[data-value]")
-        .forEach((label) =>
-          label.classList.toggle("is-selected", label.dataset.value === value),
-        );
-      field.querySelector(".feedback-rating-result").textContent =
-        value === "na"
-          ? "Não aplicável"
-          : value === ""
-            ? form.dataset.submitted === "true"
-              ? "Sem avaliação"
-              : "Por avaliar"
-            : `${value}/5 · ${feedbackScale[Number(value)]}`;
+      field.querySelectorAll('label[data-value]').forEach(label => label.classList.toggle('is-selected', label.dataset.value === value));
+      field.querySelector('.feedback-rating-result').textContent = value === 'na' ? 'Não aplicável' : value === '' ? (form.dataset.submitted === 'true' ? 'Sem avaliação' : 'Por avaliar') : scoreText(value, form.dataset.method || 'stars');
       paint(value);
     };
-    field.addEventListener("input", (event) => {
-      if (!event.target.matches("[data-feedback-choice]")) return;
+    field.addEventListener('rating-method-change', sync);
+    field.addEventListener('input', event => {
+      if (!event.target.matches('[data-feedback-choice]')) return;
       input.value = event.target.value;
       sync();
-      form.querySelector("[data-rating-count]").textContent =
-        `${Object.keys(readRatings(form)).length} / ${FEEDBACK.length} dimensões`;
+      form.querySelector('[data-rating-count]').textContent = Object.keys(readRatings(form)).length + ' / ' + FEEDBACK.length + ' dimensões';
     });
-    field.querySelectorAll(".feedback-star").forEach((star) => {
-      star.addEventListener("pointerenter", (event) => {
-        if (event.pointerType === "mouse" && form.dataset.submitted !== "true")
-          paint(star.dataset.value);
-      });
+    field.addEventListener('pointerover', event => {
+      const star = event.target.closest('.feedback-star');
+      if (star && event.pointerType === 'mouse' && !star.querySelector('input').disabled) paint(star.dataset.value);
     });
-    field
-      .querySelector(".feedback-stars")
-      .addEventListener("pointerleave", () => paint(input.value));
+    field.addEventListener('pointerout', event => {
+      if (event.target.closest('.feedback-star')) paint(input.value);
+    });
     sync();
   });
 }
@@ -263,6 +233,7 @@ export async function feedbackPage(ctx, gid, editing = false) {
         "games",
       ),
     );
+  let method = validMethod(ctx.user.ratingMethod) ? ctx.user.ratingMethod : null;
   const existing = await DB.myFeedback(gid, ctx.user.uid);
   const targets = [...new Set(participants(g))].sort(
     (a, b) => Number(a === ctx.user.uid) - Number(b === ctx.user.uid),
@@ -309,10 +280,10 @@ export async function feedbackPage(ctx, gid, editing = false) {
     const stats = matchPerformance(uid, g);
     return `<details name="match-feedback" class="panel feedback-review${self ? " feedback-self-review" : ""} ${submitted ? "feedback-completed" : ""}" ${uid === firstPending || (!firstPending && uid === targets[0]) ? "open" : ""}>
       <summary class="feedback-player"><span class="feedback-avatar"><img src="${esc(safeImage(p?.photoURL))}" alt="" data-fallback="${ASSET_PATHS.avatar}" width="48" height="48"><i aria-hidden="true">${team.side}</i></span><span class="feedback-player-name"><strong>${esc(name)}${self ? " (Tu)" : ""}</strong><small>${esc(p?.primaryPosition || "Jogador")} · ${bench ? "Suplente" : "Titular"}</small><span class="feedback-player-stats"><span>${icon("ball")}<b>${stats.goals}</b> golos</span><span>${icon("assists")}<b>${stats.assists}</b> assist.</span></span></span><span class="pill feedback-status ${submitted ? "success" : ""}">${submitted ? "Enviada" : f ? "Rascunho" : "Por avaliar"}</span><span class="feedback-toggle" aria-hidden="true">${icon("arrow")}</span></summary>
-      <form class="rating-form feedback-form" data-target="${esc(uid)}" data-submitted="${readonly}" data-was-submitted="${submitted}" aria-label="Avaliar ${esc(name)}">${self ? `<p class="feedback-self-notice">${icon("profile")}Esta é a tua autoavaliação</p>` : ""}<div class="feedback-form-status"><span data-rating-count>${selectedCount} / ${FEEDBACK.length} dimensões</span><span class="save-state" role="status">${submitted ? "Concluída" : f ? "Guardado" : "Escolhe as estrelas"}</span></div><div class="feedback-fields">${FEEDBACK.map(([key, label], index) => feedbackField(uid, key, label, goalkeepingBlocked && key === "goalkeeping" ? { goalkeeping: null } : f?.ratings, readonly || (goalkeepingBlocked && key === "goalkeeping"), index, goalkeepingBlocked && key === "goalkeeping")).join("")}</div>${submitted ? '<div class="feedback-sent"><span class="pill success">Avaliação enviada</span></div>' : ""}</form></details>`;
+      <form class="rating-form feedback-form" data-target="${esc(uid)}" data-method="${method || "stars"}" data-submitted="${readonly}" data-was-submitted="${submitted}" aria-label="Avaliar ${esc(name)}">${self ? `<p class="feedback-self-notice">${icon("profile")}Esta é a tua autoavaliação</p>` : ""}<div class="feedback-form-status"><span data-rating-count>${selectedCount} / ${FEEDBACK.length} dimensões</span><span class="save-state" role="status">${submitted ? "Concluída" : f ? "Guardado" : "Escolhe a avaliação"}</span></div><div class="feedback-fields">${FEEDBACK.map(([key, label], index) => feedbackField(uid, key, label, goalkeepingBlocked && key === "goalkeeping" ? { goalkeeping: null } : f?.ratings, readonly || (goalkeepingBlocked && key === "goalkeeping"), index, goalkeepingBlocked && key === "goalkeeping", method || "stars")).join("")}</div>${submitted ? '<div class="feedback-sent"><span class="pill success">Avaliação enviada</span></div>' : ""}</form></details>`;
   }
   ctx.render(`${pageHead("Pós-jogo", `Avaliar ${g.title}`, "As tuas avaliações deste jogo.", linkButton(`#/game/${gid}`, "Ver jogo", "ghost"))}
-    <div class="feedback-workspace content-stack"><section class="panel feedback-scoreboard" aria-label="Resultado final"><span class="eyebrow">Resultado final</span><div class="feedback-scoreline"><span class="feedback-score-team feedback-team-a">${esc(g.teamNames?.teamA || "Equipa A")}</span><strong>${g.score?.teamA ?? "—"}<span aria-hidden="true">:</span>${g.score?.teamB ?? "—"}</strong><span class="feedback-score-team feedback-team-b">${esc(g.teamNames?.teamB || "Equipa B")}</span></div></section><section class="panel feedback-overview"><div class="section-head"><div><span class="eyebrow">AVALIAÇÃO DO JOGO</span><h2>${completed === targets.length && targets.length ? "Tudo enviado" : "O jogo, pela tua perspetiva"}</h2></div><span class="pill ${completed === targets.length && targets.length ? "success" : ""}">${completed} / ${targets.length} enviadas</span></div><div class="progress" role="progressbar" aria-label="Avaliações enviadas" aria-valuemin="0" aria-valuemax="${targets.length || 1}" aria-valuenow="${completed}"><span style="--progress:${targets.length ? Math.round((completed / targets.length) * 100) : 0}%"></span></div><p class="feedback-brief">Guardado automaticamente. No fim, <strong>Submeter</strong>.</p><details class="feedback-guide"><summary>Privacidade e edição</summary><p>As respostas individuais são privadas. A autoavaliação tem o mesmo peso das restantes. O prazo de edição começa na primeira submissão e aparece junto de cada avaliação.</p></details><div class="feedback-team-shortcuts">${teams.map((team) => `<button type="button" class="feedback-team-shortcut feedback-team-${team.side.toLowerCase()}" data-feedback-team="${team.side}"><span>Equipa ${team.side}</span><small>${team.own ? "A tua equipa" : "Adversários"} · ${team.completed}/${team.players.length} enviadas</small>${icon("arrow")}</button>`).join("")}</div><div id="feedback-edit-slot"></div><details class="feedback-guide"><summary>Como usar a escala</summary><p>Toca numa estrela para preencher todas até à escolhida. Usa 0 estrelas para a classificação mínima e «Não jogou à baliza» quando guarda-redes não se aplica.</p><div class="feedback-scale">${feedbackScale.map((label, value) => `<span><b>${value}</b>${label}</span>`).join("")}</div></details></section>
+    <div class="feedback-workspace content-stack"><section class="panel feedback-scoreboard" aria-label="Resultado final"><span class="eyebrow">Resultado final</span><div class="feedback-scoreline"><span class="feedback-score-team feedback-team-a">${esc(g.teamNames?.teamA || "Equipa A")}</span><strong>${g.score?.teamA ?? "—"}<span aria-hidden="true">:</span>${g.score?.teamB ?? "—"}</strong><span class="feedback-score-team feedback-team-b">${esc(g.teamNames?.teamB || "Equipa B")}</span></div></section><section class="panel feedback-overview"><div class="section-head"><div><span class="eyebrow">AVALIAÇÃO DO JOGO</span><h2>${completed === targets.length && targets.length ? "Tudo enviado" : "O jogo, pela tua perspetiva"}</h2></div><span class="pill ${completed === targets.length && targets.length ? "success" : ""}">${completed} / ${targets.length} enviadas</span></div><div class="progress" role="progressbar" aria-label="Avaliações enviadas" aria-valuemin="0" aria-valuemax="${targets.length || 1}" aria-valuenow="${completed}"><span style="--progress:${targets.length ? Math.round((completed / targets.length) * 100) : 0}%"></span></div><p class="feedback-brief">Guardado automaticamente. No fim, <strong>Submeter</strong>.</p><details class="feedback-guide"><summary>Privacidade e edição</summary><p>As respostas individuais são privadas. A autoavaliação tem o mesmo peso das restantes. O prazo de edição começa na primeira submissão e aparece junto de cada avaliação.</p></details><div class="feedback-team-shortcuts">${teams.map((team) => `<button type="button" class="feedback-team-shortcut feedback-team-${team.side.toLowerCase()}" data-feedback-team="${team.side}"><span>Equipa ${team.side}</span><small>${team.own ? "A tua equipa" : "Adversários"} · ${team.completed}/${team.players.length} enviadas</small>${icon("arrow")}</button>`).join("")}</div><div id="feedback-edit-slot"></div><button type="button" class="btn btn-secondary" data-change-rating-method>Mudar método de avaliação</button></section>
     <div class="feedback-grid">${teams.map((team) => `<section class="feedback-team feedback-team-${team.side.toLowerCase()}" id="feedback-team-${team.side}" aria-labelledby="feedback-team-heading-${team.side}"><div class="feedback-team-heading"><span class="feedback-team-letter" aria-hidden="true">${team.side}</span><div><p>${team.own ? "A tua equipa" : "Equipa adversária"}</p><h2 id="feedback-team-heading-${team.side}" tabindex="-1">Equipa ${team.side}</h2></div><span class="feedback-team-count">${team.completed}<span> / ${team.players.length} enviadas</span></span></div><div class="feedback-team-players">${team.players.map((uid) => playerReview(uid, team)).join("")}</div></section>`).join("") || empty("Não há colegas para avaliar", "Este jogo só tem um participante.", "", "players")}</div></div>`);
   document.querySelectorAll("[data-feedback-team]").forEach((button) => {
     button.onclick = () => {
@@ -328,6 +299,26 @@ export async function feedbackPage(ctx, gid, editing = false) {
       });
     };
   });
+  const applyMethod = async selected => {
+    await DB.saveProfile(ctx.user.uid, { ratingMethod: selected });
+    ctx.user.ratingMethod = selected;
+    method = selected;
+    document.querySelectorAll('.feedback-form').forEach(form => {
+      form.dataset.method = selected;
+      form.querySelectorAll('.feedback-field').forEach(field => {
+        const input = field.querySelector('[data-rating]');
+        const disabled = form.dataset.submitted === 'true' || field.querySelector('[data-feedback-choice]')?.disabled;
+        const rating = field.querySelector('.feedback-rating');
+        input.remove();
+        rating.innerHTML = methodControls(selected, input.value, field.dataset.dimension, disabled);
+        rating.prepend(input);
+        field.dispatchEvent(new Event('rating-method-change'));
+      });
+      bindMethodControls(form);
+    });
+  };
+  document.querySelector('[data-change-rating-method]').onclick = () => chooseMethod(ctx, applyMethod);
+  if (!method) chooseMethod(ctx, applyMethod, true);
   const reviews = [...document.querySelectorAll(".feedback-review")];
   reviews.forEach((review) =>
     review.addEventListener("toggle", () => {
@@ -340,6 +331,7 @@ export async function feedbackPage(ctx, gid, editing = false) {
   const pending = [];
   document.querySelectorAll(".feedback-form").forEach((form) => {
     bindFeedbackStars(form);
+    bindMethodControls(form);
     const target = form.dataset.target;
     if (form.dataset.submitted === "true") return;
     form.addEventListener("input", () => {

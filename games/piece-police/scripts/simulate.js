@@ -242,7 +242,12 @@ function printMode(r) {
   console.log(table('De onde vem o RTP (atribuição dos prémios)', [{ h: 'Origem', a: 'l' }, { h: 'RTP total' }, { h: 'Só no jogo base' }],
     at.map(([k, v]) => [k, pct(v.total), pct(v.base)])));
   console.log(c.dim('  Cada prémio é dividido pelas células que o formaram, conforme quem as criou ou mexeu (natural = sem poder).'));
-  console.log(c.dim('  A parte acima de ×1 de um cluster com wilds multiplicadores vai para mult:CW (cantos) / mult:DW (Distintivo).'));
+  console.log(c.dim('  A parte acima de ×1 de um cluster com wilds multiplicadores vai para mult:CW (cantos) / mult:DW (Joiner).'));
+  // pp-v7: o tamanho do cluster e o multiplicador contam?
+  const faixa = (rows) => rows.map((b) => [b.label, x(b.perRound, 4), x(b.avgX, 2), pct(b.rtp)]);
+  const heads = (h) => [{ h, a: 'l' }, { h: 'Prémios por jogada' }, { h: 'Prémio médio (×)' }, { h: 'Parte do RTP' }];
+  if (r.bySize) console.log(table('RTP por tamanho do cluster', heads('Tamanho'), faixa(r.bySize)));
+  if (r.byMult) console.log(table('RTP por multiplicador do cluster (Σ cantos × Joiner)', heads('Multiplicador'), faixa(r.byMult)));
 }
 if (!RESUMO) for (const r of Object.values(results)) printMode(r);
 
@@ -285,6 +290,9 @@ if (FILES) {
   }
   w('funcionalidades.csv', ['modo', 'tipo_spin', 'metrica', 'total', 'por_spin_%'], featRows);
   w('atribuicao.csv', ['modo', 'origem', 'rtp_total_%', 'rtp_jogo_base_%'], R.flatMap((r) => TAGS.map((t) => [r.mode, t, r.attrib[t].total * 100, r.attrib[t].base * 100])));
+  w('faixas.csv', ['modo', 'tipo', 'faixa', 'premios_por_jogada', 'premio_medio_x', 'rtp_%'], R.flatMap((r) => [
+    ...r.bySize.map((b) => [r.mode, 'tamanho', b.label, b.perRound, b.avgX, b.rtp * 100]),
+    ...r.byMult.map((b) => [r.mode, 'multiplicador', b.label, b.perRound, b.avgX, b.rtp * 100])]));
   fs.writeFileSync(path.join(dir, 'relatorio.json'), JSON.stringify({ versao: MATH_VERSION, config: CONFIG_HASH, seed: SEED, data: started.toISOString(), spins: SPINS, compras: BUYS, resultados: results }, null, 2));
   fs.writeFileSync(path.join(ROOT, 'relatorios', 'ULTIMO.txt'), path.relative(ROOT, dir) + '\n');
   console.log('\n' + c.dim(`Relatórios gravados em ${path.relative(ROOT, dir)}${path.sep} (CSV abrem no Excel; relatorio.json tem tudo).`));

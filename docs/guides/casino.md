@@ -2,9 +2,16 @@
 
 [Documentação](../README.md) · [Desenvolvimento](development.md) · [Publicação](deployment.md)
 
-O casino está em `#/casino`; `/casino` redireciona para essa rota. O convite aparece no início, imediatamente abaixo do pódio. A entrada exige uma conta ativa. Os cinco jogos usam as fontes de `games` e a mesma carteira.
+O casino está em `#/casino`; `/casino` redireciona para essa rota. O convite aparece no início, imediatamente abaixo do pódio. A entrada exige uma conta ativa. Os jogos usam as fontes de `games` e a mesma carteira.
 
 No telemóvel, blackjack e roleta usam as mesmas fichas selecionáveis do computador, sem dropdown. Em retrato, os nove valores ficam visíveis em duas filas. Abrir o chat não ativa o campo de mensagem; o teclado só é solicitado ao tocar nesse campo.
+
+
+## PEACE POLICE: THE AFTERPARTY
+
+Disponível no catálogo e na navegação do casino com uma única versão responsiva para computador e telemóvel. O [host](../../js/casino-pp-host.js) liga o protocolo `peace-police:v1` à carteira persistente comum, reutilizando a lógica de carteira do jogo pelo [adaptador](../../js/casino-pp-local.js). A entrada debita uma vez, o último passo credita o prémio e os recibos recuperam respostas perdidas sem duplicar movimentos. Uma jogada pendente impede mudar de jogo e é retomada após recarregar.
+
+A [build](../../scripts/build-casino-pp.mjs), incluída em `npm.cmd run build:casino`, entrega apenas a página e as pastas de execução, preservando os ficheiros de música e os crossfades originais. A [capa WebP 800 × 1200](../../assets/casino/covers/peace-police.webp) usa a arte aprovada do jogo. `node tests/casino-pp-integrated.mjs` verifica a nova integração com fixtures locais, sem repetir a validação interna do jogo. Publicação completa: `.\deploy.ps1`. Não exige recálculo de dados.
 
 ## Economia e reinício
 
@@ -134,7 +141,7 @@ Validação local da integração: `npm.cmd run test:casino:cardoso`.
 
 A Vault pessoal está descrita no [relatório de implementação de 29/10/2026](../reports/casino-vault-2026-10-29.md): depósitos definitivos de pelo menos **300 DJC por depósito** no cabeçalho do salão, sem levantamentos e com saldo separado das apostas. O total para a [loja da conta](casino-shop.md) soma carteira e Vault. O painel abre num popup ancorado ao botão Vault e fecha ao clicar fora, mover o foco para outro controlo ou premir Escape.
 
-O salão apresenta sempre «Pedir Rejuice». Com saldo local de pelo menos 5 DJC, o clique mostra uma mensagem sem chamar o servidor. Abaixo desse valor, a carteira envia uma confirmação `casinoSession` com `rejuice: true`, incluindo os totais pendentes. Não há limite diário.
+O cabeçalho partilhado pelo salão e por todos os jogos apresenta um ícone de copo «JUICE» junto ao saldo, com o nome acessível «Pedir Rejuice: 50 Djabucoins». Com saldo local de pelo menos 5 DJC, o clique mostra uma mensagem sem chamar o servidor. Abaixo desse valor, a carteira envia uma confirmação `casinoSession` com `rejuice: true`, incluindo os totais pendentes. Não há limite diário.
 
 Na mesma transação, o servidor aplica os totais, verifica o saldo real resultante e acrescenta 5000 centésimos apenas se o saldo estiver entre 0 e 499. A sequência e o fingerprint da sessão tornam a repetição idempotente; o pedido fica persistido antes do envio e a resposta atualiza a carteira local sem leitura adicional nem novo listener. Pedidos concorrentes são serializados pela transação. O cliente bloqueia cliques durante o processamento.
 
@@ -144,4 +151,4 @@ Segurança: esta validação protege a atribuição contra saldo concorrente e r
 
 Validação local: `node tests/casino-rejuice.mjs`, `node --test tests/casino-session.test.js tests/casino.test.js` e `npm.cmd run test:casino:backend` (emulador). Publicar primeiro `npx.cmd firebase deploy --only functions:peladinhas:casinoSession` e depois `npm.cmd run deploy:frontend`. Não é necessário recalcular carteiras nem alterar semanas fechadas.
 
-O Rejuice usa o botão **Pedir Rejuice**, do lado oposto a **Loja de cartas**, com o mesmo formato e tamanho. O resultado aparece num popup junto ao botão e desvanece após cinco segundos. Em ecrãs estreitos, o popup aparece por baixo.
+O Rejuice usa apenas um ícone de sumo psicadélico, com alvo de 44 × 44 px e foco por teclado. O resultado aparece num popup por baixo do ícone e desvanece após cinco segundos. Em ecrãs até 1000 px, o aviso fica fixo junto ao fundo, com margem lateral para preservar a leitura.

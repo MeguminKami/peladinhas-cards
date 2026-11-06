@@ -371,7 +371,7 @@ export function gameFlowFunctions(syncGame = async () => {}) {
         !Object.entries(values).every(
           ([key, value]) =>
             (key === "goalkeeping" && value === null) ||
-            (Number.isInteger(value) && value >= 0 && value <= 5),
+            (Number.isFinite(value) && value >= 0 && value <= 5),
         )
       )
         fail("Valores fora da escala.");

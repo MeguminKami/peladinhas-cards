@@ -1,0 +1,967 @@
+{
+  "seed": "validacao-ganza-v2-20261106",
+  "version": "ganza-v2",
+  "sample": 1000000,
+  "results": [
+    {
+      "rows": 8,
+      "risk": "baixo",
+      "exact": 99,
+      "simulated": 98.85791600086232,
+      "ci95": [
+        98.54168491175989,
+        99.17414708996476
+      ],
+      "sd": 1.6134239239920463,
+      "max": 15.98,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 3847,
+          "expected": 3906.25
+        },
+        {
+          "k": 1,
+          "observed": 31218,
+          "expected": 31250
+        },
+        {
+          "k": 2,
+          "observed": 109215,
+          "expected": 109375
+        },
+        {
+          "k": 3,
+          "observed": 218692,
+          "expected": 218750
+        },
+        {
+          "k": 4,
+          "observed": 273786,
+          "expected": 273437.5
+        },
+        {
+          "k": 5,
+          "observed": 218923,
+          "expected": 218750
+        },
+        {
+          "k": 6,
+          "observed": 109163,
+          "expected": 109375
+        },
+        {
+          "k": 7,
+          "observed": 31265,
+          "expected": 31250
+        },
+        {
+          "k": 8,
+          "observed": 3891,
+          "expected": 3906.25
+        }
+      ]
+    },
+    {
+      "rows": 8,
+      "risk": "medio",
+      "exact": 99,
+      "simulated": 98.87510600179365,
+      "ci95": [
+        98.2995298451387,
+        99.45068215844863
+      ],
+      "sd": 2.9366130441580043,
+      "max": 32.02,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 3976,
+          "expected": 3906.25
+        },
+        {
+          "k": 1,
+          "observed": 31217,
+          "expected": 31250
+        },
+        {
+          "k": 2,
+          "observed": 109552,
+          "expected": 109375
+        },
+        {
+          "k": 3,
+          "observed": 219135,
+          "expected": 218750
+        },
+        {
+          "k": 4,
+          "observed": 273813,
+          "expected": 273437.5
+        },
+        {
+          "k": 5,
+          "observed": 218356,
+          "expected": 218750
+        },
+        {
+          "k": 6,
+          "observed": 109137,
+          "expected": 109375
+        },
+        {
+          "k": 7,
+          "observed": 30975,
+          "expected": 31250
+        },
+        {
+          "k": 8,
+          "observed": 3839,
+          "expected": 3906.25
+        }
+      ]
+    },
+    {
+      "rows": 8,
+      "risk": "alto",
+      "exact": 99,
+      "simulated": 99.59371999894199,
+      "ci95": [
+        98.48614823428133,
+        100.70129176360267
+      ],
+      "sd": 5.650876350309532,
+      "max": 64.03,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 3957,
+          "expected": 3906.25
+        },
+        {
+          "k": 1,
+          "observed": 31297,
+          "expected": 31250
+        },
+        {
+          "k": 2,
+          "observed": 109141,
+          "expected": 109375
+        },
+        {
+          "k": 3,
+          "observed": 218856,
+          "expected": 218750
+        },
+        {
+          "k": 4,
+          "observed": 273732,
+          "expected": 273437.5
+        },
+        {
+          "k": 5,
+          "observed": 218194,
+          "expected": 218750
+        },
+        {
+          "k": 6,
+          "observed": 109567,
+          "expected": 109375
+        },
+        {
+          "k": 7,
+          "observed": 31311,
+          "expected": 31250
+        },
+        {
+          "k": 8,
+          "observed": 3945,
+          "expected": 3906.25
+        }
+      ]
+    },
+    {
+      "rows": 8,
+      "risk": "extremo",
+      "exact": 99,
+      "simulated": 98.83588599831161,
+      "ci95": [
+        97.11625488536662,
+        100.5555171112566
+      ],
+      "sd": 8.773628127270399,
+      "max": 99.96,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 3783,
+          "expected": 3906.25
+        },
+        {
+          "k": 1,
+          "observed": 30887,
+          "expected": 31250
+        },
+        {
+          "k": 2,
+          "observed": 109051,
+          "expected": 109375
+        },
+        {
+          "k": 3,
+          "observed": 219110,
+          "expected": 218750
+        },
+        {
+          "k": 4,
+          "observed": 273319,
+          "expected": 273437.5
+        },
+        {
+          "k": 5,
+          "observed": 218855,
+          "expected": 218750
+        },
+        {
+          "k": 6,
+          "observed": 109926,
+          "expected": 109375
+        },
+        {
+          "k": 7,
+          "observed": 31055,
+          "expected": 31250
+        },
+        {
+          "k": 8,
+          "observed": 4014,
+          "expected": 3906.25
+        }
+      ]
+    },
+    {
+      "rows": 12,
+      "risk": "baixo",
+      "exact": 99.00048828125,
+      "simulated": 98.9410430012729,
+      "ci95": [
+        98.72692870383885,
+        99.15515729870695
+      ],
+      "sd": 1.0924198848676125,
+      "max": 16,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 264,
+          "expected": 244.140625
+        },
+        {
+          "k": 1,
+          "observed": 2856,
+          "expected": 2929.6875
+        },
+        {
+          "k": 2,
+          "observed": 16132,
+          "expected": 16113.28125
+        },
+        {
+          "k": 3,
+          "observed": 54081,
+          "expected": 53710.9375
+        },
+        {
+          "k": 4,
+          "observed": 120856,
+          "expected": 120849.609375
+        },
+        {
+          "k": 5,
+          "observed": 194245,
+          "expected": 193359.375
+        },
+        {
+          "k": 6,
+          "observed": 224932,
+          "expected": 225585.9375
+        },
+        {
+          "k": 7,
+          "observed": 192928,
+          "expected": 193359.375
+        },
+        {
+          "k": 8,
+          "observed": 120985,
+          "expected": 120849.609375
+        },
+        {
+          "k": 9,
+          "observed": 53632,
+          "expected": 53710.9375
+        },
+        {
+          "k": 10,
+          "observed": 15957,
+          "expected": 16113.28125
+        },
+        {
+          "k": 11,
+          "observed": 2873,
+          "expected": 2929.6875
+        },
+        {
+          "k": 12,
+          "observed": 259,
+          "expected": 244.140625
+        }
+      ]
+    },
+    {
+      "rows": 12,
+      "risk": "medio",
+      "exact": 99,
+      "simulated": 99.2530530014622,
+      "ci95": [
+        98.67669527328485,
+        99.82941072963956
+      ],
+      "sd": 2.940600653966096,
+      "max": 80,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 270,
+          "expected": 244.140625
+        },
+        {
+          "k": 1,
+          "observed": 2950,
+          "expected": 2929.6875
+        },
+        {
+          "k": 2,
+          "observed": 16354,
+          "expected": 16113.28125
+        },
+        {
+          "k": 3,
+          "observed": 54096,
+          "expected": 53710.9375
+        },
+        {
+          "k": 4,
+          "observed": 120610,
+          "expected": 120849.609375
+        },
+        {
+          "k": 5,
+          "observed": 193041,
+          "expected": 193359.375
+        },
+        {
+          "k": 6,
+          "observed": 225359,
+          "expected": 225585.9375
+        },
+        {
+          "k": 7,
+          "observed": 193143,
+          "expected": 193359.375
+        },
+        {
+          "k": 8,
+          "observed": 121168,
+          "expected": 120849.609375
+        },
+        {
+          "k": 9,
+          "observed": 53815,
+          "expected": 53710.9375
+        },
+        {
+          "k": 10,
+          "observed": 16073,
+          "expected": 16113.28125
+        },
+        {
+          "k": 11,
+          "observed": 2889,
+          "expected": 2929.6875
+        },
+        {
+          "k": 12,
+          "observed": 232,
+          "expected": 244.140625
+        }
+      ]
+    },
+    {
+      "rows": 12,
+      "risk": "alto",
+      "exact": 98.99951171875,
+      "simulated": 99.16256799874122,
+      "ci95": [
+        98.0403863567657,
+        100.28474964071677
+      ],
+      "sd": 5.725416540691471,
+      "max": 200,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 259,
+          "expected": 244.140625
+        },
+        {
+          "k": 1,
+          "observed": 2907,
+          "expected": 2929.6875
+        },
+        {
+          "k": 2,
+          "observed": 15956,
+          "expected": 16113.28125
+        },
+        {
+          "k": 3,
+          "observed": 53430,
+          "expected": 53710.9375
+        },
+        {
+          "k": 4,
+          "observed": 121002,
+          "expected": 120849.609375
+        },
+        {
+          "k": 5,
+          "observed": 193695,
+          "expected": 193359.375
+        },
+        {
+          "k": 6,
+          "observed": 225462,
+          "expected": 225585.9375
+        },
+        {
+          "k": 7,
+          "observed": 193267,
+          "expected": 193359.375
+        },
+        {
+          "k": 8,
+          "observed": 120967,
+          "expected": 120849.609375
+        },
+        {
+          "k": 9,
+          "observed": 53692,
+          "expected": 53710.9375
+        },
+        {
+          "k": 10,
+          "observed": 16259,
+          "expected": 16113.28125
+        },
+        {
+          "k": 11,
+          "observed": 2841,
+          "expected": 2929.6875
+        },
+        {
+          "k": 12,
+          "observed": 263,
+          "expected": 244.140625
+        }
+      ]
+    },
+    {
+      "rows": 12,
+      "risk": "extremo",
+      "exact": 99.001953125,
+      "simulated": 103.45433199828098,
+      "ci95": [
+        98.89361684789655,
+        108.01504714866539
+      ],
+      "sd": 23.2689548489001,
+      "max": 1000,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 253,
+          "expected": 244.140625
+        },
+        {
+          "k": 1,
+          "observed": 2978,
+          "expected": 2929.6875
+        },
+        {
+          "k": 2,
+          "observed": 15924,
+          "expected": 16113.28125
+        },
+        {
+          "k": 3,
+          "observed": 53629,
+          "expected": 53710.9375
+        },
+        {
+          "k": 4,
+          "observed": 121204,
+          "expected": 120849.609375
+        },
+        {
+          "k": 5,
+          "observed": 193107,
+          "expected": 193359.375
+        },
+        {
+          "k": 6,
+          "observed": 225660,
+          "expected": 225585.9375
+        },
+        {
+          "k": 7,
+          "observed": 193237,
+          "expected": 193359.375
+        },
+        {
+          "k": 8,
+          "observed": 120574,
+          "expected": 120849.609375
+        },
+        {
+          "k": 9,
+          "observed": 53910,
+          "expected": 53710.9375
+        },
+        {
+          "k": 10,
+          "observed": 16304,
+          "expected": 16113.28125
+        },
+        {
+          "k": 11,
+          "observed": 2943,
+          "expected": 2929.6875
+        },
+        {
+          "k": 12,
+          "observed": 277,
+          "expected": 244.140625
+        }
+      ]
+    },
+    {
+      "rows": 16,
+      "risk": "baixo",
+      "exact": 99.00225830078125,
+      "simulated": 99.14520000029083,
+      "ci95": [
+        98.96602151361466,
+        99.324378486967
+      ],
+      "sd": 0.914175952429419,
+      "max": 16,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 14,
+          "expected": 15.2587890625
+        },
+        {
+          "k": 1,
+          "observed": 285,
+          "expected": 244.140625
+        },
+        {
+          "k": 2,
+          "observed": 1896,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 3,
+          "observed": 8404,
+          "expected": 8544.921875
+        },
+        {
+          "k": 4,
+          "observed": 27724,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 5,
+          "observed": 66712,
+          "expected": 66650.390625
+        },
+        {
+          "k": 6,
+          "observed": 122378,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 7,
+          "observed": 174389,
+          "expected": 174560.546875
+        },
+        {
+          "k": 8,
+          "observed": 196918,
+          "expected": 196380.615234375
+        },
+        {
+          "k": 9,
+          "observed": 174034,
+          "expected": 174560.546875
+        },
+        {
+          "k": 10,
+          "observed": 121576,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 11,
+          "observed": 66949,
+          "expected": 66650.390625
+        },
+        {
+          "k": 12,
+          "observed": 28009,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 13,
+          "observed": 8561,
+          "expected": 8544.921875
+        },
+        {
+          "k": 14,
+          "observed": 1890,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 15,
+          "observed": 244,
+          "expected": 244.140625
+        },
+        {
+          "k": 16,
+          "observed": 17,
+          "expected": 15.2587890625
+        }
+      ]
+    },
+    {
+      "rows": 16,
+      "risk": "medio",
+      "exact": 99.00408935546875,
+      "simulated": 99.20913000153426,
+      "ci95": [
+        98.74861152418917,
+        99.66964847887935
+      ],
+      "sd": 2.3495840680871964,
+      "max": 100,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 19,
+          "expected": 15.2587890625
+        },
+        {
+          "k": 1,
+          "observed": 250,
+          "expected": 244.140625
+        },
+        {
+          "k": 2,
+          "observed": 1908,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 3,
+          "observed": 8639,
+          "expected": 8544.921875
+        },
+        {
+          "k": 4,
+          "observed": 27395,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 5,
+          "observed": 66653,
+          "expected": 66650.390625
+        },
+        {
+          "k": 6,
+          "observed": 122019,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 7,
+          "observed": 174664,
+          "expected": 174560.546875
+        },
+        {
+          "k": 8,
+          "observed": 196615,
+          "expected": 196380.615234375
+        },
+        {
+          "k": 9,
+          "observed": 174060,
+          "expected": 174560.546875
+        },
+        {
+          "k": 10,
+          "observed": 122488,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 11,
+          "observed": 66944,
+          "expected": 66650.390625
+        },
+        {
+          "k": 12,
+          "observed": 27644,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 13,
+          "observed": 8652,
+          "expected": 8544.921875
+        },
+        {
+          "k": 14,
+          "observed": 1801,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 15,
+          "observed": 229,
+          "expected": 244.140625
+        },
+        {
+          "k": 16,
+          "observed": 20,
+          "expected": 15.2587890625
+        }
+      ]
+    },
+    {
+      "rows": 16,
+      "risk": "alto",
+      "exact": 99.00210571289062,
+      "simulated": 98.67230999961362,
+      "ci95": [
+        98.00017605288497,
+        99.34444394634227
+      ],
+      "sd": 3.4292548302482193,
+      "max": 200,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 9,
+          "expected": 15.2587890625
+        },
+        {
+          "k": 1,
+          "observed": 237,
+          "expected": 244.140625
+        },
+        {
+          "k": 2,
+          "observed": 1821,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 3,
+          "observed": 8478,
+          "expected": 8544.921875
+        },
+        {
+          "k": 4,
+          "observed": 27819,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 5,
+          "observed": 66047,
+          "expected": 66650.390625
+        },
+        {
+          "k": 6,
+          "observed": 122454,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 7,
+          "observed": 174811,
+          "expected": 174560.546875
+        },
+        {
+          "k": 8,
+          "observed": 196411,
+          "expected": 196380.615234375
+        },
+        {
+          "k": 9,
+          "observed": 174983,
+          "expected": 174560.546875
+        },
+        {
+          "k": 10,
+          "observed": 121566,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 11,
+          "observed": 66749,
+          "expected": 66650.390625
+        },
+        {
+          "k": 12,
+          "observed": 27892,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 13,
+          "observed": 8624,
+          "expected": 8544.921875
+        },
+        {
+          "k": 14,
+          "observed": 1869,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 15,
+          "observed": 216,
+          "expected": 244.140625
+        },
+        {
+          "k": 16,
+          "observed": 14,
+          "expected": 15.2587890625
+        }
+      ]
+    },
+    {
+      "rows": 16,
+      "risk": "extremo",
+      "exact": 98.9979248046875,
+      "simulated": 96.45935499834643,
+      "ci95": [
+        85.47391787749072,
+        107.44479211920212
+      ],
+      "sd": 56.048148575794386,
+      "max": 9999,
+      "sample": 1000000,
+      "bins": [
+        {
+          "k": 0,
+          "observed": 13,
+          "expected": 15.2587890625
+        },
+        {
+          "k": 1,
+          "observed": 244,
+          "expected": 244.140625
+        },
+        {
+          "k": 2,
+          "observed": 1827,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 3,
+          "observed": 8581,
+          "expected": 8544.921875
+        },
+        {
+          "k": 4,
+          "observed": 27970,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 5,
+          "observed": 66349,
+          "expected": 66650.390625
+        },
+        {
+          "k": 6,
+          "observed": 122021,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 7,
+          "observed": 174181,
+          "expected": 174560.546875
+        },
+        {
+          "k": 8,
+          "observed": 196255,
+          "expected": 196380.615234375
+        },
+        {
+          "k": 9,
+          "observed": 174355,
+          "expected": 174560.546875
+        },
+        {
+          "k": 10,
+          "observed": 122921,
+          "expected": 122192.3828125
+        },
+        {
+          "k": 11,
+          "observed": 66865,
+          "expected": 66650.390625
+        },
+        {
+          "k": 12,
+          "observed": 27734,
+          "expected": 27770.99609375
+        },
+        {
+          "k": 13,
+          "observed": 8608,
+          "expected": 8544.921875
+        },
+        {
+          "k": 14,
+          "observed": 1830,
+          "expected": 1831.0546875
+        },
+        {
+          "k": 15,
+          "observed": 230,
+          "expected": 244.140625
+        },
+        {
+          "k": 16,
+          "observed": 16,
+          "expected": 15.2587890625
+        }
+      ]
+    }
+  ]
+}

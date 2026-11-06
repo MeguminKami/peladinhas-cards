@@ -1181,3 +1181,9 @@ test("game singleton and immutable vote revisions are inaccessible to browser ro
     await assertFails(setDoc(doc(signed(uid),`games/forged-${uid}`),game("draft")));
   }
 });
+
+test("players can save only supported rating methods on their own profile", async () => {
+ for(const ratingMethod of ['stars','half','values','words']) await assertSucceeds(updateDoc(doc(signed('joao'),'users/joao'),{ratingMethod,updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(doc(signed('joao'),'users/joao'),{ratingMethod:'invalid',updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(doc(signed('joao'),'users/boss'),{ratingMethod:'half',updatedAt:serverTimestamp()}));
+});

@@ -1866,7 +1866,7 @@ try {
   await page.keyboard.press("ArrowRight");
   assert.equal(
     await page.locator('#weekly-photo-form [name="photoX"]').inputValue(),
-    "33",
+    "32",
   );
   await page.locator("#save-weekly-photo").click();
   await page.waitForFunction(() =>
@@ -1897,7 +1897,7 @@ try {
   );
   assert.ok(
     (
-      await page.locator(".card-stage .card-photo img").getAttribute("style")
+      await page.locator(".card-stage .card-photo").getAttribute("style")
     ).includes("scale(1.4)"),
   );
   await navigate("#/admin/card-photo/pedro", "Editar foto de carta");

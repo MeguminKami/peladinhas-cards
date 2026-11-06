@@ -1,60 +1,67 @@
-# Para o próximo agente — PEACE POLICE: THE AFTERPARTY
+# Próxima conversa — revisão dos efeitos e músicas Acidwave
 
-Estado em 04-11-2026. Lê primeiro, por esta ordem: `GUIA-DO-PROJETO.md`, `AGENTS.md`, `docs/estrutura-ui.md`, `docs/eventos.md`, `docs/matematica.md` (§4, §16, §17) e `README.md`.
+## Atualização posterior, 05-11-2026
 
-## Onde estamos
+**Músicas entregues e integradas:** os cinco MP3 do dono estão em ui/audio/music, com [manifesto](ui/audio/music/manifest.json). O dono pediu transições sempre suaves. [Leitor musical](ui/music-player.js) e [preparação dos loops](ui/music-loop.js) fazem crossfades de potência constante de 2 segundos, preservando a faixa anterior durante a carga. Não reiniciar música por spin, nem mudar afinação/velocidade no Turbo. Laboratório inclui seletor dos cinco modos e volume musical. Ler [sons](docs/sons.md) para pontos de loop, testes e limitações. Os MP3 originais mantêm-se intactos. Antes de publicação futura, ainda faltam loops comprimidos de entrega separados das fontes e teste em aparelhos reais. Não houve deploy. Esta atualização substitui as referências a músicas pendentes no histórico abaixo.
 
-| Fase | Estado |
-|---|---|
-| 0 — Design | ✅ `docs/GDD.md` (V2.3) |
-| 1 — Matemática e motor | ✅ `pp-v6`, em afinação pelo dono (`npm run sim`) |
-| 2 — GUI de teste | ✅ entregue e revista pelo dono (`npm run dev` → `game.html`, `?debug=1`) |
-| 3 — Visuais e animações | ⏳ **próxima, preparada**: `docs/fase3/` (plano com 3 agentes, perfil do jogo, inventário da arte); referências do dono em `INSPIRATION/` |
-| 4 — Som e música | ⏳ (`guides/4-SOM-E-MUSICA.md`, input §7.4) |
+**Revisão mais recente:** o dono rejeitou os sons demasiado iguais. A primeira paleta foi substituída, mantendo os 62 IDs, por composições explícitas com fontes de vidro, metal, madeira, corda, ar, mecanismos, bolhas, bateria e cortes digitais. Cada fusão tem uma sequência própria. O laboratório tem agora Comparar personagens e Comparar fusões. Manifesto de efeitos versão 2. A nova paleta ainda precisa de aprovação auditiva do dono, os testes técnicos não a comprovam.
 
-## Decisões recentes do dono (já no motor e nos documentos)
+O dono aprovou que o agente escolha a direção sonora, recusou vozes e decidiu gerar as músicas pessoalmente no Suno com os prompts recebidos. Autorizou entretanto os efeitos de todo o jogo. Primeira versão de 62 efeitos sintetizados localmente, integrada em [fx-audio](ui/fx-audio.js), [barramento](ui/audio-bus.js) e [catálogo](ui/audio-catalog.js). Existem WAV e [manifesto](ui/audio/sfx/manifest.json), [gerador](scripts/synthesize-sfx.js), [laboratório](audio-lab.html) e testes. Detalhes e limitações atuais em [sons](docs/sons.md), que prevalece sobre o estado histórico abaixo.
 
-- **Os wilds contam por inteiro**: basta 1 símbolo real num cluster (`clusterMinimoReais = 1`); um cluster só de wilds não paga.
-- **HOLD wild**: W que fica no tabuleiro até entrar num prémio e depois sai com o cluster (rasto do SLOW DISASTER, W presos em grupos do WEED que pagam noutro cluster). CW e Distintivo ficam até ao fim do spin.
-- `pp-v6` (04-11-2026): fusão surpresa em 3 % dos spins do jogo base e do MAIS SCATTERS; alvo de RTP 98 %; Scatter do jogo base mais raro; MAIS SCATTERS a 2× com mais Scatters; compras 160× / 336× / 830×. RTP medido em `docs/matematica.md` §16.
-- `pp-v5` (04-11-2026): tabela de pagamentos fixa de design (4 regras de forma validadas no arranque; calibra-se com probabilidades e multiplicadores, nunca com a tabela); ganho máximo 25 000×; volatilidade por bónus (AFTERPARTY média, VIP alta, POLICE PARTY muito alta); compras 161× / 336× / 836×. RTP e volatilidade em `docs/matematica.md` §16.
-- Recalibração `pp-v4` (04-11-2026): nenhum prémio abaixo de 0,10×; colunas 18–20, 21–24 e 25 na tabela; menos wilds do ALCOOL, SLOW DISASTER e TOTAL MAYHEM; compras 61,5× / 160× / 864×. RTP medido em `docs/matematica.md` §16.
-- Ecrã: coluna esquerda = compras, MAIS SCATTERS e Peace Police (no bónus passa a ser o **registo do free spin**, limpo em cada spin); palco ao centro com néon **PARTY MODE · ON/OFF**; cartas de Chemistry à direita com a dica do próximo nível; barra do kit com SALDO | GANHO | **APOSTA**.
-- **O registo do bónus tem de ser visual, não texto, na Fase 3** (nota do dono).
-- Integração no casino Peladinhas: **ainda não** (decisão do dono). A lógica da carteira está pronta em `ui/carteira-local.js`.
+Passaram testes dirigidos e Edge local, incluindo AFTERPARTY completo em Normal e Turbo. Não houve escuta humana pelo agente, medição LUFS/true peak nem teste Safari/iPhone físico. Não há músicas carregadas nem transições musicais. O dono deve rever os efeitos e entregar as músicas. Uma versão por efeito, sem pipeline de candidatos/guardar escolhas. Nenhuma mudança de matemática, cloud, commit ou deploy. Não voltar a perguntar se quer vozes nem gerar músicas por iniciativa própria.
 
-## Regras de trabalho (do dono)
+## Passagem anterior, para contexto
 
-- Não alterar a matemática (`src/`, `tabelas/`) sem perguntar. Se mudar: subir `MATH_VERSION`, histórico, `npm test`, simulação rápida, documentos.
-- O dono corre as simulações; não dar números de RTP sem corrida reproduzível (seed + versão).
-- A barra de controlos é a do kit (`guides/kit` = `games/guias-slot/kit`): não editar a cópia em `ui/kit/`; `npm run verificar:kit`.
-- A interface só apresenta eventos: nunca sorteia, calcula prémios nem compara grelhas (`ui/modelo.js`, testado em `tests/modelo.test.js`).
-- Português de Portugal. Créditos fictícios.
+Estado de passagem em 05-11-2026. O dono pediu preparar a fase de som e música, com prompts para gerar as músicas, e conversar sobre a direção antes de produzir. Não começar outra revisão visual nem reconstruir o jogo.
 
-## Comandos
+## Ler primeiro
+
+1. [AGENTS.md](AGENTS.md) e [guia do projeto](GUIA-DO-PROJETO.md).
+2. [Plano sonoro e cinco prompts](docs/sons.md), preparado nesta conversa.
+3. [Guia de som existente](guides/4-SOM-E-MUSICA.md), [eventos](docs/eventos.md), [interface](docs/estrutura-ui.md) e [animações](docs/visuais-animacoes.md).
+4. [Tema Acidwave](docs/TEMA.md), usando os nomes atuais abaixo quando o histórico visual mostrar nomes antigos.
+
+## Estado real
+
+- Motor atual pp-v7. Não alterar matemática, tabelas numéricas, RNG, pagamentos, carteira ou sessão para fazer som. A integração com o casino real continua fora do âmbito.
+- [fx-audio.js](ui/fx-audio.js) ainda é um stub sem som. Recebe eventos, mudanças de modo, volumes e desbloqueio. Não existe barramento de áudio, música, SFX ou página de audição implementados.
+- O [Guia 4](guides/4-SOM-E-MUSICA.md) é o plano existente. O [plano sonoro](docs/sons.md) acrescenta os 29 tipos de evento, as dez fusões, interface, proposta de paleta e prompts completos por modo.
+- O dono quer os prompts das músicas. Primeiro discutir gosto, BPM, vozes e ferramenta, depois receber as faixas ou uma instrução explícita para as gerar. Não presumir uma chave, conta ou serviço pago. Nenhum segredo foi lido.
+- Músicas propostas: base e MAIS SCATTERS 126 BPM, AFTERPARTY 128, VIP 132, POLICE PARTY 138, Ré menor. São propostas para discutir, não aprovações nem assets existentes.
+
+## Contratos atuais da apresentação
+
+- Identidade Acidwave, títulos Rubik Glitch e textos de interface Oxanium. Manrope continua em alguns textos extensos da ajuda.
+- Símbolos aprovados: N1 Bob Joint, N2 Copo de shot, N3 Cope Cannister (botija de Copium), N4 Pastilha vermelha «Move», N5 Selo colorido. Scatter é o Passe da Afterparty amarelo com a palavra Scatter em vermelho.
+- O símbolo DW chama-se apenas Joiner. É um wild que multiplica o multiplicador do grupo. Não escrever Distintivo ou JOINER WILD nos textos novos. Os identificadores internos antigos mantêm-se por compatibilidade.
+- 3 Scatters no bónus dão +5 rodadas grátis, até ao limite configurado. Dois não dão retrigger. Não mudar essa regra como parte do áudio.
+- Normal 1×, Rápido 2×, Turbo 3,75×. Não acelerar a música nem mudar-lhe a afinação. Limitar sons repetitivos no Turbo.
+- Introdução com seis cenas, espera real de 1,5 segundos antes de CONTINUAR, JOGAR no fim e opção de não repetir. As explicações são sempre visíveis. Preferência local pp-intro-v1-hidden.
+- Bónus e fusões têm resumos curtos e confirmação manual. A ajuda preserva os detalhes completos. Fundos das descrições com 96 % de opacidade. A primeira fusão de cada tipo é explicada uma vez por bónus.
+- Título e contador do bónus centrados no topo. O painel duplicado com nome, contador e ganho à esquerda foi removido nesta passagem, preservando o registo de eventos e o resumo final.
+- Barra móvel compacta, grelha sem faixa vazia abaixo e áreas seguras da notch. A pré-visualização transmite margens ao iframe. Isto foi validado com simulações locais, não num iPhone físico.
+- Não usar ponto e vírgula como substituto de vírgulas em textos. Não delegar por defeito.
+
+## Ambiente e validação
+
+Scripts existentes, confirmados em [package.json](package.json):
 
 ```text
-npm test            motor, carteira e modelo da interface
-npm run test:ui     testes de browser (Playwright, ~6 min; capturas em test-results/)
-npm run dev         http://127.0.0.1:4177/  (game.html, ?debug=1, carteira.html, site.html, pc.html, telemovel.html)
-npm run sim         simulação completa
+npm.cmd run dev
+npm.cmd test
+npm.cmd run test:intro -- --edge
+npm.cmd run test:acidwave -- --edge
+npm.cmd run verificar:kit
 ```
 
-## Pendentes conhecidos
+No repositório principal, npm.cmd run test:docs verifica a documentação. Não existem ainda scripts audio:apply ou audio:candidates. Os testes de browser usam Playwright instalado e Edge. Os cenários são locais e não exigem cloud.
 
-- Decisões D5–D8, D12, D13 por aprovar (`docs/matematica.md` §17).
-- O aviso de ganho máximo só foi testado com uma fixture sintética.
-- `npm run test:ui` precisa do browser do Playwright 1.64 (`npx.cmd playwright install chromium`, com autorização do dono).
-- Nada da Fase 1/2 está commitado: pedir ao dono antes do primeiro commit.
+Há muitas alterações não commitadas de toda esta fase e de trabalho anterior. Preservá-las. Não fazer git reset, git clean, checkout de ficheiros, commit ou deploy por inferência. As últimas alterações são verificadas no fecho desta passagem. Não transformar a preparação de som numa nova calibração de RTP.
 
-## Fase 3: como começar
+## Limpeza desta passagem
 
-Tudo está em `docs/fase3/`:
+Removidos oito WebP substituídos fora do manifesto atual, dois designs rejeitados, dois WebP retirados e capturas/saídas de teste sem referências documentais. Masters aprovados, fotografias de referência, relatórios de matemática e evidências citadas foram preservados. As ligações históricas dos WebP removidos apontam para os masters originais. Os logs preview-server.log e preview-server-error.log ficaram por estarem em uso. Não terminar processos do dono para os apagar.
 
-| Ficheiro | Para quê |
-|---|---|
-| [PLANO-FASE-3.md](docs/fase3/PLANO-FASE-3.md) | Equipa de 3 agentes (A coordenador gráfico, B arte, C interface e animação), quem mexe em quê, etapas com aprovação do dono, **prompts** |
-| [PERFIL-DO-JOGO.md](docs/fase3/PERFIL-DO-JOGO.md) | Identidade, tom, pilares visuais, paleta, personagens, modos, momentos-chave, o que não queremos |
-| [INVENTARIO-ARTE.md](docs/fase3/INVENTARIO-ARTE.md) | Todas as peças que precisam de arte ou animação, com ID, tamanhos e responsável |
+## Primeira resposta na próxima conversa
 
-As referências do dono ficam em `INSPIRATION/` (só leitura, nunca publicadas). O prompt para abrir o coordenador gráfico está em `docs/fase3/PLANO-FASE-3.md` §5.1.
+Conversar sobre a direção: acid house e breaks de afterparty, intensidade crescente até ao POLICE PARTY, sem sirenes realistas nem agudos agressivos. Mostrar os prompts já preparados, perguntar se o dono quer vozes originais das personagens ou apenas efeitos e confirmar a ferramenta das músicas. Depois aprovar uma amostra de som antes da produção extensa. Nenhum áudio foi ainda escutado, medido ou certificado. Não afirmar que a fase sonora já está pronta.

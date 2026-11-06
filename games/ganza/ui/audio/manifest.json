@@ -1,0 +1,454 @@
+[
+  {
+    "name": "wrap-0",
+    "sources": [
+      "MoreSounds/Plastic/Plastic_01.wav"
+    ],
+    "provisional": false,
+    "duration": 0.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "throw-0",
+    "sources": [
+      "rpg-audio/Audio/cloth1.ogg",
+      "casino-audio/Audio/card-slide-1.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "pin-0",
+    "sources": [
+      "impact-sounds/Audio/impactWood_medium_000.ogg",
+      "impact-sounds/Audio/impactSoft_medium_000.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "plop-0",
+    "sources": [
+      "water-splash-slime-sfx/splash_01.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.0,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "splash-0",
+    "sources": [
+      "water-splash-slime-sfx/splash_05.ogg",
+      "impact-sounds/Audio/impactSoft_heavy_000.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "cargo-0",
+    "sources": [
+      "applause_fireworks.mp3",
+      "bicycle-horn-1.wav"
+    ],
+    "provisional": false,
+    "duration": 7,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "waves-0",
+    "sources": [
+      "wave_01_cc0-18363__jasinski__alkaibeach.flac",
+      "rpg-audio/Audio/creak1.ogg"
+    ],
+    "provisional": false,
+    "duration": 5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "ui-0",
+    "sources": [
+      "interface-sounds/Audio/click_001.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.25,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "coins-0",
+    "sources": [
+      "MoreSounds/Money/Money_01.wav"
+    ],
+    "provisional": false,
+    "duration": 0.9,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "wrap-1",
+    "sources": [
+      "MoreSounds/Plastic/Plastic_02.wav"
+    ],
+    "provisional": false,
+    "duration": 0.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "throw-1",
+    "sources": [
+      "rpg-audio/Audio/cloth2.ogg",
+      "casino-audio/Audio/card-slide-2.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "pin-1",
+    "sources": [
+      "impact-sounds/Audio/impactWood_medium_001.ogg",
+      "impact-sounds/Audio/impactSoft_medium_001.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "plop-1",
+    "sources": [
+      "water-splash-slime-sfx/splash_02.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.0,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "splash-1",
+    "sources": [
+      "water-splash-slime-sfx/splash_06.ogg",
+      "impact-sounds/Audio/impactSoft_heavy_001.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "cargo-1",
+    "sources": [
+      "applause_fireworks.mp3",
+      "bicycle-horn-1.wav"
+    ],
+    "provisional": false,
+    "duration": 7,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "waves-1",
+    "sources": [
+      "wave_02_cc0-18363__jasinski__alkaibeach.flac",
+      "rpg-audio/Audio/creak2.ogg"
+    ],
+    "provisional": false,
+    "duration": 5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "ui-1",
+    "sources": [
+      "interface-sounds/Audio/click_002.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.25,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "coins-1",
+    "sources": [
+      "MoreSounds/Money/Money_02.wav"
+    ],
+    "provisional": false,
+    "duration": 0.9,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "wrap-2",
+    "sources": [
+      "MoreSounds/Plastic/Plastic_03.wav"
+    ],
+    "provisional": false,
+    "duration": 0.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "throw-2",
+    "sources": [
+      "rpg-audio/Audio/cloth3.ogg",
+      "casino-audio/Audio/card-slide-3.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "pin-2",
+    "sources": [
+      "impact-sounds/Audio/impactWood_medium_002.ogg",
+      "impact-sounds/Audio/impactSoft_medium_002.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "plop-2",
+    "sources": [
+      "water-splash-slime-sfx/splash_03.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.0,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "splash-2",
+    "sources": [
+      "water-splash-slime-sfx/splash_07.ogg",
+      "impact-sounds/Audio/impactSoft_heavy_002.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "cargo-2",
+    "sources": [
+      "applause_fireworks.mp3",
+      "bicycle-horn-1.wav"
+    ],
+    "provisional": false,
+    "duration": 7,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "waves-2",
+    "sources": [
+      "wave_03_cc0-18363__jasinski__alkaibeach.flac",
+      "rpg-audio/Audio/creak3.ogg"
+    ],
+    "provisional": false,
+    "duration": 5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "ui-2",
+    "sources": [
+      "interface-sounds/Audio/click_003.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.25,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "coins-2",
+    "sources": [
+      "MoreSounds/Money/Money_03.wav"
+    ],
+    "provisional": false,
+    "duration": 0.9,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "wrap-3",
+    "sources": [
+      "MoreSounds/Plastic/Plastic_04.wav"
+    ],
+    "provisional": false,
+    "duration": 0.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "throw-3",
+    "sources": [
+      "rpg-audio/Audio/cloth4.ogg",
+      "casino-audio/Audio/card-slide-4.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "pin-3",
+    "sources": [
+      "impact-sounds/Audio/impactWood_medium_003.ogg",
+      "impact-sounds/Audio/impactSoft_medium_003.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.45,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "plop-3",
+    "sources": [
+      "water-splash-slime-sfx/splash_04.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.0,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "splash-3",
+    "sources": [
+      "water-splash-slime-sfx/splash_08.ogg",
+      "impact-sounds/Audio/impactSoft_heavy_003.ogg"
+    ],
+    "provisional": false,
+    "duration": 1.5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "cargo-3",
+    "sources": [
+      "applause_fireworks.mp3",
+      "bicycle-horn-1.wav"
+    ],
+    "provisional": false,
+    "duration": 7,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "waves-3",
+    "sources": [
+      "wave_04_cc0-18363__jasinski__alkaibeach.flac",
+      "rpg-audio/Audio/creak1.ogg"
+    ],
+    "provisional": false,
+    "duration": 5,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "ui-3",
+    "sources": [
+      "interface-sounds/Audio/click_004.ogg"
+    ],
+    "provisional": false,
+    "duration": 0.25,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "coins-3",
+    "sources": [
+      "MoreSounds/Money/Money_04.wav"
+    ],
+    "provisional": false,
+    "duration": 0.9,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "music/base",
+    "sources": [
+      "Original simple development guide, 80 BPM D minor"
+    ],
+    "provisional": true,
+    "duration": 24
+  },
+  {
+    "name": "music/activity",
+    "sources": [
+      "Original simple development guide, 80 BPM D minor"
+    ],
+    "provisional": true,
+    "duration": 24
+  },
+  {
+    "name": "music/high",
+    "sources": [
+      "Original simple development guide, 80 BPM D minor"
+    ],
+    "provisional": true,
+    "duration": 24
+  },
+  {
+    "name": "engine-0",
+    "sources": [
+      "steamboat_engine.wav",
+      "water-splash-slime-sfx/splash_09.ogg"
+    ],
+    "provisional": false,
+    "duration": 2.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "escape-0",
+    "sources": [
+      "steamboat_engine.wav",
+      "bicycle-horn-1.wav",
+      "water-splash-slime-sfx/splash_01.ogg"
+    ],
+    "provisional": false,
+    "duration": 3.8,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "engine-1",
+    "sources": [
+      "steamboat_engine.wav",
+      "water-splash-slime-sfx/splash_10.ogg"
+    ],
+    "provisional": false,
+    "duration": 2.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "escape-1",
+    "sources": [
+      "steamboat_engine.wav",
+      "bicycle-horn-1.wav",
+      "water-splash-slime-sfx/splash_02.ogg"
+    ],
+    "provisional": false,
+    "duration": 3.8,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "engine-2",
+    "sources": [
+      "steamboat_engine.wav",
+      "water-splash-slime-sfx/splash_11.ogg"
+    ],
+    "provisional": false,
+    "duration": 2.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "escape-2",
+    "sources": [
+      "steamboat_engine.wav",
+      "bicycle-horn-1.wav",
+      "water-splash-slime-sfx/splash_03.ogg"
+    ],
+    "provisional": false,
+    "duration": 3.8,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "engine-3",
+    "sources": [
+      "steamboat_engine.wav",
+      "water-splash-slime-sfx/splash_12.ogg"
+    ],
+    "provisional": false,
+    "duration": 2.6,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  },
+  {
+    "name": "escape-3",
+    "sources": [
+      "steamboat_engine.wav",
+      "bicycle-horn-1.wav",
+      "water-splash-slime-sfx/splash_04.ogg"
+    ],
+    "provisional": false,
+    "duration": 3.8,
+    "normalization": "FFmpeg loudnorm I=-16 TP=-1.5 LRA=7"
+  }
+]

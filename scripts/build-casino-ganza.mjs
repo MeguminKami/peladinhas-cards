@@ -1,0 +1,11 @@
+import {cpSync,mkdirSync,rmSync} from 'node:fs';
+import {resolve,relative} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const source=resolve(root,'games/ganza'),target=resolve(root,'assets/games/ganza');
+if(relative(root,target).replaceAll('\\','/')!=='assets/games/ganza')throw Error('Destino inválido.');
+rmSync(target,{recursive:true,force:true});
+mkdirSync(target,{recursive:true});
+const oldArt=/[/\\]ui[/\\]art[/\\](?:(?:background|face-\d|hand|thumb|weed-seated|coast-(?:baixo|medio|alto|extremo))\.webp$|weed(?:[/\\]|$))/;
+for(const name of ['game.html','ui','src','tabelas'])cpSync(resolve(source,name),resolve(target,name),{recursive:true,filter:file=>!oldArt.test(file)&&!/[\\/]ui[\\/]art[\\/]pastel(?:[\\/]|$)/.test(file)&&!/[\\/]ui[\\/]audio[\\/]music[\\/][^\\/]+\.opus$/.test(file)});
+console.log('GANZÁ preparado localmente em assets/games/ganza.');

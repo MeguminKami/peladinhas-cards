@@ -1308,7 +1308,7 @@ export const correctRating = policyCall("correctRating",async (request) => {
         ([k, v]) =>
           keys.includes(k) &&
           ((kind === "game" && k === "goalkeeping" && v === null) ||
-            (Number.isInteger(v) && v >= 0 && v <= max)),
+            ((kind === "game" ? Number.isFinite(v) : Number.isInteger(v)) && v >= 0 && v <= max)),
       ) ||
       (previous.submitted &&
         !(kind === "game"

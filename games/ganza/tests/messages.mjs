@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {chromium} from '../../../tests/browser-sandbox.mjs';
+import {serve} from '../scripts/serve.js';
+const server=await serve(process.cwd(),0),browser=await chromium.launch({headless:true,channel:'msedge'});
+try{const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});await context.route('**/*',r=>new URL(r.request().url()).hostname==='127.0.0.1'?r.continue():r.abort());
+ await context.addInitScript(()=>{if(!localStorage.getItem('ganza-preview-v1'))localStorage.setItem('ganza-preview-v1',JSON.stringify({sessionId:crypto.randomUUID(),balance:100,rounds:{},receipts:{}}));});
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(`http://127.0.0.1:${server.address().port}/games/ganza/game.html`);await page.waitForFunction(()=>ganza.state.sessionId);
+ await page.locator('#bet').fill('2');await page.locator('#drop').click();await page.waitForFunction(()=>ganza.state.failed);assert.equal(await page.locator('#status').getAttribute('class'),'is-alert');
+ await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('ganza-preview-v1'));s.balance=10000;localStorage.setItem('ganza-preview-v1',JSON.stringify(s));});await page.locator('#settings').click();await page.locator('#recover').click();await page.waitForFunction(()=>!ganza.state.failed&&!ganza.state.busy);assert.equal(await page.locator('#status').evaluate(e=>e.classList.contains('is-alert')),false);
+ await page.locator('#bet').fill('1');await page.evaluate(()=>ganza.scene.stop());for(let i=0;i<25;i++){await page.locator('#drop').click();await page.waitForFunction(n=>ganza.state.air===n&&!ganza.state.busy,i+1);}assert.equal(await page.locator('#drop').isEnabled(),true);assert.equal(await page.evaluate(()=>ganza.state.balance),7500);
+ const expected=await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('ganza-preview-v1'));return s.balance+Object.values(s.rounds).reduce((n,r)=>n+r.payment,0);});await page.reload();await page.waitForFunction(()=>ganza.state.sessionId&&!ganza.state.busy);await page.waitForFunction(()=>ganza.state.air===0&&ganza.state.settling===0&&ganza.state.history.length===20);assert.equal(await page.evaluate(()=>ganza.state.balance),expected);assert.equal(await page.locator('#status').evaluate(e=>e.classList.contains('is-alert')),false);assert.equal(await page.locator('.ticker').evaluate(e=>getComputedStyle(e).clipPath),'inset(50%)');assert.deepEqual(errors,[]);
+ console.log('Erro recuperado sem faixa de resultado; 25 bolas na UI, reload e pagamentos corretos passaram.');
+}finally{await browser.close();server.close();}

@@ -1,0 +1,45 @@
+/* Acidwave tokens and decoded-art presentation. Geometry remains in layout.css. */
+:root{
+  --acid-ink:#0B0A1A;--acid-plum:#29243D;--acid-pearl:#F5F1FF;
+  --acid-violet:#8B3DFF;--acid-royal:#2F4BFF;--acid-pink:#FF2D7A;
+  --acid-tangerine:#FF8A1F;--acid-jade:#00F5A8;--acid-lime:#9DFF1A;
+  --acid-coral:#FF4422;--acid-punk:#FFD60A;--acid-yellow:#F2FF2A;
+  --bg:var(--acid-ink);--surface:#19162B;--surface-2:var(--acid-plum);
+  --line:#524667;--text:var(--acid-pearl);--muted:#C0B7D3;
+  --accent:#BA94FF;--gold:var(--acid-yellow);--good:var(--acid-jade);--bad:#FF8774;
+  --WEED:var(--acid-jade);--ALCOOL:var(--acid-tangerine);--COPIUM:#8E9FFF;
+  --MDMA:#FF78AA;--LCD:#BA94FF;--calmer:#FF8774;--joiner:var(--acid-lime);
+  --low:#243746;--low-2:#192532;--prem:#42324E;--prem-2:#272038;
+  --wild:#154C40;--wild-line:var(--acid-jade);--scatter:#443C13;--scatter-line:var(--acid-punk);
+}
+.cell.has-art .sym{position:absolute;inset:3%;display:grid;place-items:center;font-size:inherit}
+.cell.has-art .sym img{width:100%;height:100%;object-fit:contain;display:block}
+.cell.has-art .name{position:absolute;bottom:3px;margin:0;padding:2px 4px;border-radius:4px;background:#0B0A1Aeb;color:var(--text)}
+.cell.has-art .mult,.cell.has-art .flag{z-index:1;background:#0B0A1Aeb;border-radius:3px;padding:1px 3px}
+.art-loading{position:fixed;inset:0;z-index:1000;display:grid;place-content:center;gap:12px;padding:24px;background:var(--bg);text-align:center}
+.art-loading strong{font-size:clamp(20px,5vw,32px);letter-spacing:.06em;color:var(--text)}
+.art-loading label{color:var(--muted)}
+.art-loading progress{width:min(320px,80vw);height:12px;accent-color:var(--acid-lime);justify-self:center}
+.art-loading span{font-variant-numeric:lining-nums tabular-nums;color:var(--gold)}
+
+/* Sample states stay static until the animation-production gate. */
+.board-wrap[data-party=true] .board{animation:none;box-shadow:0 0 0 2px var(--joiner),0 0 18px #9DFF1A55}
+.persona.has-portrait{position:relative}
+.persona.has-portrait b{padding-right:30px;min-height:24px}
+.persona-portrait{position:absolute;top:3px;right:4px;width:26px;height:26px;overflow:hidden;border-radius:5px;border:1px solid var(--pc);background:var(--acid-ink);pointer-events:none}
+.persona-portrait img{display:block;width:100%;height:100%;object-fit:contain}
+.persona[data-state=sleep] .persona-portrait img{filter:saturate(.15);opacity:.65}
+.persona[data-state=awake] .persona-portrait{border-radius:2px;box-shadow:0 0 0 1px var(--pc)}
+.persona[data-state=awake] .persona-portrait::after{content:"";position:absolute;inset:0;border:2px solid #BA94FF99;clip-path:polygon(0 0,100% 0,100% 30%,65% 15%,100% 100%,50% 85%,0 100%,25% 50%);pointer-events:none}
+.persona[data-party=true] .persona-portrait{border-color:var(--joiner);box-shadow:0 0 0 2px var(--pc),0 0 8px var(--pc)}
+.shell[data-layout=portrait] .persona.has-portrait b{padding-right:17px;min-height:0}
+.shell[data-layout=portrait] .persona-portrait{width:16px;height:16px;top:2px;right:2px}
+.shell[data-layout=compact] .persona.has-portrait b{padding-right:22px;min-height:17px}
+.shell[data-layout=compact] .persona-portrait{width:20px;height:20px;top:2px}
+.cell.has-art[data-awake=true][data-sym=P1]::after,.cell.has-art[data-awake=true][data-sym=P5]::after{content:"";position:absolute;inset:4%;pointer-events:none;z-index:0;border:2px solid var(--pcolor)}
+/* Organic corner lobes and leaf-like points for WEED; broken mirror planes for LCD. */
+.cell.has-art[data-awake=true][data-sym=P1]::after{border-radius:45% 12% 45% 12%;clip-path:polygon(0 0,30% 0,14% 18%,30% 25%,0 32%,0 100%,30% 100%,18% 82%,34% 75%,0 68%,100% 68%,70% 100%,100% 100%,100% 0,70% 0,86% 18%,70% 25%,100% 32%)}
+.cell.has-art[data-awake=true][data-sym=P5]::after{clip-path:polygon(0 0,42% 0,18% 18%,0 42%,0 100%,22% 80%,44% 100%,100% 100%,82% 82%,100% 58%,100% 0,58% 0,80% 20%)}
+.cell.has-art[data-party=true]::after{border-width:3px;border-color:var(--joiner)}
+
+.cell.has-art .mult:empty,.cell.has-art .flag:empty{display:none}

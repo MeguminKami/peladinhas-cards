@@ -26,5 +26,6 @@ export const PEACE_POLICE = {
   joinerRepetePoderes: true,
 
   // Distintivo (DW): multiplicador sorteado por pesos
-  distintivo: { 2: 50, 3: 30, 4: 15, 5: 5 },
+  // pp-v7: o Distintivo MULTIPLICA a soma dos cantos do cluster (ver docs/matematica.md §4)
+  distintivo: { 2: 65, 3: 28, 4: 7 },
 };

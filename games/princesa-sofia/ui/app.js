@@ -876,8 +876,8 @@ for (const [id, direction] of [['bet-minus', -1], ['bet-plus', 1], ['buy-bet-min
 });
 /**
  * Toque no spin (rato, toque ou espaco). Fora de uma jogada: roda; toques seguidos ligam o turbo
- * (tempo.js). Durante a jogada nada e cortado: 1.o toque acelera 3x de forma suave, 2.o toque 8x e
- * deixa o spin seguinte em espera; so um 3.o toque salta o resto da apresentacao deste spin.
+ * (tempo.js). Durante um bonus, os spins ja avancam automaticamente: os toques so ativam Ultra,
+ * sem interromper a apresentacao nem cancelar animacoes.
  */
 function pressSpin() {
   if ($('spin').disabled) return;
@@ -887,6 +887,11 @@ function pressSpin() {
   if (!TURBO_ALLOWED) return; // politica sem turbo: a apresentacao segue ao seu ritmo
   tempo.press({ running: true });
   turboRound = true;
+  if (view.mode !== 'base') {
+    boost = 1;
+    applyRate(120);
+    return;
+  }
   slams++;
   if (slams === 1) boost = 3;
   else if (slams === 2) boost = 8;

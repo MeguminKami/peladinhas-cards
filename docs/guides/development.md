@@ -20,6 +20,8 @@ Para preparar também o casino, usar Node.js 24.16+ e executar `npm.cmd ci --pre
 
 **Abrir:** `http://localhost:8080` · **Outra porta:** `npm.cmd run dev -- --port 8081`
 
+No casino local, abrir ou recarregar a página com menos de 5 DJC repõe o saldo de teste para 1000 DJC. O saldo e as sessões ficam guardados no navegador. Para escolher outro valor, usar `npm.cmd run dev -- --casino-credits 2000`; o valor `0` desativa a reposição. Aplica-se apenas às fixtures do servidor local.
+
 ```mermaid
 flowchart TB
     classDef default fill:#11251d,stroke:#42e66c,color:#f4f7f5,stroke-width:1px;

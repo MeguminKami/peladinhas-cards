@@ -14,7 +14,7 @@ const lan = process.argv.includes('--rede');
 const portIndex = process.argv.indexOf('--port');
 const port = portIndex < 0 ? 4177 : Number(process.argv[portIndex + 1]);
 if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Porta inválida');
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.opus': 'audio/ogg', '.json': 'application/json' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff': 'font/woff', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.opus': 'audio/ogg', '.wav': 'audio/wav', '.json': 'application/json' };
 // Pastas que não se servem (relatórios, referências privadas, guias).
 const blocked = /^(ASSETS|relatorios|node_modules|\.git)([\\/]|$)/;
 const PAGES = { jogo: 'game.html', pc: 'pc.html', telemovel: 'telemovel.html', site: 'site.html', carteira: 'carteira.html', debug: 'game.html?debug=1' };

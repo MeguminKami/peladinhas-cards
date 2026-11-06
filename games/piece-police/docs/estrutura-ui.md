@@ -11,10 +11,15 @@ GUI de teste com todas as funcionalidades finais e apresentação neutra. O moto
 | `ui/modelo.js` | Estado do ecrã construído **só** a partir dos eventos (`aplicar(modelo, evento)`). Sem DOM; testado em `tests/modelo.test.js` |
 | `ui/session.js` | `TestSession` (créditos de teste), `HostSession` (carteira do site por `postMessage`), `DemoSession` (diagnóstico, sem saldo) |
 | `ui/carteira-local.js` | Lógica da carteira do lado do site (start/step, débito único, crédito no último passo, retoma, versão). Função pura, testada em `tests/carteira.test.js` |
-| `ui/tempo.js` | Relógio único: `wait(ms, skip)`, `animate(el, frames, opts)`, `setRate`, `currentRate`, `flushWaits`, turbo automático |
+| `ui/tempo.js` | Relógio único partilhado; Normal/Rápido/Turbo usam taxas 1/2/3,75. Sem saltar eventos ou alterar resultados |
+| `ui/presentation-state.js` | Memória de explicações por bónus e continuidade visual de Party no POLICE PARTY; snapshot de UI separado da carteira |
+| `ui/acid-symbols.js`, `ui/acid-refinement.css` | Fechadura articulada, entrada decorativa comprada e acabamento Acidwave dos símbolos, títulos e janelas |
 | `ui/layout.js` | Escolhe o desenho (`landscape` / `portrait` / `compact`) e escala o jogo inteiro |
-| `ui/fx-visual.js` | **Ponto de ligação visual** (a Fase 3 substitui) |
-| `ui/fx-audio.js` | **Ponto de ligação de som** (a Fase 4 substitui). Nesta fase não toca nada |
+| `ui/fx-visual.js` | **Ponto de ligação visual**; etapa 1 mantém coreografias da Fase 2 até aprovação da amostra |
+| `ui/art-loader.js`, `ui/art/manifest.json` | Catálogo visual versão 1: `assets` com `id`, `file` relativo ao manifesto e dimensões; valida URLs locais WebP, descodifica com `decode()` e reporta progresso/falhas. Amostra com seis peças; células conservam texto quando não há arte descodificada. P5 usa o retrato psicadélico ativo quando LCD está desperto; Chemistry usa retrato do catálogo, sem inventar imagens ausentes |
+| `ui/theme.css` | Tokens Acidwave, camada de carregamento e apresentação da arte; não altera a geometria dos três desenhos |
+| `ui/fx-audio.js`, `ui/audio-bus.js`, `ui/audio-catalog.js` | Adaptador, barramento Web Audio e catálogo de 62 efeitos originais. Os impactos recebem chamadas da apresentação, músicas por modo usam crossfades. Ver [estado sonoro](sons.md) |
+| `ui/music-player.js`, `ui/music-loop.js` | Dois leitores musicais, crossfade de potência constante, preparação de loops e níveis, cache limitada e proteção contra cargas antigas |
 | `ui/texto.js` | Nomes, formatação (DJC, × aposta) e narração de cada evento |
 | `ui/regras.js` | Regras geradas a partir da configuração (`config.tables`) |
 | Registo do bónus (`logEvent` em `ui/app.js`, `#event-log`) | No bónus substitui a coluna da esquerda. Limpa-se em cada free spin. Mostra prémios (símbolo + `base × multiplicador = prémio`, em DJC), despertares, fusões, Peace Police, Distintivo, cantos e Total Chemistry. **Nota do dono para a Fase 3: tem de ser visual, não texto** |
@@ -28,9 +33,19 @@ GUI de teste com todas as funcionalidades finais e apresentação neutra. O moto
 | `pc.html`, `telemovel.html`, `site.html`, `index.html`, `ui/preview.*`, `ui/site.css` | Pré-visualizações |
 | `scripts/serve.js` | Servidor local estático (`npm run dev`) |
 
+## Ajustes de apresentação — 06-11-2026
+
+A entrada comprada reutiliza as células, os materiais e o recorte da grelha normal, incluindo premium, Scatter e cantos fechados. `ctx.paintSymbol` usa o mesmo pintor do catálogo, que também define a cor da personagem nos premium. O título de entrada continua acessível, mas já não ocupa uma linha que reduza a altura das células. A composição decorativa conserva 3/4/5 Scatters, sem alterar modelo, motor ou carteira.
+
+O Joiner reserva espaço inferior para o multiplicador e o nome, com o retrato contido na área própria. Valores com vários algarismos deixam de ocupar o rosto. Os avisos de Chemistry, poderes, Party e restantes banners têm 3–5 segundos reais de leitura após a entrada, independentemente da velocidade e do movimento reduzido. As animações continuam a seguir o relógio partilhado, e os avisos com confirmação manual mantêm esse funcionamento.
+
+Validação dirigida: `npm.cmd run test:presentation-fixes -- --edge`. Cobre a geometria e a arte da compra nos três bónus, quatro formatos, multiplicadores ×9/×10/×25/×50/×100/×1000, tempos de leitura em Normal/Rápido/Turbo, movimento reduzido e mudança de velocidade durante o aviso. Usa fixtures de apresentação locais, sem pedidos ou alterações da carteira.
+
 ## Pontos de ligação
 
 Para cada evento de `step.events`, por ordem, `ui/app.js` faz:
+
+Antes de ligar a sessão, a etapa 1 da Fase 3 carrega o manifesto indicado por `meta[name="pp-art-manifest"]`, aguarda a descodificação das imagens e atualiza o progresso por recursos concluídos. Falhas preservam o fallback textual e são expostas em `window.pp.art` e na consola. A amostra integrada inclui N1, N4, P1, P5, W e retrato ativo P5; as restantes peças ainda usam apresentação textual. É integração local, sem deploy executado.
 
 ```js
 aplicar(model, evento);              // o modelo passa a mostrar o estado DEPOIS do evento
@@ -47,11 +62,13 @@ render(); hud();                     // por segurança: a grelha fica sempre igu
 | `ctx.before` | Cópia do modelo antes do evento (sem os grupos) |
 | `ctx.board`, `ctx.cells[25]`, `ctx.flash` | Grelha do DOM, as 25 células (índice `col * 5 + row`) e a camada por cima da grelha para etiquetas |
 | `ctx.render()` | Pinta o modelo nas células (só muda as células diferentes) |
+| `ctx.paintSymbol(target, symbol)` | Reutiliza o pintor e as cores do catálogo para as células decorativas da entrada comprada |
 | `ctx.tempo` | `{ wait(ms, skip), animate(el, frames, opts), rate }`. **Todas** as durações em ms da velocidade Normal |
-| `ctx.skip()` | `true` quando o jogador saltou o resto do spin (3.º toque): terminar já |
+| `ctx.skip()` | Sempre `false` nesta revisão: os toques não saltam a apresentação |
 | `ctx.reduced` | Movimento reduzido (preferência do sistema ou interruptor nas definições) |
 | `ctx.speed`, `ctx.mode`, `ctx.bet`, `ctx.scale` | Velocidade efetiva, modo atual (`base`, `hunt`, `afterparty`, `vip`, `police`), aposta em cêntimos, escala do jogo |
 | `ctx.hud()`, `ctx.narrate(texto)`, `ctx.money(cêntimos)` | Atualizar o HUD, escrever na faixa de narração, formatar DJC |
+| `ctx.explainFusion(evento)` | Atualiza sempre o indicador do par; na primeira apresentação no bónus mostra a explicação completa e aguarda CONTINUAR. No jogo base explica cada ocorrência |
 
 Regra: quando `visual.play` termina, a grelha tem de mostrar `ctx.model`. A Fase 3 pode animar como quiser, mas não pode decidir resultados nem guardar estado de jogo.
 
@@ -68,7 +85,7 @@ Erros: SALDO_INSUFICIENTE → PRONTO; CARTEIRA_PENDENTE (o pedido repete-se com 
 
 As transições permitidas estão em `TRANSICOES` (`ui/app.js`). Uma transição fora da tabela escreve um erro na consola, e os testes falham com qualquer erro na consola. `window.pp.transicoes` guarda as últimas 300.
 
-Durante uma jogada ficam bloqueados: aposta, compras, aposta extra, renovar a seed e repor o saldo. Ficam ativos: volume, regras, histórico, velocidade e ecrã inteiro.
+Durante uma jogada ficam bloqueados: aposta, compras, aposta extra, renovar a seed e repor o saldo. Ficam ativos: velocidade, volume, regras, histórico e ecrã inteiro.
 
 ## Sessão e carteira
 
@@ -81,11 +98,29 @@ Interface comum: `balance`, `cost(mode, bet)`, `active`, `round`, `connect()`, `
 
 ## Ritmo e teclado
 
-- Velocidades Normal / Rápido / Ultra (fatores 1 / 0,5 / 0,2 das durações), guardadas pela barra.
+- Seletor Normal/Rápido/Turbo: taxas 1/2/3,75, guardadas pela barra. O identificador interno `ultra` corresponde ao rótulo Turbo. Pode mudar durante o spin com rampa de 100 ms; o kit continua intacto.
 - ESPAÇO num único sítio (`keydown` em `ui/app.js`): com um aviso aberto = CONTINUAR; senão = spin. Campos focados e as outras janelas têm prioridade.
 - 100 ms mínimos entre comandos de spin; 500 ms mínimos antes de um aviso aceitar CONTINUAR; a tecla que estava premida quando o aviso abriu não o fecha; a repetição automática nunca cria spins.
-- Toques durante o spin: 1.º acelera 3× (rampa suave), 2.º 8× e deixa a jogada seguinte pronta, 3.º salta o resto desse spin (nunca o bónus inteiro). Turbo automático com toques rápidos ou ESPAÇO premido.
-- Constantes de mercado regulado no topo de `ui/app.js`: `MIN_CYCLE_MS`, `TURBO_ALLOWED`, `HOLD_TO_SPIN` (Reino Unido: 2500 / false / false).
+- Toques durante o spin são ignorados. Não há aceleração, salto, fila de spins nem repetição por ESPAÇO mantido. O botão pode parar um lote de autoplay, sem encurtar a jogada atual.
+- Constantes no controlador: `MIN_CYCLE_MS = 0`, `TURBO_ALLOWED = true` (seletor), `HOLD_TO_SPIN = false`. Não há aceleração automática por toque nem repetição por tecla mantida. Estas escolhas não alteram resultados nem probabilidades.
+
+## Compra e desbloqueio — revisão Acidwave
+
+Revisão de identidade e leitura: DW conserva o significado de Distintivo do motor, mas a arte é o retrato JOINER WILD baseado na referência autorizada. W/CW/DW têm rótulos funcionais explícitos; são exceções aos nomes escondidos dos símbolos pagantes. Introduções montam cartões a partir de `step.events[0].awake`; as regras do bónus só indicam Fusão Ativa. Cada fusão inicial é explicada em dialog próprio antes de começar. `ui/fusion-copy.js` partilha o efeito e limites com as regras e acrescenta condição, funcionamento e duração na explicação detalhada. Movimento reduzido e Turbo não encurtam a leitura manual. Em ecrãs baixos o dialog permite scroll vertical e mantém a ação acessível.
+
+`presentation-state` guarda quais as fusões já explicadas no bónus. A chave local `pp-visual-bonus` contém apenas id da jogada e flags de UI; a retoma só recupera o snapshot do mesmo id. Uma nova jogada limpa a memória. Cada evento `fusion.trigger` atualiza e anima `#fusion-indicator`, colocado fora do tabuleiro; repetições no mesmo bónus não abrem o dialog. O jogo base continua a anunciar/explicar cada ocorrência.
+
+No POLICE PARTY, a primeira ocorrência real de `police.joiner.party_mode` liga a continuidade visual. Nos `step.start` seguintes, o modelo continua fiel aos eventos, mas o HUD não pisca OFF. Anúncios Joiner/Party repetidos são omitidos; a colocação do novo DW de cada spin continua visível. O motor já aplica Party antes das cascatas de cada spin: não se alterou matemática. O par da última fusão ativa define `--party-a`/`--party-b` para o degradê e o indicador usa as duas cores das personagens.
+
+Na entrada comprada, os quatro cadeados continuam visíveis e reagem com brilho/movimento. Não se inventam posições abertas: os CW iniciais são apresentados pela grelha real do primeiro spin. O registo usa miniaturas e multiplicadores contidos nas próprias linhas, com scroll local; cinzento/colorido e marcas acessíveis distinguem poderes inativos/ativos.
+
+`buy-dialog` seleciona e `buy-confirm` confirma: dois dialogs independentes, nunca abertos em simultâneo. Ao selecionar, fecha-se a seleção antes de abrir a confirmação. Cancelar ou Escape regressa à seleção sem pedido nem débito. A confirmação conserva uma fotografia de modo, aposta e preço; revalida estado, preço e saldo antes de chamar o mesmo `runRound`. O pending é consumido uma só vez; confirmação fechada não aceita ações programáticas prematuras.
+
+Depois de `session.start` aceitar a compra, `visual.buy` apresenta cinco colunas com símbolos em trânsito, paragens progressivas e exatamente 3/4/5 Scatters conforme a configuração do modo. `purchaseEntry` deriva composição e tempos do id da jogada e bónus, com mistura e permutação locais. É apenas decoração da entrada já comprada: não entra no modelo, carteira ou RNG do motor, não paga e não simula um spin base. Retoma não repete esta entrada nem o débito. A sequência sai antes da introdução do bónus; os eventos reais continuam a ser apresentados pela ordem recebida.
+
+Em `corner.open`, o DOM ainda fechado é copiado antes de pintar o CW do evento por baixo. A chave aproxima-se, entra, roda; a argola abre, as duas metades das correntes afastam-se e o conjunto desvanece. Todas as peças e animações são removidas em `finally`. Movimento reduzido usa opacidade curta. Premium usam recorte de margens transparentes por CSS, sem distorcer imagens; multiplicadores e fitas HOLD/STICKY mantêm significado e nomes acessíveis.
+
+Validação dirigida: `npm.cmd run test:acidwave -- --edge`. Inclui quatro formatos, cancelamento, preferências antigas, cliques repetidos, compras dos três bónus até ao saldo final e desbloqueio real de um cenário do motor.
 
 ## Desenhos
 
@@ -95,7 +130,7 @@ Interface comum: `balance`, `cost(mode, bet)`, `active`, `round`, `connect()`, `
 | `portrait` | 400 | ecrã alto (telemóvel ao alto, iPad vertical) |
 | `compact` | 1100 | baixo e largo (telemóvel na horizontal) |
 
-Escala máxima 1,6. Abaixo de 1 os rótulos pequenos são reforçados (`--ui-boost`, máximo 1,6). Nunca há scroll: o teste `tamanhos` mede `scrollWidth/scrollHeight` em 10 tamanhos, no jogo inteiro e dentro de `site.html`.
+Escala máxima 1,6. Abaixo de 1 os rótulos pequenos são reforçados (`--ui-boost`, máximo 1,6). O ajuste conserva o reforço anterior quando a diferença candidata é inferior a 0,005, evitando oscilações de quebra de linha no ResizeObserver; o cálculo final continua a verificar os limites do viewport. Nunca há scroll: o teste `tamanhos` mede `scrollWidth/scrollHeight` em 10 tamanhos, no jogo inteiro e dentro de `site.html`.
 
 ## Diagnóstico (`?debug=1`)
 
@@ -103,8 +138,41 @@ Seed (ver, definir, renovar), cenários forçados do motor (`scenarioNames()`), 
 
 ## Ecrã (revisão do dono, 03-11-2026)
 
-- Coluna da esquerda no jogo base: COMPRAR BÓNUS, MAIS SCATTERS e Peace Police. No bónus: contador de free spins e ganho do bónus, e por baixo o registo do spin.
+- Coluna da esquerda no jogo base: COMPRAR BÓNUS, MAIS SCATTERS e Peace Police. No bónus: registo de eventos da rodada. O nome e o contador ficam apenas no topo, sem painel duplicado.
 - Palco ao centro com o néon **PARTY MODE · ON/OFF** no topo; ligado, a moldura brilha (sem animação em movimento reduzido).
 - À direita: as 5 cartas de Chemistry (estado, poder ou fusão, e a fusão que cada uma geraria a seguir) e a dica do próximo nível. No desenho vertical não há largura: ficam numa linha por cima do palco.
 - A narração de cada evento continua a existir (`narracao` no painel de diagnóstico e no histórico), mas já não há faixa de texto no ecrã.
 - Barra do kit: SALDO | GANHO | APOSTA.
+
+
+## Contas de prémios na apresentação
+
+`clusterEquation` em `ui/texto.js` usa os valores fornecidos pelo evento. A base em DJC conserva a precisão necessária até cinco casas antes do multiplicador; o resultado segue `winCents` e a apresentação monetária existente. Mostra `=` quando exato, `≈` quando há arredondamento visual a cêntimos e `→ … (limite)` quando o pagamento foi cortado. Não muda prémios, saldos, eventos nem a matemática. O registo usa imagens dos símbolos e retratos quando disponíveis, com nomes acessíveis e texto como fallback.
+
+A pintura de símbolos e retratos reutiliza a imagem quando a origem não mudou; alterações de símbolo ou estado ativo continuam a substituir a arte correspondente. Aliases de moldura com a mesma origem preservam o elemento visual.
+
+
+## Introdução às personagens
+
+Depois de carregar a arte e antes de ligar a sessão ou retomar uma jogada, a introdução apresenta WEED, ALCOOL, COPIUM, MDMA, LCD e Peace Police. Reutiliza a arte aprovada, os tokens Acidwave e os textos de ajuda; não pede jogadas nem altera o motor. Cada cena aguarda 1,5 segundos reais, independentemente de Normal/Rápido/Turbo, antes de revelar CONTINUAR; a última mostra JOGAR. A leitura é manual, com quatro instruções curtas sempre visíveis, teclado e movimento reduzido.
+
+A opção «Não voltar a mostrar esta introdução» aparece no fim. Só é guardada ao clicar em JOGAR, na chave local `pp-intro-v1-hidden`. Sem a opção, a sequência reaparece em cada abertura; a preferência aplica-se apenas ao navegador/perfil atual. Se o armazenamento não estiver disponível, a introdução continua funcional, mas pode reaparecer.
+
+Validação local: `npm.cmd run test:intro -- --edge` verifica as seis cenas, espera mínima, teclado, quatro formatos, detalhes e persistência.
+
+A grelha de entrada é uma composição decorativa de 21 símbolos premium, com 16 LCD destacados a formar um coração. Os quatro cantos mantêm-se fechados. A composição não passa pelo motor nem gera prémios; o primeiro pedido substitui-a pelos eventos reais e remove o destaque. O painel Peace Police em espera mostra «DE OLHO NA FESTA», com tipografia Acidwave.
+
+
+As apresentações dos bónus usam `bonusBrief` e as das fusões usam `fusionBrief`, com resumos para leitura rápida. As regras mantêm `bonusDescription` e `fusionDescription` com o detalhe completo. A confirmação manual e a memória das fusões já explicadas mantêm-se.
+
+
+O nome apresentado para DW é apenas «Joiner», incluindo o símbolo, regras, apresentações e registo. Os identificadores internos `DW` e `DISTINTIVO` mantêm-se por compatibilidade. Os blocos de descrição usam fundos escuros com 96 % de opacidade para proteger a leitura da arte decorativa.
+
+
+O título de modo é mostrado apenas nos bónus, centrado no topo e com cor própria de AFTERPARTY, VIP AFTERPARTY ou POLICE PARTY. O anúncio Party Mode identifica o Joiner como wild que multiplica o multiplicador do grupo.
+
+
+No telemóvel vertical, a área da grelha ocupa o espaço disponível entre Chemistry e os controlos, sem linha vazia reservada abaixo. O encaixe respeita `safe-area-inset-*`. A pré-visualização transmite margens simuladas ao iframe para a notch e a base do aparelho, também quando existe a simulação do menu do site. iPhone SE e iPad não mostram uma notch fictícia.
+
+
+O cabeçalho duplicado do registo do bónus foi removido. O contador continua no título superior, o ganho continua nos controlos e o total do bónus aparece no resumo final. O registo de eventos é preservado. Efeitos e músicas estão implementados para revisão, com estado e limitações em [sons.md](sons.md).

@@ -2045,32 +2045,38 @@ main.wide-layout {
   position: sticky;
   top: 100px;
   text-align: center;
+  overflow: clip;
+  container-type: inline-size;
 }
 #weekly-card-preview {
   display: grid;
   place-items: center;
-  padding: 24px 12px;
+  padding: 40px 20px;
   touch-action: none;
 }
 #weekly-card-preview .card-photo {
   outline: 1px dashed var(--accent);
   cursor: move;
+  user-select: none;
 }
+#weekly-card-preview .card-photo img { -webkit-user-drag: none; }
+#weekly-card-preview:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+#weekly-card-preview > .football-card { --card-width: min(300px, calc(100cqw - 40px)); }
 .weekly-photo-editor fieldset {
   border: 0;
   padding: 0;
   min-width: 0;
 }
-.weekly-photo-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-.weekly-photo-tools [aria-pressed="true"] {
-  border-color: var(--accent);
-  color: var(--accent);
-}
+.weekly-photo-editor fieldset { display: grid; gap: 16px; }
+.weekly-photo-editor fieldset > p { margin: 0; }
+.weekly-photo-control > span { display: flex; justify-content: space-between; gap: 12px; }
+.weekly-photo-control output { color: var(--accent); font-variant-numeric: tabular-nums; }
+.weekly-photo-primary { margin-top: 4px; }
+.weekly-photo-advanced { border-top: 1px solid var(--border); padding-top: 16px; min-width: 0; }
+.weekly-photo-advanced summary { cursor: pointer; padding: 8px 0; min-height: 44px; }
+.weekly-photo-advanced[open] > :not(summary) { margin-top: 16px; }
+.weekly-photo-focus[hidden] { display: none; }
+.weekly-photo-editor .actions { gap: 12px; margin-top: 8px; flex-wrap: wrap; }
 .weekly-photo-ranges {
   display: grid;
   grid-template-columns: 1fr 1fr;

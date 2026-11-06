@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "risk": "medio",
+      "fps": 59.99400059994001,
+      "pinWidth": 24.062976,
+      "actor": {
+        "x": -30,
+        "y": 37.5,
+        "size": 480
+      },
+      "board": [
+        77.5,
+        565
+      ],
+      "history": 1,
+      "footerInside": true
+    }
+  ],
+  "errors": []
+}

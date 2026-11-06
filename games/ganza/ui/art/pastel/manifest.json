@@ -1,0 +1,18 @@
+{
+  "source": "built-in image_gen, three reference-based generations",
+  "actor": {
+    "columns": 4,
+    "rows": 2,
+    "poses": 8,
+    "durationSeconds": 20,
+    "alpha": [
+      0,
+      255
+    ],
+    "premultiply": "createImageBitmap premultiplyAlpha=premultiply; Canvas premultiplied composition"
+  },
+  "boats": {
+    "rows": 4
+  },
+  "backgrounds": 4
+}

@@ -406,7 +406,7 @@ export async function rawRatings(ctx, uid) {
           fields = game ? FEEDBACK : ATTRIBUTES;
         const close = modal(
           "Corrigir avaliação",
-          `<p>Uma correcção administrativa recalcula a carta. Os valores anteriores são guardados no registo de auditoria.</p><form id="correct-rating"><div class="correction-fields">${fields.map(([key, name]) => `<label>${esc(name)}<input name="${key}" type="number" min="0" max="${game ? 5 : 20}" value="${values[key] ?? ""}" ${rating.submitted && key !== "goalkeeping" ? "required" : ""}><small>${game && key === "goalkeeping" ? "Vazio = N/A" : ""}</small></label>`).join("")}</div><button class="btn btn-primary">Guardar correcção</button></form>`,
+          `<p>Uma correcção administrativa recalcula a carta. Os valores anteriores são guardados no registo de auditoria.</p><form id="correct-rating"><div class="correction-fields">${fields.map(([key, name]) => `<label>${esc(name)}<input name="${key}" type="number" min="0" max="${game ? 5 : 20}" step="${game ? "any" : "1"}" value="${values[key] ?? ""}" ${rating.submitted && key !== "goalkeeping" ? "required" : ""}><small>${game && key === "goalkeeping" ? "Vazio = N/A" : ""}</small></label>`).join("")}</div><button class="btn btn-primary">Guardar correcção</button></form>`,
         );
         document.querySelector("#correct-rating").onsubmit = async (event) => {
           event.preventDefault();

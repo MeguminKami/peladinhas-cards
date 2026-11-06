@@ -47,7 +47,7 @@ function describe(e) {
     case 'chemistry.total': return c.yellow('✦ TOTAL CHEMISTRY: multiplicadores ×2 e poderes outra vez em Party Mode');
     case 'corner.open': return `🔓 Canto ${cell(e.cell)} abre com Wild de Canto ×${e.multiplier}`;
     case 'multiplier.change': return `   multiplicador em ${cell(e.cell)}: ×${e.from} → ×${e.to}`;
-    case 'wild.place': return `   ${e.source === 'DISTINTIVO' ? 'Distintivo' : 'Wild'} ×${e.multiplier} em ${cell(e.cell)}`;
+    case 'wild.place': return `   ${e.source === 'DISTINTIVO' ? 'Joiner' : 'Wild'} ×${e.multiplier} em ${cell(e.cell)}`;
     case 'power.reality_break': return `   LCD REALITY BREAK: ${e.cells.length} células → ${e.target}${e.party ? ' (Party)' : ''}`;
     case 'power.slow_motion.start': return `   SLOW MOTION: grupo de ${e.cells.length} × ${e.symbol} fica sticky`;
     case 'power.slow_motion.grow': return `   grupo sticky cresce para ${e.newSize}`;
@@ -58,7 +58,7 @@ function describe(e) {
     case 'power.one_more_chance.respin': return `↻  ONE MORE CHANCE: respin guardando ${e.held.length} células (${e.symbol}), ${e.revealed.length} Raspadinhas reveladas` + (GRIDS ? '\n' + grid(e.grid) : '');
     case 'police.enter': return c.cyan(`🚨 PEACE POLICE entra: ${e.mode === 'joiner' ? '«I\'m joining the party!» (JOINER)' : '«Everybody calm down!» (CALMER)'}`);
     case 'police.calmer.arrest': return `   CALMER prende ${e.cells.length} símbolos baixos`;
-    case 'police.joiner.party_mode': return `   PARTY MODE para ${e.personas.join(', ') || 'ninguém ainda'}${e.badge ? ` · Distintivo ×${e.badge.multiplier} em ${cell(e.badge.cell)}` : ''}`;
+    case 'police.joiner.party_mode': return `   PARTY MODE para ${e.personas.join(', ') || 'ninguém ainda'}${e.badge ? ` · Joiner ×${e.badge.multiplier} em ${cell(e.badge.cell)}` : ''}`;
     case 'bonus.trigger': return c.cyan(c.bold(`🎟  ${e.scatters} SCATTERS → ${config.bonus[e.bonusId].nome} (${e.freeSpins} spins)`));
     case 'bonus.retrigger': return c.cyan(`🎟  Retrigger: +${e.added} spins (total ${e.total})`);
     case 'bonus.end': return c.cyan(`Fim do ${config.bonus[e.bonusId].nome}: ${mx(e.totalWin)} em ${e.spins} spins`);

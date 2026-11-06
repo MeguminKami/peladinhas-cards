@@ -22,13 +22,13 @@ Regras fixas do dono do jogo. **Prevalecem sobre tudo.** Lê também `GUIA-DO-PR
 9. Os cantos abrem com um Wild de Canto multiplicador sticky que cresce com os prémios.
 10. Peace Police: no máximo 1 por spin. O Calmer prende os baixos e fecha a escalada, sem nunca tirar prémios. O Joiner ativa o Party Mode e deixa cair o Distintivo.
 11. Três bónus: 3 S AFTERPARTY, 4 S VIP AFTERPARTY, 5 S POLICE PARTY (Joiner em todos os spins). 10 free spins em todos.
-12. Os multiplicadores dos wilds somam dentro de um cluster.
+12. Dentro de um cluster, os Wilds de Canto (e qualquer outra fonte que não o Joiner) somam; o Distintivo do Joiner multiplica essa soma (decisão do dono, 05-11-2026). O multiplicador de um cluster tem um teto por modo.
 13. As probabilidades nunca dependem do saldo, das perdas ou do histórico do jogador.
 14. O resultado nasce dos símbolos. É proibido sortear o prémio e depois fabricar a grelha.
-15. Créditos fictícios. Português de Portugal. Sem objetos de consumo das substâncias.
+15. Créditos fictícios. Português de Portugal. Na versão de uso privado, o dono autoriza bebidas, drogas e objetos de consumo na arte (decisão de 04-11-2026). Esta autorização visual não altera a matemática nem autoriza publicação ou distribuição.
 16. RTP 97–98 % em cada modo (base, hunt e cada compra), com alvo de 98 % (decisão do dono, 04-11-2026). Volatilidade alta no jogo base; nos bónus, AFTERPARTY média, VIP alta e POLICE PARTY muito alta (decisão do dono, 04-11-2026). Ganho máximo 25 000× por jogada completa.
 17. Compras dos 3 bónus. Aposta extra «MAIS SCATTERS» (2×, decisão do dono, 04-11-2026). Sem wilds naturais. Integração com o casino Peladinhas.
-18. A tabela de pagamentos é design: valor base × curva comum, com as 4 regras de forma de `docs/matematica.md` §4. Calibra-se com probabilidades e multiplicadores, não com a tabela.
+18. A tabela de pagamentos é design: valor base × curva comum, com as 4 regras de forma de `docs/matematica.md` §4. Nenhum cluster, de qualquer tamanho ou símbolo, paga menos de 0,10× no prémio base (decisão do dono, 05-11-2026). Calibra-se com probabilidades e multiplicadores, não com a tabela.
 
 ## Regras técnicas
 
@@ -37,3 +37,7 @@ Regras fixas do dono do jogo. **Prevalecem sobre tudo.** Lê também `GUIA-DO-PR
 - O simulador usa exatamente o mesmo `playRound` do jogo.
 - Depois de mudanças de matemática: `npm test`, depois `npm run validate:rtp` (ou `npm run sim`), e apresentar a tabela de RTP por modo com a amostra e o intervalo. Nunca escrever «RTP confirmado» nem «certificado».
 - As seeds de validação não podem ser as mesmas da calibração.
+
+## Escrita dos textos
+
+- Não usar ponto e vírgula como substituto de vírgulas nos textos do jogo e da documentação. Usar vírgulas ou frases separadas conforme o sentido. Esta regra não se aplica aos terminadores de instruções do código.

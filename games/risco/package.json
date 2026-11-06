@@ -1,0 +1,13 @@
+{
+  "name": "peladinhas-risco",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "sim": "node scripts/sim.mjs",
+    "dev": "node scripts/serve.mjs",
+    "audio:export": "node scripts/export-audio.mjs",
+    "promo": "node scripts/promo.mjs",
+    "audio:compress": "node scripts/compress-audio.mjs"
+  }
+}

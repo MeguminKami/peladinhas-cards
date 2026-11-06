@@ -30,7 +30,7 @@ function gameCard(game) {
   const artwork = game.thumbnail
     ? `<img class="casino-game-thumbnail" src="${esc(new URL("../"+game.thumbnail,import.meta.url).href)}" alt="" width="800" height="1200" loading="eager" decoding="async">`
     : casinoArt(game.art);
-  return `<article class="casino-game${game.thumbnail ? " casino-game-has-thumbnail" : ""}"><div class="casino-game-art casino-art-${game.art}">${artwork}<span class="casino-coming ${game.available ? "is-available" : ""}">${game.available ? "Disponível" : "Em breve"}</span></div><div class="casino-game-copy"><span class="casino-kicker">${game.category === "slots" ? "ROLOS & COMBINAÇÕES" : "JOGOS DE MESA"}</span><h3>${esc(game.title)}</h3><p>${esc(game.label)}</p><button class="casino-text-button" type="button" data-casino-game="${game.id}" ${game.available ? 'aria-controls="casino-play-area"' : 'aria-haspopup="dialog"'}>${game.available ? "Jogar agora" : `Conhecer ${esc(game.title)}`} ${icon("arrow")}</button></div></article>`;
+  return `<article class="casino-game${game.thumbnail ? " casino-game-has-thumbnail" : ""}"><div class="casino-game-art casino-art-${game.art}">${artwork}<span class="casino-coming ${game.available ? "is-available" : ""}">${game.available ? "Disponível" : "Em breve"}</span></div><div class="casino-game-copy"><span class="casino-kicker">${game.id === "risco" ? "CRASH · CASHOUT" : game.category === "slots" ? "ROLOS & COMBINAÇÕES" : "JOGOS DE MESA"}</span><h3>${esc(game.title)}</h3><p>${esc(game.label)}</p><button class="casino-text-button" type="button" data-casino-game="${game.id}" ${game.available ? 'aria-controls="casino-play-area"' : 'aria-haspopup="dialog"'}>${game.available ? "Jogar agora" : `Conhecer ${esc(game.title)}`} ${icon("arrow")}</button></div></article>`;
 }
 function walletContent(wallet, loading = false, error = "") {
   return `<div class="casino-wallet-total">${coin}<span><small>O teu saldo</small><span class="casino-balance" aria-live="polite" aria-atomic="true"><strong>${wallet ? number(wallet.balance) : "—"}</strong> <small>DJC</small></span></span></div><button type="button" class="casino-vault-trigger" data-wallet-vault aria-controls="casino-vault-panel" aria-expanded="false">${icon("lock")}<span><small>Vault</small><span class="casino-balance"><strong>${wallet ? number(wallet.vaultBalance || 0) : "—"}</strong><small>DJC</small></span></span></button><div class="casino-wallet-actions"><button type="button" class="casino-text-button" data-wallet-history ${!wallet ? "disabled" : ""}>Movimentos</button><button type="button" class="casino-button casino-button-outline" data-wallet-refresh aria-label="Atualizar saldo" ${loading ? 'disabled aria-busy="true"' : ""}>${icon("refresh")}</button></div><p class="casino-wallet-status${error || wallet?.syncError ? " is-error" : ""}" role="status">${loading ? "A confirmar…" : error ? esc(error) : wallet?.syncError ? esc(wallet.syncError) : wallet?.local ? "Guardado no dispositivo" : "Saldo atualizado"}</p>`;
@@ -82,7 +82,7 @@ export async function casinoPage(ctx) {
   window.addEventListener("peladinhas-before-logout", beforeLogout);
   document.addEventListener("visibilitychange", visibility);
   ctx.render(
-    `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">${catalogCount()}</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><div class="casino-salon-actions"><div class="casino-rejuice"><button type="button" class="casino-button casino-button-outline" data-rejuice title="Pedir 50 Djabucoins">${icon('gift')}<span>Pedir Rejuice</span>${icon('arrow')}</button><p class="casino-rejuice-notice" role="status" aria-live="polite" aria-atomic="true"></p></div></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
+    `<div class="casino-page"><header class="casino-toolbar"><a href="#/" class="casino-back">${icon("arrow")}<span>Voltar à liga</span></a><span class="casino-brand">PELADINHAS <b>CASINO</b></span><div class="casino-game-nav" hidden><button type="button" class="casino-tool casino-back" data-close-slot aria-label="Voltar ao casino">${icon("arrow")}</button><h2 tabindex="-1">Noite de Glória</h2></div><aside class="casino-wallet" aria-label="Carteira Djabucoin">${walletContent(null, true)}</aside><div class="casino-game-tools" hidden><button type="button" class="casino-tool" data-center-game aria-label="Centrar jogo" title="Centrar jogo"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 12h8m-4-4v8"/></svg><span>Centrar jogo</span></button><button type="button" class="casino-tool" data-close-slot aria-label="Fechar jogo" title="Fechar jogo">${icon("close")}</button></div></header><section class="casino-salon" id="casino-games" aria-labelledby="casino-title"><div class="casino-section-heading"><div><p class="casino-kicker">O TEU CLUBE. OS TEUS JOGOS.</p><h1 id="casino-title">Escolhe a próxima jogada.</h1></div><span class="casino-count">${catalogCount()}</span></div><div class="casino-filters" role="group" aria-label="Filtrar jogos"><button type="button" data-casino-filter="all" aria-pressed="true">Para ti</button><button type="button" data-casino-filter="slots" aria-pressed="false">Slots</button><button type="button" data-casino-filter="tables" aria-pressed="false">Jogos de mesa</button></div><div class="casino-salon-actions"><div class="casino-rejuice"><button type="button" class="casino-juice-button" data-rejuice aria-label="Pedir Rejuice: 50 Djabucoins" title="Pedir Rejuice: 50 Djabucoins"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="m29 19 5-13 7-2" stroke="#86fff0" stroke-width="3" stroke-linecap="round"/><path d="M12 17h25l-4 25H16z" fill="#f5ff69" stroke="#170b35" stroke-width="2"/><path d="M14 24c7-8 13 8 21 0l-2 9c-8 7-12-7-18 0z" fill="#ff39ba"/><path d="M16 35c6-6 10 5 17-1l-1 7H17z" fill="#a341ff"/><ellipse cx="24.5" cy="17" rx="12.5" ry="4" fill="#ffae35" stroke="#170b35" stroke-width="2"/><path d="m29 19 3-8" stroke="#86fff0" stroke-width="3"/><path d="m7 9 1 3 3 1-3 1-1 3-1-3-3-1 3-1zm33 18 1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="#86fff0"/><text x="24" y="30" text-anchor="middle" fill="#170b35" font-size="7" font-weight="900" font-family="system-ui" transform="rotate(-7 24 28)">JUICE</text></svg></button><p class="casino-rejuice-notice" role="status" aria-live="polite" aria-atomic="true"></p></div></div><div class="casino-game-grid">${CASINO_CATALOG.map(gameCard).join("")}</div></section><section id="casino-play-area" class="casino-session" hidden aria-label="Jogo em curso"></section><footer class="casino-footer"><span>PELADINHAS <b>CASINO</b></span><span>A tua liga. Outro jogo.</span></footer></div>`,
   );
   const root = document.querySelector(".casino-page");
   const store = mountCasinoStore(root, localWallet, () => wallet, () => ctx.invalidateLeague?.());
@@ -209,8 +209,20 @@ export async function casinoPage(ctx) {
       modal("Retoma a Rift", "<p>Conclui o b\u00f3nus da Rift Core Overdrive antes de mudar de jogo.</p>");
       return;
     }
+    if (game.id !== "piece-police" && localWallet.peacePoliceActive()) {
+      modal("Retoma o PEACE POLICE", "<p>Conclui a jogada do PEACE POLICE antes de mudar de jogo.</p>");
+      return;
+    }
+    if (game.id !== "ganza" && localWallet.ganzaActive()) {
+      modal("Retoma GANZÁ", "<p>Conclui as bolas no ar antes de mudar de jogo.</p>");
+      return;
+    }
     if (game.id !== "princesa-sofia" && localWallet.sofiaActive()) {
       modal("Retoma a Princesa Sofia", "<p>Conclui a jogada da Princesa Sofia antes de mudar de jogo.</p>");
+      return;
+    }
+    if (game.id !== "risco" && localWallet.riscoActive()) {
+      modal("Retoma o RISCO", "<p>Conclui a ronda do RISCO antes de mudar de jogo.</p>");
       return;
     }
     if (slot) {
@@ -226,11 +238,11 @@ export async function casinoPage(ctx) {
     showGame(button);
     bindClose();
     root.querySelector(".casino-game-nav h2").innerHTML = game.id === "cardoso-road" ? '<span class="cardoso-toolbar-logo">CARDOSO<em>ROAD</em></span>' : esc(game.title);
-    root.classList.toggle("is-table", game.category === "tables" || game.id === "rift" || game.id === "princesa-sofia" || game.id === "cardoso-road");
+    root.classList.toggle("is-table", game.category === "tables" || game.id === "risco" || game.id === "rift" || game.id === "piece-police" || game.id === "princesa-sofia" || game.id === "ganza" || game.id === "cardoso-road");
     playArea.innerHTML = '<p role="status">A preparar a tua mesa…</p>';
     try {
       const [sdk, latest] = await Promise.all([
-        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "roulette" ? import("./casino-roulette.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "rift" ? import("./casino-rift-host.js") : game.id === "princesa-sofia" ? import("./casino-sofia-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
+        game.id === "blackjack" && !legacyBlackjack ? import("./casino-blackjack.js") : game.id === "roulette" ? import("./casino-roulette.js") : game.id === "cardoso-road" ? import("../assets/games/cardoso-road/mount.mjs") : game.id === "risco" ? import("./casino-risco-host.js") : game.id === "rift" ? import("./casino-rift-host.js") : game.id === "piece-police" ? import("./casino-pp-host.js") : game.id === "ganza" ? import("./casino-ganza-host.js") : game.id === "princesa-sofia" ? import("./casino-sofia-host.js") : game.category === "tables" ? import("./casino-table-host.js") : import("../assets/games/futebol/slot-host.js"),
         localWallet.enterGame(),
       ]);
       if (!active || run !== gameRun) return;
@@ -242,7 +254,7 @@ export async function casinoPage(ctx) {
         streamId = crypto.randomUUID();
         localStorage.setItem(key, streamId);
       }
-      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "rift" || game.id === "princesa-sofia" || game.id === "cardoso-road" ? " casino-table-mount" : ""}${game.id === "blackjack" ? " casino-blackjack-mount" : ""}"></div>`;
+      playArea.innerHTML = `<div class="casino-slot-mount${game.category === "tables" || game.id === "risco" || game.id === "rift" || game.id === "piece-police" || game.id === "princesa-sofia" || game.id === "ganza" || game.id === "cardoso-road" ? " casino-table-mount" : ""}${game.id === "blackjack" ? " casino-blackjack-mount" : ""}"></div>`;
       if (game.id === "blackjack" && !legacyBlackjack) {
         slot = sdk.mountBlackjackMultiplayer(playArea.querySelector(".casino-slot-mount"), {
           uid,
@@ -265,6 +277,18 @@ export async function casinoPage(ctx) {
         if (!active || run !== gameRun) return;
       } else if (game.id === "rift") {
         slot = sdk.mountCasinoRift(playArea.querySelector(".casino-slot-mount"), localWallet);
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "risco") {
+        slot = sdk.mountCasinoRisco(playArea.querySelector(".casino-slot-mount"), localWallet);
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "piece-police") {
+        slot = sdk.mountCasinoPeacePolice(playArea.querySelector(".casino-slot-mount"), localWallet);
+        await slot.ready;
+        if (!active || run !== gameRun) return;
+      } else if (game.id === "ganza") {
+        slot = sdk.mountCasinoGanza(playArea.querySelector(".casino-slot-mount"), localWallet);
         await slot.ready;
         if (!active || run !== gameRun) return;
       } else if (game.id === "princesa-sofia") {
@@ -326,11 +350,14 @@ export async function casinoPage(ctx) {
   function history() {
     modal(
       "Movimentos Djabucoin",
-      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "shop" ? "Compra na loja do casino" : entry.kind === "vault" ? "Depósito na Vault" : entry.kind === "rejuice" ? "Rejuice" : entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "princesa-sofia" ? "Princesa Sofia" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
+      `<div class="casino-history"><p class="subtitle">Últimos ${DJABUCOIN.recentLimit} movimentos · saldo confirmado de ${number(wallet.balance)} DJC</p>${wallet.recent.length ? `<ol>${wallet.recent.map((entry) => `<li><span>${icon(entry.kind === "welcome" ? "gift" : entry.kind === "slot" ? "studioSymbols" : "games")}<span><strong>${entry.kind === "shop" ? "Compra na loja do casino" : entry.kind === "vault" ? "Depósito na Vault" : entry.kind === "rejuice" ? "Rejuice" : entry.kind === "admin" ? "Moedas do administrador" : entry.kind === "welcome" ? "Boas-vindas à liga" : entry.kind === "blackjack" ? "Blackjack" : entry.kind === "roulette" ? "Roleta" : entry.kind === "cardoso-road" ? "Cardoso Road" : entry.kind === "risco" ? "RISCO" : entry.kind === "rift" ? "Rift Core Overdrive" : entry.kind === "piece-police" ? "PEACE POLICE: THE AFTERPARTY" : entry.kind === "ganza" ? "GANZÁ" : entry.kind === "princesa-sofia" ? "Princesa Sofia" : entry.kind === "slot" ? "Jogos do casino" : "Peladinha concluída"}</strong><small>${esc(new Date(entry.at).toLocaleDateString("pt-PT"))}</small></span></span><b class="${entry.amount < 0 ? "is-debit" : ""}">${entry.amount > 0 ? "+" : ""}${number(entry.amount)} DJC</b></li>`).join("")}</ol>` : "<p>Ainda não há movimentos. Os teus créditos vão aparecer aqui.</p>"}</div>`,
     );
   }
   function drawWallet(error = "") {
+    const rejuice = walletRoot.querySelector(".casino-rejuice");
+    rejuice?.remove();
     walletRoot.innerHTML = walletContent(presentedBalance === undefined ? wallet : { ...wallet, balance: presentedBalance }, loading, error);
+    if (rejuice) walletRoot.querySelector(".casino-wallet-total").append(rejuice);
     const vaultTrigger = walletRoot.querySelector("[data-wallet-vault]");
     vaultTrigger.onclick = vault.toggle;
     vaultTrigger.setAttribute("aria-expanded", String(vault.expanded()));
@@ -365,6 +392,7 @@ export async function casinoPage(ctx) {
     }
   }
   const rejuiceButton = root.querySelector("[data-rejuice]");
+  walletRoot.querySelector(".casino-wallet-total").append(rejuiceButton.closest(".casino-rejuice"));
   const rejuiceNotice = root.querySelector(".casino-rejuice-notice");
   let rejuiceTimer;
   ctx.cleanup(() => clearTimeout(rejuiceTimer));

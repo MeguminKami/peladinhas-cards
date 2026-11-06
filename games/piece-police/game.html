@@ -3,24 +3,38 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-  <meta name="theme-color" content="#101224">
+  <meta name="theme-color" content="#0B0A1A">
+  <meta name="pp-art-manifest" content="ui/art/manifest.json">
   <title>Peace Police: The Afterparty</title>
+  <link rel="preload" as="image" href="ui/art/chr-group.webp" fetchpriority="high">
+  <link rel="preload" href="ui/fonts/Oxanium.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="ui/base.css">
   <link rel="stylesheet" href="ui/layout.css">
+  <link rel="stylesheet" href="ui/theme.css">
+  <link rel="stylesheet" href="ui/presentation.css">
   <link rel="stylesheet" href="ui/kit/barra.css">
   <link rel="stylesheet" href="ui/tema-barra.css">
+  <link rel="stylesheet" href="ui/acid-refinement.css">
+  <link rel="stylesheet" href="ui/intro.css">
 </head>
 <body data-layout="landscape">
+  <div id="art-loading" class="art-loading" role="status" aria-live="polite">
+    <img class="loading-key-art" src="ui/art/chr-group.webp" width="1600" height="900" alt="As cinco personagens da festa" fetchpriority="high" loading="eager">
+    <strong>PEACE POLICE</strong>
+    <label for="art-progress">A preparar a pista</label>
+    <progress id="art-progress" max="1" value="0"></progress>
+    <span id="art-count">A ler a arte…</span>
+  </div>
   <div class="shell" data-layout="landscape">
     <header class="topbar">
       <div class="brand"><strong>PEACE POLICE</strong><span>THE AFTERPARTY</span></div>
-      <span id="mode-label" class="mode-chip" data-mode="base">JOGO BASE</span>
+      <span id="mode-label" class="mode-chip" data-mode="base" hidden></span>
       <span id="forced-label" class="forced-chip" hidden>CENÁRIO FORÇADO</span>
       <div class="top-actions">
-        <button id="history-button" class="top-btn" type="button" aria-haspopup="dialog">Histórico</button>
-        <button id="settings-button" class="top-btn" type="button" aria-haspopup="dialog">Definições</button>
-        <button id="fullscreen-button" class="top-btn" type="button" aria-pressed="false" aria-label="Ecrã inteiro">⛶</button>
+        <button id="history-button" class="top-btn" type="button" aria-haspopup="dialog"><svg class="pp-icon" aria-hidden="true"><use href="ui/icons.svg#history"></use></svg><span>Histórico</span></button>
+        <button id="settings-button" class="top-btn" type="button" aria-haspopup="dialog"><svg class="pp-icon" aria-hidden="true"><use href="ui/icons.svg#settings"></use></svg><span>Definições</span></button>
+        <button id="fullscreen-button" class="top-btn" type="button" aria-pressed="false" aria-label="Ecrã inteiro"><svg class="pp-icon" aria-hidden="true"><use href="ui/icons.svg#fullscreen"></use></svg></button>
       </div>
     </header>
 
@@ -35,16 +49,11 @@
         <section id="police-panel" class="panel police" data-police="idle" aria-live="polite">
           <h3>PEACE POLICE</h3>
           <strong id="police-short" class="police-short">à espera</strong>
-          <p id="police-text">Ainda não apareceu neste spin.</p>
+          <p id="police-text">DE OLHO NA FESTA</p>
           <p id="police-badge" class="badge-line" hidden></p>
         </section>
       </div>
       <section id="bonus-panel" class="bonus-log" hidden aria-label="Registo do free spin">
-        <header class="log-head">
-          <h3 id="bonus-name">AFTERPARTY</h3>
-          <div class="fs-row"><span>FREE SPINS</span><strong id="fs-count">0 / 10</strong></div>
-          <div class="fs-row"><span>Ganho no bónus</span><strong id="bonus-win">0,00</strong></div>
-        </header>
         <ol id="event-log" class="event-log" aria-live="polite"></ol>
       </section>
     </aside>
@@ -55,6 +64,7 @@
         <div id="board" class="board" role="grid" aria-label="Party Stage 3-5-5-5-3"></div>
         <div id="board-flash" class="board-flash" aria-hidden="true"></div>
       </div>
+      <div id="fusion-indicator" class="fusion-indicator" role="status" hidden><span class="fusion-token"></span><span class="fusion-caption"><b></b><small></small></span></div>
     </main>
 
     <section id="chem-bar" class="chem-bar" aria-label="Chemistry">
@@ -79,11 +89,17 @@
     <header class="dlg-head"><h2 id="buy-title">Comprar bónus</h2><button class="close" type="button" data-close aria-label="Fechar">✕</button></header>
     <div class="buy-bet"><span>Aposta</span><button id="buy-bet-minus" type="button" aria-label="Diminuir aposta">−</button><strong id="buy-bet"></strong><button id="buy-bet-plus" type="button" aria-label="Aumentar aposta">+</button></div>
     <div id="buy-cards" class="buy-cards"></div>
-    <div id="buy-confirm" class="buy-confirm" hidden>
-      <p id="buy-confirm-text"></p>
-      <div class="row"><button id="buy-cancel" type="button">Cancelar</button><button id="buy-ok" class="primary" type="button">Confirmar compra</button></div>
-    </div>
     <p class="note">Uma compra entra diretamente no bónus. Não acumula com a aposta extra. Os prémios são sobre a aposta base.</p>
+  </dialog>
+
+  <dialog id="buy-confirm" class="small purchase-confirm" aria-labelledby="buy-confirm-title" aria-describedby="buy-confirm-text">
+    <p class="kicker">PASSE PARA A AFTERPARTY</p>
+    <div id="buy-confirm-emblem" class="confirmation-emblem" aria-hidden="true"></div>
+    <h2 id="buy-confirm-title"></h2>
+    <p id="buy-confirm-price" class="confirmation-price"></p>
+    <p id="buy-confirm-text"></p>
+    <p class="note">Débito único ao confirmar. Os prémios são calculados sobre a aposta base. A entrada de scatters apresenta a compra e não paga prémios.</p>
+    <div class="confirmation-actions"><button id="buy-cancel" type="button">Voltar à seleção</button><button id="buy-ok" class="primary" type="button">Confirmar compra</button></div>
   </dialog>
 
   <dialog id="rules-dialog" class="big" aria-labelledby="rules-title">

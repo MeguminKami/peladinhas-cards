@@ -38,9 +38,9 @@ export const MODOS = {
   base: { nome: 'Jogo base', custo: 1, pesos: 'base' },
   hunt: { nome: 'Aposta extra MAIS SCATTERS', custo: 2, pesos: 'hunt' },
   // Compras: entram diretamente no bónus. Preço = valor medido do bónus / RTP alvo.
-  'buy-afterparty': { nome: 'Compra AFTERPARTY', custo: 160, bonus: 'afterparty' },
-  'buy-vip': { nome: 'Compra VIP AFTERPARTY', custo: 336, bonus: 'vip' },
-  'buy-police': { nome: 'Compra POLICE PARTY', custo: 830, bonus: 'police' },
+  'buy-afterparty': { nome: 'Compra AFTERPARTY', custo: 126, bonus: 'afterparty' },
+  'buy-vip': { nome: 'Compra VIP AFTERPARTY', custo: 334, bonus: 'vip' },
+  'buy-police': { nome: 'Compra POLICE PARTY', custo: 840, bonus: 'police' },
 };
 
 // --- Alvo de RTP (só informativo: o motor nunca o usa para decidir resultados)

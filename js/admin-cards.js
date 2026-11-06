@@ -1,9 +1,9 @@
-import { SHOP_CARDS } from "./casino-shop-catalog.js";
+import { SHOP_CARDS, SHOP_ARCHIVED_CARDS } from "./casino-shop-catalog.js";
 import { CARD_POLICY, durationName } from "./card-achievements.js";
 import { applyCardDesign } from "./card-design.js";
 import * as DB from "./db.js";
 import { cardWeek } from "./card-week.js";
-import { PHOTO_FIELDS, defaultPhotoDesign } from "./card-photo.js";
+import { PHOTO_FIELDS, freePhotoDesign, cardPhotoStyles } from "./card-photo.js";
 import {
   CATALOG_THEMES,
   COLLECTION_EDITIONS,
@@ -11,7 +11,7 @@ import {
   themeName as standardThemeName,
   clamp,
 } from "./utils.js";
-import { card, bindImages } from "./cards.js";
+import { card, bindImages, currentCardTheme } from "./cards.js";
 import { esc, pageHead, empty, linkButton, busy, toast, modal } from "./ui.js";
 import { icon } from "./icons.js";
 const themeName = id => SHOP_CARDS.find(card => card.id === id)?.name || standardThemeName(id);
@@ -24,28 +24,30 @@ export async function editWeeklyCardPhotoPage(ctx, uid) {
     );
   const cycle = ctx.league.cycle || cardWeek(),
     locked = cycle.phase !== "open" || player.cardLocked;
-  let theme = player.specials?.[0]?.id || player.cardType || "bronze-common",
-    file = null,
+  const theme = currentCardTheme(player);
+  let file = null,
     objectURL = "",
     drag = null;
-  const originalDesign = {
-    ...defaultPhotoDesign(),
-    ...player.cardPhoto?.design,
+  const shop = [...SHOP_CARDS, ...SHOP_ARCHIVED_CARDS].some(item => item.id === theme || `casino-shop-${item.id}` === theme);
+  const originalDesign = freePhotoDesign(player.cardPhoto?.design, { shop });
+  const control = (key, label, unit = "%") => {
+    const [, , min, max] = PHOTO_FIELDS.find(([name]) => name === key);
+    return `<label class="weekly-photo-control" for="weekly-${key}"><span>${label}<output data-photo-value="${key}" data-unit="${unit}">${Number(originalDesign[key].toFixed(1))}${unit}</output></span><input id="weekly-${key}" type="range" name="${key}" min="${min}" max="${max}" step="0.1" value="${originalDesign[key]}"></label>`;
   };
   ctx.render(
-    `${pageHead("Perfil do jogador", "Editar foto de carta", player.displayName || player.username, linkButton(`#/player/${player.uid}`, "Voltar ao perfil", "secondary", "players"))}<section class="panel card-types-toolbar"><span class="pill ${locked ? "warning" : "success"}">${esc(cycle.weekId)} · ${locked ? "Fechada" : "Aberta"}</span><span>Tipo atual: <b>${esc(themeName(theme))}</b></span></section><div class="weekly-photo-layout"><section class="panel weekly-photo-stage"><div class="section-head"><h2 id="weekly-preview-type"></h2><span class="pill">Pré-visualização</span></div><div id="weekly-card-preview" tabindex="0" aria-label="Fotografia da carta: usa as setas para mover"></div><p class="muted small">O tipo de carta depende do desempenho nos jogos.</p></section><section class="panel weekly-photo-editor"><h2>Fotografia desta semana</h2><p class="muted">A fotografia do perfil mantém-se independente.</p>${locked ? '<p class="pill warning">Carta fechada: fotografia bloqueada.</p>' : ""}<form id="weekly-photo-form"><fieldset ${locked ? "disabled" : ""}><label>Carregar imagem<input name="file" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="muted small">JPG, PNG ou WebP até 5 MB. Mantém proporções e transparência.</p><label>Ou usar URL de imagem<input name="photoURL" type="url" placeholder="https://…" value="${esc(player.cardPhoto?.photoURL || "")}" maxlength="2000"></label><div class="weekly-photo-tools"><button type="button" data-photo-tool="move" class="btn btn-secondary" aria-pressed="true">${icon("arrow")} Mover</button><button type="button" data-photo-tool="size" class="btn btn-secondary" aria-pressed="false">Tamanho</button><button type="button" data-photo-tool="zoom" class="btn btn-secondary" aria-pressed="false">Ampliar</button></div><p class="muted small" id="weekly-photo-help">Arrasta a fotografia na carta ou usa as setas.</p><div class="weekly-photo-ranges">${PHOTO_FIELDS.map(([key, label, min, max]) => `<label>${label}<input type="range" name="${key}" min="${min}" max="${max}" step="1" value="${originalDesign[key]}"></label>`).join("")}</div><div class="form-grid"><label>Enquadramento<select name="fit"><option value="cover">Preencher</option><option value="contain">Imagem completa</option></select></label><label>Recorte inferior<select name="fade"><option value="soft">Suave</option><option value="none">Sem efeito</option></select></label></div><div class="actions"><button id="save-weekly-photo" class="btn btn-primary">Guardar fotografia semanal</button><button type="button" id="reset-weekly-photo" class="btn btn-secondary">Usar fotografia do perfil</button></div></fieldset></form></section></div>`,
+    `${pageHead("Perfil do jogador", "Editar foto de carta", player.displayName || player.username, linkButton(`#/player/${player.uid}`, "Voltar ao perfil", "secondary", "players"))}<section class="panel card-types-toolbar"><span class="pill ${locked ? "warning" : "success"}">${esc(cycle.weekId)} · ${locked ? "Fechada" : "Aberta"}</span><span>Tipo atual: <b>${esc(themeName(theme))}</b></span></section><div class="weekly-photo-layout"><section class="panel weekly-photo-stage"><div class="section-head"><h2 id="weekly-preview-type"></h2><span class="pill">Pré-visualização</span></div><div id="weekly-card-preview" tabindex="0" aria-label="Fotografia da carta: usa as setas para mover"></div><p class="muted small">A imagem pode ultrapassar a moldura. O texto da carta fica por cima.</p></section><section class="panel weekly-photo-editor"><h2>Fotografia desta semana</h2><p class="muted">A fotografia do perfil mantém-se independente.</p>${locked ? '<p class="pill warning">Carta fechada: fotografia bloqueada.</p>' : ""}<form id="weekly-photo-form"><fieldset ${locked ? "disabled" : ""}><label>Carregar imagem<input name="file" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="muted small">JPG, PNG ou WebP até 5 MB. Mantém proporções e transparência.</p><label>Ou usar URL de imagem<input name="photoURL" type="url" placeholder="https://…" value="${esc(player.cardPhoto?.photoURL || "")}" maxlength="2000"></label><p class="muted small" id="weekly-photo-help">Arrasta a imagem livremente, mesmo para fora da moldura. Usa as setas para afinar e Shift para mover mais depressa.</p><div class="weekly-photo-ranges weekly-photo-primary">${control("photoScale", "Tamanho")}${control("photoRotate", "Rotação", "°")}</div><button type="button" id="reset-photo-adjustments" class="btn btn-secondary">Repor ajustes</button><details class="weekly-photo-advanced"><summary>Posição e recorte</summary><div class="weekly-photo-ranges">${control("photoX", "Posição horizontal")}${control("photoY", "Posição vertical")}</div><div class="form-grid"><label>Imagem<select name="fit"><option value="contain">Mostrar imagem inteira</option><option value="cover">Recortar para preencher</option></select></label><label>Recorte inferior<select name="fade"><option value="soft">Suave</option><option value="none">Sem efeito</option></select></label></div><div class="weekly-photo-ranges weekly-photo-focus">${control("focusX", "Foco horizontal")}${control("focusY", "Foco vertical")}</div></details><input type="hidden" name="photoWidth" value="${originalDesign.photoWidth}"><input type="hidden" name="photoHeight" value="${originalDesign.photoHeight}"><div class="actions"><button id="save-weekly-photo" class="btn btn-primary">Guardar fotografia semanal</button><button type="button" id="reset-weekly-photo" class="btn btn-secondary">Usar fotografia do perfil</button></div></fieldset></form></section></div>`,
   );
   const form = document.querySelector("#weekly-photo-form"),
     preview = document.querySelector("#weekly-card-preview");
   form.elements.fit.value = originalDesign.fit;
   form.elements.fade.value = originalDesign.fade;
-  let tool = "move";
   const readDesign = () => ({
     ...Object.fromEntries(
       PHOTO_FIELDS.map(([key]) => [key, Number(form.elements[key].value)]),
     ),
     fit: form.elements.fit.value,
     fade: form.elements.fade.value,
+    placement: "free",
   });
   const photo = () => ({
     photoURL: form.elements.photoURL.value.trim(),
@@ -56,15 +58,27 @@ export async function editWeeklyCardPhotoPage(ctx, uid) {
     objectURL = "";
   };
   ctx.cleanup(release);
+  let previewSource;
   const renderPreview = () => {
-    preview.innerHTML = card(
-      { ...player, cardPhoto: photo() },
-      { size: "lg", theme, preview: true },
-    );
-    if (objectURL) preview.querySelector(".card-photo img").src = objectURL;
+    const source = objectURL || form.elements.photoURL.value.trim() || player.photoURL || "";
+    if (!preview.firstElementChild || source !== previewSource) {
+      preview.innerHTML = card(
+        { ...player, cardPhoto: photo() },
+        { size: "lg", theme, preview: true },
+      );
+      if (objectURL) preview.querySelector(".card-photo img").src = objectURL;
+      previewSource = source;
+      bindImages(preview);
+    }
+    const design = readDesign(), styles = cardPhotoStyles(design);
+    preview.querySelector(".card-photo").style.cssText = styles.photo;
+    preview.querySelector(".card-photo img").style.cssText = styles.image;
+    form.querySelectorAll("[data-photo-value]").forEach(output => {
+      output.textContent = `${Number(design[output.dataset.photoValue].toFixed(1))}${output.dataset.unit}`;
+    });
+    form.querySelector(".weekly-photo-focus").hidden = design.fit !== "cover";
     document.querySelector("#weekly-preview-type").textContent =
       themeName(theme);
-    bindImages(preview);
   };
   form.oninput = (event) => {
     if (event.target.name === "file") return;
@@ -91,29 +105,15 @@ export async function editWeeklyCardPhotoPage(ctx, uid) {
     objectURL = URL.createObjectURL(file);
     renderPreview();
   };
-  form.querySelectorAll("[data-photo-tool]").forEach(
-    (button) =>
-      (button.onclick = () => {
-        tool = button.dataset.photoTool;
-        form
-          .querySelectorAll("[data-photo-tool]")
-          .forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
-        document.querySelector("#weekly-photo-help").textContent = {
-          move: "Arrasta a fotografia na carta ou usa as setas.",
-          size: "Arrasta para a direita para aumentar o tamanho.",
-          zoom: "Arrasta para cima para aproximar a imagem.",
-        }[tool];
-      }),
-  );
   const setValue = (key, value) => {
     const field = PHOTO_FIELDS.find(([name]) => name === key);
-    form.elements[key].value = clamp(value, field[2], field[3]);
+    form.elements[key].value = Math.round(clamp(value, field[2], field[3]) * 10) / 10;
   };
   preview.onpointerdown = (event) => {
     if (
       locked ||
       form.querySelector("fieldset").disabled ||
-      !event.target.closest(".card-photo")
+      event.button !== 0
     )
       return;
     event.preventDefault();
@@ -130,17 +130,8 @@ export async function editWeeklyCardPhotoPage(ctx, uid) {
     if (!drag || event.pointerId !== drag.pointer) return;
     const dx = ((event.clientX - drag.x) / drag.rect.width) * 100,
       dy = ((event.clientY - drag.y) / drag.rect.height) * 100;
-    if (tool === "move") {
-      setValue("photoX", drag.design.photoX + dx);
-      setValue("photoY", drag.design.photoY + dy);
-    } else if (tool === "size") {
-      setValue("photoWidth", drag.design.photoWidth + dx);
-      setValue(
-        "photoHeight",
-        drag.design.photoHeight *
-          (Number(form.elements.photoWidth.value) / drag.design.photoWidth),
-      );
-    } else setValue("photoScale", drag.design.photoScale - dy * 2);
+    setValue("photoX", drag.design.photoX + dx);
+    setValue("photoY", drag.design.photoY + dy);
     renderPreview();
   };
   const end = (event) => {
@@ -165,8 +156,15 @@ export async function editWeeklyCardPhotoPage(ctx, uid) {
     setValue(
       key,
       Number(form.elements[key].value) +
-        (["ArrowRight", "ArrowDown"].includes(event.key) ? 2 : -2),
+        (["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : -1) * (event.shiftKey ? 5 : event.altKey ? .1 : 1),
     );
+    renderPreview();
+  };
+  document.querySelector("#reset-photo-adjustments").onclick = () => {
+    const defaults = freePhotoDesign(null, { shop });
+    for (const [key] of PHOTO_FIELDS) form.elements[key].value = defaults[key];
+    form.elements.fit.value = "contain";
+    form.elements.fade.value = "soft";
     renderPreview();
   };
   form.onsubmit = async (event) => {
@@ -226,7 +224,7 @@ export async function editWeeklyCardPhotoPage(ctx, uid) {
       release();
       form.elements.photoURL.value = "";
       form.elements.file.value = "";
-      Object.entries(defaultPhotoDesign()).forEach(([key, value]) => {
+      Object.entries(freePhotoDesign(null, { shop })).filter(([key]) => key !== "placement").forEach(([key, value]) => {
         form.elements[key].value = value;
       });
       renderPreview();

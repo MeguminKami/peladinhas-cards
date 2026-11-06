@@ -114,6 +114,8 @@ for (let c = 1; c <= 10; c++) {
   payTable[c] = row.map((v, i) => {
     const m = Math.round(v * 1000);
     if (!(v >= 0) || Math.abs(m - v * 1000) > 1e-6) fail(`PAGAMENTOS.${id}[${i}] = ${v}: tem de ser >= 0 com no máximo 3 casas decimais`);
+    // Regra do dono (pp-v7): nenhum cluster, de qualquer tamanho ou símbolo, paga menos de 0,10× sem multiplicador
+    if (m < 100) fail(`PAGAMENTOS.${id}[${i}] = ${v}: nenhum prémio base pode ser inferior a 0,10×`);
     return m;
   });
   // Regras de forma da tabela (decisão do dono, pp-v5). Contas em milésimos (inteiros).
@@ -203,7 +205,17 @@ if (!['tamanho-final', 'diferenca', 'novo-tamanho'].includes(PODERES.WEED.pagame
 if (!pctOk(PODERES.COPIUM.probRaspadinha)) fail('PODERES.COPIUM.probRaspadinha 0..100');
 for (const [m, v] of Object.entries(FUSAO_SURPRESA.probabilidade)) { if (!modes[m] || modes[m].bonus) fail(`FUSAO_SURPRESA.probabilidade.${m}: só modos de jogo (base, hunt)`); if (!pctOk(v)) fail(`FUSAO_SURPRESA.probabilidade.${m} tem de ser 0..100`); }
 if (!(CANTOS.multiplicadorMax >= CANTOS.multiplicadorInicial)) fail('CANTOS.multiplicadorMax >= multiplicadorInicial');
+// pp-v7: teto do multiplicador de um cluster (soma dos cantos × Joiner), no jogo base e em cada bónus
+if (!(isInt(CANTOS.multClusterMax) && CANTOS.multClusterMax >= CANTOS.multiplicadorMaxAbsoluto)) fail('CANTOS.multClusterMax tem de ser inteiro >= multiplicadorMaxAbsoluto');
+for (const [id, b] of Object.entries(BONUS)) if (!(isInt(b.multClusterMax) && b.multClusterMax >= b.multCantoMax)) fail(`BONUS.${id}.multClusterMax tem de ser inteiro >= multCantoMax`);
+if (!(isInt(CHEMISTRY.totalSomaCantos) && CHEMISTRY.totalSomaCantos >= 0)) fail('CHEMISTRY.totalSomaCantos tem de ser inteiro >= 0');
+if (!(isInt(PODERES.LCD.celulasMax) && PODERES.LCD.celulasMax >= PODERES.LCD.celulasMinimas)) fail('PODERES.LCD.celulasMax tem de ser inteiro >= celulasMinimas');
+if (!(isInt(PODERES.LCD.celulasMaxParty) && PODERES.LCD.celulasMaxParty >= PODERES.LCD.celulasMax)) fail('PODERES.LCD.celulasMaxParty tem de ser inteiro >= celulasMax');
 if (!(JOGO.ganhoMaximo > 0)) fail('JOGO.ganhoMaximo > 0');
+// pp-v7: retrigger por nº de Scatters, com máximo de Scatters no ecrã durante o bónus
+if (!(isInt(RETRIGGER.scattersMaximoNoBonus) && RETRIGGER.scattersMaximoNoBonus >= 1)) fail('RETRIGGER.scattersMaximoNoBonus tem de ser inteiro >= 1');
+for (const [n, s] of Object.entries(RETRIGGER.spinsPorScatters || {})) if (!(isInt(Number(n)) && Number(n) >= 1 && Number(n) <= RETRIGGER.scattersMaximoNoBonus && isInt(s) && s >= 1)) fail(`RETRIGGER.spinsPorScatters.${n}: nº de Scatters 1..scattersMaximoNoBonus e spins inteiros >= 1`);
+if (!Object.keys(RETRIGGER.spinsPorScatters || {}).length) fail('RETRIGGER.spinsPorScatters não pode estar vazio');
 if (!(JOGO.clusterMinimoReais >= 1 && JOGO.clusterMinimoReais <= JOGO.clusterMinimo)) fail('JOGO.clusterMinimoReais entre 1 e clusterMinimo');
 
 if (errors.length) {

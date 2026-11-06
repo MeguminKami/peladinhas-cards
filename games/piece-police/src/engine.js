@@ -107,6 +107,8 @@ function drawSymbol(ctx, col, restrict) {
     return restrict.codes[restrict.codes.length - 1];
   }
   if (colScatterCount(ctx, col) >= ctx.cfg.scatterMaxPerCol) return w.codesNoS[ctx.rng.pickCum(w.cumNoS)];
+  // pp-v7: no bónus, nunca mais de scattersMaximoNoBonus Scatters no ecrã (as cascatas também contam)
+  if (ctx.bonus && countSym(ctx, S) >= ctx.cfg.retrigger.scattersMaximoNoBonus) return w.codesNoS[ctx.rng.pickCum(w.cumNoS)];
   return w.codes[ctx.rng.pickCum(w.cumAll)];
 }
 
@@ -244,11 +246,22 @@ function award(ctx, mils) {
   return pay;
 }
 
+// Multiplicador de um cluster (pp-v7, decisão do dono): os Wilds de Canto (e qualquer outra fonte que
+// não o Joiner) SOMAM; o Distintivo do Joiner MULTIPLICA essa soma. m = max(1, ΣCW) × max(1, ΣDW),
+// limitado ao teto do modo (multClusterMax).
+function clusterMult(ctx, cells) {
+  let mCW = 0, mDW = 0;
+  for (const c of cells) { if (ctx.sym[c] === CW) mCW += ctx.mult[c]; else if (ctx.sym[c] === DW) mDW += ctx.mult[c]; }
+  const cap = ctx.bonus ? ctx.bonus.def.multClusterMax : ctx.cfg.corners_.multClusterMax;
+  return { m: Math.min(cap, Math.max(1, mCW) * Math.max(1, mDW)), mCW, mDW };
+}
+
 function attribution(ctx, cells, basePay, pay, multCW, multDW) {
-  // basePay × 1 dividido pelas etiquetas das células; o resto (multiplicador) por CW/DW
+  // basePay × 1 dividido pelas etiquetas das células; do resto, a parte dos cantos (base × (ΣCW − 1))
+  // vai para CW e o que o Joiner acrescenta ao multiplicar (base × ΣCW × (ΣDW − 1)) vai para DW.
   const out = [];
-  const total = multCW + multDW;
-  const m = Math.max(1, total);
+  const a = Math.max(1, multCW), b = Math.max(1, multDW);
+  const m = a * b;
   const scale = pay / (basePay * m || 1);
   const baseShare = Math.round(basePay * scale);
   const counts = new Map();
@@ -269,7 +282,7 @@ function attribution(ctx, cells, basePay, pay, multCW, multDW) {
   }
   const rest = pay - baseShare;
   if (rest > 0) {
-    const cwPart = total ? Math.floor(rest * multCW / total) : 0;
+    const cwPart = Math.min(rest, Math.floor(basePay * (a - 1) * scale));
     if (cwPart) out.push([TAG['mult:CW'], cwPart]);
     if (rest - cwPart) out.push([TAG['mult:DW'], rest - cwPart]);
   }
@@ -296,9 +309,7 @@ function evaluate(ctx) {
     let basePay = payAt(size);
     if (gids.length && ref > 0 && cfg.powers.WEED.pagamentoAoCrescer === 'diferenca') basePay -= payAt(ref);
     if (basePay <= 0) { growOnly.push({ ...cl, size, gids }); continue; }
-    let mCW = 0, mDW = 0;
-    for (const c of cl.cells) { if (ctx.sym[c] === CW) mCW += ctx.mult[c]; else if (ctx.sym[c] === DW) mDW += ctx.mult[c]; }
-    const m = Math.max(1, mCW + mDW);
+    const { m, mCW, mDW } = clusterMult(ctx, cl.cells);
     paid.push({ ...cl, size, basePay, mult: m, mCW, mDW, pay: basePay * m, gids, growthFrom: gids.length ? ref : 0 });
   }
   paid.sort((a, b) => b.pay - a.pay || b.type - a.type || b.size - a.size);
@@ -360,9 +371,7 @@ function payGroupFinal(ctx, g) {
   if (real < cfg.clusterMinReal) return null;
   const size = comp.length;
   const basePay = cfg.pay[g.type][Math.min(size, cfg.payMaxSize) - cfg.clusterMin];
-  let mCW = 0, mDW = 0;
-  for (const c of comp) { if (ctx.sym[c] === CW) mCW += ctx.mult[c]; else if (ctx.sym[c] === DW) mDW += ctx.mult[c]; }
-  const m = Math.max(1, mCW + mDW);
+  const { m, mCW, mDW } = clusterMult(ctx, comp);
   const want = basePay * m;
   const got = ctx.round.capped ? 0 : award(ctx, want);
   if (got > 0 || want > 0) {
@@ -565,6 +574,9 @@ function realityBreak(ctx, party, tag) {
       for (let i = 0; i < NC; i++) if (ctx.sym[i] === L && isFree(ctx, i) && !cells.includes(i)) cells.push(i);
     }
   }
+  // pp-v7: teto de células transformadas (menos clusters gigantes vindos do LCD); escolhe ao acaso
+  const max = party ? p.celulasMaxParty : p.celulasMax;
+  if (cells.length > max) { ctx.rng.shuffle(cells); cells.length = max; }
   for (const c of cells) { ctx.sym[c] = T; ctx.tag[c] = tag; }
   emit(ctx, { type: 'power.reality_break', target: CODE_TO_ID[T], cells, party });
   return { T, cells };
@@ -945,11 +957,13 @@ function totalChemistry(ctx) {
   if (ctx.off.has('total')) return;
   emit(ctx, { type: 'chemistry.total' });
   const ch = ctx.cfg.chemistry;
-  if (ch.totalDuplicaMultiplicadores) {
+  if (ch.totalSomaCantos > 0) {
+    // pp-v7: soma +totalSomaCantos a cada Wild de Canto (antes duplicava CW e DW; com o Joiner a
+    // multiplicar, duplicar seria demasiado). O Distintivo não muda.
     const cap = ctx.bonus ? ctx.cfg.police.cwAbsByBonus[ctx.bonus.id] : ctx.cfg.corners_.multiplicadorMaxAbsoluto;
     for (let i = 0; i < NC; i++) {
-      if (ctx.sym[i] === CW || ctx.sym[i] === DW) {
-        const from = ctx.mult[i], to = Math.min(cap, from * 2);
+      if (ctx.sym[i] === CW) {
+        const from = ctx.mult[i], to = Math.min(cap, from + ch.totalSomaCantos);
         if (to !== from) { ctx.mult[i] = to; emit(ctx, { type: 'multiplier.change', cell: i, from, to }); }
       }
     }
@@ -1132,8 +1146,9 @@ function playBonus(round, bonusId, steps) {
     for (const c of cfg.corners) {
       if (ctx.sym[c] === CW) st.corners.set(c, def.cantosPersistemMultiplicador ? ctx.mult[c] : def.multCantoInicial);
     }
-    if (nS >= cfg.retrigger.scattersMinimos && !round.capped) {
-      const add = Math.min(cfg.retrigger.spinsExtra, cfg.retrigger.spinsMaximoTotal - total);
+    const extra = cfg.retrigger.spinsPorScatters[Math.min(nS, cfg.retrigger.scattersMaximoNoBonus)] || 0;
+    if (extra > 0 && !round.capped) {
+      const add = Math.min(extra, cfg.retrigger.spinsMaximoTotal - total);
       if (add > 0) { total += add; emit(ctx, { type: 'bonus.retrigger', scatters: nS, added: add, total }); }
     }
     bonusWin += ctx.stepWin;

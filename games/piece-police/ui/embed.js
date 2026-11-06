@@ -6,9 +6,9 @@
 // e acompanha redimensionamentos, rotacao do telemovel e a barra do browser movel.
 //
 // Uso no site (ES module):
-//   <iframe data-pp-game src="/jogos/peace-police/game.html" title="Peace Police"
+//   <iframe data-pp-game src="/jogos/piece-police/game.html" title="Peace Police"
 //           allow="fullscreen; autoplay" allowfullscreen data-bottom-gap="16"></iframe>
-//   <script type="module" src="/jogos/peace-police/ui/embed.js"></script>
+//   <script type="module" src="/jogos/piece-police/ui/embed.js"></script>
 // ou, por codigo: import { fitGameFrame } from '.../ui/embed.js'; fitGameFrame(iframe, { bottomGap: 16 });
 
 export function fitGameFrame(frame, { bottomGap = 0, minHeight = 200 } = {}) {

@@ -69,7 +69,11 @@ export function installLayout({ shell = document.querySelector('.shell'), force 
       else { layout = 'landscape'; size = measure('landscape'); }
     }
     let scale = Math.min(MAX_SCALE, scaleFor(size));
-    const boost = Math.min(MAX_BOOST, Math.max(1, 1 / scale));
+    const candidateBoost = Math.min(MAX_BOOST, Math.max(1, 1 / scale));
+    const previousBoost = Number.parseFloat(shell.style.getPropertyValue('--ui-boost'));
+    // A line-wrap boundary can oscillate by 0.002 and schedule ResizeObserver forever.
+    // Keep sub-half-percent changes stable; the final scale still enforces viewport bounds.
+    const boost = Number.isFinite(previousBoost) && Math.abs(candidateBoost - previousBoost) < .005 ? previousBoost : candidateBoost;
     shell.style.setProperty('--ui-boost', boost.toFixed(3));
     // o reforço do texto pode mudar a altura: medir de novo antes de escalar
     const finalHeight = Math.max(shell.offsetHeight, layout === 'portrait' ? size.height : 0);

@@ -77,7 +77,7 @@ export function aplicar(m, e) {
       m.groups.push({ symbol: e.symbol, kind: e.kind, cells: new Set(e.cells) });
       break;
     case 'power.slow_motion.grow': {
-      // Duas formas: Lava lamps convertidas (passam a e.symbol) ou o grupo inteiro depois de fundir clusters.
+      // Duas formas: Bob Joints convertidos (passam a e.symbol) ou o grupo inteiro depois de fundir clusters.
       for (const c of e.cells) if (m.grid[c] === 'N1') m.grid[c] = e.symbol;
       const g = e.cells.map(c => groupOf(m, c)).find(Boolean)
         || m.groups.find(gr => gr.symbol === e.symbol && [...gr.cells].some(c => e.cells.some(n => adjacentes(c, n))))

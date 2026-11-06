@@ -1,0 +1,18 @@
+{
+  "durationMs": 20000.0,
+  "frames": 480,
+  "apngEncodedFrames": 480,
+  "atlasCount": 8,
+  "sourceAlphaExtrema": [
+    0,
+    254
+  ],
+  "firstLastMeanAbsoluteDelta": 0.5020294189453125,
+  "sourceSHA256": "86a75eb592fd12772ea766d539c073bd91aa0f03b598c56467f6c0b9fb6b57c5",
+  "bytes": {
+    "weed-fumar-v2.png": 45983766,
+    "weed-png-v2.zip": 130974715,
+    "jogo\\weed-fumar.png": 13527165,
+    "weed-png-plinko.zip": 24882309
+  }
+}

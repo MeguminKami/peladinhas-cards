@@ -42,21 +42,30 @@ O nome da edição, o tier, o preço, os requisitos e as ações pertencem à fi
 
 ## 3. Fotografia e composição
 
-A fotografia tem de ficar contida numa área quadrada, dimensionada para dar espaço próprio ao OVR, posição, país, nome e atributos. Deve ter o mesmo enquadramento entre edições da mesma família, sem se esticar, invadir texto ou ultrapassar a moldura.
+Por omissão, a fotografia fica contida numa área quadrada, dimensionada para dar espaço próprio ao OVR, posição, país, nome e atributos. Deve ter o mesmo enquadramento entre edições da mesma família, sem se esticar, invadir texto ou ultrapassar a moldura. A edição manual ADMIN descrita abaixo é uma exceção explícita: permite posicionamento livre fora da moldura.
 
 - Preservar a proporção da imagem. Aplicar foco, zoom e modo de ajuste dentro da área reservada, com recorte limitado ao quadrado.
 - Não reutilizar cegamente coordenadas e dimensões de uma carta com geometria diferente. Um zoom, rotação ou posição guardados nunca devem permitir que a fotografia invada outras zonas.
-- Na loja, reutilizar `.sca-photo-frame` de [casino-shop-art.css](../../css/casino-shop-art.css) e o tratamento da fotografia de [casino-shop-art.js](../../js/casino-shop-art.js). O quadrado atual tem largura de 46% da carta; a altura deriva de `aspect-ratio: 1`.
+- Na loja, reutilizar `.sca-photo-frame` de [casino-shop-art.css](../../css/casino-shop-art.css) e o tratamento da fotografia de [casino-shop-art.js](../../js/casino-shop-art.js). O quadrado fica a 33% da esquerda, com largura de 54% da carta e a base a 56% da altura, junto ao nome; a altura deriva de `aspect-ratio: 1`.
+- Nas fotografias existentes sem posicionamento livre, aplicar os controlos guardados numa camada `.sca-photo-transform` dentro desse quadrado, usando `cardPhotoStyles(design, { bounded: true })`.
+- O editor ADMIN usa `placement: "free"`: arrastar move sempre, Tamanho amplia proporcionalmente e Rotação roda. Posição e recorte ficam em opções avançadas; não apresentar modos Mover/Tamanho/Ampliar concorrentes. Os ajustes atualizam os estilos da fotografia sem reconstruir a carta. Setas movem 1 ponto percentual; Shift acelera para 5 e Alt afina para 0,1.
+- Converter o enquadramento anterior com `freePhotoDesign()` ao abrir o editor. Guardar o marcador de posicionamento livre com a fotografia semanal: a imagem pode ultrapassar a silhueta tanto na prévia como no perfil, catálogo e histórico respetivo, mantendo nome, OVR e atributos por cima. Fotografias antigas e semanas fechadas não são reescritas. Repor ajustes recupera posição/tamanho/rotação sem apagar a imagem; Usar fotografia do perfil mantém a reposição semanal existente.
 - Reutilizar a validação e as opções de [card-photo.js](../../js/card-photo.js). Se o formato já tiver um editor de fotografia, preservar a compatibilidade e verificar o enquadramento antes de alterar a geometria existente.
 - Sem fotografia ou com erro de carregamento, mostrar o avatar padrão; não criar uma identidade fictícia para o jogador.
 
 A composição deve ter leitura clara: OVR/posição/país, fotografia, nome e atributos. Apresentar os atributos em duas linhas de quatro, com valor acima do rótulo. Reservar espaço para setas e playstyles sem os sobrepor a números ou à identidade.
 
-Respeitar a proporção da família existente, os tamanhos de carta e o desenho responsivo. A carta normal e a loja têm geometrias próprias; não esticar uma para imitar a outra. Usar escala relativa à carta para que texto, fotografia e símbolos cresçam juntos. Garantir contraste, algarismos tabulares, nomes longos legíveis e separação entre elementos.
+Na loja, desenhar os acabamentos para a geometria base: cantos ligados às laterais, pedras assentes em encaixes, coroas e louros unidos ao rebordo e remates próprios no topo e no fundo. Reutilizar [casino-shop-frame-art.js](../../js/casino-shop-frame-art.js). Não obter ornamentos recortando ou esbatendo outra moldura. Adornos podem prolongar-se ligeiramente para o exterior (até 15 unidades no topo, 8 nas laterais e 7 no fundo do desenho SVG de 300 × 420), sem reduzir o corpo nem invadir o conteúdo; reservar espaço nos contentores. Evitar pontas cortadas e linhas soltas.
+
+Nas edições de prestígio e premium, acrescentar placas pretas, encaixes cinzentos e metal escuro entre os adornos coloridos, preservando a progressão visual. As cinco cartas de jogos usam cenários próprios sob a fotografia: feltro/cartas/fichas no Blackjack, roda/bola na Roleta, tubos/correntes/óleo no Cardoso, reator/fraturas no RIFT e campo/rede/projetores no Futebol de Bairro. Conter estes cenários no corpo e proteger a leitura do OVR e símbolos; não alterar os dados do jogador.
+
+Respeitar a proporção da família existente, os tamanhos de carta e o desenho responsivo. As cartas da loja usam a mesma caixa da carta normal (proporção `0.67` e `--card-width`) e a mesma ordem de leitura: OVR/posição/país à esquerda, fotografia à direita, nome e atributos em baixo. A loja reutiliza o corpo base do Card Lab (`DEFAULT_CARD_OUTLINE` com `expandCardOutline`) e as classes de conteúdo da carta normal. Cada edição acrescenta materiais e ornamentos à periferia desse corpo, sem encolher a área útil nem criar proporções próprias por edição. Usar escala relativa à carta para que texto, fotografia e símbolos cresçam juntos. Garantir contraste, algarismos tabulares, nomes longos legíveis e separação entre elementos.
 
 ## 4. Componentes e integração
 
 A entrada comum de apresentação é `card()` em [cards.js](../../js/cards.js). Os desenhos da loja usam [casino-shop-art.js](../../js/casino-shop-art.js), mantendo o mesmo conteúdo partilhado. Uma nova edição deve integrar-se nesses caminhos, em vez de criar uma carta independente com regras próprias.
+
+O editor ADMIN de fotografia semanal usa `currentCardTheme()` de [cards.js](../../js/cards.js) para abrir a mesma aparência apresentada no perfil, incluindo a escolha explícita da carta base. Ajustar a fotografia não altera essa escolha.
 
 Verificar os consumidores aplicáveis: loja, pré-visualização ampliada, catálogo/álbum, ADMIN, seletor de cartas, perfil, início e histórico. Uma edição reconhecida pelo catálogo deve ser reconhecida pelo renderer e pelo seletor quando o jogador tem direito a usá-la.
 

@@ -36,6 +36,8 @@ const types = {
   ".woff": "font/woff",
   ".woff2": "font/woff2",
   ".opus": "audio/ogg",
+  ".ogg": "audio/ogg",
+  ".ttf": "font/ttf",
   ".mp3": "audio/mpeg",
   ".json": "application/json",
   ".webmanifest": "application/manifest+json",
@@ -60,8 +62,10 @@ const server = createServer(async (req, res) => {
     if (mode === "fixtures" && ["tests/fixtures/game-ratings.js", "tests/fixtures/maintenance.js", "tests/fixtures/casino.js"].includes(localModule)) {
       res.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "no-store" });
       let source = await readFile(resolve(root, localModule), "utf8");
+      if (localModule === "tests/fixtures/casino.js")
+        source = `window.__casinoPersistentFixture = true;\nwindow.__casinoDevCredits = ${(casinoCredits ?? 1000) * 100};\n` + source;
       if (localModule === "tests/fixtures/casino.js" && casinoCredits !== null)
-        source = source.replace("wallet: newCasinoWallet(),", `wallet: { ...newCasinoWallet(), balance: ${casinoCredits * 100}, recent: [] },`);
+        source = source.replace("wallet: {...newCasinoWallet(), balance:10000},", `wallet: { ...newCasinoWallet(), balance: ${casinoCredits * 100}, recent: [] },`);
       res.end(source);
       return;
     }

@@ -96,6 +96,10 @@ try {
     await page.locator(".feedback-review[open]").waitFor();
   }
   await openFeedback();
+  if (await page.locator(".rating-method-dialog").count()) {
+    await page.locator('.rating-method-dialog [data-method="stars"]').click();
+    await page.getByRole("button", {name:"Escolho Este", exact:true}).click();
+  }
   assert.equal((await page.locator(".feedback-scoreline > strong").textContent()).trim(), "5:3");
   assert.match(await page.locator('[data-target="pedro"]').locator("..").locator(".feedback-player-stats").innerText(), /2\s+golos.*1\s+assist/s);
   const form = page.locator(".feedback-review[open] .feedback-form");

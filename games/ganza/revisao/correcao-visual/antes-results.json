@@ -1,0 +1,98 @@
+[
+  {
+    "width": 1920,
+    "height": 1080,
+    "risk": "baixo",
+    "fps": 42.90171606862889
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "risk": "medio",
+    "fps": 59.99400059994001
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "risk": "alto",
+    "fps": 59.99700014999249
+  },
+  {
+    "width": 1920,
+    "height": 1080,
+    "risk": "extremo",
+    "fps": 58.530875036581776
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "risk": "baixo",
+    "fps": 53.82453202564453
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "risk": "medio",
+    "fps": 59.9970001499925
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "risk": "alto",
+    "fps": 59.997000149992516
+  },
+  {
+    "width": 1366,
+    "height": 768,
+    "risk": "extremo",
+    "fps": 59.997000149992516
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "risk": "baixo",
+    "fps": 59.59302325591075
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "risk": "medio",
+    "fps": 59.997000149992495
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "risk": "alto",
+    "fps": 59.9970001499925
+  },
+  {
+    "width": 390,
+    "height": 844,
+    "risk": "extremo",
+    "fps": 59.994000599939994
+  },
+  {
+    "width": 320,
+    "height": 740,
+    "risk": "baixo",
+    "fps": 59.27682276229994
+  },
+  {
+    "width": 320,
+    "height": 740,
+    "risk": "medio",
+    "fps": 60.00600060006001
+  },
+  {
+    "width": 320,
+    "height": 740,
+    "risk": "alto",
+    "fps": 59.9970001499925
+  },
+  {
+    "width": 320,
+    "height": 740,
+    "risk": "extremo",
+    "fps": 60.00300015000751
+  }
+]

@@ -243,6 +243,12 @@ try {
   await page.locator('#notice-dialog[open] [data-close]').click();
   await setSpeed('ultra');
   assert.equal(await page.locator('#speed-label').innerText(), 'Ultra');
+  await page.waitForFunction(() => document.getElementById('status').textContent.includes('spins após este'));
+  const bonusSpinsBeforeTurbo = await page.locator('#free-spins').innerText();
+  await page.keyboard.press('Space'); await page.keyboard.press('Space'); await page.keyboard.press('Space');
+  await page.waitForTimeout(80);
+  assert.equal(await page.locator('#free-spins').innerText(), bonusSpinsBeforeTurbo, 'rapid Space presses turbo a bonus without skipping its active spin');
+  assert.equal(await page.locator('#speed-label').innerText(), 'Turbo');
   await settle();
   assert.equal(await page.locator('#bet').isDisabled(), false);
 

@@ -35,11 +35,11 @@ Cinco personagens que caricaturam estilos de festa partilham um palco. Cada uma 
 - Poderes que só fazem animação e raramente produzem prémio.
 - Funcionalidades puramente negativas (o Calmer arruma, não castiga).
 - Quase-vitórias falsas: a antecipação mostra só o que é realmente possível.
-- Objetos de consumo das substâncias, preparação, dosagens ou realismo de consumo.
+- A antiga proibição de objetos de consumo foi revista pelo dono em 04-11-2026: bebidas, drogas e objetos de consumo são permitidos na arte da versão privada, sem venda nem distribuição.
 - Copiar nomes, matemática ou arte de outras produtoras (xWays, Megaways, Golden Squares, etc.).
 
 ## Tema e limites
-As personagens são **caricaturas humanas de estilos de festa**, não informação sobre substâncias. «LCD» mantém-se assim escrito. «COPIUM» é o meme da negação otimista. Os poderes são fantasia. Os símbolos baixos são **objetos de ambiente de festa**, nunca parafernália.
+As personagens são **caricaturas humanas de estilos de festa**, não informação sobre substâncias. «LCD» mantém-se assim escrito. «COPIUM» é o meme da negação otimista. Os poderes são fantasia. Os símbolos baixos são **objetos de ambiente de festa**; o dono autoriza adereços de consumo na arte privada desde 04-11-2026.
 
 ---
 
@@ -63,13 +63,13 @@ As personagens são **caricaturas humanas de estilos de festa**, não informaç�
 
 ## Pagamento — Cluster Pays
 - Grupo de **4 ou mais** símbolos pagantes do mesmo tipo, ligados **na horizontal ou na vertical**. As diagonais não ligam. **Os wilds contam por inteiro**: basta 1 símbolo real para dar o tipo ao cluster (V2.3).
-- **HOLD wild:** um wild que fica no tabuleiro através das cascatas até entrar num prémio; quando paga, sai com o cluster (só paga uma vez). Os Wilds de Canto e o Distintivo não são HOLD: ficam até ao fim do spin.
+- **HOLD wild:** um wild que fica no tabuleiro através das cascatas até entrar num prémio; quando paga, sai com o cluster (só paga uma vez). Os Wilds de Canto e o Joiner não são HOLD: ficam até ao fim do spin.
 - Os wilds substituem todos os símbolos pagantes (N e P), nunca o Scatter. O mesmo wild pode fazer parte de clusters de tipos diferentes no mesmo ciclo. Um cluster só de wilds não paga.
 - Todos os clusters do ciclo são pagos em simultâneo, depois são removidos (exceto os sticky) e há cascata.
-- **Multiplicador de um cluster** = soma dos multiplicadores dos wilds multiplicadores que contém (Wild de Canto, Distintivo), com mínimo ×1. Os multiplicadores somam, não se multiplicam entre si.
+- **Multiplicador de um cluster** (pp-v7) = soma dos Wilds de Canto que contém (mínimo ×1) **× o Joiner**, se o cluster o tiver. Os cantos somam entre si; o Joiner multiplica essa soma. Cada modo tem um teto para o multiplicador de um cluster.
 - A tabela é em × aposta total, por tipo de símbolo e tamanho do cluster (Fase 1).
 
-**Exemplo:** cluster de 7 × P3 que, na tabela (provisória), paga 1,5×. Contém um Wild de Canto ×3 e um Distintivo ×2, por isso o multiplicador é ×5 e o prémio é 1,5 × 5 = **7,5×** a aposta.
+**Exemplo:** cluster de 7 × P3 que, na tabela, paga 2,64×. Contém dois Wilds de Canto ×2 e ×1 (somam ×3) e um Joiner ×2, por isso o multiplicador é 3 × 2 = ×6 e o prémio é 2,64 × 6 = **15,84×** a aposta.
 
 ---
 
@@ -79,11 +79,11 @@ Cada personagem tem **um símbolo baixo próprio**, que é a **matéria-prima do
 
 | ID | Símbolo | Personagem associada | Papel |
 |---|---|---|---|
-| N1 | Lava lamp | WEED | baixo |
+| N1 | Bob Joint | WEED | baixo |
 | N2 | Copo de shot | ALCOOL | baixo |
-| N3 | Raspadinha «quase» | COPIUM | baixo |
-| N4 | Coluna de som | MDMA | baixo |
-| N5 | Prisma / espelho partido | LCD | baixo |
+| N3 | Cope Cannister | COPIUM | baixo |
+| N4 | Pastilha | MDMA | baixo |
+| N5 | Selo colorido | LCD | baixo |
 | P1 | WEED — The Chiller | — | premium |
 | P2 | ALCOOL — The Wildcard | — | premium |
 | P3 | COPIUM — The Dreamer | — | premium |
@@ -91,8 +91,8 @@ Cada personagem tem **um símbolo baixo próprio**, que é a **matéria-prima do
 | P5 | LCD — The Glitch | — | premium (o mais raro) |
 | W | Wild (copo de néon / rasto) | criado por poderes | substitui N e P |
 | CW | Wild de Canto ×N | Party Corners | wild multiplicador sticky |
-| DW | Distintivo ×N | Peace Police (Joiner) | wild multiplicador sticky |
-| S | Pulseira VIP | — | Scatter, ativa os bónus |
+| DW | JOINER ×N (Joiner) | Peace Police (Joiner), retrato da referência autorizada | wild multiplicador sticky |
+| S | Pulseira amarela com detalhes prata e «Scatter» vermelho prismático | — | Scatter, ativa os bónus |
 
 - **Não caem wilds naturais** (nem no jogo base nem nos bónus). Os wilds nascem dos poderes, dos cantos e do Peace Police, o que dá protagonismo às personagens.
 - **Scatter S:** podem cair vários na mesma coluna. É protegido: nenhum poder o move, transforma ou cobre. Não é removido nas cascatas. É contado no fim do spin.
@@ -121,23 +121,23 @@ Formato: **condição → sorteio → alvo → efeito → duração → limites 
 ### LCD — REALITY BREAK *(transformar)*
 - **Condição:** LCD desperta.
 - **Sorteio:** escolhe o tipo-alvo T = o premium com o maior grupo no tabuleiro depois do refill (em caso de empate, decide o RNG).
-- **Efeito:** **todos os Prismas (N5)** do tabuleiro transformam-se em T.
+- **Efeito:** **todos os Selos (N5)** do tabuleiro transformam-se em T.
 - **Duração:** instantâneo, seguido de reavaliação.
-- **Sem alvo:** se não houver Prismas, transforma 2 células baixas aleatórias em T.
+- **Sem alvo:** se não houver Selos, transforma 2 células baixas aleatórias em T.
 - **Party Mode:** também transforma **um segundo tipo de baixo**, escolhido pelo RNG.
 
 ### WEED — SLOW MOTION *(crescer)*
 - **Condição:** WEED desperta.
-- **Efeito:** o cluster que o despertou **não é removido**: fica sticky. Depois de cada refill, as **Lava lamps (N1)** ortogonalmente adjacentes ao grupo convertem-se em P1 e juntam-se a ele. **Enquanto cresce não paga** (nem o cluster que o criou). Quando para de crescer, paga **uma única vez o tamanho final**, com os multiplicadores desse momento.
+- **Efeito:** o cluster que o despertou **não é removido**: fica sticky. Depois de cada refill, as **Bob Joints (N1)** ortogonalmente adjacentes ao grupo convertem-se em P1 e juntam-se a ele. **Enquanto cresce não paga** (nem o cluster que o criou). Quando para de crescer, paga **uma única vez o tamanho final**, com os multiplicadores desse momento.
 - **Duração:** enquanto crescer. Na primeira cascata em que não cresce, paga o tamanho final e sai.
 - **Party Mode:** o grupo fica sticky até ao fim do spin, mesmo sem crescer, e paga o tamanho final nesse momento.
 
 ### MDMA — RAVE RUSH *(juntar)*
 - **Condição:** MDMA desperta.
-- **Sorteio:** número de movimentos = 1 + número de **Colunas de som (N4)** no tabuleiro (máximo 3).
+- **Sorteio:** número de movimentos = 1 + número de **Pastilhas (N4)** no tabuleiro (máximo 3).
 - **Alvo:** o maior grupo de premium no tabuleiro.
-- **Efeito:** cada movimento leva o símbolo igual mais próximo que está fora do grupo para uma célula adjacente ao grupo, trocando de lugar com o que lá estava (de preferência uma Coluna de som).
-- **Sem alvo:** se não houver símbolos iguais soltos, as Colunas de som transformam-se no tipo do grupo, até ao número de movimentos.
+- **Efeito:** cada movimento leva o símbolo igual mais próximo que está fora do grupo para uma célula adjacente ao grupo, trocando de lugar com o que lá estava (de preferência uma Pastilha).
+- **Sem alvo:** se não houver símbolos iguais soltos, as Pastilhas transformam-se no tipo do grupo, até ao número de movimentos.
 - **Party Mode:** máximo de 6 movimentos.
 
 ### ALCOOL — DRUNK WALK *(rasto de wilds)*
@@ -149,14 +149,14 @@ Formato: **condição → sorteio → alvo → efeito → duração → limites 
 
 ### COPIUM — ONE MORE CHANCE *(segunda oportunidade)*
 - **Condição:** COPIUM desperta. O poder fica **armado** até a sequência de cascatas acabar.
-- **Efeito:** quando já não há mais prémios, guarda o **maior grupo pagante** (2 ou mais células), os especiais e todas as **Raspadinhas (N3)**. As Raspadinhas são «raspadas»: cada uma revela o tipo do grupo guardado com probabilidade *p* (calibração) ou outro símbolo. As restantes células fazem **respin**. Depois avalia e faz cascatas normalmente.
+- **Efeito:** quando já não há mais prémios, guarda o **maior grupo pagante** (2 ou mais células), os especiais e todas as **Botijas de Copium (N3)**. As Botijas de Copium são abertas: cada uma revela o tipo do grupo guardado com probabilidade *p* (calibração) ou outro símbolo. As restantes células fazem **respin**. Depois avalia e faz cascatas normalmente.
 - **Duração / limites:** 1 respin por spin.
 - **Party Mode:** 2 respins.
 
 ## Party Mode (resumo)
 | Personagem | Normal | Party Mode |
 |---|---|---|
-| LCD | transforma os Prismas | + um segundo tipo de baixo |
+| LCD | transforma os Selos | + um segundo tipo de baixo |
 | WEED | sticky enquanto cresce | sticky até ao fim do spin |
 | MDMA | até 3 movimentos | até 6 movimentos |
 | ALCOOL | 1 rasto | 2 rastos |
@@ -182,7 +182,7 @@ Formato: **condição → sorteio → alvo → efeito → duração → limites 
 | 5 | MDMA + ALCOOL | TOTAL MAYHEM | Depois de cada cascata, os W do rasto **saltam** para a célula que liga dois grupos do mesmo tipo (ou, se não houver, para junto do maior grupo). |
 | 6 | LCD + WEED | FROZEN REALITY | As células transformadas pelo LCD ficam sticky até ao fim do spin e crescem como o SLOW MOTION (os baixos adjacentes juntam-se ao tipo T). |
 | 7 | WEED + MDMA | FREEZE & FREAK | Enquanto o grupo sticky do WEED existir, depois de cada refill o MDMA **puxa mais um símbolo igual** para ele. |
-| 8 | LCD + COPIUM | DREAM GLITCH | No respin só caem símbolos do tipo guardado ou baixos, e as Raspadinhas revelam sempre o tipo guardado. |
+| 8 | LCD + COPIUM | DREAM GLITCH | No respin só caem símbolos do tipo guardado ou baixos, e as Botijas de Copium revelam sempre o tipo guardado. |
 | 9 | MDMA + COPIUM | ONE MORE RAVE | No respin, cada símbolo igual ao grupo guardado é **puxado** de imediato para junto do grupo. |
 | 10 | LCD + ALCOOL | DOUBLE VISION | Dois rastos de wilds **em espelho**: o segundo é o reflexo horizontal do primeiro (col → 4 − col). |
 
@@ -195,7 +195,7 @@ O nível = número de personagens diferentes despertas (no spin, ou no bónus).
 | 2 | DUAL CHEMISTRY | primeira fusão |
 | 3 | TRIPLE CHEMISTRY | fusão + **abrem 2 cantos** |
 | 4 | FULL CHAOS | fusão + **abrem os restantes cantos** |
-| 5 | TOTAL CHEMISTRY | fusão + **todos os multiplicadores do tabuleiro duplicam** (uma vez) e cada personagem desperta volta a disparar o seu poder uma vez, em Party Mode |
+| 5 | TOTAL CHEMISTRY | fusão + **cada Wild de Canto ganha +1** (uma vez) e cada personagem desperta volta a disparar o seu poder uma vez, em Party Mode |
 
 ## Antecipação (UI)
 - A **barra de Chemistry** mostra os 5 retratos. Quando um desperta, acendem-se os **4 slots de fusão possíveis**, com o nome visível: «falta o WEED → SLOW DISASTER».
@@ -230,7 +230,7 @@ Não é símbolo pagante. Aparece fora da grelha e entra quando há um evento.
 
 ## JOINER — «I'm joining the party!» *(a loucura)*
 - Todas as personagens despertas, e as que despertarem a seguir nesse spin, ficam em **Party Mode** (§03).
-- O Peace Police deixa cair **um Distintivo (DW)**, wild multiplicador **×2 a ×5** (sorteado), sticky até ao fim do spin, numa célula adjacente ao maior grupo.
+- O Peace Police deixa cair **um Joiner (DW)**, wild multiplicador **×2 a ×4** no jogo base (sorteado; cada bónus pode ter os seus), sticky até ao fim do spin, numa célula adjacente ao maior grupo. **Multiplica a soma dos cantos** do cluster onde entra (pp-v7).
 - Se as fusões ainda estiverem por vir, a próxima fusão já corre com Party Mode.
 - Visual: tira o chapéu, a paleta muda de azul/vermelho de polícia para o gradiente da festa e entra a dançar.
 
@@ -244,7 +244,7 @@ Não é símbolo pagante. Aparece fora da grelha e entra quando há um evento.
 - **As personagens despertas ficam despertas até ao fim do bónus.** Contam para o nível de Chemistry, e cada novo cluster 5+ do seu tipo volta a disparar o poder.
 - **Fusões persistentes:** depois de um par fundir, sempre que uma dessas personagens dispara o poder, dispara-o na forma fundida com o parceiro de ranking mais alto.
 - Cantos abertos ficam abertos até ao fim do bónus.
-- **Retrigger (provisório):** 3 ou mais Scatters dentro do bónus dão +5 spins. Não sobe de nível de bónus.
+- **Retrigger:** dentro do bónus há no máximo 3 Scatters por spin; 3 Scatters dão +5 spins (pp-v7). Não sobe de nível de bónus.
 
 ## Os três bónus
 | | 3 S — **AFTERPARTY** | 4 S — **VIP AFTERPARTY** | 5 S — **POLICE PARTY** |
@@ -254,7 +254,7 @@ Não é símbolo pagante. Aparece fora da grelha e entra quando há um evento.
 | Cantos no início | **4 abertos** | 3 abertos | **fechados** (abrem com o Chemistry) |
 | CW | nascem ×1, voltam a ×1 em cada spin, máximo ×2 | **persistem**, máximo ×10 | **persistem**, nascem ×1, +2 por prémio, máximo ×50 |
 | Peace Police | Calmer ou Joiner (como na base) | Joiner mais provável | **Joiner em todos os spins** |
-| Distintivo | só via Joiner | só via Joiner | 1 novo em cada spin, até ×50 |
+| Joiner | só via Joiner | só via Joiner | 1 novo em cada spin, até ×50 |
 | Sensação | a festa começa: paga muitas vezes um valor razoável | já há ambiente: às vezes 1 000×+ | o polícia entra na festa: muitas vezes pouco, mas é onde mora o ganho máximo |
 
 **Objetivo de calibração:** o valor de cada bónus sobe de nível para nível, e a volatilidade também (medida no simulador: desvio-padrão ÷ preço, compras abaixo de metade do preço, frequência do ganho máximo).
@@ -325,7 +325,11 @@ A Fase 1 fecha os nomes e os campos.
 
 # 10. DIREÇÃO ARTÍSTICA (base para a Fase 3)
 
-**Estilo:** *Neon Underground Cartoon*. Uma afterparty ficcional numa cidade estilizada: cartoon adulto expressivo, posters de rave, contornos luminosos de arcade. Nada infantil, nada realista em relação ao consumo, nenhuma marca real.
+> **Atualização do dono (04-11-2026, Fase 3):** estilo **ACIDWAVE NEON**, paleta tangerine / royal blue / violet / raspberry pink / lime green / neon yellow / red orange / punk yellow / neon jade, e personagens **humanas que personificam as substâncias**, com o rosto das pessoas de referência. Prevalece sobre a tabela abaixo: ver `docs/fase3/PERFIL-DO-JOGO.md` e `docs/fase3/PESSOAS.md`. Bíblia e referências aprovadas; bebidas, drogas e objetos de consumo permitidos na arte privada por revisão expressa do dono.
+
+> **Folhas aprovadas e ativos reforçados:** o dono aprovou os seis rostos e a arte e pediu mais personificação das drogas sobretudo no estado ativo. As folhas fixam identidade e roupa; símbolos, retratos e Alter Egos são peças finais próprias. Desperto e Party Mode diferem também por expressão, pose, adereços e assinatura surreal, não apenas pela cor; direção por personagem em `docs/TEMA.md` §6. A amostra integrada precede a produção em série.
+
+**Estilo (original):** *Neon Underground Cartoon*. Uma afterparty ficcional numa cidade estilizada: cartoon adulto expressivo, posters de rave, contornos luminosos de arcade. Nada infantil, nada realista em relação ao consumo, nenhuma marca real.
 
 | Finalidade | Cor | HEX |
 |---|---|---|
@@ -359,9 +363,10 @@ A Fase 1 fecha os nomes e os campos.
 # 11. SOM (base para a Fase 4)
 
 - **Direção:** house, breaks e synth originais, com humor rítmico e camadas por evento.
-- **Música por modo:** base (clube) → AFTERPARTY (madrugada, camada instrumental) → VIP (mais cheio, groove) → POLICE PARTY (sirene estilizada integrada no drop).
-- **Assinaturas por personagem:** LCD (micro-glitches, eco), WEED (low-pass, pad suave), MDMA (breakbeat curto), ALCOOL (percussão desalinhada, objetos a cair), COPIUM (harpa sintética surreal).
-- **Peace Police:** Calmer (apito e travagem) e Joiner (scratch e drop). Vozes opcionais e sempre legendadas: «Everybody calm down!» / «I'm joining the party!».
+- **Música por modo:** base (clube) → AFTERPARTY (madrugada, camada instrumental) → VIP (mais cheio, groove) → POLICE PARTY (acid techno e rave breaks). Direção aprovada em 05-11-2026, cinco faixas geradas e entregues pelo dono no Suno, incluindo MAIS SCATTERS. Transições sempre suaves, crossfade de 2 segundos, sem reinício por spin nem mudança de afinação com a velocidade do jogo. Sem vozes nem sirenes realistas. Ver [integração e limites](sons.md).
+- **Assinaturas por personagem:** LCD (glitch cromático), WEED (baixo filtrado e bolhas elásticas), MDMA (atração percussiva e pulsação), ALCOOL (vidro e líquido), COPIUM (sopro de válvula e motivo de nova oportunidade).
+- **Peace Police:** Calmer com varredura filtrada e batida de estabilização, Joiner com entrada rítmica e timbre cromado. Sem vozes, falas ou amostras vocais, por decisão do dono de 05-11-2026. Os textos visuais mantêm-se.
+- **Efeitos:** primeira versão de 62 efeitos sintetizados localmente, com assinaturas das dez fusões e cobertura dos 29 eventos. Integração e limitações em [sons.md](sons.md), revisão auditiva pendente.
 - Nenhum som de vitória para retornos abaixo da aposta.
 
 ---
@@ -384,10 +389,14 @@ Ver a lista viva em `GUIA-DO-PROJETO.md` → «Decisões em aberto».
 
 # HISTÓRICO
 
+Revisão de clareza das imagens 1–8 (05-11-2026): Normal/Rápido/Turbo recuperados; uma explicação por fusão em cada bónus e indicador em todas as ativações; regras gerais e fusão em ecrãs separados. No POLICE PARTY, a apresentação mantém Party desde a primeira ativação até ao fim, com anúncio inicial único; os eventos Joiner/Party e o DW de cada spin do motor mantêm-se. Cores Party usam o par da fusão. W/CW têm WILD explícito; W continua wild normal e N2 continua pagante. Ver [tema atual](TEMA.md#14-refinamento-integral-e-entrada-comprada--05-11-2026).
+
+Revisão visual de 05-11-2026: [direção Acidwave e fluxo de compra](TEMA.md#14-refinamento-integral-e-entrada-comprada--05-11-2026). Fechadura/chave/correntes animadas, premium a preencher as células e confirmação independente. Ritmo exclusivamente normal. A entrada comprada apresenta 3/4/5 Scatters sem pagamentos próprios; o motor continua a gerar apenas os passos de bónus nas compras, sem mudança de matemática.
+
 | Versão | Data | Mudanças |
 |---|---|---|
 | V1.0 | 02-11-2026 | Conceito inicial (arquivado em `docs/historico/GDD-V1.md`) |
 | V2.3 | 03-11-2026 | Os wilds contam por inteiro nos clusters (1 símbolo real chega); HOLD wild (fica até pagar, depois sai). Matemática `pp-v3` |
 | V2.2 | 03-11-2026 | Grupo sticky paga uma vez o tamanho final; vários Scatters por coluna; mínimo de 3 símbolos reais por cluster; empilhamento na geração (decisões do dono na Fase 1) |
 | V2.1 | 03-11-2026 | Decisões do dono: RTP 97–98 %, volatilidade alta, ganho máximo 10 000×, compras dos 3 bónus, aposta extra «mais Scatters», P5 = LCD, sem wilds naturais, 10 spins em todos os bónus, casino Peladinhas |
-| V2.0 | 03-11-2026 | Símbolos baixos ligados às personagens; 5 poderes redesenhados com momentos distintos; Party Mode; fusões reais com regra de ranking; cantos com Wild de Canto multiplicador; Calmer positivo e Joiner como caminho para a loucura (Distintivo); 3 bónus por 3/4/5 Scatters com persistência; ordem de resolução e eventos próprios |
+| V2.0 | 03-11-2026 | Símbolos baixos ligados às personagens; 5 poderes redesenhados com momentos distintos; Party Mode; fusões reais com regra de ranking; cantos com Wild de Canto multiplicador; Calmer positivo e Joiner como caminho para a loucura (Joiner); 3 bónus por 3/4/5 Scatters com persistência; ordem de resolução e eventos próprios |

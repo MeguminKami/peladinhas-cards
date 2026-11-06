@@ -1,0 +1,4340 @@
+{
+  "version": "weed-smoke-png-v2",
+  "durationMs": 20000,
+  "fps": 24,
+  "frameCount": 480,
+  "generatedKeyPoses": 24,
+  "frameSize": [
+    128,
+    128
+  ],
+  "alpha": "straight RGBA, transparent background and semitransparent smoke",
+  "loop": true,
+  "anchor": [
+    0.5,
+    1
+  ],
+  "interpolation": "Bidirectional OpenCV DIS flow on premultiplied RGBA, occlusion fallback. Intermediates are not 480 individually generated drawings.",
+  "frames": [
+    {
+      "frame": 0,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 1,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 2,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 3,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 4,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 5,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 6,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 7,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 8,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 9,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 10,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 11,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 12,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 13,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 14,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 15,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 16,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 17,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 18,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 19,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 20,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 21,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 22,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 23,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 24,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 25,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 26,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 27,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 28,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 29,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 30,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 31,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 32,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 33,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 34,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 35,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 36,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 37,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 38,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 39,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 40,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 41,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 42,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 43,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 44,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 45,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 46,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 47,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 48,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 49,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 50,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 51,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 52,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 53,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 54,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 55,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 56,
+      "atlas": "weed-00.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 57,
+      "atlas": "weed-00.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 58,
+      "atlas": "weed-00.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 59,
+      "atlas": "weed-00.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 60,
+      "atlas": "weed-00.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 61,
+      "atlas": "weed-00.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 62,
+      "atlas": "weed-00.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 63,
+      "atlas": "weed-00.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 64,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 65,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 66,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 67,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 68,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 69,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 70,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 71,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 72,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 73,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 74,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 75,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 76,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 77,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 78,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 79,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 80,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 81,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 82,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 83,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 84,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 85,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 86,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 87,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 88,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 89,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 90,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 91,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 92,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 93,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 94,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 95,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 96,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 97,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 98,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 99,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 100,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 101,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 102,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 103,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 104,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 105,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 106,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 107,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 108,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 109,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 110,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 111,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 112,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 113,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 114,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 115,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 116,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 117,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 118,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 119,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 120,
+      "atlas": "weed-01.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 121,
+      "atlas": "weed-01.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 122,
+      "atlas": "weed-01.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 123,
+      "atlas": "weed-01.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 124,
+      "atlas": "weed-01.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 125,
+      "atlas": "weed-01.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 126,
+      "atlas": "weed-01.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 127,
+      "atlas": "weed-01.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 128,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 129,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 130,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 131,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 132,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 133,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 134,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 135,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 136,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 137,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 138,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 139,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 140,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 141,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 142,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 143,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 144,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 145,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 146,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 147,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 148,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 149,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 150,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 151,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 152,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 153,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 154,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 155,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 156,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 157,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 158,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 159,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 160,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 161,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 162,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 163,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 164,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 165,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 166,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 167,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 168,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 169,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 170,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 171,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 172,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 173,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 174,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 175,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 176,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 177,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 178,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 179,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 180,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 181,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 182,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 183,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 184,
+      "atlas": "weed-02.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 185,
+      "atlas": "weed-02.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 186,
+      "atlas": "weed-02.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 187,
+      "atlas": "weed-02.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 188,
+      "atlas": "weed-02.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 189,
+      "atlas": "weed-02.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 190,
+      "atlas": "weed-02.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 191,
+      "atlas": "weed-02.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 192,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 193,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 194,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 195,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 196,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 197,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 198,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 199,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 200,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 201,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 202,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 203,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 204,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 205,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 206,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 207,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 208,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 209,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 210,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 211,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 212,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 213,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 214,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 215,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 216,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 217,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 218,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 219,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 220,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 221,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 222,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 223,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 224,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 225,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 226,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 227,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 228,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 229,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 230,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 231,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 232,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 233,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 234,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 235,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 236,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 237,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 238,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 239,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 240,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 241,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 242,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 243,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 244,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 245,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 246,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 247,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 248,
+      "atlas": "weed-03.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 249,
+      "atlas": "weed-03.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 250,
+      "atlas": "weed-03.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 251,
+      "atlas": "weed-03.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 252,
+      "atlas": "weed-03.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 253,
+      "atlas": "weed-03.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 254,
+      "atlas": "weed-03.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 255,
+      "atlas": "weed-03.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 256,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 257,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 258,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 259,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 260,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 261,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 262,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 263,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 264,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 265,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 266,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 267,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 268,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 269,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 270,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 271,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 272,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 273,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 274,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 275,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 276,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 277,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 278,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 279,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 280,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 281,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 282,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 283,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 284,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 285,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 286,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 287,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 288,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 289,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 290,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 291,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 292,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 293,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 294,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 295,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 296,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 297,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 298,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 299,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 300,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 301,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 302,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 303,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 304,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 305,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 306,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 307,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 308,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 309,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 310,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 311,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 312,
+      "atlas": "weed-04.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 313,
+      "atlas": "weed-04.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 314,
+      "atlas": "weed-04.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 315,
+      "atlas": "weed-04.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 316,
+      "atlas": "weed-04.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 317,
+      "atlas": "weed-04.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 318,
+      "atlas": "weed-04.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 319,
+      "atlas": "weed-04.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 320,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 321,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 322,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 323,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 324,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 325,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 326,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 327,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 328,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 329,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 330,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 331,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 332,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 333,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 334,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 335,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 336,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 337,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 338,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 339,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 340,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 341,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 342,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 343,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 344,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 345,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 346,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 347,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 348,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 349,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 350,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 351,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 352,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 353,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 354,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 355,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 356,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 357,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 358,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 359,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 360,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 361,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 362,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 363,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 364,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 365,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 366,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 367,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 368,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 369,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 370,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 371,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 372,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 373,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 374,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 375,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 376,
+      "atlas": "weed-05.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 377,
+      "atlas": "weed-05.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 378,
+      "atlas": "weed-05.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 379,
+      "atlas": "weed-05.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 380,
+      "atlas": "weed-05.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 381,
+      "atlas": "weed-05.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 382,
+      "atlas": "weed-05.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 383,
+      "atlas": "weed-05.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 384,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 385,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 386,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 387,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 388,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 389,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 390,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 391,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 392,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 393,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 394,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 395,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 396,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 397,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 398,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 399,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 400,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 401,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 402,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 403,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 404,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 405,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 406,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 407,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 408,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 409,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 410,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 411,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 412,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 413,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 414,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 415,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 416,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 417,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 418,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 419,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 420,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 421,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 422,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 423,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 512,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 424,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 425,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 426,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 427,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 428,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 429,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 430,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 431,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 640,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 432,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 433,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 434,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 435,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 436,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 437,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 438,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 439,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 768,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 440,
+      "atlas": "weed-06.png",
+      "x": 0,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 441,
+      "atlas": "weed-06.png",
+      "x": 128,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 442,
+      "atlas": "weed-06.png",
+      "x": 256,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 443,
+      "atlas": "weed-06.png",
+      "x": 384,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 444,
+      "atlas": "weed-06.png",
+      "x": 512,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 445,
+      "atlas": "weed-06.png",
+      "x": 640,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 446,
+      "atlas": "weed-06.png",
+      "x": 768,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 447,
+      "atlas": "weed-06.png",
+      "x": 896,
+      "y": 896,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 448,
+      "atlas": "weed-07.png",
+      "x": 0,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 449,
+      "atlas": "weed-07.png",
+      "x": 128,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 450,
+      "atlas": "weed-07.png",
+      "x": 256,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 451,
+      "atlas": "weed-07.png",
+      "x": 384,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 452,
+      "atlas": "weed-07.png",
+      "x": 512,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 453,
+      "atlas": "weed-07.png",
+      "x": 640,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 454,
+      "atlas": "weed-07.png",
+      "x": 768,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 455,
+      "atlas": "weed-07.png",
+      "x": 896,
+      "y": 0,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 456,
+      "atlas": "weed-07.png",
+      "x": 0,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 457,
+      "atlas": "weed-07.png",
+      "x": 128,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 458,
+      "atlas": "weed-07.png",
+      "x": 256,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 459,
+      "atlas": "weed-07.png",
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 460,
+      "atlas": "weed-07.png",
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 461,
+      "atlas": "weed-07.png",
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 462,
+      "atlas": "weed-07.png",
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 463,
+      "atlas": "weed-07.png",
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 464,
+      "atlas": "weed-07.png",
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 465,
+      "atlas": "weed-07.png",
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 466,
+      "atlas": "weed-07.png",
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 467,
+      "atlas": "weed-07.png",
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 468,
+      "atlas": "weed-07.png",
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 469,
+      "atlas": "weed-07.png",
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 470,
+      "atlas": "weed-07.png",
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 471,
+      "atlas": "weed-07.png",
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 472,
+      "atlas": "weed-07.png",
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 473,
+      "atlas": "weed-07.png",
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 474,
+      "atlas": "weed-07.png",
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 475,
+      "atlas": "weed-07.png",
+      "x": 384,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 476,
+      "atlas": "weed-07.png",
+      "x": 512,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 477,
+      "atlas": "weed-07.png",
+      "x": 640,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    },
+    {
+      "frame": 478,
+      "atlas": "weed-07.png",
+      "x": 768,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 41
+    },
+    {
+      "frame": 479,
+      "atlas": "weed-07.png",
+      "x": 896,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "durationMs": 42
+    }
+  ]
+}

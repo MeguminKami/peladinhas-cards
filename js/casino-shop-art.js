@@ -3,6 +3,8 @@ import { cardPlaystyles, cardStatsMarkup, cardOvrTrend } from "./card-player-con
 import { flag } from "./utils.js";
 import { cardPhotoStyles } from "./card-photo.js";
 import { safeImage } from "./assets.js";
+import { shopFrameArt, shopGameScene } from "./casino-shop-frame-art.js";
+import { DEFAULT_CARD_OUTLINE, expandCardOutline } from "./card-geometry.js";
 // Shop editions are authored locally. No image requests or player reads.
 import { GAME_DESIGNS } from "./casino-shop-game-art.js";
 import { METAL_DESIGNS } from "./casino-shop-metal-art.js";
@@ -47,10 +49,14 @@ const legacyDesigns = {
 const designs = { ...legacyDesigns, ...METAL_DESIGNS, ...GAME_DESIGNS };
 export const CASINO_SHOP_ART_IDS = Object.freeze(Object.keys(designs));
 let previewSerial = 0;
+// Use the same expanded body as the default card in Card Lab.
+const baseOutline = expandCardOutline(DEFAULT_CARD_OUTLINE).split(" ").map(point => {
+  const [x, y] = point.split(",").map(Number);
+  return `${x * 3},${y * 4.2}`;
+}).join(" ");
 
 export function renderCasinoShopCard(item, player = {}) {
   const id = Object.hasOwn(designs, item?.id) ? item.id : "bronze-foundry";
-  const design = designs[id];
   const paint = `casino-shop-paint-${++previewSerial}`;
   const name = String(player.name || "A TUA CARTA");
   const ovr = player.hasCard === false ? "—" : (player.ovr ?? 0);
@@ -58,8 +64,9 @@ export function renderCasinoShopCard(item, player = {}) {
   const statMarkup = cardStatsMarkup(player);
   const playstyles = cardPlaystyles(player);
   const playstyleMarkup = playstyles.length ? `<div class="card-playstyles" aria-label="Playstyles">${playstyles.map(p => `<img data-playstyle="${p.key}" src="${new URL(p.icon, new URL("../", import.meta.url)).href}" alt="Playstyle ${esc(p.name)}" title="${esc(p.name)} &middot; ${p.value}" width="128" height="128">`).join("")}</div>` : "";
-  const photoStyles = cardPhotoStyles(player.photoDesign);
-  const photo = `<div class="sca-photo-frame"><img src="${esc(new URL(safeImage(player.photoURL), new URL("../", import.meta.url)).href)}" alt="" data-fallback="${new URL("../assets/default-avatar.svg", import.meta.url).href}"${photoStyles.image ? ` style="${photoStyles.image}"` : ""}></div>`;
+  const freePhoto = player.photoDesign?.placement === "free";
+  const photoStyles = cardPhotoStyles(player.photoDesign, { bounded: true });
+  const photo = `<div class="sca-photo-frame card-photo${freePhoto ? " sca-photo-free" : ""}"${freePhoto ? ` style="${photoStyles.photo}"` : ""}><div class="sca-photo-transform"${!freePhoto && photoStyles.photo ? ` style="${photoStyles.photo}"` : ""}><img src="${esc(new URL(safeImage(player.photoURL), new URL("../", import.meta.url)).href)}" alt="" data-fallback="${new URL("../assets/default-avatar.svg", import.meta.url).href}"${photoStyles.image ? ` style="${photoStyles.image}"` : ""}></div></div>`;
   // Unique paint IDs let several editions and repeated previews coexist.
-  return `<div class="casino-shop-card sca-${id}" style="--sca-metal-fill:url(#${paint}-metal);--sca-shell-fill:url(#${paint}-shell)" role="img" aria-label="${esc(name)}, ${ovr} OVR, ${esc(position)}"><svg class="sca-art" viewBox="0 0 300 420"${id.startsWith("football-p") ? ' preserveAspectRatio="none"' : ""} aria-hidden="true"><defs><linearGradient id="${paint}-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="sca-stop-bright"/><stop offset=".18" class="sca-stop-mid"/><stop offset=".38" class="sca-stop-bright"/><stop offset=".4" class="sca-stop-mid"/><stop offset=".7" class="sca-stop-base"/><stop offset=".91" class="sca-stop-mid"/><stop offset="1" class="sca-stop-bright"/></linearGradient><radialGradient id="${paint}-shell" cx=".7" cy=".2" r=".9"><stop class="sca-stop-mid" stop-opacity=".8"/><stop offset=".48" class="sca-stop-base"/><stop offset="1" class="sca-stop-shadow"/></radialGradient><linearGradient id="${paint}-skin"><stop stop-color="#f4c598"/><stop offset=".52" stop-color="#c79370"/><stop offset="1" stop-color="#795647"/></linearGradient></defs><polygon class="sca-shell" points="${design.shape}"/><path class="sca-surface" d="M42 48h216l-9 291-20 27-79 25-79-25-20-27Z"/>${typeof design.art === "function" ? design.art(paint) : design.art}<path class="sca-underlay" d="M48 262h204v78l-23 26-79 25-79-25-23-26Z"/><path class="sca-bottom-mark" d="m141 375 9-5 9 5-9 6Z"/></svg>${photo}<div class="sca-rating" aria-hidden="true"><b>${ovr}${cardOvrTrend(player)}</b><small>OVR</small><span>${esc(position)}</span><i class="card-country-symbols">${flag(player.countryCode)}${clubBadge(player.favoriteClub)}</i></div><div class="sca-identity" aria-hidden="true"><strong class="${name.length > 19 ? "sca-long-name" : ""}">${esc(name)}</strong><div class="sca-stats">${statMarkup}</div></div>${playstyleMarkup}</div>`;
+  return `<div class="casino-shop-card sca-${id}" style="--sca-metal-fill:url(#${paint}-metal);--sca-shell-fill:url(#${paint}-shell)" role="img" aria-label="${esc(name)}, ${ovr} OVR, ${esc(position)}"><svg class="sca-art" viewBox="0 0 300 420" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${paint}-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="sca-stop-bright"/><stop offset=".18" class="sca-stop-mid"/><stop offset=".38" class="sca-stop-bright"/><stop offset=".4" class="sca-stop-mid"/><stop offset=".7" class="sca-stop-base"/><stop offset=".91" class="sca-stop-mid"/><stop offset="1" class="sca-stop-bright"/></linearGradient><radialGradient id="${paint}-shell" cx=".7" cy=".2" r=".9"><stop class="sca-stop-mid" stop-opacity=".8"/><stop offset=".48" class="sca-stop-base"/><stop offset="1" class="sca-stop-shadow"/></radialGradient><mask id="${paint}-rail" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="420"><rect width="300" height="420" fill="white"/><polygon points="${baseOutline}" transform="translate(5.4 7.56) scale(.964)" fill="black"/></mask><clipPath id="${paint}-body"><polygon points="${baseOutline}"/></clipPath></defs><polygon class="sca-shell" points="${baseOutline}"/><g clip-path="url(#${paint}-body)"><path class="sca-base-texture" d="M0 60 120 0M0 120 240 0M0 180 300 30M0 240 300 90M0 300 300 150M0 360 300 210M0 420 300 270M120 420 300 330"/>${shopGameScene(id)}<path class="sca-underlay" d="M18 231h264v170H18Z"/></g>${shopFrameArt(id, paint, baseOutline)}<polygon class="sca-edge-finish" points="${baseOutline}"/><path class="sca-bottom-mark" d="m141 375 9-5 9 5-9 6Z"/></svg>${photo}<div class="sca-rating card-rating" aria-hidden="true"><strong>${ovr}${cardOvrTrend(player)}</strong><span>OVR</span><small>${esc(position)}</small><span class="card-country-symbols">${flag(player.countryCode)}${clubBadge(player.favoriteClub)}</span></div><div class="sca-identity" aria-hidden="true"><div class="card-caption${name.length > 19 ? " long-name" : ""}"><h3>${esc(name)}</h3></div><div class="sca-stats card-stats">${statMarkup}</div></div>${playstyleMarkup}</div>`;
 }

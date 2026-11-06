@@ -27,3 +27,5 @@ body{display:flex;flex-direction:column;background:radial-gradient(1200px 700px 
 .pv-index{display:grid;gap:10px;padding:24px;max-width:560px}
 .pv-index a{display:block;padding:12px 16px;border:1px solid #5d4566;border-radius:12px;background:#2b2138;color:#f3e7f3;text-decoration:none}
 .pv-index a:hover{border-color:#f4d5e7}
+
+.pv-screen.phone[data-notch=false]::before{display:none}

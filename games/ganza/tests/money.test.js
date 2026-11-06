@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {toUnits,formatDjc} from '../ui/money.js';
+test('DJC usa cêntimos inteiros como a carteira partilhada',()=>{for(const [input,expected]of [['1',100],['0.29',29],['0.01',1],['10000',1000000],['7.5',750]])assert.equal(toUnits(input),expected);for(const bad of ['1.001','-1','NaN','1e3',''])assert.ok(Number.isNaN(toUnits(bad)));assert.ok(formatDjc(137).includes('1,37'));});

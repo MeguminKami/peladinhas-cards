@@ -85,10 +85,34 @@ test('HOLD wild preso num grupo sticky sai quando paga noutro cluster (não paga
   }
 });
 
-test('multiplicadores dos wilds somam dentro do cluster', () => {
-  const r = forced(['X . . . X', '. . . . .', 'CW P5 P5 P5 DW', '. . . . .', 'X . . . X'], { mult: { [idx(0, 2)]: 2, [idx(4, 2)]: 3 } });
+test('pp-v7: o Distintivo do Joiner multiplica a soma dos cantos do cluster', () => {
+  // dois cantos ×2 e ×3 (somam 5) e um Distintivo ×3 no mesmo cluster: 5 × 3 = ×15
+  const r = forced(['X . . . X', 'CW P5 P5 P5 .', 'CW . DW . .', '. . . . .', 'X . . . X'],
+    { mult: { [idx(0, 1)]: 2, [idx(0, 2)]: 3, [idx(2, 2)]: 3 } });
   const w = ofType(r, 'win.cluster')[0];
-  assert.equal(w.size, 5); assert.equal(w.multiplier, 5); assert.equal(w.pay, pay('P5', 5) * 5);
+  assert.equal(w.multiplier, 15); assert.equal(w.pay, w.basePay * 15);
+  assert.equal(w.attrib.reduce((a, [, v]) => a + v, 0), w.pay, 'a atribuição soma o prémio');
+});
+
+test('pp-v7: só cantos somam; só Distintivo vale o seu valor; sem wilds ×1', () => {
+  const soCantos = ofType(forced(['X . . . X', 'CW P5 P5 P5 .', 'CW . . . .', '. . . . .', 'X . . . X'], { mult: { [idx(0, 1)]: 2, [idx(0, 2)]: 3 } }), 'win.cluster')[0];
+  assert.equal(soCantos.multiplier, 5);
+  const soDW = ofType(forced(['X . . . X', '. . . . .', 'DW P5 P5 P5 .', '. . . . .', 'X . . . X'], { mult: { [idx(0, 2)]: 4 } }), 'win.cluster')[0];
+  assert.equal(soDW.multiplier, 4); assert.equal(soDW.pay, soDW.basePay * 4);
+  const sem = ofType(forced(['X . . . X', '. . . . .', 'P5 P5 P5 P5 .', '. . . . .', 'X . . . X']), 'win.cluster')[0];
+  assert.equal(sem.multiplier, 1); assert.equal(sem.pay, sem.basePay);
+});
+
+test('pp-v7: o multiplicador de um cluster nunca passa do teto do modo', () => {
+  const cap = config.corners_.multClusterMax;
+  const r = forced(['X . . . X', 'CW P5 P5 P5 CW', 'CW . DW . CW', '. . . . .', 'X . . . X'],
+    { mult: { [idx(0, 1)]: 9, [idx(4, 1)]: 9, [idx(0, 2)]: 9, [idx(4, 2)]: 9, [idx(2, 2)]: 9 } });
+  const w = ofType(r, 'win.cluster')[0];
+  assert.equal(w.multiplier, cap); assert.equal(w.pay, w.basePay * cap);
+});
+
+test('pp-v7: nenhum valor da tabela de pagamentos fica abaixo de 0,10×', () => {
+  for (let c = 1; c <= 10; c++) for (const v of config.payTable[c]) assert.ok(v >= 100, `símbolo ${c}: ${v / 1000}×`);
 });
 
 test('cantos fechados não recebem símbolos nem contam', () => {
@@ -398,4 +422,27 @@ test('fusão surpresa: só no jogo base/hunt, sem acordar personagens, frequênc
   assert.ok(Math.abs(n / N - p) < 4 * Math.sqrt(p * (1 - p) / N), `frequência ${n / N}`);
   rng = seedState('surpresa-bonus');
   for (let i = 0; i < 20; i++) { const r = playRound(rng, { bet: 100, mode: 'buy-police' }); rng = r.rngAfter; assert.ok(!allEvents(r).some((e) => e.surprise)); }
+});
+
+test('pp-v7: no bónus nunca há mais de 3 Scatters no ecrã e o retrigger segue a tabela (3 S → +5)', () => {
+  const max = config.retrigger.scattersMaximoNoBonus;
+  let retriggers = 0;
+  for (const mode of ['buy-afterparty', 'buy-vip', 'buy-police']) {
+    let rng = seedState('scatters-' + mode);
+    for (let i = 0; i < 400; i++) {
+      const r = playRound(rng, { bet: 100, mode }); rng = r.rngAfter;
+      for (const s of r.steps) {
+        if (s.kind !== 'bonus') continue;
+        for (const e of s.events) {
+          if (e.grid) assert.ok(e.grid.filter((x) => x === 'S').length <= max, `${mode}#${i}: ${e.type} com mais de ${max} Scatters`);
+          if (e.type === 'bonus.retrigger') {
+            retriggers++;
+            const want = config.retrigger.spinsPorScatters[e.scatters];
+            assert.ok(want && e.added <= want, `${e.scatters} Scatters deram +${e.added}`);
+          }
+        }
+      }
+    }
+  }
+  assert.ok(retriggers > 0, 'houve retriggers na amostra');
 });

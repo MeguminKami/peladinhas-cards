@@ -3,7 +3,7 @@
 // que o motor envia (grid.refill, respin) e com as células de cada prémio.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newState, playRound, scenario, scenarioNames } from '../src/index.js';
+import { config, newState, playRound, scenario, scenarioNames } from '../src/index.js';
 import { novoModelo, aplicar } from '../ui/modelo.js';
 
 const WILDS = new Set(['W', 'CW', 'DW']);
@@ -26,9 +26,11 @@ function verificar(round, label) {
       }
       if (e.type === 'win.cluster') {
         for (const c of e.cells) assert.ok(m.grid[c] === e.symbol || WILDS.has(m.grid[c]), `${label}: célula ${c} = ${m.grid[c]}, prémio ${e.symbol}`);
-        let mult = 0;
-        for (const c of e.cells) if (m.grid[c] === 'CW' || m.grid[c] === 'DW') mult += m.mult[c];
-        assert.equal(Math.max(1, mult), e.multiplier, `${label}: multiplicador do prémio`);
+        // pp-v7: Σ cantos × Σ Distintivo, limitado ao teto do modo
+        let cw = 0, dw = 0;
+        for (const c of e.cells) { if (m.grid[c] === 'CW') cw += m.mult[c]; else if (m.grid[c] === 'DW') dw += m.mult[c]; }
+        const cap = step.bonusId ? config.bonus[step.bonusId].multClusterMax : config.corners_.multClusterMax;
+        assert.equal(Math.min(cap, Math.max(1, cw) * Math.max(1, dw)), e.multiplier, `${label}: multiplicador do prémio`);
       }
       aplicar(m, e);
       if (e.grid) assert.deepEqual(m.grid, e.grid, `${label}: ${e.type}`);

@@ -1,3 +1,4 @@
+import { createFiveAsidePlacement, FIVE_A_SIDE_POSITIONS } from "./five-a-side.js";
 import { gameTeamSize, splitTeam, DEFAULT_TEAM_SIZE, MAX_TEAM_SIZE } from "./game-format.js";
 import { matchRatingSummary } from "./match-rating-summary.js";
 import { closedGamePage } from "./closed-game.js";
@@ -28,7 +29,7 @@ import {
   modal,
 } from "./ui.js";
 import { icon } from "./icons.js";
-import { card } from "./cards.js";
+import { card, bindImages } from "./cards.js";
 import { youtubeVideoId, youtubePlayer } from "./youtube.js";
 export function matchPositions(game, players) {
   return Object.fromEntries(
@@ -314,6 +315,13 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
       ] = Number(input.value);
     };
   };
+  const placement = createFiveAsidePlacement(saved?.id || crypto.randomUUID());
+  const showPitch = () => g.teamSize === 5 && g.status === "open";
+  const pitch = () => `<section class="five-match" aria-label="Campo 5 contra 5"><div class="five-match-heading"><span class="eyebrow">5 × 5 · FORMAÇÃO 2–1–2</span><p>Sem guarda-redes · posições sorteadas</p></div><div class="five-team-names">${["A", "B"].map(side => `<strong class="five-name-${side.toLowerCase()}">${esc(g.teamNames?.[`team${side}`] || `Equipa ${side}`)} <span>${side === "A" ? "→" : "←"}</span></strong>`).join("")}</div><p class="five-scroll-hint" id="five-scroll-help"><span class="five-desktop-help">Toca numa carta para ver o perfil.</span><span class="five-mobile-help">Toca numa carta para ampliar.</span></p><div class="five-pitch-scroll" role="region" aria-label="Campo das duas equipas" aria-describedby="five-scroll-help"><div class="five-pitch"><div class="five-markings" aria-hidden="true"><i class="five-half"></i><i class="five-circle"></i><i class="five-box five-box-left"></i><i class="five-box five-box-right"></i><i class="five-goal five-goal-left"></i><i class="five-goal five-goal-right"></i></div>${["A", "B"].map(side => placement(`team${side}`, g[`team${side}`].starters).map((uid, index) => {
+    const pos = FIVE_A_SIDE_POSITIONS[index];
+    const player = ctx.league.players.find(p => p.uid === uid) || { uid, displayName: "Jogador inativo" };
+    return `<div class="five-position five-side-${side.toLowerCase()}" data-pitch-side="${side}" data-pitch-slot="${index}" data-pitch-uid="${esc(uid || "")}" style="--x:${side === "A" ? pos.x : 100 - pos.x}%;--y:${pos.y}%;--portrait-x:${pos.y}%;--portrait-y:${side === "A" ? [88,88,74,60,60][index] : [12,12,26,40,40][index]}%"><span class="five-role">${pos.label}</span>${uid ? `<a class="five-player" data-five-player="${esc(uid)}" href="#/player/${esc(uid)}" aria-label="Ver perfil de ${esc(player.displayName || player.username)}"><span class="five-card">${card({...player, ...g.playerCards?.[uid]}, {size:"sm", preview:true})}</span><b>${esc(player.displayName || player.username)}</b></a>` : editable ? `<button type="button" class="team-slot" data-slot-team="team${side}">${icon("plus")}<span>Adicionar</span></button>` : '<span class="five-empty">Lugar livre</span>'}</div>`;
+  }).join("")).join("")}</div></div></section>`;
   const draw = () => {
     for (const side of ["teamA", "teamB"]) {
       const ranked = teamPlayers(side),
@@ -326,11 +334,21 @@ export async function gamePage(ctx, id, { edit = false } = {}) {
       const label = document.querySelector(`[name="${field}"]`).parentElement;
       label.firstChild.textContent = g.teamNames?.[side] || (side === "teamA" ? "Equipa A" : "Equipa B");
     }
-    builder.innerHTML = `<section class="panel game-teams-frame content-stack">${autoPanel()}<div class="team-builder">${["A", "B"].map(side => {
+    builder.innerHTML = `<section class="panel game-teams-frame content-stack">${autoPanel()}${showPitch() ? pitch() + '<details class="five-management"><summary>Equipas, suplentes e gestão</summary>' : ""}<div class="team-builder">${["A", "B"].map(side => {
       const team = `team${side}`, ids = [...g[team].starters, ...g[team].bench];
       const canName = saved && (ctx.user.role === "admin" || (g.status !== "closed" && saved[team].starters[0] === ctx.user.uid));
       return `<section class="team-panel team-${side.toLowerCase()}"><div class="section-head"><div><span class="eyebrow">EQUIPA ${side} · ${g[team].starters.length}/${g.teamSize} TITULARES${g[team].bench.length ? ` · ${g[team].bench.length} SUPLENTES` : ""}</span><h2>${esc(g.teamNames?.[team] || `Equipa ${side}`)}</h2></div>${canName ? `<button type="button" class="btn btn-icon btn-ghost" data-team-name="${team}" aria-label="Mudar nome da equipa ${side}">${icon("edit")}</button>` : `<span class="team-letter">${side}</span>`}</div><div class="team-player-list ordered-team-list">${ids.map((uid, index) => chip(ctx.league.players.find(p => p.uid === uid) || {uid, displayName:"Jogador inativo"}, `${side}-${index < g.teamSize ? "starters" : "bench"}`)).join("")}${editable ? Array.from({length:Math.max(0,g.teamSize-ids.length)+1}, (_, i) => `<button type="button" class="team-slot" data-slot-team="${team}">${icon("plus")}<span>${ids.length+i < g.teamSize ? `Lugar ${ids.length+i+1}` : "Adicionar jogador"}</span></button>`).join("") : !ids.length ? '<p class="muted">Sem jogadores</p>' : ""}</div></section>`;
-    }).join("")}</div>${balancePanel()}</section>`;
+    }).join("")}</div>${showPitch() ? "</details>" : ""}${balancePanel()}</section>`;
+    builder.querySelectorAll("[data-five-player]").forEach(link => link.onclick = event => {
+      if (!matchMedia("(max-width: 1000px)").matches || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      const uid = link.dataset.fivePlayer;
+      const player = ctx.league.players.find(p => p.uid === uid) || {uid, displayName:"Jogador inativo"};
+      modal(player.displayName || player.username, `<div class="five-card-preview">${card({...player, ...g.playerCards?.[uid]}, {size:"lg", preview:true})}</div><div class="actions">${linkButton(`#/player/${uid}`, "Ver perfil", "primary")}</div>`);
+      const dialog = document.querySelector("#modal-root .modal");
+      dialog.classList.add("five-preview-modal");
+      bindImages(dialog);
+    });
     builder.querySelectorAll("[data-team-name]").forEach(button => button.onclick = () => {
       const side = button.dataset.teamName;
       const close = modal("Nome da equipa", `<form id="team-name-form" class="content-stack"><label>Nome<input name="teamName" maxlength="40" required value="${esc(g.teamNames?.[side] || (side === "teamA" ? "Equipa A" : "Equipa B"))}"></label><button class="btn btn-primary">Guardar nome</button></form>`);

@@ -1,0 +1,11 @@
+@font-face{font-family:Oxanium;src:url('../ui/fonts/Oxanium.woff2') format('woff2');font-display:swap}
+:root{color-scheme:dark;font-family:Oxanium,system-ui,sans-serif;background:#0b0a1a;color:#f5f1ff}
+*{box-sizing:border-box}body{margin:0}main{max-width:1100px;margin:auto;padding:28px 20px}
+h1{font-size:clamp(1.8rem,5vw,3rem);margin:.3em 0}.kicker{color:#9dff1a;letter-spacing:.15em}
+p{line-height:1.6}.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:18px;background:#29243d;border:1px solid #8b3dff}
+button,input,select{font:inherit}select{max-width:100%;background:#0b0a1a;color:#f5f1ff;padding:10px;border:1px solid #8b3dff;min-height:44px}button{background:#29243d;color:#f5f1ff;border:1px solid #00f5a8;border-radius:5px;padding:12px;cursor:pointer;min-height:44px}
+button:disabled{opacity:.45;cursor:default}button:hover:not(:disabled){background:#384d4b}button:focus-visible,input:focus-visible{outline:3px solid #ffd60a;outline-offset:3px}
+label{display:flex;gap:10px;align-items:center;flex-wrap:wrap}input[type=search]{width:220px;max-width:100%;background:#0b0a1a;border:1px solid #8b3dff;color:inherit;padding:10px}
+#sounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
+.sound{background:#19152d;border:1px solid #463767;padding:14px;min-width:0}.sound button{width:100%;overflow-wrap:anywhere;text-align:left}.sound p{font-size:.85rem;margin:10px 0 0;color:#c7bedb}
+.sound[hidden]{display:none}#status{min-height:26px}

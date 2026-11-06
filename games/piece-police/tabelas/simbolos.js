@@ -9,11 +9,11 @@
 
 export const SIMBOLOS = [
   // id    nome                      categoria    personagem ligada
-  { id: 'N1', nome: 'Lava lamp',            cat: 'baixo',   personagem: 'WEED' },
+  { id: 'N1', nome: 'Bob Joint',            cat: 'baixo',   personagem: 'WEED' },
   { id: 'N2', nome: 'Copo de shot',         cat: 'baixo',   personagem: 'ALCOOL' },
-  { id: 'N3', nome: 'Raspadinha',           cat: 'baixo',   personagem: 'COPIUM' },
-  { id: 'N4', nome: 'Coluna de som',        cat: 'baixo',   personagem: 'MDMA' },
-  { id: 'N5', nome: 'Prisma',               cat: 'baixo',   personagem: 'LCD' },
+  { id: 'N3', nome: 'Cope Cannister',           cat: 'baixo',   personagem: 'COPIUM' },
+  { id: 'N4', nome: 'Pastilha',        cat: 'baixo',   personagem: 'MDMA' },
+  { id: 'N5', nome: 'Selo',               cat: 'baixo',   personagem: 'LCD' },
   { id: 'P1', nome: 'WEED — The Chiller',   cat: 'premium', personagem: 'WEED' },
   { id: 'P2', nome: 'ALCOOL — The Wildcard',cat: 'premium', personagem: 'ALCOOL' },
   { id: 'P3', nome: 'COPIUM — The Dreamer', cat: 'premium', personagem: 'COPIUM' },
@@ -21,16 +21,16 @@ export const SIMBOLOS = [
   { id: 'P5', nome: 'LCD — The Glitch',     cat: 'premium', personagem: 'LCD' },
   { id: 'W',  nome: 'Wild',                 cat: 'wild' },
   { id: 'CW', nome: 'Wild de Canto',        cat: 'wild' },
-  { id: 'DW', nome: 'Distintivo',           cat: 'wild' },
-  { id: 'S',  nome: 'Pulseira VIP',         cat: 'scatter' },
+  { id: 'DW', nome: 'Joiner',           cat: 'wild' },
+  { id: 'S',  nome: 'Passe da Afterparty',         cat: 'scatter' },
 ];
 
 // Pesos por conjunto. Cada modo/bónus aponta para um conjunto (ver jogo.js e bonus.js).
 // Os respins do COPIUM usam o conjunto do modo em que acontecem.
 //                 N1  N2  N3  N4  N5   P1  P2  P3  P4  P5    S
 export const PESOS = {
-  base:       { N1: 430, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 16 },
-  hunt:       { N1: 369, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 29 },
+  base:       { N1: 420, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 18 },
+  hunt:       { N1: 392, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 33 },
   afterparty: { N1: 400, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 12 },
   vip:        { N1: 400, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 12 },
   police:     { N1: 400, N2: 320, N3: 250, N4: 190, N5: 150, P1: 140, P2: 120, P3: 100, P4: 85, P5: 70, S: 12 },
@@ -46,9 +46,9 @@ export const PESOS = {
 // sorteia-se normalmente pelos PESOS. É isto que controla a frequência de
 // clusters grandes (e portanto de despertares) sem mexer nas regras.
 export const EMPILHAMENTO = {
-  base:       { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 16, horizontal: 12 } },
-  hunt:       { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 16, horizontal: 12 } },
-  afterparty: { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 19.5, horizontal: 15.5 } },
+  base:       { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 14.5, horizontal: 10.5 } },
+  hunt:       { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 14.5, horizontal: 10.5 } },
+  afterparty: { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 17, horizontal: 13 } },
   vip:        { baixo: { vertical: 5, horizontal: 4 }, premium: { vertical: 15, horizontal: 11.5 } },
   police:     { baixo: { vertical: 3, horizontal: 2 }, premium: { vertical: 6, horizontal: 4 } },
 };

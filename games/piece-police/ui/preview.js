@@ -38,12 +38,33 @@ function applySite() {
   $('site-toggle')?.setAttribute('aria-pressed', String(withSite));
 }
 
+
+// Iframes do not inherit device safe-area values from a decorative phone frame.
+const safeFrames = new WeakSet();
+function applyPreviewSafeArea(win = $('game').contentWindow) {
+  if (kind !== 'phone' || !win) return;
+  try {
+    const style = win.document.documentElement.style;
+    const notch = !['iphonese','ipad'].includes(current.id);
+    for (const [edge,value] of Object.entries({top:notch&&!landscape?26:0,right:0,bottom:notch&&!landscape?20:0,left:notch&&landscape?26:0})) {
+      style.setProperty('--preview-safe-'+edge,value+'px');
+    }
+    win.pp?.layout?.schedule();
+    for (const frame of win.document.querySelectorAll('iframe')) {
+      if (!safeFrames.has(frame)) { safeFrames.add(frame); frame.addEventListener('load',()=>applyPreviewSafeArea(frame.contentWindow)); }
+      applyPreviewSafeArea(frame.contentWindow);
+    }
+  } catch { /* Preview propagation is limited to same-origin frames. */ }
+}
+$('game').addEventListener('load',()=>applyPreviewSafeArea());
+
 function fit() {
   const stage = $('stage'), screen = $('screen');
   const box = stage.getBoundingClientRect();
   const fill = kind === 'pc' && current.id === 'fill';
   screen.classList.toggle('fill', fill);
   screen.classList.toggle('landscape', landscape);
+  screen.dataset.notch = String(kind==='phone'&&!['iphonese','ipad'].includes(current.id));
   let w = current.w, h = current.h;
   if (landscape) [w, h] = [h, w];
   if (fill) { w = Math.floor(box.width - 32); h = Math.floor(box.height - 32); }
@@ -52,6 +73,7 @@ function fit() {
   screen.style.height = `${h + frame}px`;
   const scale = Math.min(1, (box.width - 32) / (w + frame), (box.height - 32) / (h + frame));
   screen.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  applyPreviewSafeArea();
   $('info').textContent = `${fill ? 'Janela inteira' : current.label} · ${w} × ${h} px` +
     (landscape ? ' · horizontal' : kind === 'phone' ? ' · vertical' : '') + (withSite ? ' · com o menu do site' : '') +
     (scale < 1 ? ` · mostrado a ${Math.round(scale * 100)}% para caber na janela` : '') +

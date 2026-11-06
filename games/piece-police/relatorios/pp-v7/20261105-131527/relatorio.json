@@ -1,0 +1,2458 @@
+{
+  "versao": "pp-v7",
+  "config": "9d74f350",
+  "seed": "validacao-pp-v7-c",
+  "data": "2026-11-05T13:15:27.618Z",
+  "spins": 16000000,
+  "compras": 200000,
+  "resultados": {
+    "buy-afterparty": {
+      "mode": "buy-afterparty",
+      "name": "Compra AFTERPARTY",
+      "rounds": 200000,
+      "n": 200000,
+      "costX": 126,
+      "sdX": 216.37390232603812,
+      "volatility": {
+        "sdPerCost": 1.7172531930637946,
+        "underHalfCost": 0.67339,
+        "maxWinOneIn": null
+      },
+      "rtp": 0.9739569087301594,
+      "ci": 0.007526193953567662,
+      "ciBatch": 0.007176370796277643,
+      "sigma": 1.7172531930637946,
+      "hitFreq": 1,
+      "netWinFreq": 0.231345,
+      "avgWinX": 122.71857050000008,
+      "avgHitX": 122.71857050000008,
+      "maxX": 3118.34,
+      "minX": 0.3,
+      "capHits": 0,
+      "maxZeroStreak": 0,
+      "percentis": [
+        {
+          "p": 50,
+          "all": 32.20500183105469,
+          "hits": 32.20500183105469
+        },
+        {
+          "p": 75,
+          "all": 105.2750015258789,
+          "hits": 105.2750015258789
+        },
+        {
+          "p": 90,
+          "all": 392.385009765625,
+          "hits": 392.385009765625
+        },
+        {
+          "p": 95,
+          "all": 594.8499755859375,
+          "hits": 594.8499755859375
+        },
+        {
+          "p": 99,
+          "all": 1028,
+          "hits": 1028
+        },
+        {
+          "p": 99.9,
+          "all": 1573.8599853515625,
+          "hits": 1573.8599853515625
+        },
+        {
+          "p": 99.99,
+          "all": 2096.659912109375,
+          "hits": 2096.659912109375
+        }
+      ],
+      "hist": [
+        {
+          "label": "0×",
+          "from": 0,
+          "to": 0,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        },
+        {
+          "label": ">0–0.5×",
+          "from": 0,
+          "to": 0.5,
+          "count": 3,
+          "freq": 0.000015,
+          "rtpShare": 4.662698460003687e-8
+        },
+        {
+          "label": "0.5–1×",
+          "from": 0.5,
+          "to": 1,
+          "count": 26,
+          "freq": 0.00013,
+          "rtpShare": 8.202380935351053e-7
+        },
+        {
+          "label": "1–2×",
+          "from": 1,
+          "to": 2,
+          "count": 256,
+          "freq": 0.00128,
+          "rtpShare": 0.00001661269844524444
+        },
+        {
+          "label": "2–5×",
+          "from": 2,
+          "to": 5,
+          "count": 5419,
+          "freq": 0.027095,
+          "rtpShare": 0.0008354194448013155
+        },
+        {
+          "label": "5–10×",
+          "from": 5,
+          "to": 10,
+          "count": 23394,
+          "freq": 0.11697,
+          "rtpShare": 0.007114830953299053
+        },
+        {
+          "label": "10–20×",
+          "from": 10,
+          "to": 20,
+          "count": 41789,
+          "freq": 0.208945,
+          "rtpShare": 0.02410333273774102
+        },
+        {
+          "label": "20–50×",
+          "from": 20,
+          "to": 50,
+          "count": 53502,
+          "freq": 0.26751,
+          "rtpShare": 0.06841673452301632
+        },
+        {
+          "label": "50–100×",
+          "from": 50,
+          "to": 100,
+          "count": 24502,
+          "freq": 0.12251,
+          "rtpShare": 0.06696541587693351
+        },
+        {
+          "label": "100–250×",
+          "from": 100,
+          "to": 250,
+          "count": 20102,
+          "freq": 0.10051,
+          "rtpShare": 0.13269277534817892
+        },
+        {
+          "label": "250–500×",
+          "from": 250,
+          "to": 500,
+          "count": 17121,
+          "freq": 0.085605,
+          "rtpShare": 0.24747435532645573
+        },
+        {
+          "label": "500–1k×",
+          "from": 500,
+          "to": 1000,
+          "count": 11658,
+          "freq": 0.05829,
+          "rtpShare": 0.3163472176457965
+        },
+        {
+          "label": "1k–2.5k×",
+          "from": 1000,
+          "to": 2500,
+          "count": 2222,
+          "freq": 0.01111,
+          "rtpShare": 0.10935133590213836
+        },
+        {
+          "label": "2.5k–5k×",
+          "from": 2500,
+          "to": 5000,
+          "count": 6,
+          "freq": 0.00003,
+          "rtpShare": 0.0006380113195994543
+        },
+        {
+          "label": "5k–10k×",
+          "from": 5000,
+          "to": 10000,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        },
+        {
+          "label": "10k–25k×",
+          "from": 10000,
+          "to": 25000,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        },
+        {
+          "label": "25k× (máx.)",
+          "from": 25000,
+          "to": null,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        }
+      ],
+      "bonus": {
+        "afterparty": {
+          "count": 200000,
+          "freq": 1,
+          "oneIn": 1,
+          "avgWinX": 122.71857050000008,
+          "sdWinX": 216.37390232603897,
+          "maxWinX": 3118.34,
+          "rtpShare": 0.9739569087301594
+        },
+        "vip": {
+          "count": 0,
+          "freq": 0,
+          "oneIn": null,
+          "avgWinX": 0,
+          "sdWinX": 0,
+          "maxWinX": 0,
+          "rtpShare": 0
+        },
+        "police": {
+          "count": 0,
+          "freq": 0,
+          "oneIn": null,
+          "avgWinX": 0,
+          "sdWinX": 0,
+          "maxWinX": 0,
+          "rtpShare": 0
+        }
+      },
+      "bonusSpins": 2023820,
+      "retriggers": 4764,
+      "bonusRounds": 200000,
+      "baseOnly": {
+        "meanX": 0,
+        "varX": 0,
+        "rtp": 0
+      },
+      "spinBase": {
+        "spins": 0,
+        "cascades": 0,
+        "maxCascades": 0,
+        "withAwaken": 0,
+        "awakenTotal": 0,
+        "refires": 0,
+        "persona": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "solo": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "level": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 0,
+          "ONE_MORE_ROUND": 0,
+          "SLOW_DISASTER": 0,
+          "RAVE_DIMENSION": 0,
+          "TOTAL_MAYHEM": 0,
+          "FROZEN_REALITY": 0,
+          "FREEZE_AND_FREAK": 0,
+          "DREAM_GLITCH": 0,
+          "ONE_MORE_RAVE": 0,
+          "DOUBLE_VISION": 0
+        },
+        "police": 0,
+        "calmer": 0,
+        "joiner": 0,
+        "corners": 0,
+        "total": 0,
+        "respins": 0,
+        "capped": 0,
+        "safety": 0
+      },
+      "spinBonus": {
+        "spins": 2023820,
+        "cascades": 3682979,
+        "maxCascades": 54,
+        "withAwaken": 408183,
+        "awakenTotal": 506790,
+        "refires": 388555,
+        "persona": {
+          "WEED": 141710,
+          "ALCOOL": 105225,
+          "COPIUM": 98188,
+          "MDMA": 87256,
+          "LCD": 74411
+        },
+        "solo": {
+          "WEED": 95664,
+          "ALCOOL": 70155,
+          "COPIUM": 54619,
+          "MDMA": 41872,
+          "LCD": 31118
+        },
+        "level": [
+          1707592,
+          112068,
+          73353,
+          57092,
+          44527,
+          29188
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 179251,
+          "ONE_MORE_ROUND": 92216,
+          "SLOW_DISASTER": 97818,
+          "RAVE_DIMENSION": 83836,
+          "TOTAL_MAYHEM": 44425,
+          "FROZEN_REALITY": 32895,
+          "FREEZE_AND_FREAK": 25733,
+          "DREAM_GLITCH": 14873,
+          "ONE_MORE_RAVE": 14550,
+          "DOUBLE_VISION": 16320
+        },
+        "police": 105390,
+        "calmer": 52693,
+        "joiner": 52697,
+        "corners": 0,
+        "total": 25522,
+        "respins": 443393,
+        "capped": 0,
+        "safety": 0
+      },
+      "attrib": {
+        "natural": {
+          "total": 0.11414382944466435,
+          "base": 0
+        },
+        "REALITY_BREAK": {
+          "total": 0.009195963373015903,
+          "base": 0
+        },
+        "SLOW_MOTION": {
+          "total": 0.0058583214682541756,
+          "base": 0
+        },
+        "RAVE_RUSH": {
+          "total": 0.0028812370238095364,
+          "base": 0
+        },
+        "DRUNK_WALK": {
+          "total": 0.019441388373015286,
+          "base": 0
+        },
+        "ONE_MORE_CHANCE": {
+          "total": 0.0024320026984127117,
+          "base": 0
+        },
+        "NEVER_ENDING_DREAM": {
+          "total": 0.013675396428569943,
+          "base": 0
+        },
+        "ONE_MORE_ROUND": {
+          "total": 0.0064375994444444236,
+          "base": 0
+        },
+        "SLOW_DISASTER": {
+          "total": 0.01357059384920587,
+          "base": 0
+        },
+        "RAVE_DIMENSION": {
+          "total": 0.003216215238095249,
+          "base": 0
+        },
+        "TOTAL_MAYHEM": {
+          "total": 0.004099853571428514,
+          "base": 0
+        },
+        "FROZEN_REALITY": {
+          "total": 0.005837502976190495,
+          "base": 0
+        },
+        "FREEZE_AND_FREAK": {
+          "total": 0.00321956492063493,
+          "base": 0
+        },
+        "DREAM_GLITCH": {
+          "total": 0.0008608463095238152,
+          "base": 0
+        },
+        "ONE_MORE_RAVE": {
+          "total": 0.0013889492460317492,
+          "base": 0
+        },
+        "DOUBLE_VISION": {
+          "total": 0.0026168278968253895,
+          "base": 0
+        },
+        "CALMER": {
+          "total": 0.0020030107936508256,
+          "base": 0
+        },
+        "mult:CW": {
+          "total": 0.44655206214236953,
+          "base": 0
+        },
+        "mult:DW": {
+          "total": 0.31652574353177804,
+          "base": 0
+        }
+      },
+      "bySize": [
+        {
+          "label": "4–6",
+          "rtp": 0.17925261924635388,
+          "perRound": 23.735655,
+          "avgX": 0.9515570573064275
+        },
+        {
+          "label": "7–10",
+          "rtp": 0.1245997069444386,
+          "perRound": 3.48424,
+          "avgX": 4.505878778442146
+        },
+        {
+          "label": "11–14",
+          "rtp": 0.11396156269840953,
+          "perRound": 0.63784,
+          "avgX": 22.51216120030039
+        },
+        {
+          "label": "15–20",
+          "rtp": 0.20021147222221763,
+          "perRound": 0.32054,
+          "avgX": 78.70046016097655
+        },
+        {
+          "label": "21+",
+          "rtp": 0.3559315476190476,
+          "perRound": 0.191305,
+          "avgX": 234.42866103865555
+        }
+      ],
+      "byMult": [
+        {
+          "label": "×1",
+          "rtp": 0.06528151269856163,
+          "perRound": 14.48617,
+          "avgX": 0.5678154129089169
+        },
+        {
+          "label": "×2–5",
+          "rtp": 0.24568709265902586,
+          "perRound": 12.55707,
+          "avgX": 2.4652704552126616
+        },
+        {
+          "label": "×6–20",
+          "rtp": 0.6629883033730415,
+          "perRound": 1.32634,
+          "avgX": 62.982739135518216
+        },
+        {
+          "label": "×21–100",
+          "rtp": 0,
+          "perRound": 0,
+          "avgX": 0
+        },
+        {
+          "label": "×101+",
+          "rtp": 0,
+          "perRound": 0,
+          "avgX": 0
+        }
+      ],
+      "seconds": 31.829
+    },
+    "buy-vip": {
+      "mode": "buy-vip",
+      "name": "Compra VIP AFTERPARTY",
+      "rounds": 200000,
+      "n": 200000,
+      "costX": 331,
+      "sdX": 693.3367006784011,
+      "volatility": {
+        "sdPerCost": 2.094672811717224,
+        "underHalfCost": 0.743085,
+        "maxWinOneIn": null
+      },
+      "rtp": 0.9791726324773385,
+      "ci": 0.009180308363335847,
+      "ciBatch": 0.012512809725276491,
+      "sigma": 2.0946728117172237,
+      "hitFreq": 0.999995,
+      "netWinFreq": 0.207245,
+      "avgWinX": 324.10614134999906,
+      "avgHitX": 324.1077618888085,
+      "maxX": 9666.305,
+      "minX": 0.13,
+      "capHits": 0,
+      "maxZeroStreak": 1,
+      "percentis": [
+        {
+          "p": 50,
+          "all": 39.95000076293945,
+          "hits": 39.95000076293945
+        },
+        {
+          "p": 75,
+          "all": 179.5449981689453,
+          "hits": 179.5449981689453
+        },
+        {
+          "p": 90,
+          "all": 1177.4599609375,
+          "hits": 1177.4599609375
+        },
+        {
+          "p": 95,
+          "all": 1828.8299560546875,
+          "hits": 1828.8299560546875
+        },
+        {
+          "p": 99,
+          "all": 3290.5,
+          "hits": 3290.5
+        },
+        {
+          "p": 99.9,
+          "all": 5256.68017578125,
+          "hits": 5256.68017578125
+        },
+        {
+          "p": 99.99,
+          "all": 7174.78515625,
+          "hits": 7253.83984375
+        }
+      ],
+      "hist": [
+        {
+          "label": "0×",
+          "from": 0,
+          "to": 0,
+          "count": 1,
+          "freq": 0.000005,
+          "rtpShare": 0
+        },
+        {
+          "label": ">0–0.5×",
+          "from": 0,
+          "to": 0.5,
+          "count": 25,
+          "freq": 0.000125,
+          "rtpShare": 1.332326280656538e-7
+        },
+        {
+          "label": "0.5–1×",
+          "from": 0.5,
+          "to": 1,
+          "count": 128,
+          "freq": 0.00064,
+          "rtpShare": 0.0000015618580066545491
+        },
+        {
+          "label": "1–2×",
+          "from": 1,
+          "to": 2,
+          "count": 681,
+          "freq": 0.003405,
+          "rtpShare": 0.000016171601209395603
+        },
+        {
+          "label": "2–5×",
+          "from": 2,
+          "to": 5,
+          "count": 6105,
+          "freq": 0.030525,
+          "rtpShare": 0.0003446818732206915
+        },
+        {
+          "label": "5–10×",
+          "from": 5,
+          "to": 10,
+          "count": 18031,
+          "freq": 0.090155,
+          "rtpShare": 0.0020791079302280692
+        },
+        {
+          "label": "10–20×",
+          "from": 10,
+          "to": 20,
+          "count": 35934,
+          "freq": 0.17967,
+          "rtpShare": 0.008017928020269849
+        },
+        {
+          "label": "20–50×",
+          "from": 20,
+          "to": 50,
+          "count": 50347,
+          "freq": 0.251735,
+          "rtpShare": 0.024470748040496045
+        },
+        {
+          "label": "50–100×",
+          "from": 50,
+          "to": 100,
+          "count": 26481,
+          "freq": 0.132405,
+          "rtpShare": 0.02798487553645477
+        },
+        {
+          "label": "100–250×",
+          "from": 100,
+          "to": 250,
+          "count": 17074,
+          "freq": 0.08537,
+          "rtpShare": 0.039949028333681226
+        },
+        {
+          "label": "250–500×",
+          "from": 250,
+          "to": 500,
+          "count": 9703,
+          "freq": 0.048515,
+          "rtpShare": 0.0532994409352559
+        },
+        {
+          "label": "500–1k×",
+          "from": 500,
+          "to": 1000,
+          "count": 12241,
+          "freq": 0.061205,
+          "rtpShare": 0.13387730625671201
+        },
+        {
+          "label": "1k–2.5k×",
+          "from": 1000,
+          "to": 2500,
+          "count": 18305,
+          "freq": 0.091525,
+          "rtpShare": 0.4373795707283135
+        },
+        {
+          "label": "2.5k–5k×",
+          "from": 2500,
+          "to": 5000,
+          "count": 4672,
+          "freq": 0.02336,
+          "rtpShare": 0.22777093433576048
+        },
+        {
+          "label": "5k–10k×",
+          "from": 5000,
+          "to": 10000,
+          "count": 272,
+          "freq": 0.00136,
+          "rtpShare": 0.0239811437213817
+        },
+        {
+          "label": "10k–25k×",
+          "from": 10000,
+          "to": 25000,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        },
+        {
+          "label": "25k× (máx.)",
+          "from": 25000,
+          "to": null,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        }
+      ],
+      "bonus": {
+        "afterparty": {
+          "count": 0,
+          "freq": 0,
+          "oneIn": null,
+          "avgWinX": 0,
+          "sdWinX": 0,
+          "maxWinX": 0,
+          "rtpShare": 0
+        },
+        "vip": {
+          "count": 200000,
+          "freq": 1,
+          "oneIn": 1,
+          "avgWinX": 324.10614134999906,
+          "sdWinX": 693.3367006784017,
+          "maxWinX": 9666.304999999998,
+          "rtpShare": 0.9791726324773385
+        },
+        "police": {
+          "count": 0,
+          "freq": 0,
+          "oneIn": null,
+          "avgWinX": 0,
+          "sdWinX": 0,
+          "maxWinX": 0,
+          "rtpShare": 0
+        }
+      },
+      "bonusSpins": 2020800,
+      "retriggers": 4160,
+      "bonusRounds": 200000,
+      "baseOnly": {
+        "meanX": 0,
+        "varX": 0,
+        "rtp": 0
+      },
+      "spinBase": {
+        "spins": 0,
+        "cascades": 0,
+        "maxCascades": 0,
+        "withAwaken": 0,
+        "awakenTotal": 0,
+        "refires": 0,
+        "persona": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "solo": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "level": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 0,
+          "ONE_MORE_ROUND": 0,
+          "SLOW_DISASTER": 0,
+          "RAVE_DIMENSION": 0,
+          "TOTAL_MAYHEM": 0,
+          "FROZEN_REALITY": 0,
+          "FREEZE_AND_FREAK": 0,
+          "DREAM_GLITCH": 0,
+          "ONE_MORE_RAVE": 0,
+          "DOUBLE_VISION": 0
+        },
+        "police": 0,
+        "calmer": 0,
+        "joiner": 0,
+        "corners": 0,
+        "total": 0,
+        "respins": 0,
+        "capped": 0,
+        "safety": 0
+      },
+      "spinBonus": {
+        "spins": 2020800,
+        "cascades": 3198935,
+        "maxCascades": 51,
+        "withAwaken": 291252,
+        "awakenTotal": 319019,
+        "refires": 343335,
+        "persona": {
+          "WEED": 92602,
+          "ALCOOL": 64887,
+          "COPIUM": 60987,
+          "MDMA": 53898,
+          "LCD": 46645
+        },
+        "solo": {
+          "WEED": 24547,
+          "ALCOOL": 17776,
+          "COPIUM": 14969,
+          "MDMA": 11421,
+          "LCD": 8758
+        },
+        "level": [
+          1816020,
+          0,
+          86088,
+          52587,
+          39340,
+          26765
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 162588,
+          "ONE_MORE_ROUND": 90265,
+          "SLOW_DISASTER": 87663,
+          "RAVE_DIMENSION": 83360,
+          "TOTAL_MAYHEM": 42786,
+          "FROZEN_REALITY": 34991,
+          "FREEZE_AND_FREAK": 26606,
+          "DREAM_GLITCH": 18644,
+          "ONE_MORE_RAVE": 18290,
+          "DOUBLE_VISION": 19690
+        },
+        "police": 88689,
+        "calmer": 30894,
+        "joiner": 57795,
+        "corners": 86814,
+        "total": 24512,
+        "respins": 408598,
+        "capped": 0,
+        "safety": 0
+      },
+      "attrib": {
+        "natural": {
+          "total": 0.03527898785505894,
+          "base": 0
+        },
+        "REALITY_BREAK": {
+          "total": 0.004692174456193355,
+          "base": 0
+        },
+        "SLOW_MOTION": {
+          "total": 0.0029717176283988447,
+          "base": 0
+        },
+        "RAVE_RUSH": {
+          "total": 0.0012763687613293107,
+          "base": 0
+        },
+        "DRUNK_WALK": {
+          "total": 0.008645481978851928,
+          "base": 0
+        },
+        "ONE_MORE_CHANCE": {
+          "total": 0.000275088791540786,
+          "base": 0
+        },
+        "NEVER_ENDING_DREAM": {
+          "total": 0.004975297084591693,
+          "base": 0
+        },
+        "ONE_MORE_ROUND": {
+          "total": 0.0025235819939576952,
+          "base": 0
+        },
+        "SLOW_DISASTER": {
+          "total": 0.006003325694863905,
+          "base": 0
+        },
+        "RAVE_DIMENSION": {
+          "total": 0.0015594196525679856,
+          "base": 0
+        },
+        "TOTAL_MAYHEM": {
+          "total": 0.0018297775226585856,
+          "base": 0
+        },
+        "FROZEN_REALITY": {
+          "total": 0.002507683489425992,
+          "base": 0
+        },
+        "FREEZE_AND_FREAK": {
+          "total": 0.0011477091389728118,
+          "base": 0
+        },
+        "DREAM_GLITCH": {
+          "total": 0.000432352145015108,
+          "base": 0
+        },
+        "ONE_MORE_RAVE": {
+          "total": 0.0006671334441087634,
+          "base": 0
+        },
+        "DOUBLE_VISION": {
+          "total": 0.0012626807401812682,
+          "base": 0
+        },
+        "CALMER": {
+          "total": 0.0003984105589123894,
+          "base": 0
+        },
+        "mult:CW": {
+          "total": 0.47122037682765255,
+          "base": 0
+        },
+        "mult:DW": {
+          "total": 0.4315050647130065,
+          "base": 0
+        }
+      },
+      "bySize": [
+        {
+          "label": "4–6",
+          "rtp": 0.10926396064969462,
+          "perRound": 20.01265,
+          "avgX": 1.8071755102422178
+        },
+        {
+          "label": "7–10",
+          "rtp": 0.07581769410875847,
+          "perRound": 2.754095,
+          "avgX": 9.112124581758819
+        },
+        {
+          "label": "11–14",
+          "rtp": 0.0824157095921444,
+          "perRound": 0.5343,
+          "avgX": 51.05670947969268
+        },
+        {
+          "label": "15–20",
+          "rtp": 0.21077585347432093,
+          "perRound": 0.307245,
+          "avgX": 227.07223063027953
+        },
+        {
+          "label": "21+",
+          "rtp": 0.500899414652568,
+          "perRound": 0.204235,
+          "avgX": 811.7986939065293
+        }
+      ],
+      "byMult": [
+        {
+          "label": "×1",
+          "rtp": 0.009949418504528594,
+          "perRound": 6.10224,
+          "avgX": 0.5396801051743236
+        },
+        {
+          "label": "×2–5",
+          "rtp": 0.09414877167688424,
+          "perRound": 14.020045,
+          "avgX": 2.2227634379952903
+        },
+        {
+          "label": "×6–20",
+          "rtp": 0.24222572990941135,
+          "perRound": 3.22649,
+          "avgX": 24.849516533451258
+        },
+        {
+          "label": "×21–100",
+          "rtp": 0.6328487123867044,
+          "perRound": 0.46375,
+          "avgX": 451.6936362264132
+        },
+        {
+          "label": "×101+",
+          "rtp": 0,
+          "perRound": 0,
+          "avgX": 0
+        }
+      ],
+      "seconds": 22.31
+    },
+    "buy-police": {
+      "mode": "buy-police",
+      "name": "Compra POLICE PARTY",
+      "rounds": 200000,
+      "n": 200000,
+      "costX": 840,
+      "sdX": 1852.1088597135868,
+      "volatility": {
+        "sdPerCost": 2.204891499659032,
+        "underHalfCost": 0.755075,
+        "maxWinOneIn": 200000
+      },
+      "rtp": 0.9782799676190501,
+      "ci": 0.009663363061448138,
+      "ciBatch": 0.008843445451199352,
+      "sigma": 2.204891499659032,
+      "hitFreq": 0.99977,
+      "netWinFreq": 0.21203,
+      "avgWinX": 821.7551728000021,
+      "avgHitX": 821.9442199705953,
+      "maxX": 25000,
+      "minX": 0.1,
+      "capHits": 1,
+      "maxZeroStreak": 1,
+      "percentis": [
+        {
+          "p": 50,
+          "all": 18.06999969482422,
+          "hits": 18.079999923706055
+        },
+        {
+          "p": 75,
+          "all": 378.2850036621094,
+          "hits": 378.5950012207031
+        },
+        {
+          "p": 90,
+          "all": 3196.425048828125,
+          "hits": 3196.794921875
+        },
+        {
+          "p": 95,
+          "all": 4869.5,
+          "hits": 4869.64990234375
+        },
+        {
+          "p": 99,
+          "all": 8507.9296875,
+          "hits": 8507.9296875
+        },
+        {
+          "p": 99.9,
+          "all": 14012.294921875,
+          "hits": 14012.294921875
+        },
+        {
+          "p": 99.99,
+          "all": 18708.224609375,
+          "hits": 18807.91015625
+        }
+      ],
+      "hist": [
+        {
+          "label": "0×",
+          "from": 0,
+          "to": 0,
+          "count": 46,
+          "freq": 0.00023,
+          "rtpShare": 0
+        },
+        {
+          "label": ">0–0.5×",
+          "from": 0,
+          "to": 0.5,
+          "count": 347,
+          "freq": 0.001735,
+          "rtpShare": 6.63005954940759e-7
+        },
+        {
+          "label": "0.5–1×",
+          "from": 0.5,
+          "to": 1,
+          "count": 913,
+          "freq": 0.004565,
+          "rtpShare": 0.000004215892856319745
+        },
+        {
+          "label": "1–2×",
+          "from": 1,
+          "to": 2,
+          "count": 3246,
+          "freq": 0.01623,
+          "rtpShare": 0.000029675208350732212
+        },
+        {
+          "label": "2–5×",
+          "from": 2,
+          "to": 5,
+          "count": 18206,
+          "freq": 0.09103,
+          "rtpShare": 0.00039423386903036207
+        },
+        {
+          "label": "5–10×",
+          "from": 5,
+          "to": 10,
+          "count": 39458,
+          "freq": 0.19729,
+          "rtpShare": 0.0017530004464075678
+        },
+        {
+          "label": "10–20×",
+          "from": 10,
+          "to": 20,
+          "count": 42432,
+          "freq": 0.21216,
+          "rtpShare": 0.003542575268472944
+        },
+        {
+          "label": "20–50×",
+          "from": 20,
+          "to": 50,
+          "count": 22961,
+          "freq": 0.114805,
+          "rtpShare": 0.004103931816101075
+        },
+        {
+          "label": "50–100×",
+          "from": 50,
+          "to": 100,
+          "count": 8483,
+          "freq": 0.042415,
+          "rtpShare": 0.003572206040246146
+        },
+        {
+          "label": "100–250×",
+          "from": 100,
+          "to": 250,
+          "count": 9822,
+          "freq": 0.04911,
+          "rtpShare": 0.00950723521010081
+        },
+        {
+          "label": "250–500×",
+          "from": 250,
+          "to": 500,
+          "count": 6772,
+          "freq": 0.03386,
+          "rtpShare": 0.014491172284353347
+        },
+        {
+          "label": "500–1k×",
+          "from": 500,
+          "to": 1000,
+          "count": 6724,
+          "freq": 0.03362,
+          "rtpShare": 0.02914213169533866
+        },
+        {
+          "label": "1k–2.5k×",
+          "from": 1000,
+          "to": 2500,
+          "count": 14790,
+          "freq": 0.07395,
+          "rtpShare": 0.15326741907319566
+        },
+        {
+          "label": "2.5k–5k×",
+          "from": 2500,
+          "to": 5000,
+          "count": 16369,
+          "freq": 0.081845,
+          "rtpShare": 0.3502614919389997
+        },
+        {
+          "label": "5k–10k×",
+          "from": 5000,
+          "to": 10000,
+          "count": 8383,
+          "freq": 0.041915,
+          "rtpShare": 0.3309581583600726
+        },
+        {
+          "label": "10k–25k×",
+          "from": 10000,
+          "to": 25000,
+          "count": 1047,
+          "freq": 0.005235,
+          "rtpShare": 0.07710304809570313
+        },
+        {
+          "label": "25k× (máx.)",
+          "from": 25000,
+          "to": null,
+          "count": 1,
+          "freq": 0.000005,
+          "rtpShare": 0.00014880952380952382
+        }
+      ],
+      "bonus": {
+        "afterparty": {
+          "count": 0,
+          "freq": 0,
+          "oneIn": null,
+          "avgWinX": 0,
+          "sdWinX": 0,
+          "maxWinX": 0,
+          "rtpShare": 0
+        },
+        "vip": {
+          "count": 0,
+          "freq": 0,
+          "oneIn": null,
+          "avgWinX": 0,
+          "sdWinX": 0,
+          "maxWinX": 0,
+          "rtpShare": 0
+        },
+        "police": {
+          "count": 200000,
+          "freq": 1,
+          "oneIn": 1,
+          "avgWinX": 821.7551728000021,
+          "sdWinX": 1852.1088597135865,
+          "maxWinX": 25000,
+          "rtpShare": 0.9782799676190501
+        }
+      },
+      "bonusSpins": 2049562,
+      "retriggers": 9913,
+      "bonusRounds": 200000,
+      "baseOnly": {
+        "meanX": 0,
+        "varX": 0,
+        "rtp": 0
+      },
+      "spinBase": {
+        "spins": 0,
+        "cascades": 0,
+        "maxCascades": 0,
+        "withAwaken": 0,
+        "awakenTotal": 0,
+        "refires": 0,
+        "persona": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "solo": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "level": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 0,
+          "ONE_MORE_ROUND": 0,
+          "SLOW_DISASTER": 0,
+          "RAVE_DIMENSION": 0,
+          "TOTAL_MAYHEM": 0,
+          "FROZEN_REALITY": 0,
+          "FREEZE_AND_FREAK": 0,
+          "DREAM_GLITCH": 0,
+          "ONE_MORE_RAVE": 0,
+          "DOUBLE_VISION": 0
+        },
+        "police": 0,
+        "calmer": 0,
+        "joiner": 0,
+        "corners": 0,
+        "total": 0,
+        "respins": 0,
+        "capped": 0,
+        "safety": 0
+      },
+      "spinBonus": {
+        "spins": 2049562,
+        "cascades": 3699898,
+        "maxCascades": 53,
+        "withAwaken": 198197,
+        "awakenTotal": 172687,
+        "refires": 494307,
+        "persona": {
+          "WEED": 47550,
+          "ALCOOL": 30013,
+          "COPIUM": 36977,
+          "MDMA": 29301,
+          "LCD": 28846
+        },
+        "solo": {
+          "WEED": 0,
+          "ALCOOL": 0,
+          "COPIUM": 0,
+          "MDMA": 0,
+          "LCD": 0
+        },
+        "level": [
+          1943694,
+          0,
+          0,
+          36650,
+          31130,
+          38088
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 251948,
+          "ONE_MORE_ROUND": 95532,
+          "SLOW_DISASTER": 95763,
+          "RAVE_DIMENSION": 139496,
+          "TOTAL_MAYHEM": 28019,
+          "FROZEN_REALITY": 20528,
+          "FREEZE_AND_FREAK": 9973,
+          "DREAM_GLITCH": 9163,
+          "ONE_MORE_RAVE": 8106,
+          "DOUBLE_VISION": 8466
+        },
+        "police": 2049562,
+        "calmer": 0,
+        "joiner": 2049562,
+        "corners": 269198,
+        "total": 38088,
+        "respins": 673473,
+        "capped": 1,
+        "safety": 0
+      },
+      "attrib": {
+        "natural": {
+          "total": 0.013271068327413597,
+          "base": 0
+        },
+        "REALITY_BREAK": {
+          "total": 0.0016466436964285701,
+          "base": 0
+        },
+        "SLOW_MOTION": {
+          "total": 0.0009873626845238116,
+          "base": 0
+        },
+        "RAVE_RUSH": {
+          "total": 0.00036533746428571396,
+          "base": 0
+        },
+        "DRUNK_WALK": {
+          "total": 0.0024543683928570812,
+          "base": 0
+        },
+        "ONE_MORE_CHANCE": {
+          "total": 0.000017591178571428567,
+          "base": 0
+        },
+        "NEVER_ENDING_DREAM": {
+          "total": 0.0031911571785708777,
+          "base": 0
+        },
+        "ONE_MORE_ROUND": {
+          "total": 0.0017983872916664412,
+          "base": 0
+        },
+        "SLOW_DISASTER": {
+          "total": 0.006242917077381319,
+          "base": 0
+        },
+        "RAVE_DIMENSION": {
+          "total": 0.0014286728452380987,
+          "base": 0
+        },
+        "TOTAL_MAYHEM": {
+          "total": 0.0010213118511904812,
+          "base": 0
+        },
+        "FROZEN_REALITY": {
+          "total": 0.001031079363095241,
+          "base": 0
+        },
+        "FREEZE_AND_FREAK": {
+          "total": 0.0002708614940476199,
+          "base": 0
+        },
+        "DREAM_GLITCH": {
+          "total": 0.00013329238095238178,
+          "base": 0
+        },
+        "ONE_MORE_RAVE": {
+          "total": 0.0001425459523809527,
+          "base": 0
+        },
+        "DOUBLE_VISION": {
+          "total": 0.0005557857261904749,
+          "base": 0
+        },
+        "CALMER": {
+          "total": 0,
+          "base": 0
+        },
+        "mult:CW": {
+          "total": 0.324207812243826,
+          "base": 0
+        },
+        "mult:DW": {
+          "total": 0.6195137724701165,
+          "base": 0
+        }
+      },
+      "bySize": [
+        {
+          "label": "4–6",
+          "rtp": 0.18663486601174853,
+          "perRound": 22.955195,
+          "avgX": 6.829534118523879
+        },
+        {
+          "label": "7–10",
+          "rtp": 0.09864491389880568,
+          "perRound": 3.04573,
+          "avgX": 27.20586778046536
+        },
+        {
+          "label": "11–14",
+          "rtp": 0.09911672562500082,
+          "perRound": 0.939615,
+          "avgX": 88.60868496671583
+        },
+        {
+          "label": "15–20",
+          "rtp": 0.17907948511904756,
+          "perRound": 0.40615,
+          "avgX": 370.3724424473715
+        },
+        {
+          "label": "21+",
+          "rtp": 0.4148039769642857,
+          "perRound": 0.202535,
+          "avgX": 1720.3710008146738
+        }
+      ],
+      "byMult": [
+        {
+          "label": "×1",
+          "rtp": 0.0014015480654760734,
+          "perRound": 3.212765,
+          "avgX": 0.36644459678809427
+        },
+        {
+          "label": "×2–5",
+          "rtp": 0.02459417607144932,
+          "perRound": 10.34258,
+          "avgX": 1.9974810830583305
+        },
+        {
+          "label": "×6–20",
+          "rtp": 0.13013545380953315,
+          "perRound": 9.080855,
+          "avgX": 12.037829169170505
+        },
+        {
+          "label": "×21–100",
+          "rtp": 0.8221487896726416,
+          "perRound": 4.913025,
+          "avgX": 140.5661447529819
+        },
+        {
+          "label": "×101+",
+          "rtp": 0,
+          "perRound": 0,
+          "avgX": 0
+        }
+      ],
+      "seconds": 25.385
+    },
+    "base": {
+      "mode": "base",
+      "name": "Jogo base",
+      "rounds": 16000000,
+      "n": 16000000,
+      "costX": 1,
+      "sdX": 22.654963603359572,
+      "volatility": {
+        "sdPerCost": 22.654963603359572,
+        "underHalfCost": 0.8133935,
+        "maxWinOneIn": null
+      },
+      "rtp": 0.9779220878105764,
+      "ci": 0.01110093216564619,
+      "ciBatch": 0.010095315535705824,
+      "sigma": 22.654963603359572,
+      "hitFreq": 0.4650313125,
+      "netWinFreq": 0.1192013125,
+      "avgWinX": 0.9779220878105764,
+      "avgHitX": 2.1029166456626003,
+      "maxX": 8091.49,
+      "minX": 0.1,
+      "capHits": 0,
+      "maxZeroStreak": 24,
+      "percentis": [
+        {
+          "p": 50,
+          "all": 0,
+          "hits": 0.33000001311302185
+        },
+        {
+          "p": 75,
+          "all": 0.30000001192092896,
+          "hits": 1.0499999523162842
+        },
+        {
+          "p": 90,
+          "all": 1.2000000476837158,
+          "hits": 2.1700000762939453
+        },
+        {
+          "p": 95,
+          "all": 2.0899999141693115,
+          "hits": 3.4800000190734863
+        },
+        {
+          "p": 99,
+          "all": 5.835000038146973,
+          "hits": 9.390000343322754
+        },
+        {
+          "p": 99.9,
+          "all": 91.58000183105469,
+          "hits": 374.260009765625
+        },
+        {
+          "p": 99.99,
+          "all": 1139.1800537109375,
+          "hits": 1470.14501953125
+        }
+      ],
+      "hist": [
+        {
+          "label": "0×",
+          "from": 0,
+          "to": 0,
+          "count": 8559499,
+          "freq": 0.5349686875,
+          "rtpShare": 0
+        },
+        {
+          "label": ">0–0.5×",
+          "from": 0,
+          "to": 0.5,
+          "count": 4454797,
+          "freq": 0.2784248125,
+          "rtpShare": 0.05872556207386591
+        },
+        {
+          "label": "0.5–1×",
+          "from": 0.5,
+          "to": 1,
+          "count": 1034318,
+          "freq": 0.064644875,
+          "rtpShare": 0.04711641517683491
+        },
+        {
+          "label": "1–2×",
+          "from": 1,
+          "to": 2,
+          "count": 1011791,
+          "freq": 0.0632369375,
+          "rtpShare": 0.09028535866886378
+        },
+        {
+          "label": "2–5×",
+          "from": 2,
+          "to": 5,
+          "count": 732348,
+          "freq": 0.04577175,
+          "rtpShare": 0.12979186444798113
+        },
+        {
+          "label": "5–10×",
+          "from": 5,
+          "to": 10,
+          "count": 138084,
+          "freq": 0.00863025,
+          "rtpShare": 0.05734871282783151
+        },
+        {
+          "label": "10–20×",
+          "from": 10,
+          "to": 20,
+          "count": 29215,
+          "freq": 0.0018259375,
+          "rtpShare": 0.02424611063426733
+        },
+        {
+          "label": "20–50×",
+          "from": 20,
+          "to": 50,
+          "count": 17021,
+          "freq": 0.0010638125,
+          "rtpShare": 0.03367219749367237
+        },
+        {
+          "label": "50–100×",
+          "from": 50,
+          "to": 100,
+          "count": 7693,
+          "freq": 0.0004808125,
+          "rtpShare": 0.03387864093327522
+        },
+        {
+          "label": "100–250×",
+          "from": 100,
+          "to": 250,
+          "count": 5856,
+          "freq": 0.000366,
+          "rtpShare": 0.05761612310361862
+        },
+        {
+          "label": "250–500×",
+          "from": 250,
+          "to": 500,
+          "count": 3460,
+          "freq": 0.00021625,
+          "rtpShare": 0.07872394910335541
+        },
+        {
+          "label": "500–1k×",
+          "from": 500,
+          "to": 1000,
+          "count": 3797,
+          "freq": 0.0002373125,
+          "rtpShare": 0.16778830986213683
+        },
+        {
+          "label": "1k–2.5k×",
+          "from": 1000,
+          "to": 2500,
+          "count": 2003,
+          "freq": 0.0001251875,
+          "rtpShare": 0.17409056913757323
+        },
+        {
+          "label": "2.5k–5k×",
+          "from": 2500,
+          "to": 5000,
+          "count": 109,
+          "freq": 0.0000068125,
+          "rtpShare": 0.02112046434020996
+        },
+        {
+          "label": "5k–10k×",
+          "from": 5000,
+          "to": 10000,
+          "count": 9,
+          "freq": 5.625e-7,
+          "rtpShare": 0.003517810333251953
+        },
+        {
+          "label": "10k–25k×",
+          "from": 10000,
+          "to": 25000,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        },
+        {
+          "label": "25k× (máx.)",
+          "from": 25000,
+          "to": null,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        }
+      ],
+      "bonus": {
+        "afterparty": {
+          "count": 22934,
+          "freq": 0.001433375,
+          "oneIn": 697.6541379611058,
+          "avgWinX": 124.60810020057546,
+          "sdWinX": 220.7896152262456,
+          "maxWinX": 2792.905,
+          "rtpShare": 0.17861013562499986
+        },
+        "vip": {
+          "count": 1589,
+          "freq": 0.0000993125,
+          "oneIn": 10069.225928256765,
+          "avgWinX": 303.4607929515419,
+          "sdWinX": 643.0039710941343,
+          "maxWinX": 6495.46,
+          "rtpShare": 0.030137450000000003
+        },
+        "police": {
+          "count": 205,
+          "freq": 0.0000128125,
+          "oneIn": 78048.78048780488,
+          "avgWinX": 669.8898292682927,
+          "sdWinX": 1495.1455028755138,
+          "maxWinX": 7958.115,
+          "rtpShare": 0.0085829634375
+        }
+      },
+      "bonusSpins": 250030,
+      "retriggers": 550,
+      "bonusRounds": 24728,
+      "baseOnly": {
+        "meanX": 0.7605915387482597,
+        "varX": 329.0368605477875,
+        "rtp": 0.7605915387482597
+      },
+      "spinBase": {
+        "spins": 16000000,
+        "cascades": 10368783,
+        "maxCascades": 40,
+        "withAwaken": 933331,
+        "awakenTotal": 1169595,
+        "refires": 0,
+        "persona": {
+          "WEED": 413999,
+          "ALCOOL": 279954,
+          "COPIUM": 207570,
+          "MDMA": 158368,
+          "LCD": 109704
+        },
+        "solo": {
+          "WEED": 336533,
+          "ALCOOL": 241068,
+          "COPIUM": 171209,
+          "MDMA": 126141,
+          "LCD": 88315
+        },
+        "level": [
+          15066669,
+          763819,
+          122559,
+          31739,
+          10629,
+          4585
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 80278,
+          "ONE_MORE_ROUND": 78549,
+          "SLOW_DISASTER": 71813,
+          "RAVE_DIMENSION": 68583,
+          "TOTAL_MAYHEM": 68155,
+          "FROZEN_REALITY": 69694,
+          "FREEZE_AND_FREAK": 58620,
+          "DREAM_GLITCH": 64946,
+          "ONE_MORE_RAVE": 58446,
+          "DOUBLE_VISION": 68311
+        },
+        "police": 130166,
+        "calmer": 78186,
+        "joiner": 51980,
+        "corners": 105584,
+        "total": 4384,
+        "respins": 546931,
+        "capped": 0,
+        "safety": 0
+      },
+      "spinBonus": {
+        "spins": 250030,
+        "cascades": 450873,
+        "maxCascades": 44,
+        "withAwaken": 49514,
+        "awakenTotal": 60850,
+        "refires": 47783,
+        "persona": {
+          "WEED": 17062,
+          "ALCOOL": 12594,
+          "COPIUM": 11674,
+          "MDMA": 10516,
+          "LCD": 9004
+        },
+        "solo": {
+          "WEED": 11290,
+          "ALCOOL": 8173,
+          "COPIUM": 6324,
+          "MDMA": 4811,
+          "LCD": 3686
+        },
+        "level": [
+          212004,
+          12866,
+          9108,
+          6984,
+          5482,
+          3586
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 21901,
+          "ONE_MORE_ROUND": 11424,
+          "SLOW_DISASTER": 11739,
+          "RAVE_DIMENSION": 10593,
+          "TOTAL_MAYHEM": 5450,
+          "FROZEN_REALITY": 4113,
+          "FREEZE_AND_FREAK": 3201,
+          "DREAM_GLITCH": 1896,
+          "ONE_MORE_RAVE": 1870,
+          "DOUBLE_VISION": 2162
+        },
+        "police": 15051,
+        "calmer": 6373,
+        "joiner": 8678,
+        "corners": 919,
+        "total": 3166,
+        "respins": 54502,
+        "capped": 0,
+        "safety": 0
+      },
+      "attrib": {
+        "natural": {
+          "total": 0.3590264138740648,
+          "base": 0.3370621749367579
+        },
+        "REALITY_BREAK": {
+          "total": 0.011136798000000227,
+          "base": 0.009252330500000053
+        },
+        "SLOW_MOTION": {
+          "total": 0.015145518500000827,
+          "base": 0.013961879375000569
+        },
+        "RAVE_RUSH": {
+          "total": 0.0034290700625000826,
+          "base": 0.0028615075625000566
+        },
+        "DRUNK_WALK": {
+          "total": 0.020357102000001234,
+          "base": 0.016477745187500774
+        },
+        "ONE_MORE_CHANCE": {
+          "total": 0.006118857249999977,
+          "base": 0.0056704776249999886
+        },
+        "NEVER_ENDING_DREAM": {
+          "total": 0.010115525187500016,
+          "base": 0.007485847437500035
+        },
+        "ONE_MORE_ROUND": {
+          "total": 0.008633035312500054,
+          "base": 0.0073819676250000575
+        },
+        "SLOW_DISASTER": {
+          "total": 0.009656781374999835,
+          "base": 0.0070027785624997094
+        },
+        "RAVE_DIMENSION": {
+          "total": 0.003622460875000016,
+          "base": 0.0029602251875000154
+        },
+        "TOTAL_MAYHEM": {
+          "total": 0.00504281593749987,
+          "base": 0.004251857687499949
+        },
+        "FROZEN_REALITY": {
+          "total": 0.013190610812500165,
+          "base": 0.012039893687500138
+        },
+        "FREEZE_AND_FREAK": {
+          "total": 0.0020551690624999964,
+          "base": 0.0014186230000000064
+        },
+        "DREAM_GLITCH": {
+          "total": 0.002907355062500055,
+          "base": 0.0027333725625000456
+        },
+        "ONE_MORE_RAVE": {
+          "total": 0.0048381444999999745,
+          "base": 0.004567253624999985
+        },
+        "DOUBLE_VISION": {
+          "total": 0.007170829999999693,
+          "base": 0.006612683062499706
+        },
+        "CALMER": {
+          "total": 0.0023925027500000117,
+          "base": 0.0020166590625000005
+        },
+        "mult:CW": {
+          "total": 0.21510265287504432,
+          "base": 0.11591590618750232
+        },
+        "mult:DW": {
+          "total": 0.27798044437501795,
+          "base": 0.2009183558750187
+        }
+      },
+      "bySize": [
+        {
+          "label": "4–6",
+          "rtp": 0.37615912937428353,
+          "perRound": 0.7249768125,
+          "avgX": 0.5188567729182146
+        },
+        {
+          "label": "7–10",
+          "rtp": 0.13517129687499232,
+          "perRound": 0.0770963125,
+          "avgX": 1.7532783669127148
+        },
+        {
+          "label": "11–14",
+          "rtp": 0.07781681156249776,
+          "perRound": 0.008502625,
+          "avgX": 9.152092625806471
+        },
+        {
+          "label": "15–20",
+          "rtp": 0.12419922500000022,
+          "perRound": 0.001582,
+          "avgX": 78.50772756005071
+        },
+        {
+          "label": "21+",
+          "rtp": 0.264575625,
+          "perRound": 0.0005921875,
+          "avgX": 446.77678100263853
+        }
+      ],
+      "byMult": [
+        {
+          "label": "×1",
+          "rtp": 0.41065885531117763,
+          "perRound": 0.7687821875,
+          "avgX": 0.5341680153212156
+        },
+        {
+          "label": "×2–5",
+          "rtp": 0.12222398687500124,
+          "perRound": 0.036622125,
+          "avgX": 3.3374356860777805
+        },
+        {
+          "label": "×6–20",
+          "rtp": 0.2402525140625038,
+          "perRound": 0.0069485,
+          "avgX": 34.57616954198803
+        },
+        {
+          "label": "×21–100",
+          "rtp": 0.20478673156249988,
+          "perRound": 0.000397125,
+          "avgX": 515.673230248662
+        },
+        {
+          "label": "×101+",
+          "rtp": 0,
+          "perRound": 0,
+          "avgX": 0
+        }
+      ],
+      "seconds": 81.624,
+      "decomposed": {
+        "rtp": 0.9792097990530191,
+        "ci": 0.009524105563664032,
+        "parts": [
+          {
+            "bonus": "afterparty",
+            "freq": 0.001433375,
+            "ev": 122.71857050000008,
+            "share": 0.17590173099043763
+          },
+          {
+            "bonus": "vip",
+            "freq": 0.0000993125,
+            "ev": 324.10614134999906,
+            "share": 0.03218779116282178
+          },
+          {
+            "bonus": "police",
+            "freq": 0.0000128125,
+            "ev": 821.7551728000021,
+            "share": 0.010528738151500027
+          }
+        ]
+      }
+    },
+    "hunt": {
+      "mode": "hunt",
+      "name": "Aposta extra MAIS SCATTERS",
+      "rounds": 16000000,
+      "n": 16000000,
+      "costX": 2,
+      "sdX": 42.34719946937535,
+      "volatility": {
+        "sdPerCost": 21.173599734687674,
+        "underHalfCost": 0.873656625,
+        "maxWinOneIn": null
+      },
+      "rtp": 0.9868702034366874,
+      "ci": 0.01037506386999696,
+      "ciBatch": 0.013193917247813939,
+      "sigma": 21.173599734687674,
+      "hitFreq": 0.446213125,
+      "netWinFreq": 0.058064625,
+      "avgWinX": 1.9737404068733748,
+      "avgHitX": 4.423313202347813,
+      "maxX": 18140.205,
+      "minX": 0.1,
+      "capHits": 0,
+      "maxZeroStreak": 28,
+      "percentis": [
+        {
+          "p": 50,
+          "all": 0,
+          "hits": 0.3499999940395355
+        },
+        {
+          "p": 75,
+          "all": 0.30000001192092896,
+          "hits": 1.2000000476837158
+        },
+        {
+          "p": 90,
+          "all": 1.2999999523162842,
+          "hits": 2.450000047683716
+        },
+        {
+          "p": 95,
+          "all": 2.2100000381469727,
+          "hits": 4.25
+        },
+        {
+          "p": 99,
+          "all": 9.449999809265137,
+          "hits": 40.79999923706055
+        },
+        {
+          "p": 99.9,
+          "all": 458.2300109863281,
+          "hits": 789.1099853515625
+        },
+        {
+          "p": 99.99,
+          "all": 1616.2099609375,
+          "hits": 2425.510009765625
+        }
+      ],
+      "hist": [
+        {
+          "label": "0×",
+          "from": 0,
+          "to": 0,
+          "count": 8860590,
+          "freq": 0.553786875,
+          "rtpShare": 0
+        },
+        {
+          "label": ">0–0.5×",
+          "from": 0,
+          "to": 0.5,
+          "count": 4105266,
+          "freq": 0.256579125,
+          "rtpShare": 0.027284763230694457
+        },
+        {
+          "label": "0.5–1×",
+          "from": 0.5,
+          "to": 1,
+          "count": 1012650,
+          "freq": 0.063290625,
+          "rtpShare": 0.023178618361460044
+        },
+        {
+          "label": "1–2×",
+          "from": 1,
+          "to": 2,
+          "count": 1003923,
+          "freq": 0.0627451875,
+          "rtpShare": 0.04482633747603744
+        },
+        {
+          "label": "2–5×",
+          "from": 2,
+          "to": 5,
+          "count": 721993,
+          "freq": 0.0451245625,
+          "rtpShare": 0.06380032393477857
+        },
+        {
+          "label": "5–10×",
+          "from": 5,
+          "to": 10,
+          "count": 141285,
+          "freq": 0.0088303125,
+          "rtpShare": 0.02963173703739047
+        },
+        {
+          "label": "10–20×",
+          "from": 10,
+          "to": 20,
+          "count": 47425,
+          "freq": 0.0029640625,
+          "rtpShare": 0.02053937515771389
+        },
+        {
+          "label": "20–50×",
+          "from": 20,
+          "to": 50,
+          "count": 43894,
+          "freq": 0.002743375,
+          "rtpShare": 0.043902102179706096
+        },
+        {
+          "label": "50–100×",
+          "from": 50,
+          "to": 100,
+          "count": 20354,
+          "freq": 0.001272125,
+          "rtpShare": 0.04402291938114166
+        },
+        {
+          "label": "100–250×",
+          "from": 100,
+          "to": 250,
+          "count": 16024,
+          "freq": 0.0010015,
+          "rtpShare": 0.08115391048312187
+        },
+        {
+          "label": "250–500×",
+          "from": 250,
+          "to": 500,
+          "count": 12144,
+          "freq": 0.000759,
+          "rtpShare": 0.13815040859746933
+        },
+        {
+          "label": "500–1k×",
+          "from": 500,
+          "to": 1000,
+          "count": 9859,
+          "freq": 0.0006161875,
+          "rtpShare": 0.21314781447315215
+        },
+        {
+          "label": "1k–2.5k×",
+          "from": 1000,
+          "to": 2500,
+          "count": 3923,
+          "freq": 0.0002451875,
+          "rtpShare": 0.17227904020118714
+        },
+        {
+          "label": "2.5k–5k×",
+          "from": 2500,
+          "to": 5000,
+          "count": 536,
+          "freq": 0.0000335,
+          "rtpShare": 0.0559767767868042
+        },
+        {
+          "label": "5k–10k×",
+          "from": 5000,
+          "to": 10000,
+          "count": 123,
+          "freq": 0.0000076875,
+          "rtpShare": 0.024546713638305663
+        },
+        {
+          "label": "10k–25k×",
+          "from": 10000,
+          "to": 25000,
+          "count": 11,
+          "freq": 6.875e-7,
+          "rtpShare": 0.00442936279296875
+        },
+        {
+          "label": "25k× (máx.)",
+          "from": 25000,
+          "to": null,
+          "count": 0,
+          "freq": 0,
+          "rtpShare": 0
+        }
+      ],
+      "bonus": {
+        "afterparty": {
+          "count": 113465,
+          "freq": 0.0070915625,
+          "oneIn": 141.01264707178424,
+          "avgWinX": 123.546452562464,
+          "sdWinX": 216.14666888490513,
+          "maxWinX": 2433.5600000000004,
+          "rtpShare": 0.4380686949999993
+        },
+        "vip": {
+          "count": 13370,
+          "freq": 0.000835625,
+          "oneIn": 1196.7090501121916,
+          "avgWinX": 335.1526503365746,
+          "sdWinX": 711.066322626738,
+          "maxWinX": 7654.93,
+          "rtpShare": 0.14003096671875007
+        },
+        "police": {
+          "count": 2248,
+          "freq": 0.0001405,
+          "oneIn": 7117.437722419929,
+          "avgWinX": 780.9765836298932,
+          "sdWinX": 1824.5837067533712,
+          "maxWinX": 18134.09,
+          "rtpShare": 0.054863604999999996
+        }
+      },
+      "bonusSpins": 1306050,
+      "retriggers": 3044,
+      "bonusRounds": 129083,
+      "baseOnly": {
+        "meanX": 0.7078138734357653,
+        "varX": 249.0876960854136,
+        "rtp": 0.35390693671788265
+      },
+      "spinBase": {
+        "spins": 16000000,
+        "cascades": 9749886,
+        "maxCascades": 37,
+        "withAwaken": 946574,
+        "awakenTotal": 1183357,
+        "refires": 0,
+        "persona": {
+          "WEED": 419379,
+          "ALCOOL": 283707,
+          "COPIUM": 210120,
+          "MDMA": 159425,
+          "LCD": 110726
+        },
+        "solo": {
+          "WEED": 341381,
+          "ALCOOL": 244696,
+          "COPIUM": 173432,
+          "MDMA": 127375,
+          "LCD": 89459
+        },
+        "level": [
+          15053426,
+          776206,
+          123486,
+          31837,
+          10557,
+          4488
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 79629,
+          "ONE_MORE_ROUND": 78600,
+          "SLOW_DISASTER": 71659,
+          "RAVE_DIMENSION": 68448,
+          "TOTAL_MAYHEM": 68197,
+          "FROZEN_REALITY": 69907,
+          "FREEZE_AND_FREAK": 58796,
+          "DREAM_GLITCH": 64978,
+          "ONE_MORE_RAVE": 57909,
+          "DOUBLE_VISION": 68488
+        },
+        "police": 132369,
+        "calmer": 79540,
+        "joiner": 52829,
+        "corners": 105346,
+        "total": 4285,
+        "respins": 549270,
+        "capped": 0,
+        "safety": 0
+      },
+      "spinBonus": {
+        "spins": 1306050,
+        "cascades": 2346468,
+        "maxCascades": 49,
+        "withAwaken": 252474,
+        "awakenTotal": 311602,
+        "refires": 248816,
+        "persona": {
+          "WEED": 87227,
+          "ALCOOL": 64513,
+          "COPIUM": 60484,
+          "MDMA": 53840,
+          "LCD": 45538
+        },
+        "solo": {
+          "WEED": 56114,
+          "ALCOOL": 40572,
+          "COPIUM": 31953,
+          "MDMA": 24395,
+          "LCD": 18183
+        },
+        "level": [
+          1111893,
+          63571,
+          46998,
+          36185,
+          28466,
+          18937
+        ],
+        "fusion": {
+          "NEVER_ENDING_DREAM": 116164,
+          "ONE_MORE_ROUND": 59651,
+          "SLOW_DISASTER": 61992,
+          "RAVE_DIMENSION": 54866,
+          "TOTAL_MAYHEM": 29071,
+          "FROZEN_REALITY": 20861,
+          "FREEZE_AND_FREAK": 16618,
+          "DREAM_GLITCH": 9872,
+          "ONE_MORE_RAVE": 9348,
+          "DOUBLE_VISION": 10758
+        },
+        "police": 88966,
+        "calmer": 32266,
+        "joiner": 56700,
+        "corners": 8837,
+        "total": 16740,
+        "respins": 287350,
+        "capped": 0,
+        "safety": 0
+      },
+      "attrib": {
+        "natural": {
+          "total": 0.22234974199927554,
+          "base": 0.16566758112475355
+        },
+        "REALITY_BREAK": {
+          "total": 0.009377066218750172,
+          "base": 0.004522740812500028
+        },
+        "SLOW_MOTION": {
+          "total": 0.009435206187500812,
+          "base": 0.006311248437500313
+        },
+        "RAVE_RUSH": {
+          "total": 0.0029055188125000284,
+          "base": 0.0014265779062500258
+        },
+        "DRUNK_WALK": {
+          "total": 0.018286542156250068,
+          "base": 0.008140280218750337
+        },
+        "ONE_MORE_CHANCE": {
+          "total": 0.00391989006249999,
+          "base": 0.0027898805624999986
+        },
+        "NEVER_ENDING_DREAM": {
+          "total": 0.01056872378124892,
+          "base": 0.0035518706562500243
+        },
+        "ONE_MORE_ROUND": {
+          "total": 0.006869466937500055,
+          "base": 0.0035394562187500292
+        },
+        "SLOW_DISASTER": {
+          "total": 0.010764599843749889,
+          "base": 0.003468738999999881
+        },
+        "RAVE_DIMENSION": {
+          "total": 0.0032267584687499843,
+          "base": 0.00147228681250001
+        },
+        "TOTAL_MAYHEM": {
+          "total": 0.0043821470312498875,
+          "base": 0.002133092156249975
+        },
+        "FROZEN_REALITY": {
+          "total": 0.00857501328125006,
+          "base": 0.0056143358125000575
+        },
+        "FREEZE_AND_FREAK": {
+          "total": 0.0022973536249999995,
+          "base": 0.0006678351875000031
+        },
+        "DREAM_GLITCH": {
+          "total": 0.0017922790312500266,
+          "base": 0.0013290494062500157
+        },
+        "ONE_MORE_RAVE": {
+          "total": 0.0029273982499999846,
+          "base": 0.0022243103437499926
+        },
+        "DOUBLE_VISION": {
+          "total": 0.004667722906249984,
+          "base": 0.003251808312499858
+        },
+        "CALMER": {
+          "total": 0.0019330320625000168,
+          "base": 0.0009803582812499972
+        },
+        "mult:CW": {
+          "total": 0.33636093837478637,
+          "base": 0.049749497750000496
+        },
+        "mult:DW": {
+          "total": 0.3262308044062453,
+          "base": 0.08706598771875737
+        }
+      },
+      "bySize": [
+        {
+          "label": "4–6",
+          "rtp": 0.2730603532798335,
+          "perRound": 0.838537625,
+          "avgX": 0.6512775220547402
+        },
+        {
+          "label": "7–10",
+          "rtp": 0.12523517062495104,
+          "perRound": 0.091089,
+          "avgX": 2.749732034053531
+        },
+        {
+          "label": "11–14",
+          "rtp": 0.09491919828125682,
+          "perRound": 0.011723625,
+          "avgX": 16.19280696563679
+        },
+        {
+          "label": "15–20",
+          "rtp": 0.16832844999999785,
+          "perRound": 0.0035800625,
+          "avgX": 94.03659852306929
+        },
+        {
+          "label": "21+",
+          "rtp": 0.32532703125,
+          "perRound": 0.0018119375,
+          "avgX": 359.09299437756545
+        }
+      ],
+      "byMult": [
+        {
+          "label": "×1",
+          "rtp": 0.2261889073429779,
+          "perRound": 0.8089431875,
+          "avgX": 0.5592207483494702
+        },
+        {
+          "label": "×2–5",
+          "rtp": 0.16127637390639907,
+          "perRound": 0.118863375,
+          "avgX": 2.7136428509858326
+        },
+        {
+          "label": "×6–20",
+          "rtp": 0.389842960000013,
+          "perRound": 0.0176455,
+          "avgX": 44.18610523929761
+        },
+        {
+          "label": "×21–100",
+          "rtp": 0.2095619621875001,
+          "perRound": 0.0012901875,
+          "avgX": 324.8550496536358
+        },
+        {
+          "label": "×101+",
+          "rtp": 0,
+          "perRound": 0,
+          "avgX": 0
+        }
+      ],
+      "seconds": 101.739,
+      "decomposed": {
+        "rtp": 0.9821840410955827,
+        "ci": 0.00674673750169064,
+        "parts": [
+          {
+            "bonus": "afterparty",
+            "freq": 0.0070915625,
+            "ev": 122.71857050000008,
+            "share": 0.4351332063057034
+          },
+          {
+            "bonus": "vip",
+            "freq": 0.000835625,
+            "ev": 324.10614134999906,
+            "share": 0.13541559718279647
+          },
+          {
+            "bonus": "police",
+            "freq": 0.0001405,
+            "ev": 821.7551728000021,
+            "share": 0.05772830088920015
+          }
+        ]
+      }
+    }
+  }
+}

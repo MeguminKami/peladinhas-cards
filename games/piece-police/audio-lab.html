@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'">
+  <title>Peace Police · Audição de efeitos</title>
+  <link rel="stylesheet" href="scripts/audio-lab.css">
+  <script type="module" src="scripts/audio-lab.js"></script>
+</head>
+<body>
+  <main>
+    <p class="kicker">PEACE POLICE · ACIDWAVE</p>
+    <h1>Audição de efeitos</h1>
+    <p>Paleta refeita com vidro, líquido, ar, mecanismos, percussão e cortes digitais. Efeitos sintetizados e músicas entregues pelo dono, sem vozes.</p>
+    <section class="controls" aria-label="Controlos de audição">
+      <button id="unlock">Ativar áudio</button>
+      <button id="sequence" disabled>Ouvir sequência</button>
+      <button id="personas" disabled>Comparar personagens</button>
+      <button id="fusions" disabled>Comparar fusões</button>
+      <button id="stop">Parar</button>
+      <label>Volume <input id="volume" type="range" min="0" max="100" value="35"></label>
+      <label>Música <select id="music-mode" disabled><option value="">Sem música</option><option value="base">Base</option><option value="hunt">MAIS SCATTERS</option><option value="afterparty">AFTERPARTY</option><option value="vip">VIP AFTERPARTY</option><option value="police">POLICE PARTY</option></select></label>
+      <label>Volume música <input id="music-volume" type="range" min="0" max="100" value="35"></label>
+      <label>Filtrar <input id="filter" type="search" placeholder="Ex.: fusion, copium, bonus"></label>
+    </section>
+    <p id="status" role="status">O áudio começa apenas depois de ativares.</p>
+    <div id="sounds"></div>
+  </main>
+</body>
+</html>

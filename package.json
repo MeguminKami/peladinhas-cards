@@ -17,6 +17,7 @@
     "test:casino:cardoso": "node tests/casino-cardoso.mjs",
     "test:casino:tables": "node tests/casino-tables.mjs",
     "test:casino:sofia": "node scripts/build-casino-sofia.mjs && node --test tests/casino-sofia.test.js && npm.cmd test --prefix games/princesa-sofia",
+    "test:casino:ganza:sync": "node tests/casino-ganza-sync.mjs",
     "test:casino:rift": "node --test tests/casino-rift.test.js && node scripts/build-casino-rift.mjs && node tests/casino-rift-mobile.mjs",
     "test:casino": "node --test tests/casino.test.js tests/casino-session.test.js tests/casino-football.test.js && node tests/casino-local-wallet.mjs && node tests/casino-football.mjs && node tests/casino.mjs",
     "test:casino:football": "npm.cmd run check --prefix games/futebol && npm.cmd test --prefix games/futebol && node --test tests/casino.test.js tests/casino-session.test.js tests/casino-football.test.js && npm.cmd run build:casino && node tests/casino-football.mjs",
@@ -110,7 +111,9 @@
     "deploy:resume": "node scripts/deploy-tracker.mjs resume",
     "test:deploy-tracker": "node --test tests/deploy-tracker.test.js",
     "test:clubs": "node --test tests/football-clubs.test.js && node tests/football-clubs.mjs",
-    "test:clubs:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.backend.json --project demo-peladinhas-clubs --only firestore \"node --test tests/football-clubs.backend.test.js\""
+    "test:clubs:backend": "node scripts/emulator-cli.mjs emulators:exec --config firebase.backend.json --project demo-peladinhas-clubs --only firestore \"node --test tests/football-clubs.backend.test.js\"",
+    "test:casino:risco": "node scripts/build-casino-risco.mjs && node --test tests/casino-risco.test.js && npm.cmd test --prefix games/risco && node tests/casino-risco-integrated.mjs",
+    "test:casino:pp": "node scripts/build-casino-pp.mjs && node tests/casino-pp-integrated.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

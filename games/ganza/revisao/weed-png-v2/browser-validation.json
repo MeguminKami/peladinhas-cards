@@ -1,0 +1,11 @@
+{
+  "browser": "Edge headless",
+  "nativeAPNG": true,
+  "changingFrames": true,
+  "backgrounds": [
+    "cream",
+    "dark teal",
+    "checkerboard"
+  ],
+  "errors": []
+}

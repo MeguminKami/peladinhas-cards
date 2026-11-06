@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { card } from "../js/cards.js";
+import { DEFAULT_CARD_OUTLINE, expandCardOutline } from "../js/card-geometry.js";
 import { ATTRIBUTES, flag } from "../js/utils.js";
 import { cardStatsMarkup } from "../js/card-player-content.js";
 import {
@@ -22,14 +23,17 @@ test("every shop finish shares official values, eight attributes, country, trend
     photoDesign: { photoX: -50, photoY: 100, photoWidth: 160, photoHeight: 120, photoScale: 200 },
   };
   const stats = cardStatsMarkup(player);
+  const base = expandCardOutline(DEFAULT_CARD_OUTLINE).split(" ").map(point => { const [x, y] = point.split(",").map(Number); return `${x * 3},${y * 4.2}`; }).join(" ");
   assert.ok(card(player, { preview: true, theme: "gold-common" }).includes(stats));
   for (const edition of SHOP_CARDS) {
     const markup = renderCasinoShopCard(edition, player);
     assert.ok(markup.includes(stats), edition.id);
+    assert.ok(markup.includes(`class="sca-shell" points="${base}"`), `${edition.id} shares the Card Lab body`);
+    for (const content of ["card-photo", "card-rating", "card-caption", "card-stats"]) assert.ok(markup.includes(content), `${edition.id}: ${content}`);
     assert.ok(markup.includes(flag("PT")), edition.id);
     assert.ok(markup.includes("87 OVR, GR"), edition.id);
     assert.equal((markup.match(/data-playstyle=/g) || []).length, 3);
-    assert.ok(markup.includes('class="sca-photo-frame"'));
+    assert.ok(markup.includes('class="sca-photo-frame card-photo"'));
     assert.ok(!markup.includes("left:-50%"));
     assert.ok(!markup.includes("width:160%"));
     const missing = renderCasinoShopCard(edition, { ...player, hasCard: false });
@@ -52,6 +56,15 @@ test("catalogue starts at 1000; every edition has an OVR requirement", () => {
       CASINO_SHOP_ART_IDS.includes(card.id),
       `missing art for ${card.id}`,
     );
+  }
+});
+test("game scenery follows catalogue IDs and stays below the player layers", () => {
+  const games = new Set(["blackjack-private", "roulette-european", "cardoso-asphalt", "rift-core", "glory-night"]);
+  for (const edition of SHOP_CARDS) {
+    const markup = renderCasinoShopCard(edition, { name: "Jogador", ovr: 90 });
+    const scene = markup.indexOf(`data-game-scene="${edition.id}"`);
+    assert.equal(scene >= 0, games.has(edition.id), edition.id);
+    if (scene >= 0) assert.ok(scene < markup.indexOf('class="sca-photo-frame'), edition.id);
   }
 });
 test("buy validates OVR, money, ownership and never mutates failed state", () => {

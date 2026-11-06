@@ -21,7 +21,7 @@ button{font:inherit;color:inherit;touch-action:manipulation}
 button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 [hidden]{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.safe-area-probe{position:fixed;visibility:hidden;pointer-events:none;inset:0;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+.safe-area-probe{position:fixed;visibility:hidden;pointer-events:none;inset:0;padding:max(env(safe-area-inset-top,0px),var(--preview-safe-top,0px)) max(env(safe-area-inset-right,0px),var(--preview-safe-right,0px)) max(env(safe-area-inset-bottom,0px),var(--preview-safe-bottom,0px)) max(env(safe-area-inset-left,0px),var(--preview-safe-left,0px))}
 
 /* ---- Grelha ---- */
 .board-wrap{position:relative}
