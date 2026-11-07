@@ -4,7 +4,7 @@ export {color} from './falesia-layers.js';
 const risks=['baixo','medio','alto','extremo'],ease=u=>u*u*(3-2*u);
 export class Scene extends Base{
  constructor(...args){super(...args);this.risk='extremo';this.landings=[];this.environment=null;this.previous=null;this.transition=0;this.geometry=null;}
- resize(){super.resize();this.geometry=null;this.backgrounds=null;}
+ resize(){super.resize();this.geometry=null;this.backgrounds=null;this.buoySprites=null;this.buoyRows=null;}
  layout(rows=this.rows){
   const {width:w,height:h}=this.surface;
   if(!this.geometry){const bounds=this.canvas.getBoundingClientRect(),scale=h/Math.max(1,bounds.height),controls=document.querySelector('#controls').getBoundingClientRect(),header=document.querySelector('header').getBoundingClientRect(),mobile=bounds.width<=650;
@@ -36,10 +36,10 @@ export class Scene extends Base{
   // Keep gameplay objects above foreground flowers, including the outermost boat.
   this.foreground(t);
   // Bright jade glass with a dark outer rim stays readable over both sea and pastel sky.
-  for(let j=0;j<this.rows;j++)for(let k=0;k<=j;k++){const x=center+(k-j/2)*step,y=top+j*dy,age=now-(this.lights.get(`${j}:${k}`)||-1e4),r=Math.min(step*.25,dy*.29);
-   this.drawBuoy(x,y,r*1.15,age);
-  }
+  this.drawBuoyRows(now);
   for(let k=0;k<=this.rows;k++)this.boat(center+(k-this.rows/2)*step,boatY+(mobile?16:-7)*scale,step*.97,this.reduced?0:Math.sin(t*1.4+k)*.018,k);
+  // Immediate launch feedback; no pins, destination or payment before durable acceptance.
+  if(this.launch){const u=this.reduced?1:Math.min(1,Math.max(0,(now-this.launch.start)/300)),sx=actorX+actorSize*.6,sy=actorY+actorSize*.4,arc=Math.min(90*scale,Math.abs(top-sy)*.35+24*scale),x=sx+(center-sx)*ease(u),y=sy+(top-sy)*u-Math.sin(u*Math.PI)*arc,r=Math.max(4.5,Math.min(13,step*.30));this.launch.screenPosition={x,y};this.parcel(x,y,r*1.25,0,1);}
   for(const p of [...this.plates]){const progress=Math.max(0,(now-p.start-300)/(p.duration-300)),at=Math.min(p.rows-1,Math.floor(progress*p.rows)),u=Math.min(1,progress*p.rows-at),a=this.point(p,at),b=this.point(p,at+1),launch=Math.min(1,(now-p.start)/300),sx=actorX+actorSize*.6,sy=actorY+actorSize*.4,launchArc=Math.min(90*scale,Math.abs(a.y-sy)*.35+24*scale),x=launch<1?sx+(a.x-sx)*ease(launch):a.x+(b.x-a.x)*ease(u),y=launch<1?sy+(a.y-sy)*launch-Math.sin(launch*Math.PI)*launchArc:a.y+(b.y-a.y)*u-Math.sin(Math.PI*u)*dy*.35;
    p.screenPosition={x,y};
    if(launch===1&&at!==p.lastPin){p.lastPin=at;let k=0;for(let i=0;i<at;i++)k+=p.path[i];this.lights.set(`${at}:${k}`,now);this.onPin?.(x/w,at);this.burst(a.x,a.y,'#efc395',3);}

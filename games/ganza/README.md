@@ -4,6 +4,12 @@ Plinko LoFi privado do WEED para o casino Peladinhas, com créditos fictícios D
 
 Na raiz do repositório:
 
+O clique inicia imediatamente o gesto e a placa até à entrada do tabuleiro, sem esperar pelo áudio ou pela carteira. A confirmação durável corre em paralelo; só depois de recebida a jogada e publicado o compromisso a placa percorre as bóias. Se a confirmação demorar, permanece na entrada; se falhar, a preparação visual é retirada e surge a recuperação. A preparação não inventa percurso nem prémio. O teste de lançamento inclui resposta atrasada e rejeitada da carteira.
+
+As oito poses da personagem e os seus filtros de cor são preparados antes da primeira aposta. Durante a animação, as filas de bóias imóveis reutilizam o desenho anterior; apenas as filas atingidas são redesenhadas. A carteira reutiliza o motor importado na ligação inicial, evitando um novo import assíncrono em cada lançamento ou liquidação. `node tests/casino-ganza-launch.mjs` mede o clique e o desenho no casino completo com fixtures locais e CPU limitada, verifica a reutilização das poses e confirma o destino da bola. As medições são locais e não certificam o desempenho num aparelho físico.
+
+À entrada, o jogo prepara em memória todas as pinturas (retrato e paisagem), efeitos, música e ambientes, com progresso de carregamento e LARGAR desativado até concluir. O primeiro gesto ativa o som já descodificado. Falhas de áudio ficam silenciosas, com limite de 12 segundos por pedido; não impedem jogar. Depois de preparado, mudar de dificuldade e lançar bolas não descarrega recursos. A cache HTTP pode reutilizar os ficheiros entre entradas; a preparação em memória é repetida em cada abertura. A carteira mantém a confirmação de sessão e sincronização em lote. Regressão: `node tests/casino-ganza-audio-latency.mjs` verifica preparação com rede lenta e 20 jogadas por tamanho sem novos pedidos de recursos.
+
 ```powershell
 npm.cmd run dev --prefix games/ganza
 npm.cmd test --prefix games/ganza

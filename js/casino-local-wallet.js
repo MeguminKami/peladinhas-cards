@@ -3,6 +3,7 @@ import { callAdmin } from "./db.js";
 import { settleCasinoSlot, CASINO_EDITION } from "./casino-economy.js";
 import { readCasinoLocal, writeCasinoLocal } from "./casino-local-store.js";
 import { tableOperation } from "./casino-table-operation.js";
+let ganzaEngine;
 
 export function createCasinoLocalWallet(uid, changed = () => {}, { tables = false } = {}) {
   const playerId = `${uid}:${CASINO_EDITION}`;
@@ -459,7 +460,9 @@ export function createCasinoLocalWallet(uid, changed = () => {}, { tables = fals
   }
   async function ganzaRequest(action, payload, id) {
     if (!tables) throw Error('GANZÁ está indisponível.');
-    const { applyLocalGanza } = await import('./casino-ganza-local.js');
+    // connect warms the engine. Reusing it avoids scheduling another module
+    // import on every start/settle while the animation occupies the main thread.
+    const applyLocalGanza = ganzaEngine || (ganzaEngine = (await import('./casino-ganza-local.js')).applyLocalGanza);
     return lock(async () => {
       if (stopped || !state || state.closed || state.opening) throw Error('Reabre o casino para recuperar.');
       if (typeof id !== 'string' || !/^[a-zA-Z0-9-]{16,100}$/.test(id)) throw Error('Pedido inválido.');

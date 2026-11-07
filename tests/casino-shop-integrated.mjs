@@ -15,7 +15,7 @@ try {
         wallet: {
           edition: "official-2026-10-27-reset-200",
           sessionProtocol: 5,
-          balance: 3000000,
+          balance: 30000000,
           revision: 1,
           earned: 0,
           matches: 0,

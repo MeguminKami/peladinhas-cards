@@ -1,4 +1,4 @@
-/** Acidwave presentation only. Motion follows ctx.tempo, text retains real reading time. */
+/** Acidwave presentation only. Motion and banner reading time follow ctx.tempo. */
 import { fusionName, POWER_NAME, LEVEL_NAME, symName, xBet, clusterEquation, BONUS_NAME, categoria, shortName } from './texto.js';
 import { PERSONA_ID, FUSION_ART, BONUS_ART } from './art-loader.js';
 import { purchaseEntry } from './acid-symbols.js';
@@ -9,11 +9,7 @@ const pause = (ctx, ms) => ctx.skip() ? Promise.resolve() : ctx.tempo.wait(ms, c
 
 async function readingPause(ctx, text) {
   const words=text.trim().split(/\s+/).length;
-  const until=performance.now()+Math.max(3000,Math.min(5000,900+words*180));
-  while(!ctx.skip()&&performance.now()<until) {
-    // Re-evaluate the rate so changing speed mid-banner cannot cut its reading time.
-    await pause(ctx,Math.min(100,until-performance.now())*(ctx.tempo.rate||1));
-  }
+  await pause(ctx,Math.max(3000,Math.min(5000,900+words*180)));
 }
 
 function purchaseTile(ctx,symbol,index=null) {

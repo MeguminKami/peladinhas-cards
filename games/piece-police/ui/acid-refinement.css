@@ -199,4 +199,16 @@ dialog.overlay[data-kind=bonus],dialog.overlay[data-kind=fusion]{width:min(560px
 .shell[data-layout=portrait] .topbar .top-actions{grid-area:actions;margin-left:0}
 .shell[data-layout=portrait] .topbar .forced-chip{grid-area:forced;justify-self:center}
 
+/* Keep the stage geometry independent of the base/bonus HUD and fusion state. */
+body[data-in-bonus=true] .shell .side-base{display:flex;visibility:hidden}
+body[data-in-bonus=true] .shell[data-layout=portrait] .side-base{display:grid}
+.shell .bonus-log{position:absolute;inset:0;overflow:hidden}
+.shell[data-layout=portrait] .event-log{height:auto;min-height:0;max-height:none;flex:1}
+.shell .topbar .mode-chip{min-height:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#mode-label[hidden]{display:block!important;visibility:hidden}
+#mode-label:empty::before{content:'\00a0'}
+.fusion-indicator{height:52px;flex:none}
+.shell[data-layout=portrait] .fusion-indicator{height:36px}
+.fusion-indicator[hidden]{display:flex!important;visibility:hidden}
+
 .shell[data-layout=compact] .mode-chip{grid-area:auto;transform:none;translate:-50% 0;margin:0}

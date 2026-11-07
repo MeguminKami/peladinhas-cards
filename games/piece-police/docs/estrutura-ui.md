@@ -35,9 +35,11 @@ GUI de teste com todas as funcionalidades finais e apresentação neutra. O moto
 
 ## Ajustes de apresentação — 06-11-2026
 
+O tabuleiro mantém as mesmas dimensões e posição no jogo base, AFTERPARTY, VIP AFTERPARTY e POLICE PARTY para o mesmo viewport. O título do modo e o indicador de fusão reservam espaço mesmo quando ocultos. O registo de free spins ocupa a área lateral sobre os controlos do jogo base, sem alterar a altura do palco. No telemóvel, o registo pode ser percorrido dentro dessa área. Regressão local: `node tests/board-size.browser.js` a partir da pasta do jogo, com Edge, cobre os três bónus, fusão e regresso ao jogo base em 1280 × 800, 390 × 844, 320 × 640 e 844 × 390, sem pedidos à carteira ou cloud.
+
 A entrada comprada reutiliza as células, os materiais e o recorte da grelha normal, incluindo premium, Scatter e cantos fechados. `ctx.paintSymbol` usa o mesmo pintor do catálogo, que também define a cor da personagem nos premium. O título de entrada continua acessível, mas já não ocupa uma linha que reduza a altura das células. A composição decorativa conserva 3/4/5 Scatters, sem alterar modelo, motor ou carteira.
 
-O Joiner reserva espaço inferior para o multiplicador e o nome, com o retrato contido na área própria. Valores com vários algarismos deixam de ocupar o rosto. Os avisos de Chemistry, poderes, Party e restantes banners têm 3–5 segundos reais de leitura após a entrada, independentemente da velocidade e do movimento reduzido. As animações continuam a seguir o relógio partilhado, e os avisos com confirmação manual mantêm esse funcionamento.
+O Joiner reserva espaço inferior para o multiplicador e o nome, com o retrato contido na área própria. Valores com vários algarismos deixam de ocupar o rosto. Os avisos de Chemistry, poderes, Party e restantes banners acompanham a velocidade do jogo: 3 a 5 segundos em Normal, 1,5 a 2,5 segundos em Rápido e cerca de 0,8 a 1,3 segundos em Turbo, incluindo mudanças de velocidade durante o aviso e movimento reduzido. As animações continuam a seguir o relógio partilhado, e os avisos com confirmação manual mantêm esse funcionamento.
 
 Validação dirigida: `npm.cmd run test:presentation-fixes -- --edge`. Cobre a geometria e a arte da compra nos três bónus, quatro formatos, multiplicadores ×9/×10/×25/×50/×100/×1000, tempos de leitura em Normal/Rápido/Turbo, movimento reduzido e mudança de velocidade durante o aviso. Usa fixtures de apresentação locais, sem pedidos ou alterações da carteira.
 

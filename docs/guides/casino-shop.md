@@ -26,23 +26,25 @@ O catálogo estático em [casino-shop-catalog.js](../../js/casino-shop-catalog.j
 
 | Edição | OVR mínimo | DJC |
 | --- | ---: | ---: |
-| Bronze Forjado | 50 | 1 000 |
-| Prata Reflexo | 65 | 2 500 |
-| Ouro Reserva | 75 | 4 000 |
-| Platina | 85 | 5 000 |
-| Paládio | 88 | 8 000 |
-| Irídio | 90 | 12 000 |
-| Ródio | 93 | 18 000 |
-| Ósmio | 95 | 25 000 |
-| Blackjack | 75 | 5 000 |
-| Cardoso Road | 75 | 6 500 |
-| Roleta Europeia | 75 | 7 500 |
-| Futebol de Bairro | 75 | 9 000 |
-| RIFT//CORE | 75 | 12 000 |
-| P1 · Talento de Bronze | 70 | 8 000 |
-| P2 · Velocidade de Prata | 70 | 10 000 |
-| P3 · Maestro de Ouro | 70 | 12 000 |
-| P4 · Rainha da Final | 70 | 15 000 |
+| Bronze Forjado | 50 | 10 000 |
+| Prata Reflexo | 65 | 25 000 |
+| Ouro Reserva | 75 | 40 000 |
+| Platina | 85 | 50 000 |
+| Paládio | 88 | 80 000 |
+| Irídio | 90 | 120 000 |
+| Ródio | 93 | 180 000 |
+| Ósmio | 95 | 250 000 |
+| Blackjack | 75 | 50 000 |
+| Cardoso Road | 75 | 65 000 |
+| Roleta Europeia | 75 | 75 000 |
+| Futebol de Bairro | 75 | 90 000 |
+| RIFT//CORE | 75 | 120 000 |
+| P1 · Talento de Bronze | 70 | 80 000 |
+| P2 · Velocidade de Prata | 70 | 100 000 |
+| P3 · Maestro de Ouro | 70 | 120 000 |
+| P4 · Rainha da Final | 70 | 150 000 |
+
+Os playstyles usam a posi??o e o tamanho partilhados das cartas normais: coluna na margem esquerda, a 30% da altura, com os ?cones centrados no rebordo.
 
 Comprar desbloqueia um acabamento permanente para o comprador; não altera OVR nem atributos. A primeira compra revela a edição no álbum público da liga, mas não a atribui gratuitamente aos outros jogadores. Os detentores e as datas são derivados dos prémios permanentes já carregados em `cardCollections`. Não há uma consulta por edição ou por detentor.
 

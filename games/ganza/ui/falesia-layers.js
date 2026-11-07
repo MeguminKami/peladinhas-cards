@@ -6,11 +6,10 @@ export const layers={
   this.assetLoads=new Map();
   this.loadAsset=async name=>{if(this.images[name])return this.images[name];if(!this.assetLoads.has(name))this.assetLoads.set(name,(async()=>{const image=new Image();image.src=`ui/art/falesia/${name==='actor'?'actor.png':name+'.webp'}`;await image.decode();return this.images[name]=await createImageBitmap(image,{premultiplyAlpha:'premultiply'});})());return this.assetLoads.get(name);};
   this.risk=document.querySelector('#risk').value;
-  const portrait=this.canvas.getBoundingClientRect().width<=650;
-  await Promise.all(['cliff','actor','buoy','boat','parcel','pergola','ledge','flowers',this.risk+(portrait?'-portrait':'')].map(this.loadAsset));
+  await Promise.all(['cliff','actor','buoy','boat','parcel','pergola','ledge','flowers',...risks.flatMap(risk=>[risk,risk+'-portrait'])].map(this.loadAsset));
   this.ready=true;
-  // Only the active composition blocks entry. Other paintings decode in the background.
-  this.backgroundLoading=(async()=>{for(const risk of risks)for(const suffix of ['', '-portrait'])await this.loadAsset(risk+suffix);})().catch(e=>{this.assetError=e.message;});
+  this.prepareActor();
+  this.backgroundLoading=Promise.resolve();
  },
  background(risk){
   if(!this.backgrounds)this.backgrounds=new Map();const {w,h,mobile}=this.layout(),name=risk+(mobile?'-portrait':'');
@@ -55,20 +54,34 @@ export const layers={
   if(level===0&&!this.reduced){c.strokeStyle='#fff4d9';c.lineWidth=1.5*scale;for(let i=0;i<3;i++){const x=(w*.75+t*8*scale+i*70*scale)%w,y=h*.15+i*9*scale;c.beginPath();c.moveTo(x-5*scale,y);c.quadraticCurveTo(x-2*scale,y-4*scale,x,y);c.quadraticCurveTo(x+2*scale,y-4*scale,x+5*scale,y);c.stroke();}}
   c.restore();
  },
+ prepareActor(){
+  if(this.actorFramesRisk===this.risk)return;
+  const img=this.images.actor;if(!img)return;
+  const cw=img.width/4,ch=img.height/2;
+  // Prepare all poses together, including the two throwing poses. No first-use
+  // canvas allocation or colour filter is left for the launch animation.
+  this.actorFrames=Array.from({length:8},(_,index)=>{
+   const frame=document.createElement('canvas');frame.width=cw;frame.height=ch;
+   const d=frame.getContext('2d');d.filter=this.risk==='alto'?'brightness(.9) hue-rotate(340deg)':this.risk==='extremo'?'brightness(.82) hue-rotate(330deg)':'none';
+   d.drawImage(img,index%4*cw,Math.floor(index/4)*ch,cw,ch,0,0,cw,ch);return frame;
+  });
+  this.actorBlend??=document.createElement('canvas');this.actorBlend.width=cw;this.actorBlend.height=ch;
+  this.actorFramesRisk=this.risk;
+ },
  actor(x,y,size){
   const c=this.ctx,img=this.images.actor;if(!img)return;const t=this.time,throwAge=t-(this.throwAt??-10000),result=this.result;
+  this.prepareActor();
   let pose=0;
   if(!this.reduced){if(throwAge>=0&&throwAge<850)pose=throwAge<200?4:5;else if(result)pose=result.round.multiplier>=10000?7:result.round.multiplier>=100?6:1;else {const phase=(t%20000)/1000;pose=phase<6?0:phase<8?1:phase<12?2:phase<14?3:0;}}
   // Crossfade only at pose boundaries; breathing and foot sway are continuous, face stays painted.
   if(this.actorPose!==pose){this.actorPrevious=this.actorPose??pose;this.actorPose=pose;this.actorChange=t;}
   const mix=this.reduced?1:Math.min(1,Math.max(0,(t-this.actorChange)/280));
-  const draw=(index,alpha)=>{c.globalAlpha=alpha;const cw=img.width/4,ch=img.height/2;c.drawImage(img,index%4*cw,Math.floor(index/4)*ch,cw,ch,x,y,size,size);};
-  c.save();c.filter=this.risk==='alto'?'brightness(.9) hue-rotate(340deg)':this.risk==='extremo'?'brightness(.82) hue-rotate(330deg)':'none';if(!this.reduced){const breath=Math.sin(t*.0018)*size*.002;c.translate(0,breath);if(result?.round.multiplier===999900){c.translate(x+size*.5,y+size);c.rotate(Math.sin(t*.008)*.055);c.translate(-x-size*.5,-y-size);}}
+  const draw=(index,alpha)=>{c.globalAlpha=alpha;c.drawImage(this.actorFrames[index],x,y,size,size);};
+  c.save();if(!this.reduced){const breath=Math.sin(t*.0018)*size*.002;c.translate(0,breath);if(result?.round.multiplier===999900){c.translate(x+size*.5,y+size);c.rotate(Math.sin(t*.008)*.055);c.translate(-x-size*.5,-y-size);}}
   if(mix<1){
    // Blend on transparent pixels first so overlapping poses do not reveal the rock.
-   if(!this.actorBlend){this.actorBlend=document.createElement('canvas');this.actorBlend.width=img.width/4;this.actorBlend.height=img.height/2;}
    const blend=this.actorBlend.getContext('2d'),cw=img.width/4,ch=img.height/2;blend.clearRect(0,0,cw,ch);blend.globalCompositeOperation='source-over';
-   for(const [index,alpha]of [[this.actorPrevious,1-mix],[pose,mix]]){blend.globalAlpha=alpha;blend.drawImage(img,index%4*cw,Math.floor(index/4)*ch,cw,ch,0,0,cw,ch);blend.globalCompositeOperation='lighter';}
+   for(const [index,alpha]of [[this.actorPrevious,1-mix],[pose,mix]]){blend.globalAlpha=alpha;blend.drawImage(this.actorFrames[index],0,0);blend.globalCompositeOperation='lighter';}
    c.drawImage(this.actorBlend,x,y,size,size);
   }else draw(pose,1);c.restore();
  },
@@ -91,9 +104,32 @@ export const layers={
   if(active&&!this.reduced){c.strokeStyle='#d4f8ed';c.lineWidth=g.scale;for(let i=0;i<5;i++){const a=Math.PI*(1+i/4),r=(age%700)/700*size*.6;c.beginPath();c.moveTo(Math.cos(a)*r,size*.2);c.lineTo(Math.cos(a)*r*1.2,size*.2+Math.sin(a)*r*.35);c.stroke();}}
   c.restore();
  },
+ drawBuoyRows(now){
+  const c=this.ctx,{w,step,dy,top,center}=this.layout(),key=`${w}:${this.surface.height}:${this.rows}`;
+  if(this.buoyRows?.key!==key)this.buoyRows={key,rows:[]};
+  const r=Math.min(step*.25,dy*.29)*1.15,pad=Math.ceil(Math.max(32,r*6));
+  for(let j=0;j<this.rows;j++){
+   let row=this.buoyRows.rows[j];
+   if(!row){const canvas=document.createElement('canvas');canvas.width=Math.ceil(j*step+pad*2);canvas.height=pad*2;row=this.buoyRows.rows[j]={canvas,dirty:true,active:false};}
+   const ages=Array.from({length:j+1},(_,k)=>now-(this.lights.get(`${j}:${k}`)||-1e4)),active=ages.some(age=>age<420);
+   if(row.dirty||active||row.active){
+    const d=row.canvas.getContext('2d');d.clearRect(0,0,row.canvas.width,row.canvas.height);this.ctx=d;
+    try{for(let k=0;k<=j;k++)this.drawBuoy(pad+k*step,pad,r,ages[k]);}finally{this.ctx=c;}
+    row.dirty=false;
+   }
+   row.active=active;c.drawImage(row.canvas,center-j*step/2-pad,top+j*dy-pad);
+  }
+ },
  drawBuoy(x,y,r,age){
   const c=this.ctx,img=this.images.buoy,hit=age<420,swing=hit&&!this.reduced?Math.sin(age*.023)*Math.exp(-age/160)*.24:0,height=Math.min(r*3.8,this.layout().dy*.96),width=height*img.width/img.height;
-  c.save();c.translate(x,y-height*.78);c.rotate(swing);c.fillStyle='#67392340';c.beginPath();c.ellipse(width*.2,height*.88,width*.48,width*.38,0,0,7);c.fill();if(hit){c.shadowColor='#c6ffd6';c.shadowBlur=12;}c.drawImage(img,-width/2,0,width,height);c.restore();
+  // The 136 buoys share two tiny sprites. Rasterize scaling, shadow and glow
+  // once per size instead of repeating those effects on every animation frame.
+  this.buoySprites??=new Map();const key=`${width}:${height}:${hit}`;
+  if(!this.buoySprites.has(key)){
+   const sprite=document.createElement('canvas');sprite.width=Math.ceil(width*2+32);sprite.height=Math.ceil(height+32);
+   const d=sprite.getContext('2d');d.translate(sprite.width/2,16);d.fillStyle='#67392340';d.beginPath();d.ellipse(width*.2,height*.88,width*.48,width*.38,0,0,7);d.fill();if(hit){d.shadowColor='#c6ffd6';d.shadowBlur=12;}d.drawImage(img,-width/2,0,width,height);this.buoySprites.set(key,sprite);
+  }
+  const sprite=this.buoySprites.get(key);c.save();c.translate(x,y-height*.78);c.rotate(swing);c.drawImage(sprite,-sprite.width/2,-16);c.restore();
  },
  parcel(x,y,r,rotation,squash){const c=this.ctx,img=this.images.parcel;c.save();c.translate(x,y);c.rotate(rotation);c.scale(1/squash,squash);c.drawImage(img,-r,-r*img.height/img.width,r*2,r*2*img.height/img.width);c.restore();},
  foreground(t){const c=this.ctx,{w,h,mobile,controlY}=this.layout(),size=w*(mobile?.20:.16);c.save();c.translate(w-size,controlY-size*.7);if(!this.reduced)c.rotate(Math.sin(t*.4)*.012);c.drawImage(this.images.flowers,0,0,size,size*this.images.flowers.height/this.images.flowers.width);c.restore();},

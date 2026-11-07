@@ -20,7 +20,7 @@ const req = (uid, data = {}) => ({
   auth: { uid, token: { auth_time: Math.floor(Date.now() / 1000) } },
   data,
 });
-async function seed(ovr = 80, balance = 30000 * DJABUCOIN.scale) {
+async function seed(ovr = 80, balance = 300000 * DJABUCOIN.scale) {
   const uid = `shop-${randomUUID()}`;
   await db
     .doc(`users/${uid}`)
@@ -57,7 +57,7 @@ test("shop debit and permanent ownership are atomic and retries never charge twi
   );
   assert.equal(results.filter((r) => !r.alreadyOwned).length, 1);
   const view = await getCasinoShop.run(req(uid));
-  assert.equal(view.balance, 22000 * DJABUCOIN.scale);
+  assert.equal(view.balance, 220000 * DJABUCOIN.scale);
   assert.deepEqual(view.owned, ["football-p1"]);
   const collection = (await db.doc(`cardCollections/${uid}`).get()).data();
   assert.equal(collection.officialSince, "2025-01-01");
@@ -114,12 +114,12 @@ test("server rejects forged prices, unavailable editions, missing official card,
   );
   await assert.rejects(buyCasinoCard.run(req(uid, { cardId: "casino-royal" })));
   await db.doc(`weeklyCards/${uid}`).update({ ovr: 70 });
-  await db.doc(`casinoWallets/${uid}`).update({ balance: 799999 });
+  await db.doc(`casinoWallets/${uid}`).update({ balance: 7999999 });
   await assert.rejects(
     buyCasinoCard.run(req(uid, { cardId: "football-p1" })),
     /Saldo insuficiente/,
   );
-  await db.doc(`casinoWallets/${uid}`).update({ balance: 800000 });
+  await db.doc(`casinoWallets/${uid}`).update({ balance: 8000000 });
   const result = await buyCasinoCard.run(req(uid, { cardId: "football-p1" }));
   assert.equal(result.balance, 0);
   await db.doc(`weeklyCards/${uid}`).update({ weekId: "2000-W01" });
@@ -132,7 +132,7 @@ test("server rejects forged prices, unavailable editions, missing official card,
   await assert.rejects(buyCasinoCard.run({ data: { cardId: "football-p1" } }));
 });
 test("two different concurrent purchases cannot overspend one wallet", async () => {
-  const uid = await seed(99, 800000);
+  const uid = await seed(99, 8000000);
   const results = await Promise.allSettled(
     ["gold-vault", "platinum-prism"].map((cardId) =>
       buyCasinoCard.run(req(uid, { cardId })),
@@ -140,7 +140,7 @@ test("two different concurrent purchases cannot overspend one wallet", async () 
   );
   assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
   const view = await getCasinoShop.run(req(uid));
-  assert.ok([300000, 400000].includes(view.balance));
+  assert.ok([3000000, 4000000].includes(view.balance));
   assert.equal(view.owned.length, 1);
 });
 
@@ -160,9 +160,9 @@ test("closing a pre-purchase casino session preserves the shop debit", async () 
       release: true,
     }),
   );
-  assert.equal(closed.wallet.balance, 2200000);
+  assert.equal(closed.wallet.balance, 22000000);
   const view = await getCasinoShop.run(req(uid));
-  assert.equal(view.balance, 2200000);
+  assert.equal(view.balance, 22000000);
 });
 
 test("only an owner can select a shop edition and locked history stays unchanged", async () => {
@@ -191,8 +191,8 @@ test("only an owner can select a shop edition and locked history stays unchanged
 
 
 test("both shop entry points share ownership and Vault payment", async () => {
-  const uid = await seed(80, 40000);
-  await db.doc(`casinoWallets/${uid}`).update({vaultBalance: 60000});
+  const uid = await seed(80, 400000);
+  await db.doc(`casinoWallets/${uid}`).update({vaultBalance: 600000});
   const bought = await buyCasinoCard.run(req(uid, {cardId: "bronze-foundry"}));
   assert.equal(bought.balance, 0);
   assert.equal(bought.vaultBalance, 0);

@@ -78,7 +78,7 @@ try {
       fixture.ctx.speed=speed;fixture.ctx.reduced=reduced;fixture.clock.setRate(rate);
       const start=performance.now();await fixture.visual.play({type:'chemistry.total'},fixture.ctx);return performance.now()-start;
     },{speed,reduced,rate});
-    assert.ok(elapsed>=3000&&elapsed<6500,`tempo de leitura real ${speed}/${reduced}: ${elapsed}`);
+    assert.ok(elapsed>=3000/rate&&elapsed<6500/rate,`tempo de leitura por velocidade ${speed}/${reduced}: ${elapsed}`);
     assert.equal(await p.locator('.fx-banner').count(),0);
     assert.deepEqual(await p.evaluate(()=>[pp.pedidos,pp.session.balance]),balance,'fixtures não fazem pedidos nem alteram a carteira');
     console.log(`OK ${width}×${height}: compra ${count} S com geometria/arte comuns, Joiner ×9–×1000 sem cobrir rosto, aviso ${speed}${reduced?' reduzido':''} ${Math.round(elapsed)} ms.`);
@@ -87,7 +87,7 @@ try {
         fixture.clock.setRate(1);fixture.ctx.speed='normal';const start=performance.now();
         setTimeout(()=>{fixture.clock.setRate(3.75);fixture.ctx.speed='ultra';},450);
         await fixture.visual.play({type:'chemistry.level',to:5},fixture.ctx);return performance.now()-start;
-      });assert.ok(elapsed>=3000,'mudar para Turbo durante o aviso não corta a leitura');
+      });assert.ok(elapsed>=900&&elapsed<2200,`Turbo acelera o aviso em curso: ${elapsed}`);
     }
     await p.close();
   }
